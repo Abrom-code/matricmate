@@ -1,0 +1,75 @@
+# ------------------------------
+# Flutter / Dart / Pub related
+# ------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+**/doc/api/
+
+# ------------------------------
+# IntelliJ / Android Studio
+# ------------------------------
+*.iml
+*.ipr
+*.iws
+.idea/
+.android/
+*.log
+
+# ------------------------------
+# VS Code (optional)
+# ------------------------------
+#.vscode/
+
+# ------------------------------
+# Miscellaneous system files
+# ------------------------------
+*.class
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# ------------------------------
+# Symbolication / Obfuscation
+# ------------------------------
+app.*.symbols
+app.*.map.json
+
+# ------------------------------
+# Android build artifacts
+# ------------------------------
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ------------------------------
+# iOS / Xcode build artifacts
+# ------------------------------
+ios/Flutter/.last_build_id
+Pods/
+Podfile.lock
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# ------------------------------
+# Sensitive / Secrets / API Keys
+# ------------------------------
+# Do NOT track API constants
+lib/utils/constants/api_constants.dart
+
+# ------------------------------
+# Coverage
+# ------------------------------
+coverage/

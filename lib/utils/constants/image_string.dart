@@ -4,11 +4,10 @@ class AppImages {
 
   // Onboarding Images
   static const String firstOnboardingImage =
-      "assets/images/onboarding_images/onboarding1.png";
+      "assets/images/onboarding/onboarding2.png";
   static const String secondOnboardingImage =
-      "assets/images/onboarding_images/onboarding2.png";
+      "assets/images/onboarding/onboarding1.png";
   static const String thirdOnboardingImage =
-      "assets/images/onboarding_images/onboarding3.png";
+      "assets/images/onboarding/onboarding1.png";
   static const String unknownUser = "assets/images/profile/unknown.png";
-
 }

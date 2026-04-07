@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/device/device_utility.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 

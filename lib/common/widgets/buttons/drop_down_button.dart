@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class AppDropDownField extends StatelessWidget {
   const AppDropDownField({
@@ -17,17 +16,16 @@ class AppDropDownField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
     return DropdownButtonFormField(
       decoration: InputDecoration(
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.defaultSpace / 2),
           borderSide: BorderSide(
-            color: dark ? Colors.grey : AppColors.darkGrey,
-            width: 2,
+            color: AppColors.primary.withValues(alpha: 0.5),
+            width: 1,
           ),
         ),
-        prefixIcon: Icon(Icons.book),
+        prefixIcon: Icon(Icons.book, color: AppColors.primary),
       ),
       initialValue: initialValue,
       items: items,

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:matricmate/features/authentication/screens/onboarding/widgets/onboarding_navigation.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/features/authentication/screens/onboarding/widgets/onboarding_button.dart';
 
 class OnBoardingPane extends StatelessWidget {
   final String mainText;

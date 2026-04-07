@@ -10,4 +10,12 @@ class AppImages {
   static const String thirdOnboardingImage =
       "assets/images/onboarding/onboarding1.png";
   static const String unknownUser = "assets/images/profile/unknown.png";
+
+  // Main Subjects picture
+  static const String chemistryMainImage =
+      "assets/images/subjects/chemistryMain.png";
+  static const String biologyMainImage =
+      "assets/images/subjects/biologyMain.png";
+  static const String physicMainPImage =
+      "assets/images/subjects/physicsMain.png";
 }

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/buttons/drop_down_button.dart';
+import 'package:matricmate/common/widgets/layout/grid_layout.dart';
+import 'package:matricmate/features/exam/screens/home/widgets/subject_container.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
       appBar: Appbar(
         title: Text(
-          "ExamMate",
+          "MatricMate",
           style: Theme.of(
             context,
           ).textTheme.headlineMedium!.apply(color: AppColors.white),
@@ -39,27 +41,41 @@ class HomeScreen extends StatelessWidget {
           padding: const EdgeInsets.all(AppSizes.defaultSpace),
           child: Column(
             children: [
-              DropdownButtonFormField(
-                decoration: InputDecoration(
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppSizes.defaultSpace / 2,
-                    ),
-                    borderSide: BorderSide(
-                      color: dark ? Colors.grey : AppColors.darkGrey,
-                      width: 2,
+              // Select stream dropdown
+              AppDropDownField(
+                items: [
+                  DropdownMenuItem(
+                    value: "natural",
+                    child: Text(
+                      "Natural",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleSmall!.apply(color: AppColors.primary),
                     ),
                   ),
-                  prefixIcon: Icon(Icons.book),
-                ),
-                initialValue: "natural",
-                items: [
-                  DropdownMenuItem(value: "natural", child: Text("Natural")),
-                  DropdownMenuItem(value: "social", child: Text("Social")),
+                  DropdownMenuItem(
+                    value: "social",
+                    child: Text(
+                      "Social",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleSmall!.apply(color: AppColors.primary),
+                    ),
+                  ),
                 ],
                 onChanged: (val) {},
+                initialValue: "natural",
               ),
               const SizedBox(height: AppSizes.spaceBtwItems),
+
+              GridLayout(
+                itemCount: 5,
+                itemBuilder: (_, index) => SubjectContainer(
+                  title: "Chemistry",
+                  image: AppImages.chemistryMainImage,
+                  onTap: () {},
+                ),
+              ),
             ],
           ),
         ),

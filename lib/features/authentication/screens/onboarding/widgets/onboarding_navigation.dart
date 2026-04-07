@@ -11,18 +11,14 @@ class OnBoaridngNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = OnboardintController.instance;
     bool dark = AppHelperFuntions.isDark(context);
-    return Positioned(
-      bottom: 30,
-      left: 20,
-      child: SmoothPageIndicator(
-        count: 3,
-        controller: controller.pageController,
-        onDotClicked: controller.dotNavigationClick,
-        effect: ExpandingDotsEffect(
-          activeDotColor: AppColors.primary,
-          dotHeight: 6,
-          dotColor: dark ? AppColors.darkGrey : AppColors.darkerGrey,
-        ),
+    return SmoothPageIndicator(
+      count: 3,
+      controller: controller.pageController,
+      onDotClicked: controller.dotNavigationClick,
+      effect: ExpandingDotsEffect(
+        activeDotColor: AppColors.primary,
+        dotHeight: 6,
+        dotColor: dark ? AppColors.darkGrey : AppColors.darkerGrey,
       ),
     );
   }

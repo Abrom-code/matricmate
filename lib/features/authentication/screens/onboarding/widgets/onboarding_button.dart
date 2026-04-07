@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:matricmate/features/authentication/controllers/onboarding/onboardint_controller.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 
 class OnBoardingButton extends StatelessWidget {
   const OnBoardingButton({super.key});
@@ -8,12 +8,15 @@ class OnBoardingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = OnboardintController.instance;
-    return Positioned(
-      right: AppSizes.defaultSpace,
-      bottom: 20,
+    return SizedBox(
+      width: double.infinity,
       child: ElevatedButton(
         onPressed: () => controller.nextPage(),
-        child: Icon(Icons.arrow_right_alt, size: 30),
+        child: Obx(
+          () => Text(
+            controller.currentPageIndex.value == 2 ? "Sign In" : "Continue",
+          ),
+        ),
       ),
     );
   }

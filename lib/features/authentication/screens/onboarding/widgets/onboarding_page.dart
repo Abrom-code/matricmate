@@ -76,11 +76,6 @@ class OnBoardingPane extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.spaceBtwSections * 2),
-
-          const OnBoaridngNavigation(),
-          const SizedBox(height: AppSizes.spaceBtwSections),
-
-          OnBoardingButton(),
         ],
       ),
     );

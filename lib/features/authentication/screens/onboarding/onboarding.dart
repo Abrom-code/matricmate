@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/controllers/onboarding/onboardint_controller.dart';
+import 'package:matricmate/features/authentication/screens/onboarding/widgets/onboarding_button.dart';
+import 'package:matricmate/features/authentication/screens/onboarding/widgets/onboarding_navigation.dart';
 import 'package:matricmate/features/authentication/screens/onboarding/widgets/onboarding_page.dart';
 import 'package:matricmate/features/authentication/screens/onboarding/widgets/onboarding_skip.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
+import 'package:matricmate/utils/constants/sizes.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -51,6 +54,20 @@ class OnboardingScreen extends StatelessWidget {
 
             /// Skip Button
             const OnwardingSkip(),
+
+            Positioned(
+              bottom: 50,
+              left: 20,
+              right: 20,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OnBoaridngNavigation(),
+                  const SizedBox(height: AppSizes.spaceBtwSections),
+                  OnBoardingButton(),
+                ],
+              ),
+            ),
           ],
         ),
       ),

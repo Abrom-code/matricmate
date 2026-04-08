@@ -27,15 +27,8 @@ class SubjectContainer extends StatelessWidget {
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.8)),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(title, style: Theme.of(context).textTheme.titleSmall),
-              ],
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleSmall),
             const Divider(),
             Expanded(
               child: Stack(

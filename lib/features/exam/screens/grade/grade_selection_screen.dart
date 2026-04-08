@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
+import 'package:matricmate/features/exam/screens/grade/widgets/all_grade_exams_tile.dart';
 import 'package:matricmate/features/exam/screens/grade/widgets/chapters_list.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -53,6 +55,14 @@ class GradeSelectionScreen extends StatelessWidget {
             child: TabBarView(
               controller: controller.tabController,
               children: controller.tabs.map((tab) {
+                if (tab == controller.tabs[4]) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSizes.defaultSpace,
+                    ),
+                    child: AllGradeExamsTile(),
+                  );
+                }
                 return ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
@@ -61,12 +71,23 @@ class GradeSelectionScreen extends StatelessWidget {
                       height: 60,
 
                       child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                        ),
                         onPressed: () {},
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("From All Chapters"),
-                            Icon(Icons.chevron_right, size: 30),
+                            Text(
+                              "From All Chapters",
+                              style: Theme.of(context).textTheme.titleMedium!
+                                  .apply(color: AppColors.white),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: AppColors.white,
+                              size: 30,
+                            ),
                           ],
                         ),
                       ),

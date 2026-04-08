@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 
 class AppHelperMethods {
-  static void showImageZoom(BuildContext context, String imageUrl) {
+  static void showImageZoom(
+    BuildContext context,
+    String imageUrl, {
+    bool isAssetImage = false,
+  }) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.all(0),
         child: InteractiveViewer(
+          panEnabled: true,
+          minScale: 1.0,
+          maxScale: 4.0,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.network(imageUrl),
+            child: isAssetImage
+                ? Image.asset(imageUrl, fit: BoxFit.contain)
+                : Image.network(imageUrl, fit: BoxFit.contain),
           ),
         ),
       ),

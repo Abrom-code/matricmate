@@ -15,6 +15,8 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
     this.leadingIcon,
     this.leadingOnPressed,
     this.centerTitle = false,
+    this.backgroundColor = AppColors.primary,
+    this.leadingIconColor = AppColors.white,
   });
 
   final Widget? title;
@@ -23,6 +25,8 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
   final IconData? leadingIcon;
   final VoidCallback? leadingOnPressed;
   final bool centerTitle;
+  final Color backgroundColor;
+  final Color leadingIconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +36,7 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
 
       /// Background
-      backgroundColor: AppColors.primary,
+      backgroundColor: backgroundColor,
       elevation: 0,
       scrolledUnderElevation: 0,
 
@@ -43,12 +47,12 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
       leading: showBackArrow
           ? IconButton(
               onPressed: Get.back,
-              icon: Icon(Icons.arrow_back_ios_new, color: AppColors.white),
+              icon: Icon(Icons.arrow_back_ios_new, color: leadingIconColor),
             )
           : leadingIcon != null
           ? IconButton(
               onPressed: leadingOnPressed,
-              icon: Icon(leadingIcon, color: AppColors.white),
+              icon: Icon(leadingIcon, color: leadingIconColor),
             )
           : null,
 
@@ -68,8 +72,6 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
 
       /// Icon Theme (affects actions icons too)
       iconTheme: IconThemeData(color: AppColors.white),
-
-      
     );
   }
 

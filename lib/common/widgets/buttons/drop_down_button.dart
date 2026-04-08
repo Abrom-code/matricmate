@@ -8,16 +8,27 @@ class AppDropDownField extends StatelessWidget {
     required this.items,
     this.initialValue,
     required this.onChanged,
+    required this.icon,
   });
 
   final List<DropdownMenuItem> items;
   final String? initialValue;
   final ValueChanged onChanged;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField(
+      iconDisabledColor: AppColors.primary,
+      iconEnabledColor: AppColors.primary,
       decoration: InputDecoration(
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.defaultSpace / 2),
+          borderSide: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.defaultSpace / 2),
           borderSide: BorderSide(
@@ -25,7 +36,7 @@ class AppDropDownField extends StatelessWidget {
             width: 1,
           ),
         ),
-        prefixIcon: Icon(Icons.book, color: AppColors.primary),
+        prefixIcon: Icon(icon, color: AppColors.primary),
       ),
       initialValue: initialValue,
       items: items,

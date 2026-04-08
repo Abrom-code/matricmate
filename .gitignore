@@ -68,6 +68,7 @@ xcuserdata/
 # ------------------------------
 # Do NOT track API constants
 lib/utils/constants/api_constants.dart
+lib/motivations/
 
 # ------------------------------
 # Coverage

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -30,33 +31,55 @@ class SubjectContainer extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall!.apply(color: AppColors.primary),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleSmall),
+              ],
             ),
             const Divider(),
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: dark
-                      ? const Color.fromARGB(255, 43, 43, 43)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(AppSizes.defaultSpace),
-                    bottomRight: Radius.circular(AppSizes.defaultSpace),
-                  ),
-                ),
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: dark
+                          ? const Color.fromARGB(255, 43, 43, 43)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(AppSizes.defaultSpace),
+                        bottomRight: Radius.circular(AppSizes.defaultSpace),
+                      ),
+                    ),
 
-                child: ClipRRect(
-                  clipBehavior: Clip.hardEdge,
-                  child: Image.asset(
-                    image,
-                    fit: BoxFit.contain,
-                    width: double.infinity,
+                    child: ClipRRect(
+                      clipBehavior: Clip.hardEdge,
+                      child: Image.asset(
+                        image,
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                      ),
+                    ),
                   ),
-                ),
+                  Center(
+                    child: IconButton(
+                      onPressed: () {},
+                      icon: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(50),
+                          color: AppColors.darkGrey.withValues(alpha: 0.7),
+                        ),
+                        child: Icon(
+                          Icons.cloud_download_rounded,
+                          color: AppColors.white,
+                          size: 40,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

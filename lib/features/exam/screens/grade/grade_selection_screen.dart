@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
-import 'package:matricmate/common/widgets/tiles/chpater_tile.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/grade/widgets/chapters_list.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -29,10 +28,15 @@ class GradeSelectionScreen extends StatelessWidget {
       body: Column(
         children: [
           const SizedBox(height: 10),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.defaultSpace,
+            ),
             child: TabBar(
-              labelPadding: EdgeInsets.symmetric(horizontal: AppSizes.sm),
+              tabAlignment: TabAlignment.start,
+              isScrollable: true,
+              padding: EdgeInsets.only(left: 0),
+              labelPadding: EdgeInsets.symmetric(horizontal: 10),
               controller: controller.tabController,
               indicatorPadding: const EdgeInsets.all(4),
               labelStyle: const TextStyle(

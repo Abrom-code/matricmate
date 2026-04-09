@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
-import 'package:matricmate/features/exam/screens/grade/widgets/all_grade_exams_tile.dart';
-import 'package:matricmate/features/exam/screens/grade/widgets/chapters_list.dart';
+import 'package:matricmate/features/exam/screens/chapter/widgets/all_grade_exams_tile.dart';
+import 'package:matricmate/features/exam/screens/chapter/widgets/chapters_list.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class GradeSelectionScreen extends StatelessWidget {
-  const GradeSelectionScreen({super.key, required this.title});
+class ChapterScreen extends StatelessWidget {
+  const ChapterScreen({super.key, required this.title});
   final String title;
 
   @override

@@ -3,7 +3,7 @@ import 'package:get/get_instance/get_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/state_manager.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:matricmate/features/exam/screens/home/home.dart';
+import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/navigation_menu.dart';
 // import 'package:shop/features/authentication/screens/login/login.dart';
 

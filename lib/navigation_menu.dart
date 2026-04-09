@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
-import 'package:matricmate/features/exam/screens/home/home.dart';
+import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/personalization/profile.dart';
-import 'package:matricmate/utils/constants/colors.dart';
 
 class NavigationMenu extends StatelessWidget {
   const NavigationMenu({super.key});
@@ -38,5 +37,5 @@ class NavigationMenu extends StatelessWidget {
 class NavigationController extends GetxController {
   final Rx<int> selectedIdx = 0.obs;
 
-  final screens = [HomeScreen(), BookmarkScreen(), ProfileScreen()];
+  final screens = [SubjectsScreen(), BookmarkScreen(), ProfileScreen()];
 }

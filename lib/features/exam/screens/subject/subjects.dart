@@ -3,14 +3,14 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/buttons/drop_down_button.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
-import 'package:matricmate/features/exam/screens/grade/grade_selection_screen.dart';
-import 'package:matricmate/features/exam/screens/home/widgets/subject_container.dart';
+import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class SubjectsScreen extends StatelessWidget {
+  const SubjectsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +76,8 @@ class HomeScreen extends StatelessWidget {
                 itemBuilder: (_, index) => SubjectContainer(
                   title: "Physics",
                   image: AppImages.physicMainPImage,
-                  onTap: () => Get.to(
-                    () => const GradeSelectionScreen(title: "Physics"),
-                  ),
+                  onTap: () =>
+                      Get.to(() => const ChapterScreen(title: "Physics")),
                 ),
               ),
             ],

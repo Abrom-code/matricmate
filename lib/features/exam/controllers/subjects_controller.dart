@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -41,7 +42,7 @@ class SubjectsController extends GetxController {
         );
       }
     } on Exception catch (e) {
-      AppLoggerHelper.error(e.toString());
+      AppHelperFuntions.showSnackBar(e.toString());
     } finally {
       isLoading.value = false;
     }

@@ -9,7 +9,8 @@ class DBschema {
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
         is_natural INTEGER NOT NULL,
-        is_common INTEGER DEFAULT 0
+        is_common INTEGER DEFAULT 0,
+        is_downloaded INTEGER DEFAULT 0
       );
     ''');
 

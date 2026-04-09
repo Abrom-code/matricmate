@@ -1,14 +1,14 @@
 class SubjectMoModel {
   int? id;
   String name;
-  bool isNatural;
-  bool isCommon;
+  bool isNatural, isCommon, isDownloaded;
 
   SubjectMoModel({
     this.id,
     required this.name,
     required this.isNatural,
     this.isCommon = false,
+    this.isDownloaded = false,
   });
 
   // Convert Json to SubjectMoModel object
@@ -28,6 +28,7 @@ class SubjectMoModel {
       name: map['name'],
       isNatural: map['is_natural'] == 1,
       isCommon: map['is_common'] == 1,
+      isDownloaded: map['is_downloaded'] == 1,
     );
   }
 
@@ -38,6 +39,7 @@ class SubjectMoModel {
       'name': name,
       'is_natural': isNatural ? 1 : 0,
       'is_common': isCommon ? 1 : 0,
+      'is_downloaded': 0,
     };
   }
 }

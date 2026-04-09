@@ -10,7 +10,6 @@ import 'package:matricmate/features/exam/screens/subject/widgets/subject_contain
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 
 class SubjectsScreen extends StatelessWidget {
   const SubjectsScreen({super.key});
@@ -18,12 +17,6 @@ class SubjectsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subjectController = SubjectsController.instance;
-    final isNaturalStream = subjectController.selectedStream.value == "natural";
-    final int gridItemCount = subjectController.subjects
-        .where(
-          (subject) => subject.isCommon || subject.isNatural == isNaturalStream,
-        )
-        .length;
     return Scaffold(
       appBar: Appbar(
         title: Text(
@@ -38,7 +31,7 @@ class SubjectsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: AppSizes.defaultSpace / 2),
             child: IconButton(
-              onPressed: () {},
+              onPressed: () => subjectController.loadSubjects(),
               icon: Icon(
                 Icons.refresh,
                 size: AppSizes.iconMd * 1.2,
@@ -61,50 +54,56 @@ class SubjectsScreen extends StatelessWidget {
               return subject.isCommon || subject.isNatural == isNaturalStream;
             }).toList();
 
-            return Column(
-              children: [
-                AppDropDownField(
-                  items: [
-                    DropdownMenuItem(
-                      value: "natural",
-                      child: Text(
-                        "Natural",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleSmall!.apply(color: AppColors.primary),
+            if (subjectController.isLoading.value) {
+              return CircularProgressIndicator();
+            } else {
+              return Column(
+                children: [
+                  AppDropDownField(
+                    items: [
+                      DropdownMenuItem(
+                        value: "natural",
+                        child: Text(
+                          "Natural",
+                          style: Theme.of(context).textTheme.titleSmall!.apply(
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
-                    ),
-                    DropdownMenuItem(
-                      value: "social",
-                      child: Text(
-                        "Social",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleSmall!.apply(color: AppColors.primary),
+                      DropdownMenuItem(
+                        value: "social",
+                        child: Text(
+                          "Social",
+                          style: Theme.of(context).textTheme.titleSmall!.apply(
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                  icon: Icons.book,
-                  onChanged: (stream) =>
-                      subjectController.selectedStream.value = stream,
-                  initialValue: subjectController.selectedStream.value,
-                ),
-                const SizedBox(height: AppSizes.spaceBtwSections),
-                GridLayout(
-                  itemCount: filteredSubjects.length,
-                  itemBuilder: (_, index) {
-                    final item = filteredSubjects[index];
+                    ],
+                    icon: Icons.book,
+                    onChanged: (stream) =>
+                        subjectController.selectedStream.value = stream,
+                    initialValue: subjectController.selectedStream.value,
+                  ),
+                  const SizedBox(height: AppSizes.spaceBtwSections),
+                  GridLayout(
+                    itemCount: filteredSubjects.length,
+                    itemBuilder: (_, index) {
+                      final item = filteredSubjects[index];
 
-                    return SubjectContainer(
-                      title: item.name,
-                      image: AppImages.physicMainPImage,
-                      onTap: () =>
-                          Get.to(() => ChapterScreen(title: item.name)),
-                    );
-                  },
-                ),
-              ],
-            );
+                      return SubjectContainer(
+                        title: item.name,
+                        image: AppImages.physicMainPImage,
+                        isDownloaded : item.isDownloaded,
+                        onTap: () => item.isDownloaded
+                            ? Get.to(() => ChapterScreen(title: item.name))
+                            : null,
+                      );
+                    },
+                  ),
+                ],
+              );
+            }
           }),
         ),
       ),

@@ -9,9 +9,11 @@ class SubjectContainer extends StatelessWidget {
     required this.title,
     required this.image,
     required this.onTap,
+    required this.isDownloaded,
   });
   final String title, image;
   final VoidCallback onTap;
+  final bool isDownloaded;
 
   @override
   Widget build(BuildContext context) {
@@ -53,24 +55,26 @@ class SubjectContainer extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Center(
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(50),
-                          color: AppColors.darkGrey.withValues(alpha: 0.7),
-                        ),
-                        child: Icon(
-                          Icons.cloud_download_rounded,
-                          color: AppColors.white,
-                          size: 40,
+
+                  if (!isDownloaded)
+                    Center(
+                      child: IconButton(
+                        onPressed: () {},
+                        icon: Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(50),
+                            color: AppColors.darkGrey.withValues(alpha: 0.7),
+                          ),
+                          child: Icon(
+                            Icons.cloud_download_rounded,
+                            color: AppColors.white,
+                            size: 40,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

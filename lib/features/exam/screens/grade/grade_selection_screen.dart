@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
-import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/grade/widgets/all_grade_exams_tile.dart';
 import 'package:matricmate/features/exam/screens/grade/widgets/chapters_list.dart';
+import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
@@ -74,7 +74,7 @@ class GradeSelectionScreen extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                         ),
-                        onPressed: () {},
+                        onPressed: () => Get.to(() => QuestionScreen()),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

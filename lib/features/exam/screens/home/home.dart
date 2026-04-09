@@ -72,12 +72,12 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: AppSizes.spaceBtwSections),
 
               GridLayout(
-                itemCount: 5,
+                itemCount: 6,
                 itemBuilder: (_, index) => SubjectContainer(
-                  title: "Chemistry",
-                  image: AppImages.chemistryMainImage,
+                  title: "Physics",
+                  image: AppImages.physicMainPImage,
                   onTap: () => Get.to(
-                    () => const GradeSelectionScreen(title: "Chemistry"),
+                    () => const GradeSelectionScreen(title: "Physics"),
                   ),
                 ),
               ),

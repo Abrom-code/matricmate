@@ -73,6 +73,7 @@ class GradeSelectionScreen extends StatelessWidget {
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           backgroundColor: AppColors.primary,
+                          side: BorderSide.none,
                         ),
                         onPressed: () => Get.to(() => QuestionScreen()),
                         child: Row(
@@ -81,7 +82,9 @@ class GradeSelectionScreen extends StatelessWidget {
                             Text(
                               "From All Chapters",
                               style: Theme.of(context).textTheme.titleMedium!
-                                  .apply(color: AppColors.white),
+                                  .apply(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
                             ),
                             Icon(
                               Icons.chevron_right,

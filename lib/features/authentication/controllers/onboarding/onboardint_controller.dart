@@ -4,6 +4,7 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/state_manager.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/features/exam/screens/home/home.dart';
+import 'package:matricmate/navigation_menu.dart';
 // import 'package:shop/features/authentication/screens/login/login.dart';
 
 class OnboardintController extends GetxController {
@@ -22,7 +23,7 @@ class OnboardintController extends GetxController {
   void nextPage() {
     if (currentPageIndex.value == 2) {
       // GetStorage().write("isFirstTime", false);
-      Get.offAll(const HomeScreen());
+      Get.offAll(const NavigationMenu());
     } else {
       int page = currentPageIndex.value + 1;
       pageController.jumpToPage(page);
@@ -31,6 +32,6 @@ class OnboardintController extends GetxController {
 
   void skipPage() {
     GetStorage().write("isFirstTime", false);
-    Get.offAll(const HomeScreen());
+    Get.offAll(const NavigationMenu());
   }
 }

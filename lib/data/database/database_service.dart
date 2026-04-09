@@ -25,4 +25,144 @@ class DatabaseService extends GetxController {
       },
     );
   }
+
+  // Get subjects
+  Future<List<Map<String, dynamic>>> getSubjects() async {
+    final db = await database;
+    return db.query('subjects');
+  }
+
+  // Get tests by subject
+  Future<List<Map<String, dynamic>>> getTestsBySubject(int subjectId) async {
+    final db = await database;
+
+    return db.query('tests', where: 'subject_id = ?', whereArgs: [subjectId]);
+  }
+
+  // load questions for test
+  Future<List<Map<String, dynamic>>> getQuestionsByTest(int testId) async {
+    final db = await database;
+
+    return db.rawQuery(
+      '''
+    SELECT q.*, tq.position
+    FROM questions q
+    JOIN test_questions tq ON q.id = tq.question_id
+    WHERE tq.test_id = ?
+    ORDER BY tq.position ASC
+  ''',
+      [testId],
+    );
+  }
+
+  // Start test
+  Future<int> startTest({
+    required int testId,
+    required int totalQuestions,
+  }) async {
+    final db = await database;
+
+    return db.insert('test_progress', {
+      'test_id': testId,
+      'total_questions': totalQuestions,
+      'questions_attempted': 0,
+      'status': 'in_progress',
+      'started_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Save answers
+  Future<void> saveAnswer({
+    required int testProgressId,
+    required int questionId,
+    required int selectedOption,
+    required int correctOption,
+    required int currentIndex,
+  }) async {
+    final db = await database;
+
+    final isCorrect = selectedOption == correctOption ? 1 : 0;
+
+    await db.insert('question_answers', {
+      'test_progress_id': testProgressId,
+      'question_id': questionId,
+      'selected_option_index': selectedOption,
+      'is_correct': isCorrect,
+      'answered_at': DateTime.now().toIso8601String(),
+    });
+
+    // update progress
+    await db.rawUpdate(
+      '''
+    UPDATE test_progress
+    SET 
+      questions_attempted = questions_attempted + 1,
+      last_question_id = ?,
+      updated_at = ?
+    WHERE id = ?
+  ''',
+      [questionId, DateTime.now().toIso8601String(), testProgressId],
+    );
+  }
+
+  // Get test progress
+  Future<Map<String, dynamic>?> getTestProgress(int testId) async {
+    final db = await database;
+
+    final result = await db.query(
+      'test_progress',
+      where: 'test_id = ?',
+      whereArgs: [testId],
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) return result.first;
+    return null;
+  }
+
+  // Get answers
+  Future<List<Map<String, dynamic>>> getAnswers(int testProgressId) async {
+    final db = await database;
+
+    return db.query(
+      'question_answers',
+      where: 'test_progress_id = ?',
+      whereArgs: [testProgressId],
+    );
+  }
+
+  // Complete test
+  Future<void> completeTest(int testProgressId) async {
+    final db = await database;
+
+    await db.update(
+      'test_progress',
+      {'status': 'completed', 'completed_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [testProgressId],
+    );
+  }
+
+  // calulate progress
+  double calculateProgress(int attempted, int total) {
+    if (total == 0) return 0;
+    return attempted / total;
+  }
+
+  // get correct answers
+  Future<int> getCorrectAnswers(int testProgressId) async {
+    final db = await database;
+
+    final result = await db.rawQuery(
+      '''
+    SELECT COUNT(*) as correct_count
+    FROM question_answers
+    WHERE test_progress_id = ? AND is_correct = 1
+  ''',
+      [testProgressId],
+    );
+
+    return result.first['correct_count'] as int;
+  }
 }

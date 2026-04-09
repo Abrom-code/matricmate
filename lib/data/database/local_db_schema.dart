@@ -86,15 +86,15 @@ class DBschema {
     ''');
 
     await db.execute('''
-      CREATE TABLE question_answers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        test_progress_id INTEGER NOT NULL,
-        question_id INTEGER NOT NULL,
-        selected_option_index INTEGER,
-        is_correct INTEGER,
-        answered_at TEXT,
-        FOREIGN KEY(test_progress_id REFERENCES test_progress(id) ON DELETE CASCADE,
-        FOREIGN KEY(question_id) REFERENCES questions(id) ON DELETE CASCADE
+        CREATE TABLE question_answers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          test_progress_id INTEGER NOT NULL,
+          question_id INTEGER NOT NULL,
+          selected_option_index INTEGER,
+          is_correct INTEGER,
+          answered_at TEXT,
+          FOREIGN KEY(test_progress_id) REFERENCES test_progress(id) ON DELETE CASCADE,
+          FOREIGN KEY(question_id) REFERENCES questions(id) ON DELETE CASCADE
       );
     ''');
 

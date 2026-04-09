@@ -10,6 +10,7 @@ class SubjectsController extends GetxController {
   final SupabaseClient supabase = Supabase.instance.client;
   final DatabaseService _dbService = DatabaseService.instance;
   final RxBool isLoading = false.obs;
+  final RxString selectedStream = "natural".obs;
 
   var subjects = <SubjectMoModel>[].obs;
   Future<void> loadSubjects() async {

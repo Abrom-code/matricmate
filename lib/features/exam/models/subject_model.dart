@@ -10,7 +10,6 @@ class SubjectMoModel {
     this.isCommon = false,
     this.isDownloaded = false,
   });
-
   // Convert Json to SubjectMoModel object
   factory SubjectMoModel.fromJson(Map<String, dynamic> json) {
     return SubjectMoModel(

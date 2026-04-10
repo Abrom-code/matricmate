@@ -7,7 +7,6 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -31,7 +30,7 @@ class SubjectsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: AppSizes.defaultSpace / 2),
             child: IconButton(
-              onPressed: () => subjectController.loadSubjects(),
+              onPressed: () => subjectController.syncSubjects(),
               icon: Icon(
                 Icons.refresh,
                 size: AppSizes.iconMd * 1.2,
@@ -54,7 +53,8 @@ class SubjectsScreen extends StatelessWidget {
               return subject.isCommon || subject.isNatural == isNaturalStream;
             }).toList();
 
-            if (subjectController.isLoading.value) {
+            if (subjectController.isLoading.value ||
+                subjectController.isRefreshing.value) {
               return CircularProgressIndicator();
             } else {
               return Column(

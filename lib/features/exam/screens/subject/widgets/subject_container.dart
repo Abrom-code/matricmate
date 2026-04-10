@@ -53,7 +53,7 @@ class SubjectContainer extends StatelessWidget {
                       Container(
                         decoration: BoxDecoration(
                           color: dark
-                              ? const Color.fromARGB(255, 43, 43, 43)
+                              ? AppColors.darkerGrey.withValues(alpha: 0.4)
                               : Colors.transparent,
                           borderRadius: BorderRadius.only(
                             bottomLeft: Radius.circular(AppSizes.defaultSpace),

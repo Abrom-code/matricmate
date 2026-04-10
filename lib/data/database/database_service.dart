@@ -32,6 +32,11 @@ class DatabaseService extends GetxController {
     return db.query('subjects');
   }
 
+  Future<List<Map<String, dynamic>>> getDownloadedSubjects() async {
+    final db = await database;
+    return db.rawQuery('SELECT * FROM subjects WHERE is_downloaded = 1');
+  }
+
   // Get subject chapters
   Future<List<Map<String, dynamic>>> getSubjectChapters(String subject) async {
     final db = await database;

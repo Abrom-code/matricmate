@@ -6,10 +6,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize supabase 
-   await Supabase.initialize(
+  // Initialize supabase
+  await Supabase.initialize(
     url: ApiConstants.supabaseUrl,
-    anonKey: ApiConstants.supabaseApiKey ,
+    anonKey: ApiConstants.supabaseApiKey,
   );
   runApp(const App());
 }

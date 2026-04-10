@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/tiles/chpater_tile.dart';
+import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
+import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_grade_exams_tile.dart';
-import 'package:matricmate/features/exam/screens/chapter/widgets/chapters_list.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ChapterScreen extends StatelessWidget {
   const ChapterScreen({super.key, required this.title});
@@ -14,7 +17,8 @@ class ChapterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(GradeSelectionController());
+    final tabController = Get.put(GradeSelectionController());
+    final chapterController = Get.put(ChapterController());
 
     return Scaffold(
       appBar: Appbar(
@@ -26,7 +30,6 @@ class ChapterScreen extends StatelessWidget {
           ).textTheme.headlineMedium!.apply(color: AppColors.white),
         ),
       ),
-
       body: Column(
         children: [
           const SizedBox(height: 10),
@@ -37,73 +40,77 @@ class ChapterScreen extends StatelessWidget {
             child: TabBar(
               tabAlignment: TabAlignment.start,
               isScrollable: true,
-              padding: EdgeInsets.only(left: 0),
-              labelPadding: EdgeInsets.symmetric(horizontal: 10),
-              controller: controller.tabController,
-              indicatorPadding: const EdgeInsets.all(4),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+              controller: tabController.tabController,
               labelStyle: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
-              tabs: controller.tabs,
+              tabs: tabController.tabs
+                  .map((t) => Tab(text: t["label"]))
+                  .toList(),
             ),
           ),
-
           const SizedBox(height: 20),
-
           Expanded(
             child: TabBarView(
-              controller: controller.tabController,
-              children: controller.tabs.map((tab) {
-                if (tab == controller.tabs[4]) {
-                  return Padding(
+              controller: tabController.tabController,
+              children: List.generate(tabController.tabs.length, (index) {
+                final tab = tabController.tabs[index];
+                final grade = tab["grade"];
+
+                if (grade == null) {
+                  return const Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: AppSizes.defaultSpace,
                     ),
                     child: AllGradeExamsTile(),
                   );
                 }
-                return ListView(
+
+                return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      height: 60,
+                  child: Obx(() {
+                    final chapters = chapterController.getChaptersByGrade(
+                      grade,
+                    );
 
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          side: BorderSide.none,
+                    if (chapters.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSizes.defaultSpace,
                         ),
-                        onPressed: () => Get.to(() => QuestionScreen()),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "From All Chapters",
-                              style: Theme.of(context).textTheme.titleMedium!
-                                  .apply(
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                            ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: AppColors.white,
-                              size: 30,
-                            ),
-                          ],
+                        child: Text("No Chapters Added"),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AllChaptersButton(
+                          onPressed: () => Get.to(() => QuestionScreen()),
                         ),
-                      ),
-                    ),
-
-                    const Divider(height: AppSizes.spaceBtwSections),
-
-                    ChaptersList(),
-
-                    const SizedBox(height: AppSizes.spaceBtwSections),
-                  ],
+                        const Divider(height: AppSizes.spaceBtwSections),
+                        ...chapters.map((chapter) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSizes.spaceBtwItems,
+                            ),
+                            child: ChapterTile(
+                              chapter: AppHelperFuntions.getChapterName(
+                                chapter.chapterNumber,
+                              ),
+                              chapterTitle: chapter.title,
+                              onTap: () {},
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: AppSizes.spaceBtwSections),
+                      ],
+                    );
+                  }),
                 );
-              }).toList(),
+              }),
             ),
           ),
         ],

@@ -147,4 +147,33 @@ class AppHelperFuntions {
         return AppImages.unknownBook;
     }
   }
+
+  static String getChapterName(int n) {
+    switch (n) {
+      case 1:
+        return "Chapter One";
+      case 2:
+        return "Chapter Two";
+      case 3:
+        return "Chapter Three";
+      case 4:
+        return "Chapter Four";
+      case 5:
+        return "Chapter Five";
+      case 6:
+        return "Chapter Six";
+      case 7:
+        return "Chapter Seven";
+      case 8:
+        return "Chapter Eight";
+      case 9:
+        return "Chapter Nine";
+      case 10:
+        return "Chapter Ten";
+      case 11:
+        return "Chapter Eleven";
+      default:
+        return "Opps..!";
+    }
+  }
 }

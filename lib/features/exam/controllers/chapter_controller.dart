@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChapterController extends GetxController {
   static ChapterController get instance => Get.find();
+
   final SupabaseClient supabase = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService.instance;
 
@@ -16,13 +17,14 @@ class ChapterController extends GetxController {
 
   Future<void> loadSubjectChapters(String subject) async {
     try {
-      final sub = SubjectsController.instance.subjects
-          .where((sub) => sub.name == subject)
-          .first;
+      final sub = SubjectsController.instance.subjects.firstWhere(
+        (sub) => sub.name == subject,
+      );
 
       final dbCourseChapters = await _databaseService.getSubjectChapters(
         subject,
       );
+
       if (dbCourseChapters.isNotEmpty) {
         subjectChapters.value = dbCourseChapters
             .map((e) => ChapterModel.fromMap(e))
@@ -34,8 +36,8 @@ class ChapterController extends GetxController {
       final response = await supabase
           .from('chapters')
           .select()
-          .filter('subject_id', 'eq', sub.id);
-      AppLoggerHelper.debug(response.toString());
+          .eq('subject_id', sub.id!);
+
       final data = (response as List<dynamic>)
           .map((e) => ChapterModel.fromJson(e))
           .toList();
@@ -43,7 +45,7 @@ class ChapterController extends GetxController {
       subjectChapters.value = data;
 
       final db = await _databaseService.database;
-      for (var chapter in data) {
+      for (final chapter in data) {
         await db.insert(
           'chapters',
           chapter.toMap(),
@@ -53,5 +55,15 @@ class ChapterController extends GetxController {
     } catch (e) {
       AppHelperFuntions.showAlert("Chapter Error", e.toString());
     }
+  }
+
+  List<ChapterModel> selectedGradeChapters(int? grade) {
+    if (grade == null) return subjectChapters;
+    return subjectChapters.where((e) => e.grade == grade).toList();
+  }
+
+  List<ChapterModel> getChaptersByGrade(int? grade) {
+    if (grade == null) return subjectChapters;
+    return subjectChapters.where((e) => e.grade == grade).toList();
   }
 }

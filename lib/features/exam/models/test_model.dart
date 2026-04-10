@@ -1,7 +1,7 @@
 class TestModel {
   int id, subjectId, questionCount;
   int? grade, chapterId;
-  String title;
+  String title, type;
   DateTime createdAt;
 
   TestModel({
@@ -11,18 +11,23 @@ class TestModel {
     this.grade,
     this.chapterId,
     required this.createdAt,
+    required this.type,
     required this.title,
   });
 
-  factory TestModel.fromJson(json) {
+  factory TestModel.fromJson(Map<String, dynamic> json) {
     return TestModel(
       id: json['id'],
       subjectId: json['subject_id'],
       questionCount: json['question_count'],
-      createdAt: json['created_at'],
+      grade: json['grade'],
+      chapterId: json['chapter_id'],
+      createdAt: DateTime.parse(json['created_at']),
+      type: json['type'],
       title: json['title'],
     );
   }
+
   factory TestModel.fromMap(Map<String, dynamic> map) =>
       TestModel.fromJson(map);
 
@@ -31,7 +36,10 @@ class TestModel {
       'id': id,
       'subject_id': subjectId,
       'question_count': questionCount,
-      'created_at': createdAt,
+      'grade': grade,
+      'chapter_id': chapterId,
+      'created_at': createdAt.toIso8601String(),
+      'type': type,
       'title': title,
     };
   }

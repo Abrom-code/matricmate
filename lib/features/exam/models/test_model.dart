@@ -1,7 +1,7 @@
 class TestModel {
   int id, subjectId, questionCount;
   int? grade, chapterId;
-  String title, type;
+  String title;
   DateTime createdAt;
 
   TestModel({
@@ -11,7 +11,6 @@ class TestModel {
     this.grade,
     this.chapterId,
     required this.createdAt,
-    required this.type,
     required this.title,
   });
 
@@ -21,7 +20,6 @@ class TestModel {
       subjectId: json['subject_id'],
       questionCount: json['question_count'],
       createdAt: json['created_at'],
-      type: json['type'],
       title: json['title'],
     );
   }
@@ -34,7 +32,6 @@ class TestModel {
       'subject_id': subjectId,
       'question_count': questionCount,
       'created_at': createdAt,
-      'type': type,
       'title': title,
     };
   }

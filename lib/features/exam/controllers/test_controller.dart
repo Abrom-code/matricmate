@@ -15,9 +15,9 @@ class TestController extends GetxController {
 
   Future<void> loadAllChapterTests(String subject) async {
     try {
-      final sub = SubjectsController.instance.subjects.firstWhere(
-        (sub) => sub.name == subject,
-      );
+      final sub = SubjectsController.instance.subjects
+          .where((sub) => sub.name == subject)
+          .first;
       final dbChapterTests = await _databaseService.getSubjectTests(subject);
       if (dbChapterTests.isNotEmpty) {
         chapterTest.value = dbChapterTests
@@ -37,7 +37,7 @@ class TestController extends GetxController {
       chapterTest.value = data;
 
       final db = await _databaseService.database;
-      for (var test in data) {
+      for (final test in data) {
         await db.insert(
           'tests',
           test.toMap(),

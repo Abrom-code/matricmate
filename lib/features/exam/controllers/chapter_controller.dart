@@ -16,9 +16,10 @@ class ChapterController extends GetxController {
 
   Future<void> loadSubjectChapters(String subject) async {
     try {
-      final sub = SubjectsController.instance.subjects.firstWhere(
-        (sub) => sub.name == subject,
-      );
+      final sub = SubjectsController.instance.subjects
+          .where((sub) => sub.name == subject)
+          .first;
+
       final dbCourseChapters = await _databaseService.getSubjectChapters(
         subject,
       );

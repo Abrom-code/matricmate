@@ -15,9 +15,9 @@ class QuestionController extends GetxController {
 
   Future<void> loadSubjectQuestions(String subject) async {
     try {
-      final sub = SubjectsController.instance.subjects.firstWhere(
-        (sub) => sub.name == subject,
-      );
+      final sub = SubjectsController.instance.subjects
+          .where((sub) => sub.name == subject)
+          .first;
       final dbCourseQuestions = await _databaseService.getAllSubjectQuestions(
         subject,
       );

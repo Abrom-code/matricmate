@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
-import 'package:matricmate/utils/helpers/helper_methods.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ImageSection extends StatelessWidget {
   const ImageSection({super.key});
@@ -8,7 +8,7 @@ class ImageSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => AppHelperMethods.showImageZoom(
+      onTap: () => AppHelperFuntions.showImageZoom(
         context,
         AppImages.testImage,
         isAssetImage: true,

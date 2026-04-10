@@ -4,7 +4,6 @@ import 'package:matricmate/features/exam/screens/question/widgets/normal_questio
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/helper_methods.dart';
 
 class QuestionScreen extends StatelessWidget {
   const QuestionScreen({super.key});
@@ -19,13 +18,13 @@ class QuestionScreen extends StatelessWidget {
         if (didPop) return;
 
         // Call your static method here
-        AppHelperMethods.showExitDialog(context);
+        AppHelperFuntions.showExitDialog(context);
       },
       child: Scaffold(
         appBar: Appbar(
           leadingIcon: Icons.close,
           leadingIconColor: !dark ? AppColors.dark : AppColors.light,
-          leadingOnPressed: () => AppHelperMethods.showExitDialog(context),
+          leadingOnPressed: () => AppHelperFuntions.showExitDialog(context),
           title: Text(
             "Question 3 of 20",
             style: Theme.of(context).textTheme.titleMedium,

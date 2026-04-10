@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:matricmate/utils/constants/app_strings.dart';
+import 'package:matricmate/utils/constants/image_string.dart';
 
 class AppHelperFuntions {
   static void showSnackBar(String message) {
@@ -74,4 +76,28 @@ class AppHelperFuntions {
     return wrappedList;
   }
 
+  static String getSubjectImage(String subject) {
+    switch (subject) {
+      case "Biology":
+        return AppImages.biology;
+      case "Chemistry":
+        return AppImages.chemistry;
+      case "Physics":
+        return AppImages.physics;
+      case "Natural Maths" || "Social Maths":
+        return AppImages.maths;
+      case "History":
+        return AppImages.history;
+      case "Geography":
+        return AppImages.geography;
+      case "Economics":
+        return AppImages.economics;
+      case "English":
+        return AppImages.english;
+      case "SAT":
+        return AppImages.sat;
+      default:
+        return AppImages.unknownBook;
+    }
+  }
 }

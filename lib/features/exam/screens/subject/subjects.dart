@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:logger/logger.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/buttons/drop_down_button.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
@@ -10,6 +9,7 @@ import 'package:matricmate/features/exam/screens/subject/widgets/subject_contain
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class SubjectsScreen extends StatelessWidget {
   const SubjectsScreen({super.key});
@@ -94,7 +94,9 @@ class SubjectsScreen extends StatelessWidget {
                       return Obx(
                         () => SubjectContainer(
                           title: subject.name,
-                          image: AppImages.physicMainPImage,
+                          image: AppHelperFuntions.getSubjectImage(
+                            subject.name,
+                          ),
                           isDownloaded: subject.isDownloaded,
                           isDownloading:
                               subjectController.downloadingMap[subject.name] ??

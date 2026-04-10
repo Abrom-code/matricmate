@@ -14,7 +14,7 @@ class ChapterModel {
     return ChapterModel(
       id: json['id'],
       title: json['title'],
-      subjectId: json['subjext_id'],
+      subjectId: json['subject_id'],
       grade: json['grade'],
       chapterNumber: json['chapter_number'],
     );

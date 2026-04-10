@@ -32,6 +32,35 @@ class DatabaseService extends GetxController {
     return db.query('subjects');
   }
 
+  // Get subject chapters
+  Future<List<Map<String, dynamic>>> getSubjectChapters(String subject) async {
+    final db = await database;
+    return db.rawQuery(
+      'SELECT * FROM chapters WHERE subject_id = (SELECT id FROM subjects WHERE name = ?)',
+      [subject],
+    );
+  }
+
+  // Get Subject tests
+  Future<List<Map<String, dynamic>>> getSubjectTests(String subject) async {
+    final db = await database;
+    return db.rawQuery(
+      'SELECT * FROM tests WHERE subject_id = (SELECT id FROM subjects WHERE name = ?)',
+      [subject],
+    );
+  }
+
+  // Get subject questions
+  Future<List<Map<String, dynamic>>> getAllSubjectQuestions(
+    String subject,
+  ) async {
+    final db = await database;
+    return db.rawQuery(
+      'SELECT * FROM questions WHERE subject_id = (SELECT id FROM subjects WHERE name = ?)',
+      [subject],
+    );
+  }
+
   // Get tests by subject
   Future<List<Map<String, dynamic>>> getTestsBySubject(int subjectId) async {
     final db = await database;

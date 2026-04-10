@@ -28,7 +28,7 @@ class TestModel {
   factory TestModel.fromMap(Map<String, dynamic> map) =>
       TestModel.fromJson(map);
 
-  Map<String, dynamic> toMap(Map<String, dynamic> map) {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'subject_id': subjectId,

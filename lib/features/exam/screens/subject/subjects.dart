@@ -89,15 +89,22 @@ class SubjectsScreen extends StatelessWidget {
                   GridLayout(
                     itemCount: filteredSubjects.length,
                     itemBuilder: (_, index) {
-                      final item = filteredSubjects[index];
+                      final subject = filteredSubjects[index];
 
-                      return SubjectContainer(
-                        title: item.name,
-                        image: AppImages.physicMainPImage,
-                        isDownloaded : item.isDownloaded,
-                        onTap: () => item.isDownloaded
-                            ? Get.to(() => ChapterScreen(title: item.name))
-                            : null,
+                      return Obx(
+                        () => SubjectContainer(
+                          title: subject.name,
+                          image: AppImages.physicMainPImage,
+                          isDownloaded: subject.isDownloaded,
+                          isDownloading:
+                              subjectController.downloadingMap[subject.name] ??
+                              false,
+                          onPressed: () =>
+                              subjectController.downloadSubject(subject.name),
+                          onTap: () => subject.isDownloaded
+                              ? Get.to(() => ChapterScreen(title: subject.name))
+                              : null,
+                        ),
                       );
                     },
                   ),

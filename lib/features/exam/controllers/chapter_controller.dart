@@ -14,6 +14,7 @@ class ChapterController extends GetxController {
   final DatabaseService _databaseService = DatabaseService.instance;
 
   final subjectChapters = <ChapterModel>[].obs;
+  final Map<int, bool> chapterHasTests = {};
 
   @override
   void onInit() {
@@ -27,41 +28,44 @@ class ChapterController extends GetxController {
 
   Future<void> loadSubjectChapters(String subject) async {
     try {
-      final sub = SubjectsController.instance.subjects.firstWhere(
+      final sub = SubjectsController.instance.subjects.firstWhereOrNull(
         (sub) => sub.name == subject,
       );
+
+      if (sub == null) return;
 
       final dbCourseChapters = await _databaseService.getSubjectChapters(
         subject,
       );
 
+      List<ChapterModel> data;
+
       if (dbCourseChapters.isNotEmpty) {
-        subjectChapters.value = dbCourseChapters
-            .map((e) => ChapterModel.fromMap(e))
+        data = dbCourseChapters.map((e) => ChapterModel.fromMap(e)).toList();
+      } else {
+        final response = await supabase
+            .from('chapters')
+            .select()
+            .eq('subject_id', sub.id!);
+
+        data = (response as List<dynamic>)
+            .map((e) => ChapterModel.fromJson(e))
             .toList();
-        AppLoggerHelper.debug(dbCourseChapters.toString());
-        return;
+
+        final db = await _databaseService.database;
+        for (final chapter in data) {
+          await db.insert(
+            'chapters',
+            chapter.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
       }
-
-      final response = await supabase
-          .from('chapters')
-          .select()
-          .eq('subject_id', sub.id!);
-
-      final data = (response as List<dynamic>)
-          .map((e) => ChapterModel.fromJson(e))
-          .toList();
 
       subjectChapters.value = data;
 
-      final db = await _databaseService.database;
-      for (final chapter in data) {
-        await db.insert(
-          'chapters',
-          chapter.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
+      // load flags AFTER chapters
+      await loadChapterTestFlags(data);
     } catch (e) {
       AppHelperFuntions.showAlert("Chapter Error", e.toString());
     }
@@ -75,5 +79,13 @@ class ChapterController extends GetxController {
   List<ChapterModel> getChaptersByGrade(int? grade) {
     if (grade == null) return subjectChapters;
     return subjectChapters.where((e) => e.grade == grade).toList();
+  }
+
+  Future<void> loadChapterTestFlags(List<ChapterModel> chapters) async {
+    for (final chapter in chapters) {
+      final hasTests = await _databaseService.hasTests(chapter.id);
+      AppLoggerHelper.error(hasTests.toString());
+      chapterHasTests[chapter.id] = hasTests;
+    }
   }
 }

@@ -11,6 +11,7 @@ import 'package:matricmate/features/exam/screens/tests_list/tests_list.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/logging/logging.dart';
 
 class ChapterScreen extends GetView<ChapterController> {
   const ChapterScreen({super.key, required this.title});
@@ -71,7 +72,6 @@ class ChapterScreen extends GetView<ChapterController> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Obx(() {
                     final chapters = controller.getChaptersByGrade(grade);
-
                     if (chapters.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.symmetric(
@@ -94,6 +94,8 @@ class ChapterScreen extends GetView<ChapterController> {
                         ),
                         const Divider(height: AppSizes.spaceBtwSections),
                         ...chapters.map((chapter) {
+                          final hasTests =
+                              controller.chapterHasTests[chapter.id] ?? false;
                           return Padding(
                             padding: const EdgeInsets.only(
                               bottom: AppSizes.spaceBtwItems,
@@ -103,16 +105,25 @@ class ChapterScreen extends GetView<ChapterController> {
                                 chapter.chapterNumber,
                               ),
                               chapterTitle: chapter.title,
-                              onTap: () => Get.to(
-                                () => TestListScreen(
-                                  subject: title,
-                                  grade: chapter.grade,
-                                  chapter: chapter.title,
-                                  chapterId: chapter.id,
-                                ),
-                                binding: TestBinding(),
-                                arguments: chapter.subjectId,
-                              ),
+                              onTap: () {
+                                if (hasTests) {
+                                  Get.to(
+                                    () => TestListScreen(
+                                      subject: title,
+                                      grade: chapter.grade,
+                                      chapter: chapter.title,
+                                      chapterId: chapter.id,
+                                    ),
+                                    binding: TestBinding(),
+                                    arguments: chapter.subjectId,
+                                  );
+                                } else {
+                                  AppHelperFuntions.showAlert(
+                                    "Alert",
+                                    "No Tests",
+                                  );
+                                }
+                              },
                             ),
                           );
                         }),

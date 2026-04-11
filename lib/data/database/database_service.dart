@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
+import 'package:matricmate/utils/logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -87,6 +88,20 @@ class DatabaseService extends GetxController {
   ''',
       [testId],
     );
+  }
+
+  Future<bool> hasTests(int chapterId) async {
+    final db = await database;
+
+    final result = await db.query(
+      'tests',
+      where: 'chapter_id = ?',
+      whereArgs: [chapterId],
+      limit: 1,
+    );
+    AppLoggerHelper.error(result.toString());
+
+    return result.isNotEmpty;
   }
 
   // Start test

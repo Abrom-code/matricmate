@@ -1,17 +1,18 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ImageSection extends StatelessWidget {
-  const ImageSection({super.key});
+  const ImageSection({super.key, required this.imgUrl});
+  final String? imgUrl;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => AppHelperFuntions.showImageZoom(
         context,
-        AppImages.testImage,
-        isAssetImage: true,
+        imgUrl ?? "",
+        isAssetImage: false,
       ),
       child: Container(
         height: 200,
@@ -25,7 +26,13 @@ class ImageSection extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(AppImages.testImage),
+              CachedNetworkImage(
+                imageUrl: imgUrl ?? "",
+                progressIndicatorBuilder: (context, url, downloadProgress) =>
+                    CircularProgressIndicator(value: downloadProgress.progress),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+              ),
+
               Positioned(
                 bottom: 8,
                 right: 8,

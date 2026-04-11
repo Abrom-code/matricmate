@@ -33,8 +33,6 @@ class QuestionScreen extends GetView<QuestionController> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-
-        // Call your static method here
         AppHelperFuntions.showAppDialog(
           context,
           "Want to Exit?",
@@ -45,37 +43,48 @@ class QuestionScreen extends GetView<QuestionController> {
           },
         );
       },
-      child: Scaffold(
-        appBar: Appbar(
-          leadingIcon: Icons.close,
-          leadingIconColor: !dark ? AppColors.dark : AppColors.light,
-          leadingOnPressed: () => AppHelperFuntions.showAppDialog(
-            context,
-            "Want to Exit?",
-            "Your progress will be saved.",
-            () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-          ),
-          title: Text(
-            "Question 3 of 20",
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          centerTitle: true,
-          actions: [
-            IconButton(onPressed: () {}, icon: Icon(Icons.bookmark_outline)),
-          ],
-          backgroundColor: Colors.transparent,
-        ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(AppSizes.defaultSpace),
+      child: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-            child: NormarQuesionsSection(examQn: examQn),
+        if (controller.testQuestions.isEmpty) {
+          return const Center(child: Text("No Questions Available"));
+        }
+
+        final q = controller.testQuestions[controller.currentIndex.value];
+        return Scaffold(
+          appBar: Appbar(
+            leadingIcon: Icons.close,
+            leadingIconColor: !dark ? AppColors.dark : AppColors.light,
+            leadingOnPressed: () => AppHelperFuntions.showAppDialog(
+              context,
+              "Want to Exit?",
+              "Your progress will be saved.",
+              () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+            ),
+            title: Text(
+              "Question ${controller.currentIndex.value + 1} of ${controller.testQuestions.length}",
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            centerTitle: true,
+            actions: [
+              IconButton(onPressed: () {}, icon: Icon(Icons.bookmark_outline)),
+            ],
+            backgroundColor: Colors.transparent,
           ),
-        ),
-      ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(AppSizes.defaultSpace),
+
+              child: NormarQuesionsSection(),
+            ),
+          ),
+        );
+      }),
     );
   }
 }

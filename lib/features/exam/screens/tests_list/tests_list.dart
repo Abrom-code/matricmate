@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/bindings/test_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
@@ -77,6 +78,8 @@ class TestListScreen extends GetView<TestController> {
                           type: test.type,
                           subjectId: test.subjectId,
                         ),
+                        binding: QuestionBinding(),
+                        arguments: testId,
                       ),
                     );
                   },

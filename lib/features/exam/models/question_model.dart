@@ -17,8 +17,8 @@ class QuestionModel {
   String? imageUrl;
 
   int correctOptionIndex;
-  String? explanationEn;
-  String? explanationAm;
+  String explanationEn;
+  String explanationAm;
 
   List<String> options;
 
@@ -35,8 +35,8 @@ class QuestionModel {
     this.passageId,
     this.questionOrder,
     this.imageUrl,
-    this.explanationEn,
-    this.explanationAm,
+    this.explanationEn = "No English Explanation!",
+    this.explanationAm = "No Amharic Explanation!",
   });
 
   factory QuestionModel.fromMap(Map<String, dynamic> map) {

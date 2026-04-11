@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class QuestionSection extends StatelessWidget {
-  const QuestionSection({super.key, required this.examQn});
+  const QuestionSection({super.key, required this.examQn, this.qnNumber});
 
-  final int examQn;
+  final int? qnNumber;
+  final String examQn;
 
   @override
   Widget build(BuildContext context) {
@@ -12,15 +13,14 @@ class QuestionSection extends StatelessWidget {
       TextSpan(
         children: [
           TextSpan(
-            text: "$examQn. ",
+            text: "$qnNumber. ",
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 20,
             ),
           ),
           TextSpan(
-            text:
-                "Use Hansen's bearing-capacity equation for current practice due to its comprehensive correction factors and compatibility with measured cu/φ and modern design codes.?",
+            text: examQn,
             style: Theme.of(
               context,
             ).textTheme.bodyLarge!.copyWith(fontSize: 19),

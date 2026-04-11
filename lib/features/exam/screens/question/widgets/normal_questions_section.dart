@@ -1,68 +1,146 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/explanation_box.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
-import 'package:matricmate/features/exam/screens/question/widgets/question_progress_indicator.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class NormarQuesionsSection extends StatelessWidget {
-  const NormarQuesionsSection({super.key, required this.examQn});
-
-  final int examQn;
+  const NormarQuesionsSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        QuestionProgressIndicator(),
-        const SizedBox(height: AppSizes.spaceBtwItems),
+    final controller = Get.find<QuestionController>();
+    final examQn = controller.testQuestions[controller.currentIndex.value];
+    return Obx(
+      () => Column(
+        children: [
+          // Quesition
+          QuestionSection(
+            qnNumber: examQn.questionOrder,
+            examQn: examQn.questionText,
+          ),
+          const SizedBox(height: AppSizes.spaceBtwItems),
 
-        // Quesition
-        QuestionSection(examQn: examQn),
-        const SizedBox(height: AppSizes.spaceBtwItems),
+          // If there is Image
+          if (examQn.imageUrl != null) ImageSection(imgUrl: examQn.imageUrl),
+          if (examQn.imageUrl != null)
+            const SizedBox(height: AppSizes.spaceBtwItems),
 
-        // If there is Image
-        ImageSection(),
-        const SizedBox(height: AppSizes.spaceBtwItems),
+          // options
+          ...examQn.options.asMap().entries.map((entry) {
+            final index = entry.key;
+            final option = entry.value;
 
-        // options
-        ChoiceButton(),
-
-        ChoiceButton(),
-
-        ChoiceButton(),
-
-        ChoiceButton(),
-        const SizedBox(height: AppSizes.spaceBtwItems),
-        // explanations
-        // opne/colos
-        TextButton(
-          onPressed: () {},
-          child: Row(
-            children: [
-              Icon(Icons.keyboard_arrow_up, color: AppColors.primary, size: 24),
-              Text(
-                "Explanation",
-                style: Theme.of(context).textTheme.titleMedium!.apply(
-                  color: AppColors.primary,
-                  fontSizeDelta: 1.4,
+            return ChoiceButton(
+              optionTxt: option,
+              index: index,
+              questionId: examQn.id,
+              correctIndex: examQn.correctOptionIndex,
+            );
+          }),
+          const SizedBox(height: AppSizes.spaceBtwItems),
+          if (controller.isAnswerChecked(examQn.id))
+            Column(
+              children: [
+                // explanations
+                // opne/colos
+                TextButton(
+                  onPressed: () => controller.isExplanationExpanaded.value =
+                      !controller.isExplanationExpanaded.value,
+                  child: Row(
+                    children: [
+                      Icon(
+                        controller.isExplanationExpanaded.value
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_right,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                      Text(
+                        "Explanation",
+                        style: Theme.of(context).textTheme.titleMedium!.apply(
+                          color: AppColors.primary,
+                          fontSizeDelta: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+
+                if (controller.isExplanationExpanaded.value)
+                  ExplanationBox(
+                    explanationEn: examQn.explanationEn,
+                    explanationAm: examQn.explanationAm,
+                  ),
+
+                // Next/check answer button
+                const SizedBox(height: AppSizes.spaceBtwItems),
+              ],
+            ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: controller.currentIndex.value > 0
+                      ? () => controller.previousQuestion()
+                      : null,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [Icon(Icons.arrow_left), Text("Previous")],
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Obx(() {
+                  final q =
+                      controller.testQuestions[controller.currentIndex.value];
+                  final isChecked = controller.isAnswerChecked(q.id);
+
+                  final isLast =
+                      controller.currentIndex.value ==
+                      controller.testQuestions.length - 1;
+
+                  return OutlinedButton(
+                    onPressed: () {
+                      if (!isChecked) {
+                        controller.checkAnswer(q.id);
+                      } else {
+                        if (isLast) {
+                          AppHelperFuntions.showAlert(
+                            "Finished",
+                            "You have completed the test",
+                          );
+                        } else {
+                          controller.nextQuestion();
+                        }
+                      }
+                    },
+                    child: !isChecked
+                        ? Text("Check Answer")
+                        : (isLast
+                              ? Text("Finished")
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text("Next"),
+                                    Icon(Icons.arrow_right),
+                                  ],
+                                )),
+                  );
+                }),
               ),
             ],
           ),
-        ),
-
-        ExplanationBox(),
-
-        // Next/check answer button
-        const SizedBox(height: AppSizes.spaceBtwItems),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(onPressed: () {}, child: Text("Check Answer")),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

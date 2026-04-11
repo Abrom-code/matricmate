@@ -99,8 +99,18 @@ class DatabaseService extends GetxController {
       whereArgs: [chapterId],
       limit: 1,
     );
-    AppLoggerHelper.error(result.toString());
+    return result.isNotEmpty;
+  }
 
+  Future<bool> hasQuestions(int testId) async {
+    final db = await database;
+
+    final result = await db.query(
+      'questions',
+      where: 'test_id = ?',
+      whereArgs: [testId],
+      limit: 1,
+    );
     return result.isNotEmpty;
   }
 

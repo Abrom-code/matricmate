@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
+import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class TestListScreen extends GetView<TestController> {
   const TestListScreen({
@@ -45,7 +47,17 @@ class TestListScreen extends GetView<TestController> {
             spacing: AppSizes.spaceBtwItems,
             children: [
               ...test.map((test) {
-                return TestTile(testName: "testName", onTap: () {});
+                final hasTests = controller.testHasQuestions[test.id] ?? false;
+                return TestTile(
+                  testName: test.title,
+                  onTap: () {
+                    if (hasTests) {
+                      Get.to(() => QuestionScreen());
+                    } else {
+                      AppHelperFuntions.showAlert("Alert", "No Question");
+                    }
+                  },
+                );
               }),
             ],
           );

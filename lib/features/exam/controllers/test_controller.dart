@@ -3,6 +3,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -12,6 +13,7 @@ class TestController extends GetxController {
   final DatabaseService _databaseService = DatabaseService.instance;
 
   final RxList<TestModel> chapterTest = <TestModel>[].obs;
+  final Map<int, bool> testHasQuestions = {};
 
   @override
   void onInit() {
@@ -57,6 +59,7 @@ class TestController extends GetxController {
           test.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
+        await loadTestQuestionFlags(data);
       }
     } on Exception catch (e) {
       AppHelperFuntions.showAlert("Test Error", e.toString());
@@ -69,5 +72,13 @@ class TestController extends GetxController {
     return chapterTest.where((e) {
       return e.grade == grade && e.chapterId == chapterId;
     }).toList();
+  }
+
+  Future<void> loadTestQuestionFlags(List<TestModel> tests) async {
+    for (final test in tests) {
+      final hasTests = await _databaseService.hasTests(test.id);
+      AppLoggerHelper.error(hasTests.toString());
+      testHasQuestions[test.id] = hasTests;
+    }
   }
 }

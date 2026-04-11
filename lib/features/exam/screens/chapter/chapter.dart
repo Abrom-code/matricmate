@@ -11,7 +11,6 @@ import 'package:matricmate/features/exam/screens/tests_list/tests_list.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 
 class ChapterScreen extends GetView<ChapterController> {
   const ChapterScreen({super.key, required this.title});

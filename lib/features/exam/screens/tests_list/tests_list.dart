@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
+import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class TestListScreen extends StatelessWidget {
+class TestListScreen extends GetView<TestController> {
   const TestListScreen({
     super.key,
     required this.subject,
     required this.chapter,
+    this.chapterId,
+    this.chapterNumber,
+    this.grade,
   });
   final String subject, chapter;
+  final int? chapterId;
+  final int? chapterNumber, grade;
 
   @override
   Widget build(BuildContext context) {
@@ -32,17 +39,17 @@ class TestListScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(AppSizes.defaultSpace),
-        child: Column(
-          spacing: AppSizes.spaceBtwItems,
-          children: [
-            TestTile(testName: "Test one", onTap: () {}),
-            TestTile(testName: "test two", onTap: () {}),
-            TestTile(testName: "Test three", onTap: () {}),
-            TestTile(testName: "Test four ", onTap: () {}),
-            TestTile(testName: "Test five", onTap: () {}),
-            TestTile(testName: "Test six", onTap: () {}),
-          ],
-        ),
+        child: Obx(() {
+          final test = controller.getTestsByGradeAndChapter(grade, chapterId);
+          return Column(
+            spacing: AppSizes.spaceBtwItems,
+            children: [
+              ...test.map((test) {
+                return TestTile(testName: "testName", onTap: () {});
+              }),
+            ],
+          );
+        }),
       ),
     );
   }

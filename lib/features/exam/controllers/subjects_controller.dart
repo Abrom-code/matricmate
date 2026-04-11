@@ -31,7 +31,7 @@ class SubjectsController extends GetxController {
         return;
       }
 
-      final response = await supabase.from("subjects").select().order("id");
+      final response = await supabase.from("subjects").select();
       final data = (response as List<dynamic>)
           .map((e) => SubjectMoModel.fromJson(e))
           .toList();
@@ -53,7 +53,7 @@ class SubjectsController extends GetxController {
     }
   }
 
-  Future<void> downloadSubject(String subject) async {
+  Future<void> downloadSubject(String subject, int subjectId) async {
     try {
       final chapterController = Get.put(ChapterController());
       final testController = Get.put(TestController());
@@ -61,7 +61,7 @@ class SubjectsController extends GetxController {
 
       downloadingMap[subject] = true;
       await chapterController.loadSubjectChapters(subject);
-      await testController.loadAllChapterTests(subject);
+      await testController.loadAllChapterTests(subjectId);
       await questionController.loadSubjectQuestions(subject);
 
       final db = await _dbService.database;

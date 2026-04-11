@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/bindings/chapter_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/buttons/drop_down_button.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
@@ -102,9 +103,13 @@ class SubjectsScreen extends StatelessWidget {
                               subjectController.downloadingMap[subject.name] ??
                               false,
                           onPressed: () =>
-                              subjectController.downloadSubject(subject.name),
+                              subjectController.downloadSubject(subject.name, subject.id),
                           onTap: () => subject.isDownloaded
-                              ? Get.to(() => ChapterScreen(title: subject.name))
+                              ? Get.to(
+                                  () => ChapterScreen(title: subject.name),
+                                  binding: ChapterBinding(),
+                                  arguments: subject.name,
+                                )
                               : null,
                         ),
                       );

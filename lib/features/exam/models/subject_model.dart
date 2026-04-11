@@ -1,10 +1,10 @@
 class SubjectMoModel {
-  int? id;
+  int id;
   String name;
   bool isNatural, isCommon, isDownloaded;
 
   SubjectMoModel({
-    this.id,
+    required this.id,
     required this.name,
     required this.isNatural,
     this.isCommon = false,

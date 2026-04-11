@@ -15,6 +15,16 @@ class ChapterController extends GetxController {
 
   final subjectChapters = <ChapterModel>[].obs;
 
+  @override
+  void onInit() {
+    super.onInit();
+
+    final subject = Get.arguments as String?;
+    if (subject != null) {
+      loadSubjectChapters(subject);
+    }
+  }
+
   Future<void> loadSubjectChapters(String subject) async {
     try {
       final sub = SubjectsController.instance.subjects.firstWhere(

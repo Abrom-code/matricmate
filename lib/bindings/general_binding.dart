@@ -8,7 +8,7 @@ class GeneralBinding extends Bindings {
   @override
   void dependencies() {
     Get.put(NetworkManager());
-    Get.put(DatabaseService());
-    Get.put(SubjectsController());
+    Get.put(DatabaseService(), permanent: true);
+    Get.put(SubjectsController(), permanent: true);
   }
 }

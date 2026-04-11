@@ -151,27 +151,27 @@ class AppHelperFuntions {
   static String getChapterName(int n) {
     switch (n) {
       case 1:
-        return "Chapter One";
+        return "Unit One";
       case 2:
-        return "Chapter Two";
+        return "Unit Two";
       case 3:
-        return "Chapter Three";
+        return "Unit Three";
       case 4:
-        return "Chapter Four";
+        return "Unit Four";
       case 5:
-        return "Chapter Five";
+        return "Unit Five";
       case 6:
-        return "Chapter Six";
+        return "Unit Six";
       case 7:
-        return "Chapter Seven";
+        return "Unit Seven";
       case 8:
-        return "Chapter Eight";
+        return "Unit Eight";
       case 9:
-        return "Chapter Nine";
+        return "Unit Nine";
       case 10:
-        return "Chapter Ten";
+        return "Unit Ten";
       case 11:
-        return "Chapter Eleven";
+        return "Unit Eleven";
       default:
         return "Opps..!";
     }

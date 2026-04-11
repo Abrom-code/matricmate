@@ -10,11 +10,13 @@ class ChapterTile extends StatelessWidget {
     this.icon = Icons.receipt,
     required this.onTap,
     this.hasSubTitle = true,
+    this.chapterNumber,
   });
   final String chapter, chapterTitle;
   final IconData icon;
   final VoidCallback onTap;
   final bool hasSubTitle;
+  final int? chapterNumber;
 
   @override
   Widget build(BuildContext context) {

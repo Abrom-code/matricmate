@@ -13,12 +13,26 @@ class TestController extends GetxController {
 
   final RxList<TestModel> chapterTest = <TestModel>[].obs;
 
-  Future<void> loadAllChapterTests(String subject) async {
+  @override
+  void onInit() {
+    final subjectId = Get.arguments as int?;
+    if (subjectId != null) {
+      loadAllChapterTests(subjectId);
+    }
+    super.onInit();
+  }
+
+  Future<void> loadAllChapterTests(int subjectId) async {
     try {
-      final sub = SubjectsController.instance.subjects
-          .where((sub) => sub.name == subject)
-          .first;
-      final dbChapterTests = await _databaseService.getSubjectTests(subject);
+      final sub = SubjectsController.instance.subjects.firstWhereOrNull(
+        (sub) => sub.id == subjectId,
+      );
+
+      if (sub == null) {
+        AppHelperFuntions.showAlert("Error", "$subjectId Subject not found");
+        return;
+      }
+      final dbChapterTests = await _databaseService.getSubjectTests(subjectId);
       if (dbChapterTests.isNotEmpty) {
         chapterTest.value = dbChapterTests
             .map((map) => TestModel.fromMap(map))
@@ -47,5 +61,13 @@ class TestController extends GetxController {
     } on Exception catch (e) {
       AppHelperFuntions.showAlert("Test Error", e.toString());
     }
+  }
+
+  List<TestModel> getTestsByGradeAndChapter(int? grade, int? chapterId) {
+    if (grade == null || chapterId == null) return chapterTest;
+
+    return chapterTest.where((e) {
+      return e.grade == grade && e.chapterId == chapterId;
+    }).toList();
   }
 }

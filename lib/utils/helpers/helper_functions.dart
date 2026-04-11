@@ -53,24 +53,23 @@ class AppHelperFuntions {
     );
   }
 
-  static void showExitDialog(BuildContext context) {
+  static void showAppDialog(
+    BuildContext context,
+    String title,
+    String message,
+    VoidCallback onOkPressed,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Exit Quiz?'),
-        content: const Text('Your progress will be saved.'),
+        title:  Text(title),
+        content:  Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('Exit'),
-          ),
+          ElevatedButton(onPressed: onOkPressed, child: const Text('Ok')),
         ],
       ),
     );

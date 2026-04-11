@@ -48,7 +48,7 @@ class TestListScreen extends GetView<TestController> {
           return Column(
             spacing: AppSizes.spaceBtwItems,
             children: [
-              ...test.map((test) {    
+              ...test.map((test) {
                 return TestTile(
                   testName: test.title,
                   onTap: () async {
@@ -65,14 +65,18 @@ class TestListScreen extends GetView<TestController> {
                       );
                       return;
                     }
-
-                    Get.to(
-                      () => QuestionScreen(
-                        testId: testId,
-                        subject: subject,
-                        title: test.title,
-                        type: test.type,
-                        subjectId: test.subjectId,
+                    AppHelperFuntions.showAppDialog(
+                      context,
+                      "Want to take a test?",
+                      "You will be redirected to questions section.",
+                      () => Get.off(
+                        () => QuestionScreen(
+                          testId: testId,
+                          subject: subject,
+                          title: test.title,
+                          type: test.type,
+                          subjectId: test.subjectId,
+                        ),
                       ),
                     );
                   },

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -31,6 +32,21 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getSubjects() async {
     final db = await database;
     return db.query('subjects');
+  }
+
+  Future<List<Map<String, dynamic>>> getChapters() async {
+    final db = await database;
+    return db.query('chapters');
+  }
+
+  Future<List<Map<String, dynamic>>> getTests() async {
+    final db = await database;
+    return db.query('tests');
+  }
+
+  Future<List<Map<String, dynamic>>> getQuestions() async {
+    final db = await database;
+    return db.query('questions');
   }
 
   Future<List<Map<String, dynamic>>> getDownloadedSubjects() async {

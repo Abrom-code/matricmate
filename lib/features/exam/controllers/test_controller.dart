@@ -26,6 +26,8 @@ class TestController extends GetxController {
 
   Future<void> loadAllChapterTests(int subjectId) async {
     try {
+      chapterTest.clear();
+      testHasQuestions.clear();
       final sub = SubjectsController.instance.subjects.firstWhereOrNull(
         (sub) => sub.id == subjectId,
       );

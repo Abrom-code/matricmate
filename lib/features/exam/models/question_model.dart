@@ -4,7 +4,7 @@ class QuestionModel {
   int id;
 
   int subjectId;
-  int grade;
+  int? grade;
 
   int? chapterId;
   int testId;
@@ -57,7 +57,9 @@ class QuestionModel {
       imageUrl: map['image_url'],
       explanationEn: map['explanation_en'],
       explanationAm: map['explanation_am'],
-      options: map['options'] is String
+      options: map['options'] == null
+          ? []
+          : map['options'] is String
           ? List<String>.from(jsonDecode(map['options']))
           : List<String>.from(map['options']),
     );

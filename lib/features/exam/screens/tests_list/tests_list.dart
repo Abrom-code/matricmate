@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/bindings/test_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
@@ -52,7 +53,12 @@ class TestListScreen extends GetView<TestController> {
                   testName: test.title,
                   onTap: () {
                     if (hasTests) {
-                      Get.to(() => QuestionScreen());
+                      Get.to(
+                        () => QuestionScreen(),
+                        binding: TestBinding(),
+                        arguments: [
+
+                      ]);
                     } else {
                       AppHelperFuntions.showAlert("Alert", "No Question");
                     }

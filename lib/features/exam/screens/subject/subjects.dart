@@ -5,6 +5,7 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/buttons/drop_down_button.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -17,6 +18,7 @@ class SubjectsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subjectController = SubjectsController.instance;
+    final syncController = Get.put(SyncingController());
     return Scaffold(
       appBar: Appbar(
         title: Text(
@@ -31,7 +33,7 @@ class SubjectsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: AppSizes.defaultSpace / 2),
             child: IconButton(
-              onPressed: () => subjectController.syncSubjects(),
+              onPressed: () => syncController.syncAll(),
               icon: Icon(
                 Icons.refresh,
                 size: AppSizes.iconMd * 1.2,
@@ -55,7 +57,7 @@ class SubjectsScreen extends StatelessWidget {
             }).toList();
 
             if (subjectController.isLoading.value ||
-                subjectController.isRefreshing.value) {
+                syncController.refreshing.value) {
               return CircularProgressIndicator();
             } else {
               return Column(
@@ -102,8 +104,10 @@ class SubjectsScreen extends StatelessWidget {
                           isDownloading:
                               subjectController.downloadingMap[subject.name] ??
                               false,
-                          onPressed: () =>
-                              subjectController.downloadSubject(subject.name, subject.id),
+                          onPressed: () => subjectController.downloadSubject(
+                            subject.name,
+                            subject.id,
+                          ),
                           onTap: () => subject.isDownloaded
                               ? Get.to(
                                   () => ChapterScreen(title: subject.name),

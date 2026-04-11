@@ -19,7 +19,6 @@ class ChapterController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     final subject = Get.arguments as String?;
     if (subject != null) {
       loadSubjectChapters(subject);
@@ -28,17 +27,18 @@ class ChapterController extends GetxController {
 
   Future<void> loadSubjectChapters(String subject) async {
     try {
+      subjectChapters.clear();
+      chapterHasTests.clear();
       final sub = SubjectsController.instance.subjects.firstWhereOrNull(
         (sub) => sub.name == subject,
       );
 
       if (sub == null) return;
+      List<ChapterModel> data = [];
 
       final dbCourseChapters = await _databaseService.getSubjectChapters(
         subject,
       );
-
-      List<ChapterModel> data;
 
       if (dbCourseChapters.isNotEmpty) {
         data = dbCourseChapters.map((e) => ChapterModel.fromMap(e)).toList();
@@ -84,7 +84,6 @@ class ChapterController extends GetxController {
   Future<void> loadChapterTestFlags(List<ChapterModel> chapters) async {
     for (final chapter in chapters) {
       final hasTests = await _databaseService.hasTests(chapter.id);
-      AppLoggerHelper.error(hasTests.toString());
       chapterHasTests[chapter.id] = hasTests;
     }
   }

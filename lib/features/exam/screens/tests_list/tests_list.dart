@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/logging/logging.dart';
 
 class TestListScreen extends GetView<TestController> {
   const TestListScreen({
@@ -47,21 +48,33 @@ class TestListScreen extends GetView<TestController> {
           return Column(
             spacing: AppSizes.spaceBtwItems,
             children: [
-              ...test.map((test) {
-                final hasTests = controller.testHasQuestions[test.id] ?? false;
+              ...test.map((test) {    
                 return TestTile(
                   testName: test.title,
-                  onTap: () {
-                    if (hasTests) {
-                      Get.to(
-                        () => QuestionScreen(),
-                        binding: TestBinding(),
-                        arguments: [
+                  onTap: () async {
+                    final testId = test.id;
 
-                      ]);
-                    } else {
-                      AppHelperFuntions.showAlert("Alert", "No Question");
+                    final hasQn =
+                        controller.testHasQuestions[testId] ??
+                        await TestController.instance.hasQuestions(test.id);
+
+                    if (!hasQn) {
+                      AppHelperFuntions.showAlert(
+                        "No Questions",
+                        "This test has no questions",
+                      );
+                      return;
                     }
+
+                    Get.to(
+                      () => QuestionScreen(
+                        testId: testId,
+                        subject: subject,
+                        title: test.title,
+                        type: test.type,
+                        subjectId: test.subjectId,
+                      ),
+                    );
                   },
                 );
               }),

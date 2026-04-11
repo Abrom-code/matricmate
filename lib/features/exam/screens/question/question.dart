@@ -6,7 +6,21 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class QuestionScreen extends StatelessWidget {
-  const QuestionScreen({super.key});
+  const QuestionScreen({
+    super.key,
+    required this.type,
+    this.subject,
+    required this.subjectId,
+    this.grade,
+    this.chapterId,
+    required this.title, this.testId,
+  });
+  final String type;
+  final String? subject;
+  final int subjectId;
+  final int? grade, chapterId;
+  final String title;
+  final int? testId;
 
   @override
   Widget build(BuildContext context) {

@@ -9,11 +9,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TestController extends GetxController {
   static TestController get instance => Get.find();
+
   final SupabaseClient supabaseClient = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService.instance;
 
   final RxList<TestModel> chapterTest = <TestModel>[].obs;
-  final Map<int, bool> testHasQuestions = {};
+  final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
 
   @override
   void onInit() {
@@ -28,59 +29,64 @@ class TestController extends GetxController {
     try {
       chapterTest.clear();
       testHasQuestions.clear();
+
       final sub = SubjectsController.instance.subjects.firstWhereOrNull(
         (sub) => sub.id == subjectId,
       );
 
-      if (sub == null) {
-        AppHelperFuntions.showAlert("Error", "$subjectId Subject not found");
-        return;
-      }
+      if (sub == null) return;
+
       final dbChapterTests = await _databaseService.getSubjectTests(subjectId);
+
+      late List<TestModel> data;
+
       if (dbChapterTests.isNotEmpty) {
-        chapterTest.value = dbChapterTests
-            .map((map) => TestModel.fromMap(map))
-            .toList();
-        return;
+        data = dbChapterTests.map((e) => TestModel.fromMap(e)).toList();
+      } else {
+        final response = await supabaseClient
+            .from('tests')
+            .select()
+            .eq('subject_id', sub.id);
+
+        data = (response as List).map((e) => TestModel.fromJson(e)).toList();
+
+        final db = await _databaseService.database;
+
+        for (final test in data) {
+          await db.insert(
+            'tests',
+            test.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
       }
 
-      final response = await supabaseClient
-          .from('tests')
-          .select()
-          .filter('subject_id', 'eq', sub.id);
-      final data = (response as List<dynamic>)
-          .map((json) => TestModel.fromJson(json))
-          .toList();
+      chapterTest.assignAll(data);
 
-      chapterTest.value = data;
-
-      final db = await _databaseService.database;
-      for (final test in data) {
-        await db.insert(
-          'tests',
-          test.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-        await loadTestQuestionFlags(data);
-      }
-    } on Exception catch (e) {
+      await loadTestQuestionFlags(data);
+    } catch (e) {
       AppHelperFuntions.showAlert("Test Error", e.toString());
     }
+  }
+
+  Future<void> loadTestQuestionFlags(List<TestModel> tests) async {
+    await Future.wait(
+      tests.map((test) async {
+        final hasQn = await _databaseService.hasQuestions(test.id);
+        testHasQuestions[test.id] = hasQn;
+      }),
+    );
   }
 
   List<TestModel> getTestsByGradeAndChapter(int? grade, int? chapterId) {
     if (grade == null || chapterId == null) return chapterTest;
 
-    return chapterTest.where((e) {
-      return e.grade == grade && e.chapterId == chapterId;
-    }).toList();
+    return chapterTest
+        .where((e) => e.grade == grade && e.chapterId == chapterId)
+        .toList();
   }
 
-  Future<void> loadTestQuestionFlags(List<TestModel> tests) async {
-    for (final test in tests) {
-      final hasTests = await _databaseService.hasTests(test.id);
-      AppLoggerHelper.error(hasTests.toString());
-      testHasQuestions[test.id] = hasTests;
-    }
+  Future<bool> hasQuestions(int testId) async {
+    return await _databaseService.hasQuestions(testId);
   }
 }

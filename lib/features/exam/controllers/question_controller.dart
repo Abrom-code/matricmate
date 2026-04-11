@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
-import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:sqflite/sqflite.dart';
@@ -8,42 +7,40 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
+
   final SupabaseClient supabase = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService.instance;
 
-  final subjectQuestions = <QuestionModel>[].obs;
+  final RxList<QuestionModel> testQuestions = <QuestionModel>[].obs;
 
-  Future<void> loadSubjectQuestions(String subject) async {
+  Future<void> loadTestQuestions(int testId) async {
     try {
-      final sub = SubjectsController.instance.subjects
-          .where((sub) => sub.name == subject)
-          .first;
-      final dbCourseQuestions = await _databaseService.getAllSubjectQuestions(
-        subject,
-      );
-      if (dbCourseQuestions.isNotEmpty) {
-        subjectQuestions.value = dbCourseQuestions
-            .map((e) => QuestionModel.fromMap(e))
-            .toList();
+      final dbQuestions = await _databaseService.getQuestionsByTest(testId);
+
+      if (dbQuestions.isNotEmpty) {
+        testQuestions.assignAll(
+          dbQuestions.map((e) => QuestionModel.fromMap(e)).toList(),
+        );
         return;
       }
 
       final response = await supabase
           .from('questions')
           .select()
-          .filter('subject_id', 'eq', sub.id);
+          .eq('test_id', testId);
 
-      final data = (response as List<dynamic>)
+      final data = (response as List)
           .map((e) => QuestionModel.fromJson(e))
           .toList();
 
-      subjectQuestions.value = data;
+      testQuestions.assignAll(data);
 
       final db = await _databaseService.database;
-      for (var chapter in data) {
+
+      for (final q in data) {
         await db.insert(
           'questions',
-          chapter.toMap(),
+          q.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }

@@ -71,13 +71,12 @@ class ChapterScreen extends GetView<ChapterController> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Obx(() {
                     final chapters = controller.getChaptersByGrade(grade);
+                    if (controller.isChapterLoading.value) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
                     if (chapters.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppSizes.defaultSpace,
-                        ),
-                        child: Text("No Chapters Added"),
-                      );
+                      return const Center(child: Text("No Chapters Found"));
                     }
 
                     return Column(

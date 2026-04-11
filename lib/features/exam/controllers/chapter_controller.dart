@@ -15,6 +15,7 @@ class ChapterController extends GetxController {
 
   final subjectChapters = <ChapterModel>[].obs;
   final Map<int, bool> chapterHasTests = {};
+  final isChapterLoading = false.obs;
 
   @override
   void onInit() {
@@ -27,6 +28,7 @@ class ChapterController extends GetxController {
 
   Future<void> loadSubjectChapters(String subject) async {
     try {
+      isChapterLoading.value = true;
       subjectChapters.clear();
       chapterHasTests.clear();
       final sub = SubjectsController.instance.subjects.firstWhereOrNull(
@@ -68,6 +70,8 @@ class ChapterController extends GetxController {
       await loadChapterTestFlags(data);
     } catch (e) {
       AppHelperFuntions.showAlert("Chapter Error", e.toString());
+    } finally {
+      isChapterLoading.value = false;
     }
   }
 

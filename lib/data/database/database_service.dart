@@ -94,15 +94,11 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getQuestionsByTest(int testId) async {
     final db = await database;
 
-    return db.rawQuery(
-      '''
-    SELECT q.*, tq.position
-    FROM questions q
-    JOIN test_questions tq ON q.id = tq.question_id
-    WHERE tq.test_id = ?
-    ORDER BY tq.position ASC
-  ''',
-      [testId],
+    return db.query(
+      'questions',
+      where: 'test_id = ?',
+      whereArgs: [testId],
+      orderBy: 'question_order ASC',
     );
   }
 

@@ -22,9 +22,8 @@ class SubjectsController extends GetxController {
 
   final RxList<SubjectMoModel> subjects = <SubjectMoModel>[].obs;
 
-  /// =========================
   /// LOAD SUBJECTS
-  /// =========================
+
   Future<void> loadSubjects() async {
     try {
       isLoading.value = true;
@@ -62,9 +61,7 @@ class SubjectsController extends GetxController {
     }
   }
 
-  /// =========================
   /// DOWNLOAD SUBJECT (FIXED)
-  /// =========================
   Future<void> downloadSubject(String subject, int subjectId) async {
     try {
       downloadingMap[subject] = true;
@@ -72,7 +69,7 @@ class SubjectsController extends GetxController {
       final testController = Get.find<TestController>();
 
       ///  Load chapters
-      await chapterController.loadSubjectChapters(subject);
+      await chapterController.loadSubjectChapters(subjectId);
 
       ///  Load tests
       await testController.loadAllChapterTests(subjectId);

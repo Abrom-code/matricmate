@@ -20,26 +20,26 @@ class ChapterController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    final subject = Get.arguments as String?;
+    final subject = Get.arguments;
     if (subject != null) {
       loadSubjectChapters(subject);
     }
   }
 
-  Future<void> loadSubjectChapters(String subject) async {
+  Future<void> loadSubjectChapters(int subjectId) async {
     try {
       isChapterLoading.value = true;
       subjectChapters.clear();
       chapterHasTests.clear();
       final sub = SubjectsController.instance.subjects.firstWhereOrNull(
-        (sub) => sub.name == subject,
+        (sub) => sub.id == subjectId,
       );
 
       if (sub == null) return;
       List<ChapterModel> data = [];
 
       final dbCourseChapters = await _databaseService.getSubjectChapters(
-        subject,
+        subjectId,
       );
 
       if (dbCourseChapters.isNotEmpty) {
@@ -48,7 +48,7 @@ class ChapterController extends GetxController {
         final response = await supabase
             .from('chapters')
             .select()
-            .eq('subject_id', sub.id!);
+            .eq('subject_id', sub.id);
 
         data = (response as List<dynamic>)
             .map((e) => ChapterModel.fromJson(e))

@@ -3,7 +3,6 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -14,14 +13,28 @@ class TestController extends GetxController {
   final DatabaseService _databaseService = DatabaseService.instance;
 
   final RxList<TestModel> chapterTest = <TestModel>[].obs;
+  final RxList<TestModel> allGradeTests = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
 
   @override
   void onInit() {
-    final subjectId = Get.arguments as int?;
+    final args = Get.arguments;
+
+    int? subjectId;
+
+    if (args is Map) {
+      final value = args['subjectId'];
+      subjectId = value is int ? value : int.tryParse(value.toString());
+    } else if (args is int) {
+      subjectId = args;
+    } else if (args is String) {
+      subjectId = int.tryParse(args);
+    }
+
     if (subjectId != null) {
       loadAllChapterTests(subjectId);
     }
+
     super.onInit();
   }
 
@@ -64,6 +77,7 @@ class TestController extends GetxController {
       chapterTest.assignAll(data);
 
       await loadTestQuestionFlags(data);
+      loadAllGradeTests();
     } catch (e) {
       AppHelperFuntions.showAlert("Test Error", e.toString());
     }
@@ -88,5 +102,11 @@ class TestController extends GetxController {
 
   Future<bool> hasQuestions(int testId) async {
     return await _databaseService.hasQuestions(testId);
+  }
+
+  void loadAllGradeTests() {
+    allGradeTests.value = chapterTest
+        .where((test) => test.type == 'subject')
+        .toList();
   }
 }

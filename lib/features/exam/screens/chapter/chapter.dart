@@ -59,7 +59,7 @@ class ChapterScreen extends GetView<ChapterController> {
                 final grade = tab["grade"];
 
                 if (grade == null) {
-                  return const Padding(
+                  return Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: AppSizes.defaultSpace,
                     ),
@@ -113,7 +113,11 @@ class ChapterScreen extends GetView<ChapterController> {
                                       chapterId: chapter.id,
                                     ),
                                     binding: TestBinding(),
-                                    arguments: chapter.subjectId,
+                                    arguments: {
+                                      'subjectId': int.tryParse(
+                                        chapter.subjectId.toString(),
+                                      ),
+                                    },
                                   );
                                 } else {
                                   AppHelperFuntions.showAlert(

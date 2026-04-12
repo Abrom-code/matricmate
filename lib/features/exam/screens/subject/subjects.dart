@@ -58,7 +58,7 @@ class SubjectsScreen extends StatelessWidget {
 
             if (subjectController.isLoading.value ||
                 syncController.refreshing.value) {
-              return CircularProgressIndicator();
+              return Center(child: CircularProgressIndicator());
             } else {
               return Column(
                 children: [
@@ -112,7 +112,7 @@ class SubjectsScreen extends StatelessWidget {
                               ? Get.to(
                                   () => ChapterScreen(title: subject.name),
                                   binding: ChapterBinding(),
-                                  arguments: subject.name,
+                                  arguments: subject.id,
                                 )
                               : null,
                         ),

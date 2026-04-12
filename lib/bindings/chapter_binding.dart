@@ -10,6 +10,6 @@ class ChapterBinding extends Bindings {
   void dependencies() {
     Get.lazyPut(() => ChapterController());
     Get.lazyPut(() => GradeSelectionController());
-    Get.lazyPut(() => TestController());
+    Get.put(TestController(), permanent: true);
   }
 }

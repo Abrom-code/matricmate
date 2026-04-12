@@ -11,9 +11,11 @@ class AllGradeExamsTile extends GetView<TestController> {
 
   @override
   Widget build(BuildContext context) {
-    if (controller.allGradeTests.isEmpty) {
-      return Text("No Qn Found", textAlign: TextAlign.center);
-    } else {
+    return Obx(() {
+      if (controller.allGradeTests.isEmpty) {
+        return Text("No Qn Found", textAlign: TextAlign.center);
+      }
+
       return Column(
         children: [
           ...controller.allGradeTests.map((test) {
@@ -33,6 +35,7 @@ class AllGradeExamsTile extends GetView<TestController> {
                   );
                   return;
                 }
+
                 AppHelperFuntions.showAppDialog(
                   context,
                   "Want to take a test?",
@@ -53,6 +56,6 @@ class AllGradeExamsTile extends GetView<TestController> {
           }),
         ],
       );
-    }
+    });
   }
 }

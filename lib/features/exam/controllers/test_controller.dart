@@ -14,6 +14,7 @@ class TestController extends GetxController {
 
   final RxList<TestModel> chapterTest = <TestModel>[].obs;
   final RxList<TestModel> allGradeTests = <TestModel>[].obs;
+  final RxList<TestModel> singleGradeTests = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
 
   @override
@@ -107,6 +108,12 @@ class TestController extends GetxController {
   void loadAllGradeTests() {
     allGradeTests.value = chapterTest
         .where((test) => test.type == 'subject')
+        .toList();
+  }
+
+  void loadGradeTests(int grade) {
+    singleGradeTests.value = chapterTest
+        .where((t) => t.type == 'grade' && t.grade == grade)
         .toList();
   }
 }

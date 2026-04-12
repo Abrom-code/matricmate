@@ -7,6 +7,7 @@ import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_grade_exams_tile.dart';
+import 'package:matricmate/features/exam/screens/chapter/widgets/grade_tests_page.dart';
 import 'package:matricmate/features/exam/screens/tests_list/tests_list.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -84,10 +85,7 @@ class ChapterScreen extends GetView<ChapterController> {
                       children: [
                         AllChaptersButton(
                           onPressed: () => Get.to(
-                            () => TestListScreen(
-                              subject: title,
-                              chapter: "Chapter One",
-                            ),
+                            () => GradeTestsPage(grade: grade, subject: title),
                           ),
                         ),
                         const Divider(height: AppSizes.spaceBtwSections),
@@ -112,7 +110,6 @@ class ChapterScreen extends GetView<ChapterController> {
                                       chapter: chapter.title,
                                       chapterId: chapter.id,
                                     ),
-                                    binding: TestBinding(),
                                     arguments: {
                                       'subjectId': int.tryParse(
                                         chapter.subjectId.toString(),

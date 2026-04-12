@@ -52,7 +52,6 @@ class QuestionScreen extends GetView<QuestionController> {
           return const Center(child: Text("No Questions Available"));
         }
 
-        final q = controller.testQuestions[controller.currentIndex.value];
         return Scaffold(
           appBar: Appbar(
             leadingIcon: Icons.close,

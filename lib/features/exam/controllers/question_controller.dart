@@ -106,4 +106,18 @@ class QuestionController extends GetxController {
   bool isAnswerChecked(int questionId) {
     return isChecked[questionId] ?? false;
   }
+
+  int get correctAnswers {
+    int score = 0;
+
+    for (final q in testQuestions) {
+      final selected = selectedAnswers[q.id];
+
+      if (selected != null && selected == q.correctOptionIndex) {
+        score++;
+      }
+    }
+
+    return score;
+  }
 }

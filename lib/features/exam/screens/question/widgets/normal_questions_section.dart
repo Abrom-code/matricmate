@@ -5,6 +5,8 @@ import 'package:matricmate/features/exam/screens/question/widgets/choice_button.
 import 'package:matricmate/features/exam/screens/question/widgets/explanation_box.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
+import 'package:matricmate/features/exam/screens/result/result.dart';
+import 'package:matricmate/features/exam/screens/tests_list/tests_list.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -48,7 +50,6 @@ class NormarQuesionsSection extends StatelessWidget {
             Column(
               children: [
                 // explanations
-                // opne/colos
                 TextButton(
                   onPressed: () => controller.isExplanationExpanaded.value =
                       !controller.isExplanationExpanaded.value,
@@ -114,10 +115,7 @@ class NormarQuesionsSection extends StatelessWidget {
                         controller.checkAnswer(q.id);
                       } else {
                         if (isLast) {
-                          AppHelperFuntions.showAlert(
-                            "Finished",
-                            "You have completed the test",
-                          );
+                          Get.offAll(() => ResultScreen());
                         } else {
                           controller.nextQuestion();
                         }

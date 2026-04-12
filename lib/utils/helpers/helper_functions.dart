@@ -62,8 +62,8 @@ class AppHelperFuntions {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:  Text(title),
-        content:  Text(message),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

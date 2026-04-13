@@ -7,7 +7,7 @@ class TestTile extends StatelessWidget {
   const TestTile({
     super.key,
     required this.testName,
-    this.icon = Icons.question_mark,
+    this.icon = Icons.quiz,
     required this.onTap,
     this.hasSubTitle = true,
   });

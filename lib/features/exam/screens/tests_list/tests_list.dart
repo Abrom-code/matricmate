@@ -4,7 +4,6 @@ import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
-import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -70,7 +69,6 @@ class TestListScreen extends GetView<TestController> {
                       );
                       return;
                     }
-
                     AppHelperFuntions.showAppDialog(
                       context,
                       "Want to take a test?",

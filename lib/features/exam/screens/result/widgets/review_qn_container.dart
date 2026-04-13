@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:get/get_state_manager/src/simple/get_view.dart';
-import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/correct_check_button.dart';
@@ -13,14 +11,14 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ReviewContainer extends GetView<QuestionController> {
-  const ReviewContainer({super.key, required this.qn});
+class ReviewContainer extends GetView<ReviewController> {
+  const ReviewContainer({super.key, required this.qn, required this.result});
   final QuestionModel qn;
+  final ResultModel result;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
-    final reviewController = Get.put(ReviewController());
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSizes.defaultSpace),
@@ -38,12 +36,12 @@ class ReviewContainer extends GetView<QuestionController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Quesion ${qn.questionOrder} of ${controller.testQuestions.length}",
+                "Quesion ${qn.questionOrder} of ${result.testQuestions.length}",
                 style: Theme.of(
                   context,
                 ).textTheme.labelMedium!.apply(fontSizeDelta: 3),
               ),
-              controller.selectedAnswers[qn.id] == qn.correctOptionIndex
+              result.selectedAnswers[qn.id] == qn.correctOptionIndex
                   ? CorrectCheckButton()
                   : CorrectCheckButton(
                       color: Colors.red,
@@ -73,7 +71,7 @@ class ReviewContainer extends GetView<QuestionController> {
 
           // Explanation button
           Obx(() {
-            final expanded = reviewController.isExpanded[qn.id] ?? false;
+            final expanded = controller.isExpanded[qn.id] ?? false;
             return Container(
               width: double.infinity,
               padding: expanded
@@ -101,7 +99,7 @@ class ReviewContainer extends GetView<QuestionController> {
                               borderRadius: BorderRadius.circular(5),
                             ),
                           ),
-                          onPressed: () => reviewController.toggle(qn.id),
+                          onPressed: () => controller.toggle(qn.id),
                           child: Row(
                             mainAxisAlignment: !expanded
                                 ? MainAxisAlignment.spaceBetween

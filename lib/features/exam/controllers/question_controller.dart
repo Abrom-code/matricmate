@@ -19,12 +19,8 @@ class QuestionController extends GetxController {
   final RxBool isExplanationExpanaded = false.obs;
   final RxString languageSelected = "EN".obs;
 
-  int? _currentTestId;
-
   Future<void> loadTestQuestions(int testId) async {
     try {
-      _currentTestId = testId;
-
       isLoading.value = true;
 
       // reset state

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/explanation_box.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
@@ -120,7 +121,15 @@ class NormarQuesionsSection extends GetView<QuestionController> {
                         controller.checkAnswer(q.id);
                       } else {
                         if (isLast) {
-                          Get.offAll(() => ResultScreen());
+                          Get.offAll(
+                            () => ResultScreen(
+                              result: ResultModel(
+                                selectedAnswers: controller.selectedAnswers,
+                                testQuestions: controller.testQuestions,
+                                correctAnswers: controller.correctAnswers
+                              ),
+                            ),
+                          );
                         } else {
                           controller.nextQuestion();
                         }

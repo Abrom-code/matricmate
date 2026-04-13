@@ -7,6 +7,7 @@ class ReviewController extends GetxController {
 
   final RxMap<int, bool> isExpanded = <int, bool>{}.obs;
   final qnController = Get.find<QuestionController>();
+  final RxString languageSelected = "EN".obs;
   @override
   void onInit() {
     initExpansion(qnController.testQuestions);

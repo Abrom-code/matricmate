@@ -2,21 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/helpers/badges.dart';
-import 'package:matricmate/features/exam/controllers/question_controller.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/result/result_review.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ResultScreen extends GetView<QuestionController> {
-  const ResultScreen({super.key});
+class ResultScreen extends StatelessWidget {
+  const ResultScreen({super.key, required this.result});
+  final ResultModel result;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
     final examBadge = ExamBadgeHelper.getBadge(
-      controller.correctAnswers / controller.testQuestions.length,
+      result.correctAnswers / result.testQuestions.length,
     );
     return Scaffold(
       appBar: Appbar(
@@ -88,7 +89,7 @@ class ResultScreen extends GetView<QuestionController> {
               const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
               Text(
-                "${controller.correctAnswers}/${controller.testQuestions.length}",
+                "${result.correctAnswers}/${result.testQuestions.length}",
                 style: TextStyle(
                   color: AppColors.primary,
                   fontSize: 44,
@@ -100,7 +101,7 @@ class ResultScreen extends GetView<QuestionController> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => Get.to(() => TestReviewScreen()),
+                  onPressed: () => Get.to(() => TestReviewScreen( result: result)),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     spacing: 10,

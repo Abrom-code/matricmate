@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -37,6 +39,14 @@ class QuestionController extends GetxController {
           dbQuestions.map((e) => QuestionModel.fromMap(e)).toList(),
         );
         return;
+      }
+
+      final isConnectd = await NetworkManager.instance.isConnected();
+      if (!isConnectd) {
+        ToastHelper.warning(
+          "No Internet!",
+          "Please turn on mobile data or connect to WIFI!",
+        );
       }
 
       final response = await supabase

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ImageSection extends StatelessWidget {
@@ -8,6 +9,8 @@ class ImageSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(ImageSectionController(), tag: imgUrl);
+
     return GestureDetector(
       onTap: () => AppHelperFuntions.showImageZoom(
         context,
@@ -23,36 +26,82 @@ class ImageSection extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CachedNetworkImage(
-                imageUrl: imgUrl ?? "",
-                progressIndicatorBuilder: (context, url, downloadProgress) =>
-                    CircularProgressIndicator(value: downloadProgress.progress),
-                errorWidget: (context, url, error) => Icon(Icons.error),
-              ),
+          child: Obx(() {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                CachedNetworkImage(
+                  key: controller.imageKey.value,
+                  imageUrl: imgUrl ?? "",
 
-              Positioned(
-                bottom: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.zoom_in,
-                    color: Colors.white,
-                    size: 18,
+                  //  CENTERED LOADER
+                  progressIndicatorBuilder: (context, url, progress) {
+                    return const Center(
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  },
+
+                  // ❌ ERROR + RETRY BUTTON
+                  errorWidget: (context, url, error) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.broken_image,
+                            size: 40,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Failed to load image",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: controller.retry,
+                            child: const Text("Retry"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
+                // zoom icon
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.zoom_in,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
         ),
       ),
     );
+  }
+}
+
+class ImageSectionController extends GetxController {
+  final Rx<Key> imageKey = UniqueKey().obs;
+
+  void retry() {
+    imageKey.value = UniqueKey();
   }
 }

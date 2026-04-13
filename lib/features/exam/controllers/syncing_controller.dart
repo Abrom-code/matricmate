@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -36,8 +37,9 @@ class SyncingController extends GetxController {
         await syncTests(downloadedIds);
         await syncQuestions(downloadedIds);
       }
+      ToastHelper.success("Success", "All Subjects are refreshed");
     } on Exception catch (e) {
-      AppHelperFuntions.showAlert("Sync Error", e.toString());
+      ToastHelper.error("Faild", "Faild to refresh!");
     } finally {
       refreshing.value = false;
     }

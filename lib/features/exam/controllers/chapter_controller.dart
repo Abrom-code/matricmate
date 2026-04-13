@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -41,6 +43,15 @@ class ChapterController extends GetxController {
       if (dbChapters.isNotEmpty) {
         data = dbChapters.map((e) => ChapterModel.fromMap(e)).toList();
       } else {
+        final isConnectd = await NetworkManager.instance.isConnected();
+        if (!isConnectd) {
+          ToastHelper.warning(
+            "No Internet!",
+            "Please turn on mobile data or connect to WIFI!",
+          );
+          return;
+        }
+
         final response = await supabase
             .from('chapters')
             .select()

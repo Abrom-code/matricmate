@@ -16,7 +16,11 @@ class OnBoardingButton extends StatelessWidget {
         onPressed: () => controller.nextPage(),
         child: Obx(
           () => (subjectLoadingController.isLoading.value
-              ? CircularProgressIndicator()
+              ? SizedBox(
+                  height: 15,
+                  width: 15,
+                  child: CircularProgressIndicator(),
+                )
               : Text(
                   controller.currentPageIndex.value == 2
                       ? "Sign In"

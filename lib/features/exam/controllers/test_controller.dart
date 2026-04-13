@@ -51,7 +51,7 @@ class TestController extends GetxController {
       if (dbChapterTests.isNotEmpty) {
         data = dbChapterTests.map((e) => TestModel.fromMap(e)).toList();
       } else {
-        final isConnectd = await NetworkManager.instance.isConnected();
+        final isConnectd = await NetworkManager.instance.hasRealInternet();
         if (!isConnectd) {
           ToastHelper.warning(
             "No Internet!",

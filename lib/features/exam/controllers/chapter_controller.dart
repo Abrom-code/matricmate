@@ -43,7 +43,7 @@ class ChapterController extends GetxController {
       if (dbChapters.isNotEmpty) {
         data = dbChapters.map((e) => ChapterModel.fromMap(e)).toList();
       } else {
-        final isConnectd = await NetworkManager.instance.isConnected();
+        final isConnectd = await NetworkManager.instance.hasRealInternet();
         if (!isConnectd) {
           ToastHelper.warning(
             "No Internet!",

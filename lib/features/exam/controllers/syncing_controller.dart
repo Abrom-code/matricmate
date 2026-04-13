@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,6 +23,14 @@ class SyncingController extends GetxController {
 
   Future<void> syncAll() async {
     try {
+      final isConnectd = await NetworkManager.instance.hasRealInternet();
+      if (!isConnectd) {
+        ToastHelper.warning(
+          "No Internet!",
+          "Please turn on mobile data or connect to WIFI!",
+        );
+        return;
+      }
       refreshing.value = true;
 
       await syncSubjects();

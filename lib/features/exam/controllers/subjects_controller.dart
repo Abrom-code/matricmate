@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/download_subject.dart';
-import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
-import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -40,7 +38,7 @@ class SubjectsController extends GetxController {
         return;
       }
 
-      final isConnectd = await NetworkManager.instance.isConnected();
+      final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
         ToastHelper.warning(
           "No Internet!",
@@ -75,12 +73,13 @@ class SubjectsController extends GetxController {
   /// DOWNLOAD SUBJECT (FIXED)
   Future<void> downloadSubject(String subject, int subjectId) async {
     try {
-      final isConnectd = await NetworkManager.instance.isConnected();
+      final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
         ToastHelper.warning(
           "No Internet!",
           "Please turn on mobile data or connect to WIFI!",
         );
+        return;
       }
       downloadingMap[subject] = true;
       final service = SubjectDownloadService();

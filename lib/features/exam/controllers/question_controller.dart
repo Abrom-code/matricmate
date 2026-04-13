@@ -41,12 +41,13 @@ class QuestionController extends GetxController {
         return;
       }
 
-      final isConnectd = await NetworkManager.instance.isConnected();
+      final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
         ToastHelper.warning(
           "No Internet!",
           "Please turn on mobile data or connect to WIFI!",
         );
+        return;
       }
 
       final response = await supabase

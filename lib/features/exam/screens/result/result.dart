@@ -5,7 +5,7 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/helpers/badges.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/result/result_review.dart';
-import 'package:matricmate/features/exam/screens/subject/subjects.dart';
+import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -103,10 +103,10 @@ class ResultScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => Get.to(
-  () => const TestReviewScreen(),
-  binding: ReviewBinding(),
-  arguments: result,
-),
+                    () => const TestReviewScreen(),
+                    binding: ReviewBinding(),
+                    arguments: result,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     spacing: 10,
@@ -127,7 +127,7 @@ class ResultScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => Get.offAll(() => SubjectsScreen()),
+                  onPressed: () => Get.offAll(() => const NavigationMenu()),
                   child: Row(
                     spacing: 10,
                     mainAxisAlignment: MainAxisAlignment.center,

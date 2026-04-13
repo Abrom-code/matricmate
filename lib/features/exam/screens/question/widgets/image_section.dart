@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class ImageSection extends StatelessWidget {
   const ImageSection({super.key, required this.imgUrl});
@@ -45,7 +47,7 @@ class ImageSection extends StatelessWidget {
                     );
                   },
 
-                  // ❌ ERROR + RETRY BUTTON
+                  // ERROR + RETRY BUTTON
                   errorWidget: (context, url, error) {
                     return Center(
                       child: Column(
@@ -101,7 +103,15 @@ class ImageSection extends StatelessWidget {
 class ImageSectionController extends GetxController {
   final Rx<Key> imageKey = UniqueKey().obs;
 
-  void retry() {
+  Future<void> retry() async {
+    final isConnectd = await NetworkManager.instance.hasRealInternet();
+    if (!isConnectd) {
+      ToastHelper.warning(
+        "No Internet!",
+        "Please turn on mobile data or connect to WIFI!",
+      );
+      return;
+    }
     imageKey.value = UniqueKey();
   }
 }

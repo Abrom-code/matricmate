@@ -65,7 +65,7 @@ class ResultScreen extends GetView<QuestionController> {
                         height: 15,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(15),
-                          color: Colors.red,
+                          color: Colors.greenAccent,
                         ),
                       ),
                     ),

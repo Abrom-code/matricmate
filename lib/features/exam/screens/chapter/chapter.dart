@@ -71,10 +71,11 @@ class ChapterScreen extends GetView<ChapterController> {
                 return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Obx(() {
-                    final chapters = controller.getChaptersByGrade(grade);
                     if (controller.isChapterLoading.value) {
                       return const Center(child: CircularProgressIndicator());
                     }
+
+                    final chapters = controller.getChaptersByGrade(grade);
 
                     if (chapters.isEmpty) {
                       return const Center(child: Text("No Chapters Found"));
@@ -86,12 +87,17 @@ class ChapterScreen extends GetView<ChapterController> {
                         AllChaptersButton(
                           onPressed: () => Get.to(
                             () => GradeTestsPage(grade: grade, subject: title),
+                            binding: TestBinding(),
                           ),
                         ),
                         const Divider(height: AppSizes.spaceBtwSections),
                         ...chapters.map((chapter) {
                           final hasTests =
-                              controller.chapterHasTests[chapter.id] ?? false;
+                              controller.chapterHasTests[chapter.id];
+
+                          if (hasTests == null) {
+                            return const SizedBox();
+                          }
                           return Padding(
                             padding: const EdgeInsets.only(
                               bottom: AppSizes.spaceBtwItems,
@@ -115,6 +121,7 @@ class ChapterScreen extends GetView<ChapterController> {
                                         chapter.subjectId.toString(),
                                       ),
                                     },
+                                    binding: TestBinding(),
                                   );
                                 } else {
                                   AppHelperFuntions.showAlert(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
@@ -11,22 +12,29 @@ class AllGradeExamsTile extends GetView<TestController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller.allGradeTests.isEmpty) {
-        return Text("No Qn Found", textAlign: TextAlign.center);
+      final tests = controller.allGradeTests;
+
+      // empty state
+      if (tests.isEmpty) {
+        return const Center(child: Text("No Tests Found"));
       }
 
-      return Column(
-        children: [
-          ...controller.allGradeTests.map((test) {
-            return TestTile(
+      // scrollable (fix overflow)
+      return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: tests.length,
+        itemBuilder: (context, index) {
+          final test = tests[index];
+
+          // use cached value only
+          final hasQn = controller.testHasQuestions[test.id] ?? false;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: TestTile(
               testName: test.title,
-              onTap: () async {
-                final testId = test.id;
-
-                final hasQn =
-                    controller.testHasQuestions[testId] ??
-                    await TestController.instance.hasQuestions(test.id);
-
+              onTap: () {
                 if (!hasQn) {
                   AppHelperFuntions.showAlert(
                     "No Questions",
@@ -39,20 +47,20 @@ class AllGradeExamsTile extends GetView<TestController> {
                   context,
                   "Want to take a test?",
                   "You will be redirected to questions section.",
-                  () => Get.off(
+                  () => Get.to(
                     () => QuestionScreen(
-                      testId: testId,
+                      testId: test.id,
                       title: test.title,
                       type: test.type,
                       subjectId: test.subjectId,
                     ),
-                    arguments: testId,
+                    binding: QuestionBinding(),
                   ),
                 );
               },
-            );
-          }),
-        ],
+            ),
+          );
+        },
       );
     });
   }

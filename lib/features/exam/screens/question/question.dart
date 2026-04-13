@@ -28,10 +28,18 @@ class QuestionScreen extends GetView<QuestionController> {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
+
+    if (testId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.loadTestQuestions(testId!);
+      });
+    }
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+
         AppHelperFuntions.showAppDialog(
           context,
           "Want to Exit?",
@@ -44,11 +52,15 @@ class QuestionScreen extends GetView<QuestionController> {
       },
       child: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (controller.testQuestions.isEmpty) {
-          return const Center(child: Text("No Questions Available"));
+          return const Scaffold(
+            body: Center(child: Text("No Questions Available")),
+          );
         }
 
         return Scaffold(
@@ -70,11 +82,14 @@ class QuestionScreen extends GetView<QuestionController> {
             ),
             centerTitle: true,
             actions: [
-              IconButton(onPressed: () {}, icon: Icon(Icons.bookmark_outline)),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.bookmark_outline),
+              ),
             ],
             backgroundColor: Colors.transparent,
           ),
-          body: SingleChildScrollView(
+          body: const SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.all(AppSizes.defaultSpace),
               child: NormarQuesionsSection(),

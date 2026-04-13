@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/services/download_subject.dart';
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
@@ -65,14 +66,8 @@ class SubjectsController extends GetxController {
   Future<void> downloadSubject(String subject, int subjectId) async {
     try {
       downloadingMap[subject] = true;
-      final chapterController = Get.find<ChapterController>();
-      final testController = Get.find<TestController>();
-
-      ///  Load chapters
-      await chapterController.loadSubjectChapters(subjectId);
-
-      ///  Load tests
-      await testController.loadAllChapterTests(subjectId);
+      final service = SubjectDownloadService();
+      await service.downloadSubject(subjectId);
 
       /// Mark as downloaded in DB
       final db = await _dbService.database;

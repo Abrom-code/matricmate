@@ -10,12 +10,16 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class GradeTestsPage extends GetView<TestController> {
   const GradeTestsPage({super.key, required this.grade, required this.subject});
+
   final int grade;
   final String subject;
 
   @override
   Widget build(BuildContext context) {
-    controller.loadGradeTests(grade);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadGradeTests(grade);
+    });
+
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
@@ -29,23 +33,24 @@ class GradeTestsPage extends GetView<TestController> {
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Obx(() {
-          final selectedGrade = controller.singleGradeTests;
-          if (selectedGrade.isEmpty) {
-            return Text("No Qn Found", textAlign: TextAlign.center);
+          final tests = controller.singleGradeTests;
+
+          if (tests.isEmpty) {
+            return const Center(child: Text("No Tests Found"));
           }
 
-          return Column(
-            children: [
-              ...selectedGrade.map((test) {
-                return TestTile(
+          return ListView.builder(
+            itemCount: tests.length,
+            itemBuilder: (context, index) {
+              final test = tests[index];
+
+              final hasQn = controller.testHasQuestions[test.id] ?? false;
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+                child: TestTile(
                   testName: test.title,
-                  onTap: () async {
-                    final testId = test.id;
-
-                    final hasQn =
-                        controller.testHasQuestions[testId] ??
-                        await TestController.instance.hasQuestions(test.id);
-
+                  onTap: () {
                     if (!hasQn) {
                       AppHelperFuntions.showAlert(
                         "No Questions",
@@ -58,20 +63,20 @@ class GradeTestsPage extends GetView<TestController> {
                       context,
                       "Want to take a test?",
                       "You will be redirected to questions section.",
-                      () => Get.off(
+                      () => Get.to(
                         () => QuestionScreen(
-                          testId: testId,
+                          testId: test.id,
                           title: test.title,
                           type: test.type,
                           subjectId: test.subjectId,
                         ),
-                        arguments: testId,
+                        arguments: test.id,
                       ),
                     );
                   },
-                );
-              }),
-            ],
+                ),
+              );
+            },
           );
         }),
       ),

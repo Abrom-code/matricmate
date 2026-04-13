@@ -1,9 +1,7 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
-import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -13,16 +11,20 @@ class ChapterController extends GetxController {
   final SupabaseClient supabase = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService.instance;
 
-  final subjectChapters = <ChapterModel>[].obs;
-  final Map<int, bool> chapterHasTests = {};
-  final isChapterLoading = false.obs;
+  final RxList<ChapterModel> subjectChapters = <ChapterModel>[].obs;
+
+  final RxMap<int, bool> chapterHasTests = <int, bool>{}.obs;
+
+  final RxBool isChapterLoading = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    final subject = Get.arguments;
-    if (subject != null) {
-      loadSubjectChapters(subject);
+
+    final subjectId = Get.arguments;
+
+    if (subjectId != null) {
+      loadSubjectChapters(subjectId);
     }
   }
 
@@ -31,30 +33,23 @@ class ChapterController extends GetxController {
       isChapterLoading.value = true;
       subjectChapters.clear();
       chapterHasTests.clear();
-      final sub = SubjectsController.instance.subjects.firstWhereOrNull(
-        (sub) => sub.id == subjectId,
-      );
 
-      if (sub == null) return;
       List<ChapterModel> data = [];
 
-      final dbCourseChapters = await _databaseService.getSubjectChapters(
-        subjectId,
-      );
+      final dbChapters = await _databaseService.getSubjectChapters(subjectId);
 
-      if (dbCourseChapters.isNotEmpty) {
-        data = dbCourseChapters.map((e) => ChapterModel.fromMap(e)).toList();
+      if (dbChapters.isNotEmpty) {
+        data = dbChapters.map((e) => ChapterModel.fromMap(e)).toList();
       } else {
         final response = await supabase
             .from('chapters')
             .select()
-            .eq('subject_id', sub.id);
+            .eq('subject_id', subjectId);
 
-        data = (response as List<dynamic>)
-            .map((e) => ChapterModel.fromJson(e))
-            .toList();
+        data = (response as List).map((e) => ChapterModel.fromJson(e)).toList();
 
         final db = await _databaseService.database;
+
         for (final chapter in data) {
           await db.insert(
             'chapters',
@@ -64,7 +59,7 @@ class ChapterController extends GetxController {
         }
       }
 
-      subjectChapters.value = data;
+      subjectChapters.assignAll(data);
 
       // load flags AFTER chapters
       await loadChapterTestFlags(data);
@@ -75,20 +70,18 @@ class ChapterController extends GetxController {
     }
   }
 
-  List<ChapterModel> selectedGradeChapters(int? grade) {
-    if (grade == null) return subjectChapters;
-    return subjectChapters.where((e) => e.grade == grade).toList();
-  }
-
   List<ChapterModel> getChaptersByGrade(int? grade) {
     if (grade == null) return subjectChapters;
     return subjectChapters.where((e) => e.grade == grade).toList();
   }
 
   Future<void> loadChapterTestFlags(List<ChapterModel> chapters) async {
-    for (final chapter in chapters) {
-      final hasTests = await _databaseService.hasTests(chapter.id);
-      chapterHasTests[chapter.id] = hasTests;
-    }
+    await Future.wait(
+      chapters.map((chapter) async {
+        final hasTests = await _databaseService.hasTests(chapter.id);
+
+        chapterHasTests[chapter.id] = hasTests;
+      }),
+    );
   }
 }

@@ -19,18 +19,20 @@ class QuestionController extends GetxController {
   final RxBool isExplanationExpanaded = false.obs;
   final RxString languageSelected = "EN".obs;
 
-  @override
-  void onInit() {
-    final testId = Get.arguments as int?;
-    if (testId != null) {
-      loadTestQuestions(testId);
-    }
-    super.onInit();
-  }
+  int? _currentTestId;
 
   Future<void> loadTestQuestions(int testId) async {
     try {
+      _currentTestId = testId;
+
       isLoading.value = true;
+
+      // reset state
+      testQuestions.clear();
+      selectedAnswers.clear();
+      isChecked.clear();
+      currentIndex.value = 0;
+      isExplanationExpanaded.value = false;
 
       final dbQuestions = await _databaseService.getQuestionsByTest(testId);
 
@@ -83,14 +85,13 @@ class QuestionController extends GetxController {
     }
   }
 
-  bool isAnswered(int questionId) {
-    return selectedAnswers.containsKey(questionId);
-  }
-
   void selectAnswer(int questionId, int optionIndex) {
     if (isChecked[questionId] == true) return;
-
     selectedAnswers[questionId] = optionIndex;
+  }
+
+  bool isAnswered(int questionId) {
+    return selectedAnswers.containsKey(questionId);
   }
 
   int? getSelectedAnswer(int questionId) {
@@ -112,7 +113,6 @@ class QuestionController extends GetxController {
 
     for (final q in testQuestions) {
       final selected = selectedAnswers[q.id];
-
       if (selected != null && selected == q.correctOptionIndex) {
         score++;
       }

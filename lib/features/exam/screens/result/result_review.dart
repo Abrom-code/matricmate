@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/review_qn_container.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class TestReviewScreen extends StatelessWidget {
-  const TestReviewScreen({super.key, required this.result});
-  final ResultModel result;
+class TestReviewScreen extends GetView<ReviewController> {
+  const TestReviewScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final result = controller.result;
     final examQn = result.testQuestions;
     return Scaffold(
       appBar: Appbar(
@@ -25,10 +26,12 @@ class TestReviewScreen extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(AppSizes.defaultSpace),
+        padding: EdgeInsets.all(AppSizes.defaultSpace / 2),
         child: Column(
           spacing: AppSizes.spaceBtwItems,
-          children: [...examQn.map((qn) => ReviewContainer(qn: qn, result : result))],
+          children: [
+            ...examQn.map((qn) => ReviewContainer(qn: qn, result: result)),
+          ],
         ),
       ),
       bottomNavigationBar: SizedBox(

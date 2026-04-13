@@ -1,16 +1,19 @@
 import 'package:get/get.dart';
-import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 
 class ReviewController extends GetxController {
   static ReviewController get instance => Get.find();
 
   final RxMap<int, bool> isExpanded = <int, bool>{}.obs;
-  final qnController = Get.find<QuestionController>();
   final RxString languageSelected = "EN".obs;
+  late ResultModel result;
+
   @override
   void onInit() {
-    initExpansion(qnController.testQuestions);
+    final res = Get.arguments as ResultModel;
+    result = res;
+    initExpansion(res.testQuestions);
     super.onInit();
   }
 

@@ -5,6 +5,7 @@ import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
+import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/correct_check_button.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -21,7 +22,7 @@ class ReviewContainer extends GetView<ReviewController> {
     final dark = AppHelperFuntions.isDark(context);
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppSizes.defaultSpace),
+      padding: EdgeInsets.all(AppSizes.defaultSpace / 1.3),
       decoration: BoxDecoration(
         color: dark
             ? AppColors.darkerGrey.withValues(alpha: 0.5)
@@ -55,12 +56,18 @@ class ReviewContainer extends GetView<ReviewController> {
           QuestionSection(qnNumber: qn.questionOrder, examQn: qn.questionText),
           const SizedBox(height: AppSizes.spaceBtwItems),
 
+          // If there is Image
+          if (qn.imageUrl != null) ImageSection(imgUrl: qn.imageUrl),
+          if (qn.imageUrl != null)
+            const SizedBox(height: AppSizes.spaceBtwItems),
           // Options
           ...qn.options.asMap().entries.map((entry) {
             final index = entry.key;
             final option = entry.value;
 
             return ChoiceButton(
+              isChecked: true,
+              selectedIndex: result.selectedAnswers[qn.id] ?? -1,
               optionTxt: option,
               index: index,
               questionId: qn.id,
@@ -84,7 +91,9 @@ class ReviewContainer extends GetView<ReviewController> {
                   : EdgeInsets.symmetric(horizontal: AppSizes.md),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSizes.sm),
-                color: dark ? AppColors.black : AppColors.white,
+                color: dark
+                    ? const Color.fromARGB(255, 10, 10, 10)
+                    : AppColors.white,
               ),
               child: Column(
                 children: [
@@ -127,7 +136,7 @@ class ReviewContainer extends GetView<ReviewController> {
                           isDense: true,
                           iconEnabledColor: AppColors.primary,
                           underline: SizedBox(),
-                          value: controller.languageSelected.toString(),
+                          value: controller.languageSelected.value,
                           items: [
                             DropdownMenuItem(
                               value: 'EN',
@@ -167,7 +176,7 @@ class ReviewContainer extends GetView<ReviewController> {
                               .copyWith(
                                 fontSize: 15,
                                 color: dark
-                                    ? const Color.fromARGB(255, 132, 131, 131)
+                                    ? AppColors.grey
                                     : AppColors.darkerGrey,
                               ),
                         ),

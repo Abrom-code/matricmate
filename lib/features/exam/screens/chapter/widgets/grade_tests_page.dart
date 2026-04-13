@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
@@ -63,14 +64,9 @@ class GradeTestsPage extends GetView<TestController> {
                       context,
                       "Want to take a test?",
                       "You will be redirected to questions section.",
-                      () => Get.to(
-                        () => QuestionScreen(
-                          testId: test.id,
-                          title: test.title,
-                          type: test.type,
-                          subjectId: test.subjectId,
-                        ),
-                        arguments: test.id,
+                      () => Get.off(
+                        () => QuestionScreen(test: test),
+                        binding: QuestionBinding(),
                       ),
                     );
                   },

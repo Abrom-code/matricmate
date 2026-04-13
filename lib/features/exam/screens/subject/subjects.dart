@@ -110,7 +110,7 @@ class SubjectsScreen extends StatelessWidget {
                           ),
                           onTap: () => subject.isDownloaded
                               ? Get.to(
-                                  () => ChapterScreen(title: subject.name),
+                                  () => ChapterScreen(title: subject.name, subjectId : subject.id),
                                   binding: ChapterBinding(),
                                   arguments: subject.id,
                                 )

@@ -16,6 +16,27 @@ class TestController extends GetxController {
   final RxList<TestModel> singleGradeTests = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
 
+  @override
+  void onInit() {
+    final args = Get.arguments;
+
+    int? subjectId;
+
+    if (args is Map) {
+      subjectId = args['subject_id'];
+    } else if (args is int) {
+      subjectId = args;
+    } else if (args is String) {
+      subjectId = int.tryParse(args);
+    }
+
+    if (subjectId != null) {
+      loadAllChapterTests(subjectId);
+    }
+
+    super.onInit();
+  }
+
   Future<void> loadAllChapterTests(int subjectId) async {
     try {
       chapterTest.clear();

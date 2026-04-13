@@ -20,18 +20,14 @@ class QuestionSection extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 20,
-              color: dark
-                  ? const Color.fromARGB(255, 187, 187, 187)
-                  : AppColors.darkerGrey,
+              color: dark ? AppColors.grey : AppColors.darkerGrey,
             ),
           ),
           TextSpan(
             text: examQn,
             style: Theme.of(context).textTheme.bodyLarge!.copyWith(
               fontSize: 17,
-              color: dark
-                  ? const Color.fromARGB(255, 187, 187, 187)
-                  : AppColors.darkerGrey,
+              color: dark ? AppColors.grey : AppColors.darkerGrey,
             ),
           ),
         ],

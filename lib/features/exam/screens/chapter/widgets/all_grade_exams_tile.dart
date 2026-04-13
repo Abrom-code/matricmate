@@ -7,7 +7,8 @@ import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class AllGradeExamsTile extends GetView<TestController> {
-  const AllGradeExamsTile({super.key});
+  const AllGradeExamsTile({super.key, required this.subjectId});
+  final int subjectId;
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +49,7 @@ class AllGradeExamsTile extends GetView<TestController> {
                   "Want to take a test?",
                   "You will be redirected to questions section.",
                   () => Get.to(
-                    () => QuestionScreen(
-                      testId: test.id,
-                      title: test.title,
-                      type: test.type,
-                      subjectId: test.subjectId,
-                    ),
+                    () => QuestionScreen(test: test),
                     binding: QuestionBinding(),
                   ),
                 );

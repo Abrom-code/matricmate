@@ -14,8 +14,13 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ChapterScreen extends GetView<ChapterController> {
-  const ChapterScreen({super.key, required this.title});
+  const ChapterScreen({
+    super.key,
+    required this.title,
+    required this.subjectId,
+  });
   final String title;
+  final int subjectId;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +69,7 @@ class ChapterScreen extends GetView<ChapterController> {
                     padding: EdgeInsets.symmetric(
                       horizontal: AppSizes.defaultSpace,
                     ),
-                    child: AllGradeExamsTile(),
+                    child: AllGradeExamsTile(subjectId: subjectId),
                   );
                 }
 
@@ -88,6 +93,7 @@ class ChapterScreen extends GetView<ChapterController> {
                           onPressed: () => Get.to(
                             () => GradeTestsPage(grade: grade, subject: title),
                             binding: TestBinding(),
+                            arguments: {'subject_id': subjectId},
                           ),
                         ),
                         const Divider(height: AppSizes.spaceBtwSections),
@@ -116,11 +122,7 @@ class ChapterScreen extends GetView<ChapterController> {
                                       chapter: chapter.title,
                                       chapterId: chapter.id,
                                     ),
-                                    arguments: {
-                                      'subjectId': int.tryParse(
-                                        chapter.subjectId.toString(),
-                                      ),
-                                    },
+                                    arguments: {'subject_id': subjectId},
                                     binding: TestBinding(),
                                   );
                                 } else {

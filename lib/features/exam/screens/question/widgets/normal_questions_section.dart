@@ -7,19 +7,24 @@ import 'package:matricmate/features/exam/screens/question/widgets/explanation_bo
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
-import 'package:matricmate/features/exam/screens/tests_list/tests_list.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class NormarQuesionsSection extends GetView<QuestionController> {
   const NormarQuesionsSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final examQn = controller.testQuestions[controller.currentIndex.value];
     return Obx(() {
+      if (controller.testQuestions.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final examQn = controller.testQuestions[controller.currentIndex.value];
+
       final isChecked = controller.isAnswerChecked(examQn.id);
+      final selectedIndex = controller.getSelectedAnswer(examQn.id);
+
       return Column(
         children: [
           // Quesition
@@ -40,6 +45,8 @@ class NormarQuesionsSection extends GetView<QuestionController> {
             final option = entry.value;
 
             return ChoiceButton(
+              selectedIndex: selectedIndex ?? -1,
+              isChecked: isChecked,
               optionTxt: option,
               index: index,
               questionId: examQn.id,
@@ -126,7 +133,7 @@ class NormarQuesionsSection extends GetView<QuestionController> {
                               result: ResultModel(
                                 selectedAnswers: controller.selectedAnswers,
                                 testQuestions: controller.testQuestions,
-                                correctAnswers: controller.correctAnswers
+                                correctAnswers: controller.correctAnswers,
                               ),
                             ),
                           );

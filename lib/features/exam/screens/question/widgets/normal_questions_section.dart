@@ -11,15 +11,15 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class NormarQuesionsSection extends StatelessWidget {
+class NormarQuesionsSection extends GetView<QuestionController> {
   const NormarQuesionsSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<QuestionController>();
     final examQn = controller.testQuestions[controller.currentIndex.value];
-    return Obx(
-      () => Column(
+    return Obx(() {
+      final isChecked = controller.isAnswerChecked(examQn.id);
+      return Column(
         children: [
           // Quesition
           QuestionSection(
@@ -43,6 +43,11 @@ class NormarQuesionsSection extends StatelessWidget {
               index: index,
               questionId: examQn.id,
               correctIndex: examQn.correctOptionIndex,
+              onTap: () {
+                if (!isChecked) {
+                  controller.selectAnswer(examQn.id, index);
+                }
+              },
             );
           }),
           const SizedBox(height: AppSizes.spaceBtwItems),
@@ -138,7 +143,7 @@ class NormarQuesionsSection extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
+      );
+    });
   }
 }

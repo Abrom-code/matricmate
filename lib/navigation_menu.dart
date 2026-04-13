@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
+import 'package:matricmate/features/exam/screens/result/result_review.dart';
 import 'package:matricmate/features/personalization/profile.dart';
 
 class NavigationMenu extends StatelessWidget {

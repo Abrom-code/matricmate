@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
@@ -47,7 +46,6 @@ class AllGradeExamsTile extends GetView<TestController> {
                       type: test.type,
                       subjectId: test.subjectId,
                     ),
-                    binding: QuestionBinding(),
                     arguments: testId,
                   ),
                 );

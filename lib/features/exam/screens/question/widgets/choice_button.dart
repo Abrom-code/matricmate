@@ -11,12 +11,14 @@ class ChoiceButton extends StatelessWidget {
     required this.index,
     required this.questionId,
     required this.correctIndex,
+    this.onTap,
   });
 
   final String optionTxt;
   final int index;
   final int questionId;
   final int correctIndex;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +33,7 @@ class ChoiceButton extends StatelessWidget {
       final isCorrect = index == correctIndex;
 
       return GestureDetector(
-        onTap: () {
-          if (!isChecked) {
-            controller.selectAnswer(questionId, index);
-          }
-        },
+        onTap: onTap,
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(10),
@@ -46,22 +44,24 @@ class ChoiceButton extends StatelessWidget {
                       : isSelected
                       ? Colors.red.withValues(alpha: 0.2)
                       : dark
-                      ? AppColors.darkerGrey
+                      ? AppColors.darkerGrey.withValues(alpha: 0.3)
                       : Colors.grey[300])
                 : (isSelected
                       ? const Color.fromARGB(255, 115, 134, 144)
                       : dark
-                      ? AppColors.darkerGrey
+                      ? AppColors.darkerGrey.withValues(alpha: 0.3)
                       : Colors.grey[300]),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isChecked
                   ? (isCorrect
-                        ? Colors.green
+                        ? Colors.green.withValues(alpha: 0.7)
                         : isSelected
-                        ? Colors.red
-                        : Colors.grey)
-                  : (isSelected ? Colors.green : Colors.grey),
+                        ? Colors.red.withValues(alpha: 0.7)
+                        : Colors.grey.withValues(alpha: 0.7))
+                  : (isSelected
+                        ? Colors.green.withValues(alpha: 0.7)
+                        : Colors.grey.withValues(alpha: 0.7)),
               width: 2,
             ),
           ),
@@ -90,7 +90,7 @@ class ChoiceButton extends StatelessWidget {
                   child: Text(
                     String.fromCharCode(65 + index),
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -100,9 +100,11 @@ class ChoiceButton extends StatelessWidget {
               Expanded(
                 child: Text(
                   optionTxt,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                    fontSize: 17,
+                    color: dark
+                        ? const Color.fromARGB(255, 187, 187, 187)
+                        : AppColors.darkerGrey,
                   ),
                 ),
               ),

@@ -28,7 +28,6 @@ class QuestionScreen extends GetView<QuestionController> {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
-    final examQn = 10;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -78,7 +77,6 @@ class QuestionScreen extends GetView<QuestionController> {
           body: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.all(AppSizes.defaultSpace),
-
               child: NormarQuesionsSection(),
             ),
           ),

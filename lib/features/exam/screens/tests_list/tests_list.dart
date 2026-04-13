@@ -9,6 +9,7 @@ import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class TestListScreen extends GetView<TestController> {
   const TestListScreen({
@@ -63,7 +64,7 @@ class TestListScreen extends GetView<TestController> {
                   testName: test.title,
                   onTap: () {
                     if (!hasQn) {
-                      AppHelperFuntions.showAlert(
+                      ToastHelper.info(
                         "No Questions",
                         "This test has no questions",
                       );

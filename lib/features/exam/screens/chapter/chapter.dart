@@ -12,6 +12,7 @@ import 'package:matricmate/features/exam/screens/tests_list/tests_list.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ChapterScreen extends GetView<ChapterController> {
   const ChapterScreen({
@@ -126,9 +127,9 @@ class ChapterScreen extends GetView<ChapterController> {
                                     binding: TestBinding(),
                                   );
                                 } else {
-                                  AppHelperFuntions.showAlert(
-                                    "Alert",
+                                  ToastHelper.info(
                                     "No Tests",
+                                    "Tests will be added soon!",
                                   );
                                 }
                               },

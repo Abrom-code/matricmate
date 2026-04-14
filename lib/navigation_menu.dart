@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
-import 'package:matricmate/features/exam/screens/result/result_review.dart';
 import 'package:matricmate/features/personalization/profile.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 
 class NavigationMenu extends StatelessWidget {
   const NavigationMenu({super.key});
@@ -21,12 +21,33 @@ class NavigationMenu extends StatelessWidget {
           onDestinationSelected: (index) =>
               controller.selectedIdx.value = index,
           destinations: [
-            NavigationDestination(label: "Questions", icon: Icon(Icons.home)),
+            NavigationDestination(
+              label: "Questions",
+              icon: Icon(
+                Icons.home,
+                color: controller.selectedIdx.value == 0
+                    ? AppColors.primary
+                    : Colors.grey,
+              ),
+            ),
             NavigationDestination(
               label: "Bookmarks",
-              icon: Icon(Icons.bookmark),
+              icon: Icon(
+                Icons.bookmark,
+                color: controller.selectedIdx.value == 1
+                    ? AppColors.primary
+                    : Colors.grey,
+              ),
             ),
-            NavigationDestination(label: "Profile", icon: Icon(Icons.person)),
+            NavigationDestination(
+              label: "Profile",
+              icon: Icon(
+                Icons.person,
+                color: controller.selectedIdx.value == 2
+                    ? AppColors.primary
+                    : Colors.grey,
+              ),
+            ),
           ],
         ),
       ),

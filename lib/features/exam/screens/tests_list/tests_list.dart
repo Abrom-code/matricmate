@@ -9,6 +9,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/logging/logging.dart';
 
 class TestListScreen extends GetView<TestController> {
   const TestListScreen({
@@ -56,29 +57,32 @@ class TestListScreen extends GetView<TestController> {
               final test = tests[index];
 
               final hasQn = controller.testHasQuestions[test.id] ?? false;
-
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
-                child: TestTile(
-                  testName: test.title,
-                  onTap: () {
-                    if (!hasQn) {
-                      ToastHelper.info(
-                        "No Questions",
-                        "This test has no questions",
+                child: Obx(
+                  () => TestTile(
+                    testName: test.title,
+                    currentStep: controller.getCurrentStep(test.id),
+                    maxStep: controller.getMaxStep(test.id),
+                    onTap: () {
+                      if (!hasQn) {
+                        ToastHelper.info(
+                          "No Questions",
+                          "This test has no questions",
+                        );
+                        return;
+                      }
+                      AppHelperFuntions.showAppDialog(
+                        context,
+                        "Want to take a test?",
+                        "You will be redirected to questions section.",
+                        () => Get.off(
+                          () => QuestionScreen(test: test),
+                          binding: QuestionBinding(),
+                        ),
                       );
-                      return;
-                    }
-                    AppHelperFuntions.showAppDialog(
-                      context,
-                      "Want to take a test?",
-                      "You will be redirected to questions section.",
-                      () => Get.off(
-                        () => QuestionScreen(test: test),
-                        binding: QuestionBinding(),
-                      ),
-                    );
-                  },
+                    },
+                  ),
                 ),
               );
             },

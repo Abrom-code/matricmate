@@ -31,29 +31,33 @@ class AllGradeExamsTile extends GetView<TestController> {
           // use cached value only
           final hasQn = controller.testHasQuestions[test.id] ?? false;
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: TestTile(
-              testName: test.title,
-              onTap: () {
-                if (!hasQn) {
-                  AppHelperFuntions.showAlert(
-                    "No Questions",
-                    "This test has no questions",
-                  );
-                  return;
-                }
+          return Obx(
+            () => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: TestTile(
+                currentStep: controller.getCurrentStep(test.id),
+                maxStep: controller.getMaxStep(test.id),
+                testName: test.title,
+                onTap: () {
+                  if (!hasQn) {
+                    AppHelperFuntions.showAlert(
+                      "No Questions",
+                      "This test has no questions",
+                    );
+                    return;
+                  }
 
-                AppHelperFuntions.showAppDialog(
-                  context,
-                  "Want to take a test?",
-                  "You will be redirected to questions section.",
-                  () => Get.to(
-                    () => QuestionScreen(test: test),
-                    binding: QuestionBinding(),
-                  ),
-                );
-              },
+                  AppHelperFuntions.showAppDialog(
+                    context,
+                    "Want to take a test?",
+                    "You will be redirected to questions section.",
+                    () => Get.to(
+                      () => QuestionScreen(test: test),
+                      binding: QuestionBinding(),
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },

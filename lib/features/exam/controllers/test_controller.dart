@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/logging/logging.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,6 +19,7 @@ class TestController extends GetxController {
   final RxList<TestModel> allGradeTests = <TestModel>[].obs;
   final RxList<TestModel> singleGradeTests = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
+  final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
 
   @override
   void onInit() {
@@ -43,6 +46,7 @@ class TestController extends GetxController {
     try {
       chapterTest.clear();
       testHasQuestions.clear();
+      testResults.clear();
 
       final dbChapterTests = await _databaseService.getSubjectTests(subjectId);
 
@@ -82,6 +86,7 @@ class TestController extends GetxController {
 
       await loadTestQuestionFlags(data);
       loadAllGradeTests();
+      await loadTestResults(data);
     } catch (e) {
       AppHelperFuntions.showAlert("Test Error", e.toString());
     }
@@ -118,5 +123,39 @@ class TestController extends GetxController {
 
   Future<bool> hasQuestions(int testId) async {
     return await _databaseService.hasQuestions(testId);
+  }
+
+  // load saved test
+  Future<void> loadTestResults(List<TestModel> tests) async {
+    await Future.wait(
+      tests.map((test) async {
+        final result = await _databaseService.loadSavedTestResult(test.id);
+        if (result != null) {
+          AppLoggerHelper.error(result.correctAnswers.toString());
+
+          testResults[test.id] = result;
+        }
+      }),
+    );
+  }
+
+  int getCurrentStep(int testId) {
+    final result = testResults[testId];
+
+    if (result != null) {
+      return result.correctAnswers;
+    }
+
+    return 0;
+  }
+
+  int getMaxStep(int testId) {
+    final result = testResults[testId];
+
+    if (result != null) {
+      return result.testQuestions.length;
+    }
+
+    return 20;
   }
 }

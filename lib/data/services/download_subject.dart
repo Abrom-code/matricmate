@@ -1,4 +1,5 @@
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -40,9 +41,11 @@ class SubjectDownloadService {
         .eq('subject_id', subjectId);
 
     for (final q in questions) {
+      final question = QuestionModel.fromMap(q);
+
       await db.insert(
         'questions',
-        q,
+        question.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }

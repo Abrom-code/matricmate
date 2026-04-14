@@ -72,31 +72,12 @@ class DBschema {
     ''');
 
     await db.execute('''
-      CREATE TABLE test_progress (
+      CREATE TABLE results (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        test_id INTEGER NOT NULL,
-        questions_attempted INTEGER DEFAULT 0,
-        correct_answers INTEGER DEFAULT 0,
-        total_questions INTEGER NOT NULL,
-        status TEXT DEFAULT 'not_started',
-        last_question_id INTEGER,
-        started_at TEXT,
-        updated_at TEXT,
-        completed_at TEXT,
-        FOREIGN KEY(test_id) REFERENCES tests(id) ON DELETE CASCADE
-      );
-    ''');
-
-    await db.execute('''
-      CREATE TABLE question_answers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        test_progress_id INTEGER NOT NULL,
-        question_id INTEGER NOT NULL,
-        selected_option_index INTEGER,
-        is_correct INTEGER,
-        answered_at TEXT,
-        FOREIGN KEY(test_progress_id) REFERENCES test_progress(id) ON DELETE CASCADE,
-        FOREIGN KEY(question_id) REFERENCES questions(id) ON DELETE CASCADE
+        test_id INTEGER UNIQUE,
+        testQuestions TEXT,
+        selectedAnswers TEXT,
+        correctAnswers INTEGER
       );
     ''');
 
@@ -116,14 +97,6 @@ class DBschema {
 
     await db.execute(
       'CREATE INDEX idx_tests_subject_grade_chapter ON tests(subject_id, grade, chapter_id)',
-    );
-
-    await db.execute(
-      'CREATE INDEX idx_test_progress_test ON test_progress(test_id)',
-    );
-
-    await db.execute(
-      'CREATE INDEX idx_question_answers_progress ON question_answers(test_progress_id)',
     );
   }
 }

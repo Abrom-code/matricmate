@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -126,5 +128,21 @@ class QuestionController extends GetxController {
     }
 
     return score;
+  }
+
+  Future<bool> saveResult(ResultModel result) async {
+    try {
+      final db = await _databaseService.database;
+      await db.insert(
+        'results',
+        result.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      ToastHelper.success("Success", "Your result is saved!");
+      return true;
+    } catch (e) {
+      ToastHelper.error("Faild!", e.toString());
+      return false;
+    }
   }
 }

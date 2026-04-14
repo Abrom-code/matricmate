@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class TestTile extends StatelessWidget {
   const TestTile({
@@ -10,14 +11,18 @@ class TestTile extends StatelessWidget {
     this.icon = Icons.quiz,
     required this.onTap,
     this.hasSubTitle = true,
+    required this.currentStep,
+    required this.maxStep,
   });
   final String testName;
   final IconData icon;
   final VoidCallback onTap;
   final bool hasSubTitle;
+  final int currentStep, maxStep;
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFuntions.isDark(context);
     return Material(
       clipBehavior: Clip.hardEdge,
       borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
@@ -37,11 +42,11 @@ class TestTile extends StatelessWidget {
             ).textTheme.titleSmall!.apply(color: AppColors.primary),
           ),
           subtitle: LinearProgressBar(
-            currentStep: 20,
-            maxSteps: 100,
+            currentStep: currentStep,
+            maxSteps: maxStep,
             borderRadius: BorderRadiusGeometry.circular(6),
             progressColor: AppColors.primary,
-            backgroundColor: AppColors.darkGrey,
+            backgroundColor: dark ? AppColors.darkGrey : AppColors.grey,
           ),
           visualDensity: VisualDensity(vertical: 2),
 

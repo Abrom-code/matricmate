@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -124,6 +124,21 @@ class DatabaseService extends GetxController {
     );
     return result.isNotEmpty;
   }
+
+  Future<ResultModel?> loadSavedTestResult(int testId) async {
+    final db = await database;
+    final result = await db.query(
+      'results',
+      where: 'test_id = ?',
+      whereArgs: [testId],
+      limit: 1,
+    );
+    if (result.isEmpty) return null;
+
+    return ResultModel.fromMap(result.first);
+  }
+
+  // For future versions!
 
   // Start test
   Future<int> startTest({

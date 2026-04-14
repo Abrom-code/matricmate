@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
+import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/explanation_box.dart';
@@ -123,20 +124,21 @@ class NormarQuesionsSection extends GetView<QuestionController> {
                       controller.testQuestions.length - 1;
 
                   return OutlinedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (!isChecked) {
                         controller.checkAnswer(q.id);
                       } else {
                         if (isLast) {
-                          Get.offAll(
-                            () => ResultScreen(
-                              result: ResultModel(
-                                selectedAnswers: controller.selectedAnswers,
-                                testQuestions: controller.testQuestions,
-                                correctAnswers: controller.correctAnswers,
-                              ),
-                            ),
+                          final result = ResultModel(
+                            testId: examQn.testId,
+                            selectedAnswers: controller.selectedAnswers,
+                            testQuestions: controller.testQuestions.toList(),
+                            correctAnswers: controller.correctAnswers,
                           );
+                          controller.saveResult(result);
+                          TestController.instance.testResults[result.testId] =
+                              result;
+                          Get.offAll(() => ResultScreen(result: result));
                         } else {
                           controller.nextQuestion();
                         }

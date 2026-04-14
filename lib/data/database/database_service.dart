@@ -141,7 +141,7 @@ class DatabaseService extends GetxController {
 
   Future<List<BookmarkModel>> loadBookmarkedQuestions() async {
     final db = await database;
-    final result = await db.query('bookmarks');
+    final result = await db.query('bookmarks', orderBy: 'saved_at DESC');
 
     return result.map((res) => BookmarkModel.fromMap(res)).toList();
   }

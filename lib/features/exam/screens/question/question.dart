@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/normal_questions_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -12,6 +13,7 @@ class QuestionScreen extends GetView<QuestionController> {
 
   @override
   Widget build(BuildContext context) {
+    final bookmarkController = Get.find<BookmarkController>();
     final dark = AppHelperFuntions.isDark(context);
 
     return PopScope(
@@ -42,7 +44,7 @@ class QuestionScreen extends GetView<QuestionController> {
           );
         }
         final examQn = controller.testQuestions[controller.currentIndex.value];
-        final isSaved = controller.isBookmarked(examQn.id);
+
         return Scaffold(
           appBar: Appbar(
             leadingIcon: Icons.close,
@@ -62,15 +64,18 @@ class QuestionScreen extends GetView<QuestionController> {
             ),
             centerTitle: true,
             actions: [
-              IconButton(
-                onPressed: isSaved
-                    ? () => controller.removeFromBookmark(examQn.id)
-                    : () => controller.addToBookmark(examQn.id),
-                icon: Icon(
-                  isSaved ? Icons.bookmark : Icons.bookmark_outline,
-                  color: isSaved ? AppColors.primary : null,
-                ),
-              ),
+              Obx(() {
+                final isSaved = controller.isBookmarked(examQn.id);
+                return IconButton(
+                  onPressed: isSaved
+                      ? () => bookmarkController.removeFromBookmark(examQn.id)
+                      : () => bookmarkController.addToBookmark(examQn.id),
+                  icon: Icon(
+                    isSaved ? Icons.bookmark : Icons.bookmark_outline,
+                    color: isSaved ? AppColors.primary : null,
+                  ),
+                );
+              }),
             ],
             backgroundColor: Colors.transparent,
           ),

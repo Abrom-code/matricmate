@@ -3,9 +3,9 @@ import 'package:intl/intl.dart';
 class AppFormatter {
   AppFormatter._();
 
-  static String formatDate(DateTime? date) {
-    date ??= DateTime.now();
-    return DateFormat('dd-MMM-yyyy').format(date); // Customize as needed
+  static String formatDate(int timestamp) {
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    return DateFormat('MMM d, yyyy').format(date);
   }
 
   static String formatCurrency(double amount) {

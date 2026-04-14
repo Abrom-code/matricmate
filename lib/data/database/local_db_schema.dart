@@ -84,6 +84,8 @@ class DBschema {
       CREATE TABLE bookmarks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         question_id INTEGER UNIQUE,
+        saved_at INTEGER NOT NULL
+        );
 ''');
 
     await db.execute(

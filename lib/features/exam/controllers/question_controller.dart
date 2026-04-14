@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
-import 'package:matricmate/features/exam/controllers/test_controller.dart';
+import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -22,6 +22,17 @@ class QuestionController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isExplanationExpanaded = false.obs;
   final RxString languageSelected = "EN".obs;
+  final RxList<BookmarkModel> bookmarkedQuestion = <BookmarkModel>[].obs;
+  final RxSet<int> bookmarkedIds = <int>{}.obs;
+
+  @override
+  void onInit() {
+    final testId = Get.arguments as int;
+    loadTestQuestions(testId);
+    loadBookmarks();
+
+    super.onInit();
+  }
 
   Future<void> loadTestQuestions(int testId) async {
     try {
@@ -144,5 +155,46 @@ class QuestionController extends GetxController {
       ToastHelper.error("Faild!", e.toString());
       return false;
     }
+  }
+
+  Future<void> addToBookmark(int qnId) async {
+    try {
+      final db = await _databaseService.database;
+      final bookmarkQn = BookmarkModel(
+        questionId: qnId,
+        savedAt: DateTime.now().microsecondsSinceEpoch,
+      );
+      await db.insert(
+        'bookmarks',
+        bookmarkQn.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      await loadBookmarks();
+      ToastHelper.success("Success", "Added to bookmark!");
+    } catch (e) {
+      ToastHelper.error("Faild!", e.toString());
+    }
+  }
+
+  Future<void> removeFromBookmark(int qnId) async {
+    try {
+      final db = await _databaseService.database;
+      await db.delete('bookmarks', where: 'question_id = ?', whereArgs: [qnId]);
+      await loadBookmarks();
+      ToastHelper.success("Success", "Removed from bookmark!");
+    } catch (e) {
+      ToastHelper.error("Faild!", e.toString());
+    }
+  }
+
+  Future<void> loadBookmarks() async {
+    final data = await _databaseService.loadBookmarkedQuestions();
+
+    bookmarkedQuestion.value = data;
+    bookmarkedIds.value = data.map((e) => e.questionId).toSet();
+  }
+
+  bool isBookmarked(int questionId) {
+    return bookmarkedIds.contains(questionId);
   }
 }

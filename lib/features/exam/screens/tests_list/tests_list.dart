@@ -9,7 +9,6 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 
 class TestListScreen extends GetView<TestController> {
   const TestListScreen({
@@ -77,8 +76,9 @@ class TestListScreen extends GetView<TestController> {
                         "Want to take a test?",
                         "You will be redirected to questions section.",
                         () => Get.off(
-                          () => QuestionScreen(test: test),
+                          () => QuestionScreen(),
                           binding: QuestionBinding(),
+                          arguments: test.id,
                         ),
                       );
                     },

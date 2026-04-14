@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
+import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/logging/logging.dart';
 import 'package:path/path.dart';
@@ -136,6 +137,13 @@ class DatabaseService extends GetxController {
     if (result.isEmpty) return null;
 
     return ResultModel.fromMap(result.first);
+  }
+
+  Future<List<BookmarkModel>> loadBookmarkedQuestions() async {
+    final db = await database;
+    final result = await db.query('bookmarks');
+
+    return result.map((res) => BookmarkModel.fromMap(res)).toList();
   }
 
   // For future versions!

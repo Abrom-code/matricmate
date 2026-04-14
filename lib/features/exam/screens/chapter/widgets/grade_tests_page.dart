@@ -68,8 +68,9 @@ class GradeTestsPage extends GetView<TestController> {
                         "Want to take a test?",
                         "You will be redirected to questions section.",
                         () => Get.off(
-                          () => QuestionScreen(test: test),
+                          () => QuestionScreen(),
                           binding: QuestionBinding(),
+                          arguments: test.id,
                         ),
                       );
                     },

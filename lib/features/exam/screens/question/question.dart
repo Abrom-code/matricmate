@@ -2,23 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
-import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/normal_questions_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class QuestionScreen extends GetView<QuestionController> {
-  const QuestionScreen({super.key, required this.test});
-  final TestModel test;
+  const QuestionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadTestQuestions(test.id);
-    });
 
     return PopScope(
       canPop: false,
@@ -47,7 +41,8 @@ class QuestionScreen extends GetView<QuestionController> {
             body: Center(child: Text("No Questions Available")),
           );
         }
-
+        final examQn = controller.testQuestions[controller.currentIndex.value];
+        final isSaved = controller.isBookmarked(examQn.id);
         return Scaffold(
           appBar: Appbar(
             leadingIcon: Icons.close,
@@ -68,8 +63,13 @@ class QuestionScreen extends GetView<QuestionController> {
             centerTitle: true,
             actions: [
               IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.bookmark_outline),
+                onPressed: isSaved
+                    ? () => controller.removeFromBookmark(examQn.id)
+                    : () => controller.addToBookmark(examQn.id),
+                icon: Icon(
+                  isSaved ? Icons.bookmark : Icons.bookmark_outline,
+                  color: isSaved ? AppColors.primary : null,
+                ),
               ),
             ],
             backgroundColor: Colors.transparent,

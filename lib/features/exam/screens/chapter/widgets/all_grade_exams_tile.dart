@@ -52,8 +52,9 @@ class AllGradeExamsTile extends GetView<TestController> {
                     "Want to take a test?",
                     "You will be redirected to questions section.",
                     () => Get.to(
-                      () => QuestionScreen(test: test),
+                      () => QuestionScreen(),
                       binding: QuestionBinding(),
+                      arguments: test.id,
                     ),
                   );
                 },

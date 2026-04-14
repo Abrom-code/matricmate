@@ -80,6 +80,11 @@ class DBschema {
         correctAnswers INTEGER
       );
     ''');
+    await db.execute('''
+      CREATE TABLE bookmarks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        question_id INTEGER UNIQUE,
+''');
 
     await db.execute(
       'CREATE INDEX idx_questions_subject_grade ON questions(subject_id, grade)',

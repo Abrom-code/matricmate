@@ -1,7 +1,4 @@
 class AppImages {
-  static const String darkAppLogo = "/";
-  static const String lightAppLogo = '/';
-
   // Onboarding Images
   static const String firstOnboardingImage =
       "assets/images/onboarding/onboarding1.png";

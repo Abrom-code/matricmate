@@ -12,6 +12,7 @@ class SearchField extends StatelessWidget {
 
     return TextFormField(
       onTapOutside: (e) => FocusScope.of(context).unfocus(),
+      autofocus: false,
       onChanged: (value) {
         BookmarkController.instance.searchQuery.value = value;
       },

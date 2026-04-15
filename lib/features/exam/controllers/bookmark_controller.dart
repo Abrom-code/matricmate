@@ -15,6 +15,9 @@ class BookmarkController extends GetxController {
   final RxSet<int> bookmarkedIds = <int>{}.obs;
   final RxString searchQuery = ''.obs;
 
+  final RxString languageSelected = "EN".obs;
+  final RxBool isQnExpanded = false.obs;
+
   @override
   void onInit() {
     loadBookmarks();

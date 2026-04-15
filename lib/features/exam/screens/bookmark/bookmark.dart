@@ -14,6 +14,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
+
     return Obx(() {
       final tabs = controller.subjects;
       return DefaultTabController(
@@ -31,7 +32,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
                   pinned: true,
                   floating: true,
                   backgroundColor: dark ? AppColors.black : AppColors.white,
-                  expandedHeight: 150,
+                  expandedHeight: 130,
                   flexibleSpace: Padding(
                     padding: EdgeInsets.all(AppSizes.defaultSpace),
                     child: SearchField(),

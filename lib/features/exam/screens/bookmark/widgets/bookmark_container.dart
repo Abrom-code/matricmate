@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
-import 'package:matricmate/features/exam/screens/result/widgets/review_qn_container.dart';
+import 'package:matricmate/features/exam/screens/bookmark/widgets/bookmark_qn_container.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
@@ -97,7 +97,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
                   width: 100,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () => Get.to(BookmarkedQnContainer(qn: qn)),
                     child: Center(child: Text("View")),
                   ),
                 ),

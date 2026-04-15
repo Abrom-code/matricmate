@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -11,6 +12,9 @@ class SearchField extends StatelessWidget {
 
     return TextFormField(
       onTapOutside: (e) => FocusScope.of(context).unfocus(),
+      onChanged: (value) {
+        BookmarkController.instance.searchQuery.value = value;
+      },
       decoration: InputDecoration(
         prefixIcon: Icon(Icons.search),
         border: buildBorder(Colors.grey),

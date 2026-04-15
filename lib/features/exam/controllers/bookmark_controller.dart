@@ -13,6 +13,7 @@ class BookmarkController extends GetxController {
   final RxList<BookmarkModel> bookmarkedQuestionIds = <BookmarkModel>[].obs;
   final RxList<QuestionModel> bookmarkedQuestions = <QuestionModel>[].obs;
   final RxSet<int> bookmarkedIds = <int>{}.obs;
+  final RxString searchQuery = ''.obs;
 
   @override
   void onInit() {
@@ -87,17 +88,30 @@ class BookmarkController extends GetxController {
   }
 
   List<QuestionModel> getBySubject(String subject) {
-    if (subject == "All") return bookmarkedQuestions;
+    final query = searchQuery.value.toLowerCase();
 
-    return bookmarkedQuestions
-        .where(
-          (q) =>
-              SubjectsController.instance.subjects
-                  .where((s) => s.id == q.subjectId)
-                  .first
+    return bookmarkedQuestions.where((q) {
+      final matchesSubject =
+          subject == "All" ||
+          SubjectsController.instance.subjects
+                  .firstWhere((s) => s.id == q.subjectId)
                   .name ==
-              subject,
-        )
-        .toList();
+              subject;
+
+      final matchesSearch = q.questionText.toLowerCase().contains(query);
+
+      return matchesSubject && matchesSearch;
+    }).toList();
+  }
+
+  List<QuestionModel> get filteredQuestions {
+    final query = searchQuery.value.toLowerCase();
+    if (query.length < 2) return bookmarkedQuestions;
+
+    if (query.isEmpty) return bookmarkedQuestions;
+
+    return bookmarkedQuestions.where((q) {
+      return q.questionText.toLowerCase().contains(query);
+    }).toList();
   }
 }

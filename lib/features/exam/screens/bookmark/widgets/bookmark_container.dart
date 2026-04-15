@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
+import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
+import 'package:matricmate/features/exam/screens/result/widgets/review_qn_container.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
@@ -16,10 +18,12 @@ class BookmarkContainer extends GetView<BookmarkController> {
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
     final isGrater = qn.questionText.length > 150;
-    final savedAt = controller.bookmarkedQuestionIds
-        .where((b) => b.questionId == qn.id)
-        .first
-        .savedAt;
+    final bookmark = controller.bookmarkedQuestionIds.firstWhere(
+      (b) => b.questionId == qn.id,
+      orElse: () => BookmarkModel(questionId: qn.id, savedAt: 0),
+    );
+
+    final savedAt = bookmark.savedAt;
     return Obx(() {
       return Container(
         padding: EdgeInsets.all(AppSizes.defaultSpace / 1.3),

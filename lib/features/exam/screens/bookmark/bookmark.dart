@@ -52,20 +52,26 @@ class BookmarkScreen extends GetView<BookmarkController> {
 
             body: TabBarView(
               children: controller.subjects.map((subject) {
-                final filtered = controller.getBySubject(subject);
+                return Obx(() {
+                  final filtered = controller.getBySubject(subject);
 
-                return Container(
-                  margin: EdgeInsets.all(AppSizes.defaultSpace / 2),
-                  child: ListView.separated(
-                    itemCount: filtered.length,
-                    separatorBuilder: (_,_) => Divider(),
-                    itemBuilder: (_, index) {
-                      final qn = filtered[index];
+                  if (filtered.isEmpty) {
+                    return Center(child: Text("No results found"));
+                  }
 
-                      return BookmarkContainer(qn: qn);
-                    },
-                  ),
-                );
+                  return Container(
+                    margin: EdgeInsets.all(AppSizes.defaultSpace / 2),
+                    child: ListView.separated(
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, _) =>
+                          Divider(height: AppSizes.spaceBtwSections),
+                      itemBuilder: (_, index) {
+                        final qn = filtered[index];
+                        return BookmarkContainer(qn: qn);
+                      },
+                    ),
+                  );
+                });
               }).toList(),
             ),
           ),

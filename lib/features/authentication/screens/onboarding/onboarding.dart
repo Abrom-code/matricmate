@@ -37,7 +37,7 @@ class OnboardingScreen extends StatelessWidget {
                 ),
                 OnBoardingPane(
                   mainText: "Questions from",
-                  mainSubText: "Grade 9 - 11",
+                  mainSubText: "Grade 9 - 12",
                   subText:
                       "Access a vast collection of questions from Grade 9 to 12 and sharpen your skills.",
                   onboardImage: AppImages.secondOnboardingImage,

@@ -22,9 +22,7 @@ class OnBoardingButton extends StatelessWidget {
                   child: CircularProgressIndicator(),
                 )
               : Text(
-                  controller.currentPageIndex.value == 2
-                      ? "Sign In"
-                      : "Continue",
+                  controller.currentPageIndex.value == 2 ? "Sign In" : "Next",
                 )),
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -48,6 +49,7 @@ class BookmarkController extends GetxController {
       final db = await _databaseService.database;
       await db.delete('bookmarks', where: 'question_id = ?', whereArgs: [qnId]);
       await loadBookmarks();
+      ToastHelper.success("Removed", "Bookmark is removed!");
     } catch (e) {
       ToastHelper.error("Faild!", e.toString());
     }

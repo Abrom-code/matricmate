@@ -60,6 +60,8 @@ class BookmarkContainer extends GetView<BookmarkController> {
                     () {
                       controller.removeFromBookmark(qn.id);
                       Navigator.pop(context);
+
+                      FocusManager.instance.primaryFocus?.unfocus();
                     },
                   ),
                   icon: Icon(Icons.bookmark, color: AppColors.primary),

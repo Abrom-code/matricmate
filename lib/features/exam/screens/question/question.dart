@@ -52,7 +52,7 @@ class QuestionScreen extends GetView<QuestionController> {
             leadingOnPressed: () => AppHelperFuntions.showAppDialog(
               context,
               "Want to Exit?",
-              "Your progress will be saved.",
+              "Your progress will not saved.",
               () {
                 Navigator.pop(context);
                 Navigator.pop(context);

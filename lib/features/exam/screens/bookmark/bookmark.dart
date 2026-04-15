@@ -57,7 +57,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
                   final filtered = controller.getBySubject(subject);
 
                   if (filtered.isEmpty) {
-                    return Center(child: Text("No results found"));
+                    return Center(child: Text("No bookmark found"));
                   }
 
                   return Container(

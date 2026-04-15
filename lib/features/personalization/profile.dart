@@ -6,6 +6,7 @@ import 'package:matricmate/features/personalization/widgets/profile_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/themes/theme_controller.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -67,7 +68,11 @@ class ProfileScreen extends StatelessWidget {
                     ProfileTile(
                       icon: Icon(Icons.sunny),
                       title: "Change Theme",
-                      trailing: Switch(value: true, onChanged: (value) {}),
+                      trailing: Switch(
+                        value: dark,
+                        onChanged: (value) =>
+                            ThemeController.instance.toogleTheme(value),
+                      ),
                     ),
                   ],
                 ),

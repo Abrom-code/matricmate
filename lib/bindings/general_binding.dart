@@ -4,6 +4,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
+import 'package:matricmate/utils/themes/theme_controller.dart';
 
 class GeneralBinding extends Bindings {
   @override
@@ -12,5 +13,6 @@ class GeneralBinding extends Bindings {
     Get.put(DatabaseService(), permanent: true);
     Get.put(SubjectsController(), permanent: true);
     Get.put(BookmarkController(), permanent: true);
+    Get.put(ThemeController(), permanent: true);
   }
 }

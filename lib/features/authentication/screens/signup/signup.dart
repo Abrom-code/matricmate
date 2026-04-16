@@ -48,7 +48,6 @@ class SignupScreen extends StatelessWidget {
                 ],
               ),
               SizedBox(height: AppSizes.defaultSpace),
-
             ],
           ),
         ),

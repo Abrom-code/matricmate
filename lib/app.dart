@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/route_manager.dart';
 import 'package:matricmate/bindings/general_binding.dart';
+import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/authentication/screens/onboarding/onboarding.dart';
 import 'package:matricmate/utils/themes/app_theme.dart';
 import 'package:matricmate/utils/themes/theme_controller.dart';
@@ -29,7 +30,7 @@ class App extends StatelessWidget {
         );
       },
 
-      home: OnboardingScreen(),
+      home: LoginScreen(),
     );
   }
 }

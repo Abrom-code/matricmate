@@ -24,7 +24,7 @@ class LoginForm extends StatelessWidget {
             validator: (value) => AppValidator.validateEmail(value),
             decoration: InputDecoration(
               labelText: AppTextStrings.email,
-              prefixIcon: Icon(Icons.arrow_right),
+              prefixIcon: Icon(Icons.email),
             ),
           ),
           const SizedBox(height: AppSizes.defaultSpace),
@@ -36,13 +36,13 @@ class LoginForm extends StatelessWidget {
               validator: (value) => AppValidator.validatePassword(value),
               decoration: InputDecoration(
                 labelText: AppTextStrings.password,
-                prefixIcon: Icon(Icons.password),
+                prefixIcon: Icon(Icons.lock),
                 suffixIcon: IconButton(
                   onPressed: () => controller.hidePassword.value =
                       !controller.hidePassword.value,
                   icon: controller.hidePassword.value
-                      ? Icon(Icons.energy_savings_leaf_outlined)
-                      : Icon(Icons.remove_red_eye_outlined),
+                      ? Icon(Icons.visibility_off)
+                      : Icon(Icons.visibility),
                 ),
               ),
             ),
@@ -89,4 +89,3 @@ class LoginForm extends StatelessWidget {
     );
   }
 }
-

@@ -1,4 +1,8 @@
 class AppImages {
+  // logo
+  static const String transparentLogo =
+      "assets/images/logo/transparent_logo.png";
+
   // Onboarding Images
   static const String firstOnboardingImage =
       "assets/images/onboarding/onboarding1.png";

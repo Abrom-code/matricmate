@@ -5,6 +5,7 @@ import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
 import 'package:matricmate/utils/constants/api_constants.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class SignupController extends GetxController {
@@ -26,7 +27,7 @@ class SignupController extends GetxController {
       if (!signupFormKey.currentState!.validate()) return;
 
       if (!isTermsAgreed.value) {
-        Get.snackbar(
+        ToastHelper.warning(
           "Warning",
           "Please read and accept the Privacy Policy & Terms of Use.",
         );
@@ -36,10 +37,10 @@ class SignupController extends GetxController {
       // 2. START LOADING
       // Open this BEFORE the network check so the user knows the app is "thinking."
 
-
       //  NETWORK CHECK
       final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) {// Must stop if we return early
+      if (!isConnected) {
+        // Must stop if we return early
         return;
       }
 
@@ -56,22 +57,15 @@ class SignupController extends GetxController {
         firstName: firstName.text.trim(),
         lastName: lastName.text.trim(),
         email: email.text.trim(),
-        username: userName.text.trim(),
-        phoneNumber: phoneNumber.text.trim(),
-        profileImage: '',
-        role: email.text.trim() == ApiConstants.adminEmail ? "admin" : "user",
+        stream: userName.text.trim(),
       );
 
       final userRepository = Get.put(UserRepository());
       await userRepository.saveUserRecord(newUser);
 
-   
-
       Get.to(() => VerifyEmailScreen(email: email.text.trim()));
     } catch (e) {
-
-
-      Get.snackbar("Oh Snap!", e.toString());
+      ToastHelper.error("Faild", e.toString());
     }
   }
 }

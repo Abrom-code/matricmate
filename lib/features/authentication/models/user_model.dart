@@ -15,15 +15,29 @@ class UserModel {
     this.password,
   });
 
+  /// FROM JSON (Supabase → Dart)
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['_id']?.toString() ?? '',
-      firstName: json['firstName']?.toString() ?? '',
-      lastName: json['lastName']?.toString() ?? '',
+      id: json['id']?.toString() ?? '',
+      firstName: json['first_name']?.toString() ?? '',
+      lastName: json['last_name']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       stream: json['stream']?.toString() ?? '',
     );
   }
+
+  /// TO JSON (Dart → Supabase)
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'first_name': firstName,
+      'last_name': lastName,
+      'email': email,
+      'stream': stream,
+      // ⚠️ optional: don't store password here
+    };
+  }
+
   UserModel copyWith({
     String? id,
     String? firstName,
@@ -40,18 +54,6 @@ class UserModel {
       stream: stream ?? this.stream,
       password: password ?? this.password,
     );
-  }
-
-  // Convert UserModel to Map for MongoDB
-  Map<String, dynamic> toJson() {
-    return {
-      '_id': id,
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
-      'stream': stream,
-      'password': password,
-    };
   }
 
   static UserModel empty() =>

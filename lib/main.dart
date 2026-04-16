@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/app.dart';
+import 'package:matricmate/bindings/initial_binding.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/firebase_options.dart';
 import 'package:matricmate/utils/constants/api_constants.dart';
@@ -29,5 +31,5 @@ Future<void> main() async {
     url: ApiConstants.supabaseUrl,
     anonKey: ApiConstants.supabaseApiKey,
   );
-  runApp(const App());
+  runApp(GetMaterialApp(initialBinding: InitialBinding(), home: const App()));
 }

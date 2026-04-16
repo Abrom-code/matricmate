@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/buttons/drop_down_button.dart';
 import 'package:matricmate/features/authentication/controllers/signup/signup_controller.dart';
 import 'package:matricmate/features/authentication/screens/signup/widgets/term_and_conditions.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
-import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
@@ -99,8 +97,8 @@ class SignupForm extends StatelessWidget {
               DropdownMenuItem(value: "natural", child: Text("Natural")),
               DropdownMenuItem(value: "social", child: Text("Social")),
             ],
-            onChanged: (stream) {},
-            initialValue: 'natural',
+            onChanged: (stream) => controller.selectedStream.value = stream!,
+            initialValue: controller.selectedStream.value,
           ),
 
           const SizedBox(height: AppSizes.spaceBtwSections),
@@ -108,11 +106,19 @@ class SignupForm extends StatelessWidget {
           TermAndConditions(),
 
           const SizedBox(height: AppSizes.spaceBtwSections),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => controller.signup(),
-              child: Text(AppTextStrings.createAccount),
+          Obx(
+            () => SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => controller.signup(),
+                child: controller.isSigning.value
+                    ? SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(),
+                      )
+                    : Text(AppTextStrings.createAccount),
+              ),
             ),
           ),
         ],

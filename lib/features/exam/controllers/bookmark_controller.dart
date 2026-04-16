@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -32,26 +31,30 @@ class BookmarkController extends GetxController {
         questionId: qnId,
         savedAt: DateTime.now().millisecondsSinceEpoch,
       );
+
       await db.insert(
         'bookmarks',
         bookmarkQn.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+
       await loadBookmarks();
       ToastHelper.success("Success", "Added to bookmark!");
     } catch (e) {
-      ToastHelper.error("Faild!", e.toString());
+      ToastHelper.error("Failed!", e.toString());
     }
   }
 
   Future<void> removeFromBookmark(int qnId) async {
     try {
       final db = await _databaseService.database;
+
       await db.delete('bookmarks', where: 'question_id = ?', whereArgs: [qnId]);
+
       await loadBookmarks();
       ToastHelper.success("Removed", "Bookmark is removed!");
     } catch (e) {
-      ToastHelper.error("Faild!", e.toString());
+      ToastHelper.error("Failed!", e.toString());
     }
   }
 
@@ -59,49 +62,63 @@ class BookmarkController extends GetxController {
     final data = await _databaseService.loadBookmarkedQuestions();
 
     bookmarkedQuestionIds.value = data;
-
     bookmarkedIds.value = data.map((b) => b.questionId).toSet();
 
     final allQns = await _databaseService.getQuestions();
 
-    bookmarkedQuestions.value = data.map((b) {
-      final qn = allQns.firstWhere((q) => q['id'] == b.questionId);
-      return QuestionModel.fromMap(qn);
-    }).toList();
+    bookmarkedQuestions.value = data
+        .map((b) {
+          final qnList = allQns.where((q) => q['id'] == b.questionId);
+
+          if (qnList.isNotEmpty) {
+            return QuestionModel.fromMap(qnList.first);
+          }
+
+          return null;
+        })
+        .whereType<QuestionModel>()
+        .toList();
   }
 
+  /// ✅ SAFE SUBJECT LIST
   List<String> get subjects {
     final set = <String>{};
 
+    final subjectsList = SubjectsController.instance.subjects;
+
+    if (subjectsList.isEmpty) return ["All"];
+
     for (var q in bookmarkedQuestions) {
-      set.add(
-        SubjectsController.instance.subjects
-            .where((s) => s.id == q.subjectId)
-            .first
-            .name,
-      );
+      final subjectMatch = subjectsList.where((s) => s.id == q.subjectId);
+
+      if (subjectMatch.isNotEmpty) {
+        set.add(subjectMatch.first.name);
+      }
     }
 
     return ["All", ...set];
   }
 
+  /// ✅ SAFE SUBJECT NAME
   String subject(int subjectId) {
-    return SubjectsController.instance.subjects
-        .where((s) => s.id == subjectId)
-        .first
-        .name;
+    final subjectsList = SubjectsController.instance.subjects;
+
+    final match = subjectsList.where((s) => s.id == subjectId);
+
+    return match.isNotEmpty ? match.first.name : "Unknown";
   }
 
+  /// ✅ FILTER BY SUBJECT + SEARCH
   List<QuestionModel> getBySubject(String subject) {
     final query = searchQuery.value.toLowerCase();
+    final subjectsList = SubjectsController.instance.subjects;
 
     return bookmarkedQuestions.where((q) {
+      final subjectMatch = subjectsList.where((s) => s.id == q.subjectId);
+
       final matchesSubject =
           subject == "All" ||
-          SubjectsController.instance.subjects
-                  .firstWhere((s) => s.id == q.subjectId)
-                  .name ==
-              subject;
+          (subjectMatch.isNotEmpty && subjectMatch.first.name == subject);
 
       final matchesSearch = q.questionText.toLowerCase().contains(query);
 
@@ -109,11 +126,13 @@ class BookmarkController extends GetxController {
     }).toList();
   }
 
+  /// ✅ SEARCH ONLY
   List<QuestionModel> get filteredQuestions {
     final query = searchQuery.value.toLowerCase();
-    if (query.length < 2) return bookmarkedQuestions;
 
-    if (query.isEmpty) return bookmarkedQuestions;
+    if (query.isEmpty || query.length < 2) {
+      return bookmarkedQuestions;
+    }
 
     return bookmarkedQuestions.where((q) {
       return q.questionText.toLowerCase().contains(query);

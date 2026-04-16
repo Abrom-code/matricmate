@@ -4,9 +4,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/authentication/controllers/signup/verify_email_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
-import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class VerifyEmailScreen extends StatelessWidget {
   const VerifyEmailScreen({super.key, this.email});
@@ -21,7 +19,7 @@ class VerifyEmailScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            onPressed: () => AuthenticationRepository.instance.screenRedirect,
+            onPressed: () => AuthenticationRepository.instance.logout(),
             icon: const Icon(CupertinoIcons.clear),
           ),
         ],
@@ -31,10 +29,6 @@ class VerifyEmailScreen extends StatelessWidget {
           padding: EdgeInsets.all(AppSizes.defaultSpace),
           child: Column(
             children: [
-              Image.asset(
-                AppImages.firstOnboardingImage,
-                width: AppHelperFuntions.screenWidth() * 0.8,
-              ),
               const SizedBox(height: AppSizes.spaceBtwItems),
 
               Text(

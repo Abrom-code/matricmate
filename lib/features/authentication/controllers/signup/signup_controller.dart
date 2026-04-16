@@ -4,7 +4,6 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
-import 'package:matricmate/utils/constants/api_constants.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -15,10 +14,10 @@ class SignupController extends GetxController {
   final isTermsAgreed = false.obs;
   final firstName = TextEditingController();
   final lastName = TextEditingController();
-  final userName = TextEditingController();
   final email = TextEditingController();
-  final phoneNumber = TextEditingController();
   final password = TextEditingController();
+  final RxString selectedStream = "natural".obs;
+  final RxBool isSigning = false.obs;
 
   GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
 
@@ -34,15 +33,15 @@ class SignupController extends GetxController {
         return;
       }
 
-      // 2. START LOADING
-      // Open this BEFORE the network check so the user knows the app is "thinking."
-
-      //  NETWORK CHECK
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) {
-        // Must stop if we return early
+      final isConnectd = await NetworkManager.instance.hasRealInternet();
+      if (!isConnectd) {
+        ToastHelper.warning(
+          "No Internet!",
+          "Please turn on mobile data or connect to WIFI!",
+        );
         return;
       }
+      isSigning.value = true;
 
       // REGISTER USER (Firebase)
       final userCredential = await AuthenticationRepository.instance
@@ -53,11 +52,11 @@ class SignupController extends GetxController {
 
       //  SAVE USER DATA
       final newUser = UserModel(
-        id: '.user!.uid',
+        id: userCredential.user!.uid,
         firstName: firstName.text.trim(),
         lastName: lastName.text.trim(),
         email: email.text.trim(),
-        stream: userName.text.trim(),
+        stream: selectedStream.value.trim(),
       );
 
       final userRepository = Get.put(UserRepository());
@@ -66,6 +65,8 @@ class SignupController extends GetxController {
       Get.to(() => VerifyEmailScreen(email: email.text.trim()));
     } catch (e) {
       ToastHelper.error("Faild", e.toString());
+    } finally {
+      isSigning.value = false;
     }
   }
 }

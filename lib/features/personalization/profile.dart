@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
+import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/personalization/widgets/analytics_container.dart';
 import 'package:matricmate/features/personalization/widgets/profile_section.dart';
 import 'package:matricmate/features/personalization/widgets/profile_tile.dart';
@@ -82,7 +84,7 @@ class ProfileScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => AuthenticationRepository.instance.logout(),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.red),
                   ),

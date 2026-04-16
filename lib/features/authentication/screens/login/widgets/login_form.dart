@@ -33,7 +33,6 @@ class LoginForm extends StatelessWidget {
               onTapOutside: (e) => FocusScope.of(context).unfocus(),
               obscureText: controller.hidePassword.value,
               controller: controller.password,
-              validator: (value) => AppValidator.validatePassword(value),
               decoration: InputDecoration(
                 labelText: AppTextStrings.password,
                 prefixIcon: Icon(Icons.lock),
@@ -65,11 +64,19 @@ class LoginForm extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.spaceBtwSections),
 
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => controller.emailAndPasswordLogin(),
-              child: Text(AppTextStrings.signIn),
+          Obx(
+            () => SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => controller.emailAndPasswordLogin(),
+                child: controller.isLoaging.value
+                    ? SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(),
+                      )
+                    : Text(AppTextStrings.signIn),
+              ),
             ),
           ),
 

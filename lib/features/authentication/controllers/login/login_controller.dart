@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
+import 'package:matricmate/data/services/device_service.dart';
+import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
-
 
 class LoginController extends GetxController {
   static LoginController get instance => Get.find();
@@ -14,6 +15,7 @@ class LoginController extends GetxController {
   final hidePassword = true.obs;
   final email = TextEditingController();
   final password = TextEditingController();
+  final RxBool isLoaging = false.obs;
 
   GlobalKey<FormState> loginFormkey = GlobalKey<FormState>();
 
@@ -37,11 +39,15 @@ class LoginController extends GetxController {
       }
 
       // loading
+      isLoaging.value = true;
 
       // Network check
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) {
-      
+      final isConnectd = await NetworkManager.instance.hasRealInternet();
+      if (!isConnectd) {
+        ToastHelper.warning(
+          "No Internet!",
+          "Please turn on mobile data or connect to WIFI!",
+        );
         return;
       }
 
@@ -50,9 +56,27 @@ class LoginController extends GetxController {
         password.value.text.trim(),
       );
 
+      // 🔐 Get UID
+      final uid = AuthenticationRepository.instance.authUser!.uid;
+
+      // 📱 Get device ID
+      final deviceId = await DeviceService.getDeviceId();
+
+      // 🔍 Validate session
+      final isAllowed = await SessionService().validateSession(uid, deviceId);
+
+      if (!isAllowed) {
+        // logout immediately if blocked
+        await AuthenticationRepository.instance.logout();
+        return;
+      }
+
+      // ✅ Proceed if allowed
       AuthenticationRepository.instance.screenRedirect();
     } catch (e) {
-      ToastHelper.error( "Error",  e.toString());
+      ToastHelper.error("Error", e.toString());
+    } finally {
+      isLoaging.value = false;
     }
   }
 

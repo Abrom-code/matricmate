@@ -21,7 +21,7 @@ class VerifyEmailController extends GetxController {
 
   Future<void> sendEmailVerification() async {
     try {
-      await AuthenticationRepository.instance.logout();
+      await AuthenticationRepository.instance.sendEmailVerification();
       ToastHelper.success(
         "Email sent",
         "Please check your inbox!",

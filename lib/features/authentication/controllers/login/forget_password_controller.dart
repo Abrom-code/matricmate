@@ -9,15 +9,21 @@ class ForgetPasswordController extends GetxController {
   static ForgetPasswordController get instance => Get.find();
 
   final email = TextEditingController();
+  final isLoading = false.obs;
   GlobalKey<FormState> forgetPasswordFormkey = GlobalKey<FormState>();
 
   Future<void> resetPassword() async {
     try {
       if (!forgetPasswordFormkey.currentState!.validate()) return;
+      isLoading.value = true;
 
       // Network check
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) {
+      final isConnectd = await NetworkManager.instance.hasRealInternet();
+      if (!isConnectd) {
+        ToastHelper.warning(
+          "No Internet!",
+          "Please turn on mobile data or connect to WIFI!",
+        );
         return;
       }
 
@@ -29,6 +35,8 @@ class ForgetPasswordController extends GetxController {
       Get.to(() => ResetPassword(email: email.text.trim()));
     } catch (e) {
       ToastHelper.error("Error", e.toString());
+    } finally {
+      isLoading.value = false;
     }
   }
 }

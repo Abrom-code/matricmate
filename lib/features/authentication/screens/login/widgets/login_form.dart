@@ -1,0 +1,92 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
+import 'package:matricmate/features/authentication/screens/password_configration/forget_password.dart';
+import 'package:matricmate/features/authentication/screens/signup/signup.dart';
+import 'package:matricmate/utils/constants/app_strings.dart';
+import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/validators/validators.dart';
+
+class LoginForm extends StatelessWidget {
+  const LoginForm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.put(LoginController());
+
+    return Form(
+      key: controller.loginFormkey,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: controller.email,
+            onTapOutside: (e) => FocusScope.of(context).unfocus(),
+            validator: (value) => AppValidator.validateEmail(value),
+            decoration: InputDecoration(
+              labelText: AppTextStrings.email,
+              prefixIcon: Icon(Icons.arrow_right),
+            ),
+          ),
+          const SizedBox(height: AppSizes.defaultSpace),
+          Obx(
+            () => TextFormField(
+              onTapOutside: (e) => FocusScope.of(context).unfocus(),
+              obscureText: controller.hidePassword.value,
+              controller: controller.password,
+              validator: (value) => AppValidator.validatePassword(value),
+              decoration: InputDecoration(
+                labelText: AppTextStrings.password,
+                prefixIcon: Icon(Icons.password),
+                suffixIcon: IconButton(
+                  onPressed: () => controller.hidePassword.value =
+                      !controller.hidePassword.value,
+                  icon: controller.hidePassword.value
+                      ? Icon(Icons.energy_savings_leaf_outlined)
+                      : Icon(Icons.remove_red_eye_outlined),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSizes.defaultSpace / 2),
+          Row(
+            children: [
+              Obx(
+                () => Checkbox(
+                  value: controller.rememberMe.value,
+                  onChanged: (val) => controller.rememberMe.value = val!,
+                ),
+              ),
+              const Text(AppTextStrings.rememberMe),
+            ],
+          ),
+          TextButton(
+            onPressed: () => Get.to(() => const ForgetPassword()),
+            child: const Text(AppTextStrings.forgetPassword),
+          ),
+          const SizedBox(height: AppSizes.spaceBtwSections),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => controller.emailAndPasswordLogin(),
+              child: Text(AppTextStrings.signIn),
+            ),
+          ),
+
+          const SizedBox(height: AppSizes.spaceBtwSections),
+
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Get.offAll(const SignupScreen()),
+              child: Text(AppTextStrings.createAccount),
+            ),
+          ),
+
+          const SizedBox(height: AppSizes.spaceBtwSections),
+        ],
+      ),
+    );
+  }
+}
+

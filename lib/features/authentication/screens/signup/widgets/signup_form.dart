@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/buttons/drop_down_button.dart';
 import 'package:matricmate/features/authentication/controllers/signup/signup_controller.dart';
 import 'package:matricmate/features/authentication/screens/signup/widgets/term_and_conditions.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
@@ -52,17 +54,6 @@ class SignupForm extends StatelessWidget {
 
           const SizedBox(height: AppSizes.spaceBtwInputFields),
 
-          // Username
-          TextFormField(
-            controller: controller.userName,
-            validator: (val) => AppValidator.validateEmptyText("Username", val),
-            onTapOutside: (e) => FocusScope.of(context).unfocus(),
-            expands: false,
-            decoration: const InputDecoration(
-              labelText: AppTextStrings.username,
-              prefixIcon: Icon(Icons.person),
-            ),
-          ),
           const SizedBox(height: AppSizes.spaceBtwInputFields),
           // Email
           TextFormField(
@@ -74,18 +65,7 @@ class SignupForm extends StatelessWidget {
               prefixIcon: Icon(Icons.email),
             ),
           ),
-          const SizedBox(height: AppSizes.spaceBtwInputFields),
 
-          // Phone Number
-          TextFormField(
-            controller: controller.phoneNumber,
-            validator: (val) => AppValidator.validatePhoneNumber(val),
-            onTapOutside: (e) => FocusScope.of(context).unfocus(),
-            decoration: const InputDecoration(
-              labelText: AppTextStrings.phoneNo,
-              prefixIcon: Icon(Icons.phone),
-            ),
-          ),
           const SizedBox(height: AppSizes.spaceBtwInputFields),
 
           // Password
@@ -110,6 +90,19 @@ class SignupForm extends StatelessWidget {
               ),
             ),
           ),
+
+          const SizedBox(height: AppSizes.spaceBtwInputFields),
+
+          // stream
+          DropdownButtonFormField(
+            items: [
+              DropdownMenuItem(value: "natural", child: Text("Natural")),
+              DropdownMenuItem(value: "social", child: Text("Social")),
+            ],
+            onChanged: (stream) {},
+            initialValue: 'natural',
+          ),
+
           const SizedBox(height: AppSizes.spaceBtwSections),
 
           TermAndConditions(),

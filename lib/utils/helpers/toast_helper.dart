@@ -40,7 +40,7 @@ class ToastHelper {
       title,
       message,
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: backgroundColor.withValues(alpha: 0.9),
+      backgroundColor: backgroundColor..withOpacity(0.9),
       colorText: Colors.white,
       margin: const EdgeInsets.all(12),
       borderRadius: 12,

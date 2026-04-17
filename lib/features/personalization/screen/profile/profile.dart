@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
+import 'package:matricmate/features/personalization/screen/profile/widgets/account_settings.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/analytics_container.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/profile_section.dart';
-import 'package:matricmate/features/personalization/screen/profile/widgets/profile_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/themes/theme_controller.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -40,50 +40,16 @@ class ProfileScreen extends StatelessWidget {
               ),
               SizedBox(height: AppSizes.spaceBtwItems),
 
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppSizes.md),
-                  color: !dark ? AppColors.light : AppColors.black,
-                ),
-                child: Column(
-                  children: [
-                    ProfileTile(
-                      icon: Icon(Icons.person),
-                      title: "Edit Profile",
-                      trailing: Icon(Icons.keyboard_arrow_right),
-
-                      onTap: () {},
-                    ),
-                    ProfileTile(
-                      icon: Icon(Icons.lock),
-                      title: "Change Password",
-                      trailing: Icon(Icons.keyboard_arrow_right),
-                      onTap: () {},
-                    ),
-                    ProfileTile(
-                      icon: Icon(Icons.help),
-                      title: "Help & Support",
-                      trailing: Icon(Icons.keyboard_arrow_right),
-                      onTap: () {},
-                    ),
-                    ProfileTile(
-                      icon: Icon(Icons.sunny),
-                      title: "Change Theme",
-                      trailing: Switch(
-                        value: dark,
-                        onChanged: (value) =>
-                            ThemeController.instance.toogleTheme(value),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              AccountSettings(),
               SizedBox(height: AppSizes.spaceBtwSections),
 
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => AuthenticationRepository.instance.logout(),
+                  onPressed: () => AppDialogBoxes.showOkCancelDialog(
+                    context: context,
+                    onPressed: () => AuthenticationRepository.instance.logout(),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.red),
                   ),

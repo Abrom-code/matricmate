@@ -18,8 +18,10 @@ class UserController extends GetxController {
 
   @override
   void onInit() {
-    fetchUserRecord();
     super.onInit();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchUserRecord();
+    });
   }
 
   Future<void> fetchUserRecord() async {

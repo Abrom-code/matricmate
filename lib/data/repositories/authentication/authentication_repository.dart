@@ -97,8 +97,8 @@ class AuthenticationRepository extends GetxController {
       throw FirebaseExceptions(e.code).message;
     } on FormatException catch (_) {
       throw const FormatExceptions().message;
-    } on Exception {
-      throw 'Something went wrong. Please try again';
+    } on Exception catch (e) {
+      throw e.toString();
     }
   }
 

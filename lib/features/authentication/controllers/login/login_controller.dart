@@ -56,22 +56,22 @@ class LoginController extends GetxController {
         password.value.text.trim(),
       );
 
-      // 🔐 Get UID
+      //  Get UID
       final uid = AuthenticationRepository.instance.authUser!.uid;
 
-      // 📱 Get device ID
+      //  Get device ID
       final deviceId = await DeviceService.getDeviceId();
 
-      // 🔍 Validate session
+      //  Validate session
       final isAllowed = await SessionService().validateSession(uid, deviceId);
 
       if (!isAllowed) {
-        // logout immediately if blocked
+        ToastHelper.error("Error", "This account is already in use!");
         await AuthenticationRepository.instance.logout();
         return;
       }
 
-      // ✅ Proceed if allowed
+      //  Proceed if allowed
       AuthenticationRepository.instance.screenRedirect();
     } catch (e) {
       ToastHelper.error("Error", e.toString());

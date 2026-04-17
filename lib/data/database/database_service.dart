@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 

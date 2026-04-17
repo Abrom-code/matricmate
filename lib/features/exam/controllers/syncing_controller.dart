@@ -47,7 +47,7 @@ class SyncingController extends GetxController {
         await syncQuestions(downloadedIds);
       }
       ToastHelper.success("Success", "All Subjects are refreshed");
-    } on Exception catch (e) {
+    } on Exception {
       ToastHelper.error("Faild", "Faild to refresh!");
     } finally {
       refreshing.value = false;
@@ -197,7 +197,7 @@ class SyncingController extends GetxController {
           .from('passages')
           .select()
           .inFilter('id', passageIds);
-      ;
+      
       final remote = (remoteData as List)
           .map((p) => PassageModel.fromJson(p))
           .toList();

@@ -119,6 +119,7 @@ class SubjectsController extends GetxController {
     final isNatural = selectedStream.value == "natural";
 
     return subjects.where((subject) {
+      // ignore: unrelated_type_equality_checks
       return subject.isCommon || subject.isNatural == (isNatural ? 1 : 0);
     }).toList();
   }

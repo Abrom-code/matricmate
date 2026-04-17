@@ -62,6 +62,7 @@ class BookmarkController extends GetxController {
     final data = await _databaseService.loadBookmarkedQuestions();
 
     bookmarkedQuestionIds.value = data;
+    // ignore: invalid_use_of_protected_member
     bookmarkedIds.value = data.map((b) => b.questionId).toSet();
 
     final allQns = await _databaseService.getQuestions();

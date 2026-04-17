@@ -102,6 +102,27 @@ class AuthenticationRepository extends GetxController {
     }
   }
 
+  // update password
+  Future<void> updateUserPassword(String newPassword) async {
+    try {
+      final user = _auth.currentUser;
+
+      if (user == null) {
+        throw 'No authenticated user found';
+      }
+
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw FirebaseAuthExceptions(e.code).message;
+    } on FirebaseException catch (e) {
+      throw FirebaseExceptions(e.code).message;
+    } on FormatException catch (_) {
+      throw const FormatExceptions().message;
+    } on Exception catch (e) {
+      throw e.toString();
+    }
+  }
+
   /// Handle logout
   Future<void> logout() async {
     try {

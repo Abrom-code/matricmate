@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
-import 'package:matricmate/data/repositories/user/user_repository.dart';
-import 'package:matricmate/features/personalization/widgets/analytics_container.dart';
-import 'package:matricmate/features/personalization/widgets/profile_section.dart';
-import 'package:matricmate/features/personalization/widgets/profile_tile.dart';
+import 'package:matricmate/features/personalization/screen/profile/widgets/analytics_container.dart';
+import 'package:matricmate/features/personalization/screen/profile/widgets/profile_section.dart';
+import 'package:matricmate/features/personalization/screen/profile/widgets/profile_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';

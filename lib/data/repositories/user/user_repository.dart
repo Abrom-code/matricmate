@@ -37,7 +37,6 @@ class UserRepository extends GetxController {
         return null;
       }
 
-      ToastHelper.success("Success", "User fetched successfully.");
       return UserModel.fromJson(data);
     } catch (e) {
       ToastHelper.error("Error", "Failed to fetch user.");

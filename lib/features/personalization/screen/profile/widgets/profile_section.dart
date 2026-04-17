@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -27,8 +28,14 @@ class ProfileSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSizes.spaceBtwItems),
 
-        Text("User Name", style: Theme.of(context).textTheme.headlineSmall),
-        Text("Natural Science", style: TextStyle(color: Colors.grey)),
+        Text(
+          "${UserController.instance.user.value.firstName} ${UserController.instance.user.value.lastName}",
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        Text(
+          UserController.instance.user.value.stream,
+          style: TextStyle(color: Colors.grey),
+        ),
       ],
     );
   }

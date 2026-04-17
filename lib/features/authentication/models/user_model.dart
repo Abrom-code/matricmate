@@ -60,4 +60,5 @@ class UserModel {
       UserModel(id: "", firstName: "", lastName: "", email: '', stream: '');
 
   String get fullName => '$firstName $lastName';
+  static List<String> nameParts(String fullName) => fullName.split(" ");
 }

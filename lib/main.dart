@@ -31,5 +31,5 @@ Future<void> main() async {
     url: ApiConstants.supabaseUrl,
     anonKey: ApiConstants.supabaseApiKey,
   );
-  runApp(GetMaterialApp(initialBinding: InitialBinding(), home: const App()));
+  runApp(const App());
 }

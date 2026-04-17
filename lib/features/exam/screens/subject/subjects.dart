@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/bindings/chapter_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/buttons/drop_down_button.dart';
@@ -8,6 +9,7 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -19,6 +21,7 @@ class SubjectsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final subjectController = SubjectsController.instance;
     final syncController = Get.put(SyncingController());
+
     return Scaffold(
       appBar: Appbar(
         title: Text(
@@ -56,7 +59,8 @@ class SubjectsScreen extends StatelessWidget {
               return subject.isCommon || subject.isNatural == isNaturalStream;
             }).toList();
 
-            if (subjectController.isLoading.value ||
+            if (UserController.instance.userFetching.value ||
+                subjectController.isLoading.value ||
                 syncController.refreshing.value) {
               return Center(child: CircularProgressIndicator());
             } else {
@@ -110,7 +114,10 @@ class SubjectsScreen extends StatelessWidget {
                           ),
                           onTap: () => subject.isDownloaded
                               ? Get.to(
-                                  () => ChapterScreen(title: subject.name, subjectId : subject.id),
+                                  () => ChapterScreen(
+                                    title: subject.name,
+                                    subjectId: subject.id,
+                                  ),
                                   binding: ChapterBinding(),
                                   arguments: subject.id,
                                 )

@@ -23,8 +23,13 @@ class SubjectsController extends GetxController {
 
   final RxList<SubjectMoModel> subjects = <SubjectMoModel>[].obs;
 
-  /// LOAD SUBJECTS
+  @override
+  void onInit() {
+    loadSubjects();
+    super.onInit();
+  }
 
+  /// LOAD SUBJECTS
   Future<void> loadSubjects() async {
     try {
       isLoading.value = true;

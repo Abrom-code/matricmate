@@ -11,25 +11,17 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      initialBinding: GeneralBinding(),
-      debugShowCheckedModeBanner: false,
+    final themeController = Get.put(ThemeController());
 
-      builder: (context, child) {
-        final controller = Get.find<ThemeController>();
-
-        return Obx(
-          () => MaterialApp(
-            debugShowCheckedModeBanner: false,
-            themeMode: controller.themeMode.value,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            home: child,
-          ),
-        );
-      },
-
-      home: LoginScreen(),
+    return Obx(
+      () => GetMaterialApp(
+        initialBinding: GeneralBinding(),
+        debugShowCheckedModeBanner: false,
+        themeMode: themeController.themeMode.value,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        home: const LoginScreen(),
+      ),
     );
   }
 }

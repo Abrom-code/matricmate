@@ -4,7 +4,13 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class AnalyticsContainer extends StatelessWidget {
-  const AnalyticsContainer({super.key});
+  const AnalyticsContainer({
+    super.key,
+    required this.value,
+    required this.title,
+  });
+  final int value;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +43,7 @@ class AnalyticsContainer extends StatelessWidget {
                   Icon(Icons.task_alt_outlined, color: Colors.green, size: 28),
                   SizedBox(height: 8),
                   Text(
-                    "42",
+                    '$value',
                     style: TextStyle(
                       color: dark ? Colors.white : Colors.black,
                       fontSize: 22,
@@ -46,7 +52,7 @@ class AnalyticsContainer extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    "TESTS COMPLETED",
+                    title.toUpperCase(),
                     style: TextStyle(
                       fontSize: 12,
                       letterSpacing: 1,

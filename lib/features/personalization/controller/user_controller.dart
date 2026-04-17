@@ -33,7 +33,6 @@ class UserController extends GetxController {
     } catch (e) {
       userFetching.value = false;
       user(UserModel.empty());
-      ToastHelper.error("Error", "Faild to fetch user data");
     }
   }
 

@@ -89,8 +89,10 @@ class SubjectsScreen extends StatelessWidget {
                     ],
                     icon: Icons.book,
                     onChanged: (stream) =>
-                        subjectController.selectedStream.value = stream,
-                    initialValue: subjectController.selectedStream.value,
+                        subjectController.selectedStream.value = stream!,
+                    initialValue: subjectController.selectedStream.value.isEmpty
+                        ? "natural"
+                        : subjectController.selectedStream.value,
                   ),
                   const SizedBox(height: AppSizes.spaceBtwSections),
                   GridLayout(

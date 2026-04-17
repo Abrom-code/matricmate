@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/download_subject.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -26,6 +27,11 @@ class SubjectsController extends GetxController {
   @override
   void onInit() {
     loadSubjects();
+
+    final userStream = UserController.instance.user.value.stream;
+    if (userStream.isNotEmpty) {
+      selectedStream.value = userStream;
+    }
     super.onInit();
   }
 

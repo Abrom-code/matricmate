@@ -12,9 +12,9 @@ class GeneralBinding extends Bindings {
   void dependencies() {
     Get.put(NetworkManager());
     Get.put(DatabaseService(), permanent: true);
+    Get.put(UserController(), permanent: true);
     Get.put(SubjectsController(), permanent: true);
     Get.put(BookmarkController(), permanent: true);
-    Get.put(UserController(), permanent: true);
     Get.put(ThemeController(), permanent: true);
   }
 }

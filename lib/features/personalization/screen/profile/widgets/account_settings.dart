@@ -16,7 +16,7 @@ class AccountSettings extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSizes.md),
-        color: !dark ? AppColors.light : AppColors.black,
+        color: !dark ? AppColors.white : AppColors.black,
       ),
       child: Column(
         children: [

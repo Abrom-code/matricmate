@@ -35,7 +35,7 @@ class ProfileSection extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           Text(
-            UserController.instance.user.value.stream,
+            UserController.instance.user.value.email,
             style: TextStyle(color: Colors.grey),
           ),
         ],

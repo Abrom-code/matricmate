@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/themes/custom_themes/appbar_theme.dart';
 import 'package:matricmate/utils/themes/custom_themes/bottom_sheet_theme.dart';
 import 'package:matricmate/utils/themes/custom_themes/checkbox_theme.dart';
@@ -22,7 +23,7 @@ class AppTheme {
     textTheme: AppTextTheme.lightTextTheme.apply(
       fontFamilyFallback: ["Roboto", "Sans-serif"],
     ),
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: AppColors.light,
     appBarTheme: AppAppBarTheme.lightAppBarTheme,
     bottomSheetTheme: AppBottomSheetTheme.lightBottomSheetTheme,
     checkboxTheme: AppCheckboxTheme.lightCheckboxTheme,
@@ -35,7 +36,7 @@ class AppTheme {
 
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark, 
+    brightness: Brightness.dark,
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.teal,
       brightness: Brightness.dark,
@@ -45,7 +46,7 @@ class AppTheme {
       // FIXED: Using darkTextTheme
       fontFamilyFallback: ["Roboto", "Sans-serif"],
     ),
-    scaffoldBackgroundColor: Colors.black, 
+    scaffoldBackgroundColor: Colors.black,
     appBarTheme: AppAppBarTheme.darkAppBarTheme,
     bottomSheetTheme: AppBottomSheetTheme.darkBottomSheetTheme,
     checkboxTheme: AppCheckboxTheme.darkCheckboxTheme,

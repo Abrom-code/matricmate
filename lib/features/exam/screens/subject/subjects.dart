@@ -81,9 +81,6 @@ class SubjectsScreen extends StatelessWidget {
                       title: subject.name,
                       image: AppHelperFuntions.getSubjectImage(subject.name),
                       isDownloaded: subject.isDownloaded,
-                      isDownloading:
-                          subjectController.downloadingMap[subject.name] ??
-                          false,
                       onPressed: () => subjectController.downloadSubject(
                         subject.name,
                         subject.id,

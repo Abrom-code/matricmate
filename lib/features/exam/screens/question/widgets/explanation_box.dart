@@ -27,7 +27,7 @@ class ExplanationBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: dark
             ? AppColors.darkerGrey.withValues(alpha: 0.5)
-            : Colors.grey.shade100,
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Obx(

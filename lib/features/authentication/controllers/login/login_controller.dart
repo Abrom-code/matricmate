@@ -4,6 +4,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
+import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -68,6 +69,7 @@ class LoginController extends GetxController {
       if (!isAllowed) {
         ToastHelper.error("Error", "This account is already in use!");
         await AuthenticationRepository.instance.logout();
+        Get.off(() => LoginScreen());
         return;
       }
 

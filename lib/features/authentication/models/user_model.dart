@@ -34,7 +34,6 @@ class UserModel {
       'last_name': lastName,
       'email': email,
       'stream': stream,
-      // ⚠️ optional: don't store password here
     };
   }
 

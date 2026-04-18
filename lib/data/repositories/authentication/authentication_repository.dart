@@ -91,6 +91,7 @@ class AuthenticationRepository extends GetxController {
         email: email,
         password: password,
       );
+      
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthExceptions(e.code).message;
     } on FirebaseException catch (e) {

@@ -18,7 +18,7 @@ class SubjectsController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isDownloading = false.obs;
 
-  final RxString selectedStream = "natural".obs;
+  late RxString selectedStream;
 
   final RxMap<String, bool> downloadingMap = <String, bool>{}.obs;
 
@@ -28,10 +28,7 @@ class SubjectsController extends GetxController {
   void onInit() {
     loadSubjects();
 
-    final userStream = UserController.instance.user.value.stream;
-    if (userStream.isNotEmpty) {
-      selectedStream.value = userStream;
-    }
+    selectedStream = UserController.instance.user.value.stream.obs;
     super.onInit();
   }
 

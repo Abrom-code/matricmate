@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/profile_tile.dart';
+import 'package:matricmate/features/personalization/screen/update/update_profile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -23,7 +25,7 @@ class AccountSettings extends StatelessWidget {
             title: "Edit Profile",
             trailing: Icon(Icons.keyboard_arrow_right),
 
-            onTap: () {},
+            onTap: () => Get.to(() => EditProfileScreen()),
           ),
           ProfileTile(
             icon: Icon(Icons.lock),

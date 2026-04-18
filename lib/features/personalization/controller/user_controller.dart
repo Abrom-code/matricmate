@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
+import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
@@ -95,5 +96,18 @@ class UserController extends GetxController {
         }
       },
     );
+  }
+
+  Future<void> deleteUserAccount() async {
+    try {
+      await AuthenticationRepository.instance.deleteAccount();
+
+      ToastHelper.success(
+        "Account Deleted",
+        "Your data has been permanently removed.",
+      );
+    } catch (e) {
+      ToastHelper.error("Error", e.toString());
+    }
   }
 }

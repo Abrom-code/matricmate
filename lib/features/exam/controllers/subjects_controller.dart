@@ -29,6 +29,11 @@ class SubjectsController extends GetxController {
     loadSubjects();
 
     selectedStream = UserController.instance.user.value.stream.obs;
+
+    ever(UserController.instance.user, (user) {
+      selectedStream.value = user.stream;
+    });
+
     super.onInit();
   }
 

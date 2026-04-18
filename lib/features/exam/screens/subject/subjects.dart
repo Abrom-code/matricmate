@@ -55,7 +55,7 @@ class SubjectsScreen extends StatelessWidget {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: AppSizes.spaceBtwItems),
-                Text('Refreshing...'),
+                Text('Loading...'),
               ],
             ),
           );
@@ -72,63 +72,32 @@ class SubjectsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(AppSizes.defaultSpace),
             child: Column(
               children: [
-                AppDropDownField(
-                  items: [
-                    DropdownMenuItem(
-                      value: "natural",
-                      child: Text(
-                        "Natural",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleSmall!.apply(color: AppColors.primary),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: "social",
-                      child: Text(
-                        "Social",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleSmall!.apply(color: AppColors.primary),
-                      ),
-                    ),
-                  ],
-                  icon: Icons.book,
-                  onChanged: (stream) =>
-                      subjectController.selectedStream.value = stream!,
-                  initialValue: subjectController.selectedStream.value.isEmpty
-                      ? "natural"
-                      : subjectController.selectedStream.value,
-                ),
-                const SizedBox(height: AppSizes.spaceBtwSections),
                 GridLayout(
                   itemCount: filteredSubjects.length,
                   itemBuilder: (_, index) {
                     final subject = filteredSubjects[index];
 
-                    return Obx(
-                      () => SubjectContainer(
-                        title: subject.name,
-                        image: AppHelperFuntions.getSubjectImage(subject.name),
-                        isDownloaded: subject.isDownloaded,
-                        isDownloading:
-                            subjectController.downloadingMap[subject.name] ??
-                            false,
-                        onPressed: () => subjectController.downloadSubject(
-                          subject.name,
-                          subject.id,
-                        ),
-                        onTap: () => subject.isDownloaded
-                            ? Get.to(
-                                () => ChapterScreen(
-                                  title: subject.name,
-                                  subjectId: subject.id,
-                                ),
-                                binding: ChapterBinding(),
-                                arguments: subject.id,
-                              )
-                            : null,
+                    return SubjectContainer(
+                      title: subject.name,
+                      image: AppHelperFuntions.getSubjectImage(subject.name),
+                      isDownloaded: subject.isDownloaded,
+                      isDownloading:
+                          subjectController.downloadingMap[subject.name] ??
+                          false,
+                      onPressed: () => subjectController.downloadSubject(
+                        subject.name,
+                        subject.id,
                       ),
+                      onTap: () => subject.isDownloaded
+                          ? Get.to(
+                              () => ChapterScreen(
+                                title: subject.name,
+                                subjectId: subject.id,
+                              ),
+                              binding: ChapterBinding(),
+                              arguments: subject.id,
+                            )
+                          : null,
                     );
                   },
                 ),

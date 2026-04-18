@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
 import 'package:matricmate/navigation_menu.dart';
@@ -91,7 +93,6 @@ class AuthenticationRepository extends GetxController {
         email: email,
         password: password,
       );
-      
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthExceptions(e.code).message;
     } on FirebaseException catch (e) {
@@ -151,6 +152,26 @@ class AuthenticationRepository extends GetxController {
       throw const FormatExceptions().message;
     } on Exception {
       throw 'Something went wrong. Please try again';
+    }
+  }
+
+  /// AuthenticationRepository.dart
+  Future<void> deleteAccount() async {
+    try {
+      final userId = authUser?.uid;
+      if (userId == null) return;
+
+      await UserRepository.instance.deleteUserRecord(userId);
+
+      await DatabaseService.instance.clearAllData();
+
+      await _deviceStorage.erase();
+
+      await _auth.currentUser?.delete();
+
+      Get.offAll(() => const LoginScreen());
+    } catch (e) {
+      throw 'Failed to fully delete account. Please contact support.';
     }
   }
 }

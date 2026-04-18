@@ -151,4 +151,22 @@ class DatabaseService extends GetxController {
 
     return result.length;
   }
+
+  /// DatabaseService.dart
+
+  Future<void> clearAllData() async {
+    try {
+      final db = await instance.database;
+
+      await db.transaction((txn) async {
+        await txn.delete('subjects');
+
+        await txn.delete('passages');
+        await txn.delete('results');
+        await txn.delete('bookmarks');
+      });
+    } catch (e) {
+      throw 'Failed to clear local study data.';
+    }
+  }
 }

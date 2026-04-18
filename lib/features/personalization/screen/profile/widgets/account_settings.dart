@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/profile_tile.dart';
+import 'package:matricmate/features/personalization/screen/update/change_password.dart';
 import 'package:matricmate/features/personalization/screen/update/update_profile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -31,7 +32,7 @@ class AccountSettings extends StatelessWidget {
             icon: Icon(Icons.lock),
             title: "Change Password",
             trailing: Icon(Icons.keyboard_arrow_right),
-            onTap: () {},
+            onTap: () => Get.to(() => ChangePassword()),
           ),
           ProfileTile(
             icon: Icon(Icons.help),

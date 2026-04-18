@@ -63,7 +63,7 @@ class EditProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSizes.spaceBtwInputFields),
                     DropdownButtonFormField(
-                      value: controller.selectedStream.value.isEmpty
+                      initialValue: controller.selectedStream.value.isEmpty
                           ? "natural"
                           : controller.selectedStream.value,
                       items: const [

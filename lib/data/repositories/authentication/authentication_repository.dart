@@ -155,7 +155,14 @@ class AuthenticationRepository extends GetxController {
     }
   }
 
-  /// AuthenticationRepository.dart
+  Future<void> reAuthenticate(String email, String password) async {
+    AuthCredential credential = EmailAuthProvider.credential(
+      email: email,
+      password: password,
+    );
+    await _auth.currentUser!.reauthenticateWithCredential(credential);
+  }
+
   Future<void> deleteAccount() async {
     try {
       final userId = authUser?.uid;

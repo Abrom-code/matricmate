@@ -34,12 +34,6 @@ class TestListScreen extends GetView<TestController> {
             context,
           ).textTheme.titleSmall!.apply(color: AppColors.white),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.more_vert, color: AppColors.white),
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.defaultSpace),

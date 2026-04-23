@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/download_subject.dart';
@@ -23,6 +24,8 @@ class SubjectsController extends GetxController {
   final RxMap<String, bool> downloadingMap = <String, bool>{}.obs;
 
   final RxList<SubjectMoModel> subjects = <SubjectMoModel>[].obs;
+
+  final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void onInit() {

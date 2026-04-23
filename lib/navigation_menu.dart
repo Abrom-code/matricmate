@@ -6,12 +6,13 @@ import 'package:matricmate/features/personalization/screen/profile/profile.dart'
 import 'package:matricmate/utils/constants/colors.dart';
 
 class NavigationMenu extends StatelessWidget {
-  const NavigationMenu({super.key});
+  final int initialIndex;
 
+  const NavigationMenu({super.key, this.initialIndex = 0});
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(NavigationController());
-
+    controller.selectedIdx.value = initialIndex;
     return Scaffold(
       bottomNavigationBar: Obx(
         () => NavigationBar(

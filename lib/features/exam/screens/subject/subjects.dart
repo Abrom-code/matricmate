@@ -6,6 +6,7 @@ import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -21,6 +22,8 @@ class SubjectsScreen extends StatelessWidget {
     final syncController = Get.put(SyncingController());
 
     return Scaffold(
+      key: subjectController.scaffoldKey,
+      drawer: AppDrawer(userName: "Abrham", stream: "Natural"),
       appBar: Appbar(
         title: Text(
           "MatricMate",
@@ -29,7 +32,9 @@ class SubjectsScreen extends StatelessWidget {
           ).textTheme.headlineMedium!.apply(color: AppColors.white),
         ),
         leadingIcon: Icons.menu,
-        leadingOnPressed: () {},
+        leadingOnPressed: () {
+          subjectController.scaffoldKey.currentState!.openDrawer();
+        },
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: AppSizes.defaultSpace / 2),

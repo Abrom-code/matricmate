@@ -1,7 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/authentication/controllers/signup/verify_email_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -19,7 +19,7 @@ class VerifyEmailScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            onPressed: () => AuthenticationRepository.instance.logout(),
+            onPressed: () async => await FirebaseAuth.instance.signOut(),
             icon: const Icon(CupertinoIcons.clear),
           ),
         ],

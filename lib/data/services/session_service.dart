@@ -13,7 +13,7 @@ class SessionService {
           .eq('is_active', true)
           .maybeSingle();
 
-      // ✅ No session → allow
+      //  No session → allow
       if (existing == null) {
         await _supabase.from('user_sessions').insert({
           'firebase_uid': uid,
@@ -22,12 +22,12 @@ class SessionService {
         return true;
       }
 
-      // ✅ Same device → allow
+      //  Same device → allow
       if (existing['device_id'] == deviceId) {
         return true;
       }
 
-      // ❌ Different device → BLOCK
+      //  Different device → BLOCK
       ToastHelper.error(
         "Login Blocked",
         "This account is already in use on another device.",
@@ -35,7 +35,7 @@ class SessionService {
 
       return false;
 
-      // 🔄 OR replace session (better UX)
+      //  OR replace session (better UX)
       /*
       await _supabase
           .from('user_sessions')

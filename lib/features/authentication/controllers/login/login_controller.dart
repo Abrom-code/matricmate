@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -67,8 +68,7 @@ class LoginController extends GetxController {
       final isAllowed = await SessionService().validateSession(uid, deviceId);
 
       if (!isAllowed) {
-        ToastHelper.error("Error", "This account is already in use!");
-        await AuthenticationRepository.instance.logout();
+        await FirebaseAuth.instance.signOut();
         Get.off(() => LoginScreen());
         return;
       }

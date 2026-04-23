@@ -80,6 +80,7 @@ class UserRepository extends GetxController {
   Future<void> deleteUserRecord(String userId) async {
     try {
       await _supabase.from('users').delete().eq('id', userId);
+      await _supabase.from('user_sessions').delete().eq('firebase_uid', userId);
     } catch (e) {
       throw e.toString();
     }

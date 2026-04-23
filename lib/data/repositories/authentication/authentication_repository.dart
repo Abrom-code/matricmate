@@ -6,16 +6,20 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/exceptions/firebase_auth_exceptions.dart';
 import 'package:matricmate/utils/exceptions/firebase_exceptions.dart';
 import 'package:matricmate/utils/exceptions/format_exceptions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 class AuthenticationRepository extends GetxController {
   static AuthenticationRepository get instance => Get.find();
 
   final _deviceStorage = GetStorage();
   final _auth = FirebaseAuth.instance;
+
+  final SupabaseClient _supabase = Supabase.instance.client;
   late final Rx<User?> firebaseUser;
 
   User? get authUser => _auth.currentUser;
@@ -125,6 +129,10 @@ class AuthenticationRepository extends GetxController {
   /// Handle logout
   Future<void> logout() async {
     try {
+      await _supabase
+          .from('user_sessions')
+          .delete()
+          .eq('firebase_uid', UserController.instance.user.value.id);
       await _auth.signOut();
       Get.offAll(() => const LoginScreen());
     } on FirebaseAuthException catch (e) {

@@ -26,8 +26,11 @@ class UserController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      fetchUserRecord();
+
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        fetchUserRecord();
+      }
     });
   }
 
@@ -35,30 +38,33 @@ class UserController extends GetxController {
     try {
       userFetching.value = true;
 
+      // 1. LOCAL FIRST (source of truth initially)
       final dbUser = await _databaseService.getUser();
+
       if (dbUser.isNotEmpty) {
-        this.user.value = UserModel.fromMap(dbUser.first);
+        user.value = UserModel.fromMap(dbUser.first);
       }
 
+      // 2. REMOTE SYNC
       final freshUser = await userRepository.fetchUserDetails();
 
-      if (freshUser != null) {
-        if (freshUser.email.isNotEmpty) {
-          this.user.value = freshUser;
+      if (freshUser == null) return;
 
-          final db = await _databaseService.database;
-          await db.insert(
-            'user',
-            freshUser.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
-        }
+      // 3. ONLY UPDATE IF DIFFERENT (IMPORTANT FIX)
+      if (freshUser.id != user.value.id ||
+          freshUser.email != user.value.email ||
+          freshUser.firstName != user.value.firstName) {
+        user.value = freshUser;
+
+        final db = await _databaseService.database;
+        await db.insert(
+          'user',
+          freshUser.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
-      final user = await userRepository.fetchUserDetails();
-      this.user(user);
     } catch (e) {
       AppLoggerHelper.error(e.toString());
-      user(UserModel.empty());
     } finally {
       userFetching.value = false;
     }
@@ -168,7 +174,11 @@ class UserController extends GetxController {
           },
           child: Obx(
             () => isDeleting.value
-                ? const CircularProgressIndicator()
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: const CircularProgressIndicator(),
+                  )
                 : const Text("Delete"),
           ),
         ),

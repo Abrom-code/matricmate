@@ -21,6 +21,13 @@ class AppValidator {
     return null;
   }
 
+  static String? validateStream(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Stream is required.';
+    }
+    return null;
+  }
+
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Password is required.';

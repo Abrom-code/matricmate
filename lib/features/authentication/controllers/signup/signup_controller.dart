@@ -4,6 +4,7 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -11,24 +12,26 @@ class SignupController extends GetxController {
   static SignupController get instance => Get.find();
 
   final hidePassword = true.obs;
-  final isTermsAgreed = false.obs;
   final firstName = TextEditingController();
   final lastName = TextEditingController();
   final email = TextEditingController();
   final password = TextEditingController();
-  final RxString selectedStream = "natural".obs;
+  final RxString selectedStream = ''.obs;
   final RxBool isSigning = false.obs;
 
   GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
 
+  void setStream(String stream) {
+    selectedStream.value = stream;
+  }
+
   void signup() async {
     try {
       if (!signupFormKey.currentState!.validate()) return;
-
-      if (!isTermsAgreed.value) {
+      if (selectedStream.value.isEmpty) {
         ToastHelper.warning(
           "Warning",
-          "Please read and accept the Privacy Policy & Terms of Use.",
+          "Please select stream, you can edit later!",
         );
         return;
       }

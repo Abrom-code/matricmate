@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/controllers/signup/signup_controller.dart';
-import 'package:matricmate/features/authentication/screens/signup/widgets/term_and_conditions.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
@@ -92,26 +91,22 @@ class SignupForm extends StatelessWidget {
           const SizedBox(height: AppSizes.spaceBtwInputFields),
 
           // stream
-          Obx(
-            () => DropdownButtonFormField<String>(
-              initialValue: controller.selectedStream.value,
-              items: const [
-                DropdownMenuItem(value: "natural", child: Text("Natural")),
-                DropdownMenuItem(value: "social", child: Text("Social")),
-              ],
-              onChanged: (stream) {
-                if (stream != null) {
-                  controller.selectedStream.value = stream;
-                }
-              },
-            ),
+          DropdownButtonFormField<String>(
+            validator: (value) => AppValidator.validateStream(value),
+            hint: Text("Select Stream"),
+            items: const [
+              DropdownMenuItem(value: "natural", child: Text("Natural")),
+              DropdownMenuItem(value: "social", child: Text("Social")),
+            ],
+            onChanged: (stream) {
+              if (stream != null) {
+                controller.setStream(stream);
+              }
+            },
           ),
 
-          const SizedBox(height: AppSizes.spaceBtwSections),
+          const SizedBox(height: AppSizes.spaceBtwSections * 2),
 
-          TermAndConditions(),
-
-          const SizedBox(height: AppSizes.spaceBtwSections),
           Obx(
             () => SizedBox(
               width: double.infinity,

@@ -22,17 +22,14 @@ class VerifyEmailController extends GetxController {
   Future<void> sendEmailVerification() async {
     try {
       await AuthenticationRepository.instance.sendEmailVerification();
-      ToastHelper.success(
-        "Email sent",
-        "Please check your inbox!",
-      );
+      ToastHelper.success("Email sent", "Please check your inbox!");
     } catch (e) {
-      ToastHelper.error( "Oh!",  e.toString());
+      ToastHelper.error("Oh!", e.toString());
     }
   }
 
   void setTimerForAutoRedirect() {
-    Timer.periodic(const Duration(seconds: 3), (timer) async {
+    Timer.periodic(const Duration(seconds: 2), (timer) async {
       try {
         await FirebaseAuth.instance.currentUser?.reload();
         final user = FirebaseAuth.instance.currentUser;

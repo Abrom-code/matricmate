@@ -83,7 +83,7 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE results (
-        user_id TEXT NOT NULL UNIQUE,
+        user_id TEXT NOT NULL,
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         test_id INTEGER UNIQUE,
         testQuestions TEXT,
@@ -93,7 +93,7 @@ class DBschema {
     ''');
     await db.execute('''
       CREATE TABLE bookmarks (
-        user_id TEXT NOT NULL UNIQUE,
+        user_id TEXT NOT NULL,
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         question_id INTEGER UNIQUE,
         saved_at INTEGER NOT NULL

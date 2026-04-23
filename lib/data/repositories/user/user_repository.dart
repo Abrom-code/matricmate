@@ -31,15 +31,15 @@ class UserRepository extends GetxController {
     try {
       final userId = AuthenticationRepository.instance.authUser?.uid;
 
+      if (userId == null) return null;
+
       final data = await _supabase
           .from('users')
           .select()
-          .eq('id', userId!)
+          .eq('id', userId)
           .maybeSingle();
 
-      if (data == null) {
-        return null;
-      }
+      if (data == null) return null;
 
       return UserModel.fromJson(data);
     } catch (e) {

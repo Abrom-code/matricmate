@@ -153,29 +153,41 @@ class AuthenticationRepository extends GetxController {
   }
 
   Future<void> reAuthenticate(String email, String password) async {
-    AuthCredential credential = EmailAuthProvider.credential(
+    final credential = EmailAuthProvider.credential(
       email: email,
       password: password,
     );
+
     await _auth.currentUser!.reauthenticateWithCredential(credential);
   }
 
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount(String password) async {
     try {
-      final userId = authUser?.uid;
-      if (userId == null) return;
+      final user = _auth.currentUser;
 
-      await UserRepository.instance.deleteUserRecord(userId);
+      if (user == null) {
+        throw 'No authenticated user found';
+      }
 
+      //  Reauthenticate
+      await reAuthenticate(user.email!, password);
+
+      //  Delete app-specific data
+      await UserRepository.instance.deleteUserRecord(user.uid);
+
+      // Clear local DB + storage
       await DatabaseService.instance.clearAllData();
-
       await _deviceStorage.erase();
 
-      await _auth.currentUser?.delete();
+      // Delete Firebase account
+      await user.delete();
 
+      //  Redirect
       Get.offAll(() => const LoginScreen());
+    } on FirebaseAuthException catch (e) {
+      throw FirebaseAuthExceptions(e.code).message;
     } catch (e) {
-      throw 'Failed to fully delete account. Please contact support.';
+      throw e.toString();
     }
   }
 }

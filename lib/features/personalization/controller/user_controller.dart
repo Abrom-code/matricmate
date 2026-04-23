@@ -8,6 +8,7 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
+import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
@@ -17,6 +18,7 @@ class UserController extends GetxController {
 
   final DatabaseService _databaseService = DatabaseService.instance;
   Rx<UserModel> user = UserModel.empty().obs;
+  final RxBool isDeleting = false.obs;
 
   final userRepository = Get.put(UserRepository());
   final userFetching = false.obs;
@@ -40,15 +42,17 @@ class UserController extends GetxController {
 
       final freshUser = await userRepository.fetchUserDetails();
 
-      if (freshUser!.email.isNotEmpty) {
-        this.user.value = freshUser;
+      if (freshUser != null) {
+        if (freshUser.email.isNotEmpty) {
+          this.user.value = freshUser;
 
-        final db = await _databaseService.database;
-        await db.insert(
-          'user',
-          freshUser.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+          final db = await _databaseService.database;
+          await db.insert(
+            'user',
+            freshUser.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
       }
       final user = await userRepository.fetchUserDetails();
       this.user(user);
@@ -122,15 +126,53 @@ class UserController extends GetxController {
   }
 
   Future<void> deleteUserAccount() async {
-    try {
-      await AuthenticationRepository.instance.deleteAccount();
+    showDeleteDialog();
+  }
 
-      ToastHelper.success(
-        "Account Deleted",
-        "Your data has been permanently removed.",
-      );
-    } catch (e) {
-      ToastHelper.error("Error", e.toString());
-    }
+  void showDeleteDialog() {
+    final passwordController = TextEditingController();
+
+    Get.defaultDialog(
+      titlePadding: EdgeInsets.only(top: AppSizes.md),
+      contentPadding: EdgeInsets.all(AppSizes.md * 1.5),
+      title: "Delete Account",
+      content: Column(
+        children: [
+          const Text("Enter your password to confirm"),
+          const SizedBox(height: 10),
+          TextField(controller: passwordController, obscureText: true),
+        ],
+      ),
+      confirm: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () async {
+            try {
+              isDeleting.value = true;
+
+              await AuthenticationRepository.instance.deleteAccount(
+                passwordController.text.trim(),
+              );
+
+              Get.back();
+
+              ToastHelper.success(
+                "Account Deleted",
+                "Your data has been permanently removed.",
+              );
+            } catch (e) {
+              ToastHelper.error("Error", e.toString());
+            } finally {
+              isDeleting.value = false;
+            }
+          },
+          child: Obx(
+            () => isDeleting.value
+                ? const CircularProgressIndicator()
+                : const Text("Delete"),
+          ),
+        ),
+      ),
+    );
   }
 }

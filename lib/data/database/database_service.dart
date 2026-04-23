@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
-import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -177,6 +176,7 @@ class DatabaseService extends GetxController {
         await txn.delete('passages');
         await txn.delete('results');
         await txn.delete('bookmarks');
+        await txn.delete('user');
       });
     } catch (e) {
       throw 'Failed to clear local study data.';

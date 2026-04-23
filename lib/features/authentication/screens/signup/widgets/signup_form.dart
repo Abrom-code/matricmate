@@ -92,13 +92,19 @@ class SignupForm extends StatelessWidget {
           const SizedBox(height: AppSizes.spaceBtwInputFields),
 
           // stream
-          DropdownButtonFormField(
-            items: [
-              DropdownMenuItem(value: "natural", child: Text("Natural")),
-              DropdownMenuItem(value: "social", child: Text("Social")),
-            ],
-            onChanged: (stream) => controller.selectedStream.value = stream!,
-            initialValue: controller.selectedStream.value,
+          Obx(
+            () => DropdownButtonFormField<String>(
+              initialValue: controller.selectedStream.value,
+              items: const [
+                DropdownMenuItem(value: "natural", child: Text("Natural")),
+                DropdownMenuItem(value: "social", child: Text("Social")),
+              ],
+              onChanged: (stream) {
+                if (stream != null) {
+                  controller.selectedStream.value = stream;
+                }
+              },
+            ),
           ),
 
           const SizedBox(height: AppSizes.spaceBtwSections),

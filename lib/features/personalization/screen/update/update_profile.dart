@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
-import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/features/personalization/controller/update_profile_controller.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart'; // Import this
+import 'package:matricmate/features/personalization/controller/user_controller.dart'; 
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -88,26 +87,35 @@ class EditProfileScreen extends StatelessWidget {
 
                     SizedBox(
                       width: double.infinity,
-                      child: TextButton(
-                        onPressed: () => AppDialogBoxes.showOkCancelDialog(
-                          context: context,
-                          title: "Delete Account",
-                          subtitle:
-                              "Are you sure you want to delete your account?",
-                          onPressed: () {
-                            Get.back();
-                            userController.deleteUserAccount();
-                          },
-                        ),
-                        child: const Text(
-                          "Delete Account",
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                      child: Obx(() {
+                        if (userController.isDeleting.value) {
+                          return const Center(
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(),
+                                ),
+                                SizedBox(height: 8),
+                                Text("Deleting..."),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return TextButton(
+                          onPressed: () => userController.showDeleteDialog(),
+                          child: const Text(
+                            "Delete Account",
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      }),
                     ),
                   ],
                 ),

@@ -30,87 +30,89 @@ class BookmarkContainer extends GetView<BookmarkController> {
 
     final savedAt = bookmark.savedAt;
     return Obx(() {
-      return Container(
-        padding: EdgeInsets.all(AppSizes.defaultSpace / 1.3),
-        decoration: BoxDecoration(
-          color: dark
-              ? AppColors.darkerGrey.withValues(alpha: 0.5)
-              : Color(0xFFe7eae7),
-          borderRadius: BorderRadius.circular(AppSizes.md),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(AppSizes.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppSizes.lg),
-                  ),
-                  child: Text(
-                    controller.subject(qn.subjectId).toUpperCase(),
-                    style: TextStyle(color: AppColors.primary),
-                  ),
-                ),
-
-                IconButton(
-                  padding: EdgeInsets.all(0),
-                  onPressed: () => AppHelperFuntions.showAppDialog(
-                    context,
-                    "Do you want to remove?",
-                    "It will be deleted from your bookmark!",
-                    () {
-                      controller.removeFromBookmark(qn.id);
-                      Navigator.pop(context);
-
-                      FocusManager.instance.primaryFocus?.unfocus();
-                    },
-                  ),
-                  icon: Icon(Icons.bookmark, color: AppColors.primary),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: AppSizes.spaceBtwItems / 2),
-
-            Text(
-              " ${qn.questionText.substring(0, isGrater ? 150 : qn.questionText.length)} ${isGrater ? '...' : ''}",
-              textAlign: TextAlign.justify,
-
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                fontSize: 17,
-                color: dark ? AppColors.grey : AppColors.darkerGrey,
-              ),
-            ),
-            const SizedBox(height: AppSizes.spaceBtwItems),
-            Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.date_range, color: Colors.grey, size: 17),
-                    const SizedBox(width: AppSizes.xs),
-                    Text(
-                      'Saved ${AppFormatter.formatDate(savedAt)}',
-                      style: TextStyle(color: Colors.grey),
+      return GestureDetector(
+        onTap: () => Get.to(BookmarkedQnContainer(qn: qn)),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSizes.defaultSpace / 1.3,
+            vertical: AppSizes.defaultSpace / 3,
+          ),
+          decoration: BoxDecoration(
+            color: dark
+                ? AppColors.darkerGrey.withValues(alpha: 0.5)
+                : Color(0xFFe7eae7),
+            borderRadius: BorderRadius.circular(AppSizes.md),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(AppSizes.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSizes.lg),
                     ),
-                  ],
-                ),
-                SizedBox(
-                  width: 100,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () => Get.to(BookmarkedQnContainer(qn: qn)),
-                    child: Center(child: Text("View")),
+                    child: Text(
+                      controller.subject(qn.subjectId).toUpperCase(),
+                      style: TextStyle(color: AppColors.primary),
+                    ),
                   ),
+
+                  IconButton(
+                    padding: EdgeInsets.all(0),
+                    onPressed: () => AppHelperFuntions.showAppDialog(
+                      context,
+                      "Do you want to remove?",
+                      "It will be deleted from your bookmark!",
+                      () {
+                        controller.removeFromBookmark(qn.id);
+                        Navigator.pop(context);
+
+                        FocusManager.instance.primaryFocus?.unfocus();
+                      },
+                    ),
+                    icon: Icon(Icons.bookmark, color: AppColors.primary),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppSizes.spaceBtwItems / 2),
+
+              Text(
+                " ${qn.questionText.substring(0, isGrater ? 150 : qn.questionText.length)} ${isGrater ? '...' : ''}",
+                textAlign: TextAlign.justify,
+
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                  fontSize: 17,
+                  color: dark ? AppColors.grey : AppColors.darkerGrey,
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: AppSizes.spaceBtwItems / 2),
+              Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.date_range, color: Colors.grey, size: 17),
+                      const SizedBox(width: AppSizes.xs),
+                      Text(
+                        'Saved ${AppFormatter.formatDate(savedAt)}',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Get.to(BookmarkedQnContainer(qn: qn)),
+                    icon: Icon(Icons.keyboard_arrow_right),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     });

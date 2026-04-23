@@ -14,6 +14,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
+    controller.clearSearch();
 
     return Obx(() {
       final tabs = controller.subjects;

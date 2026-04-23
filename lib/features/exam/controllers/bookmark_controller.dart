@@ -85,7 +85,7 @@ class BookmarkController extends GetxController {
         .toList();
   }
 
-  /// ✅ SAFE SUBJECT LIST
+  ///  SAFE SUBJECT LIST
   List<String> get subjects {
     final set = <String>{};
 
@@ -104,7 +104,7 @@ class BookmarkController extends GetxController {
     return ["All", ...set];
   }
 
-  /// ✅ SAFE SUBJECT NAME
+  ///  SAFE SUBJECT NAME
   String subject(int subjectId) {
     final subjectsList = SubjectsController.instance.subjects;
 
@@ -113,7 +113,7 @@ class BookmarkController extends GetxController {
     return match.isNotEmpty ? match.first.name : "Unknown";
   }
 
-  /// ✅ FILTER BY SUBJECT + SEARCH
+  ///  FILTER BY SUBJECT + SEARCH
   List<QuestionModel> getBySubject(String subject) {
     final query = searchQuery.value.toLowerCase();
     final subjectsList = SubjectsController.instance.subjects;
@@ -131,7 +131,7 @@ class BookmarkController extends GetxController {
     }).toList();
   }
 
-  /// ✅ SEARCH ONLY
+  ///  SEARCH ONLY
   List<QuestionModel> get filteredQuestions {
     final query = searchQuery.value.toLowerCase();
 
@@ -142,5 +142,9 @@ class BookmarkController extends GetxController {
     return bookmarkedQuestions.where((q) {
       return q.questionText.toLowerCase().contains(query);
     }).toList();
+  }
+
+  void clearSearch() {
+    searchQuery.value = '';
   }
 }

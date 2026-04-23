@@ -19,7 +19,7 @@ class AuthenticationRepository extends GetxController {
   final _deviceStorage = GetStorage();
   final _auth = FirebaseAuth.instance;
 
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => Supabase.instance.client;
   late final Rx<User?> firebaseUser;
 
   User? get authUser => _auth.currentUser;

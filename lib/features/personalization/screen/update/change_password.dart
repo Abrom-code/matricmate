@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/personalization/controller/change_password_controller.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
@@ -13,7 +14,13 @@ class ChangePassword extends StatelessWidget {
     final controller = Get.put(ChangePasswordController());
 
     return Scaffold(
-      appBar: Appbar(title: const Text("Change Password"), showBackArrow: true),
+      appBar: Appbar(
+        title: const Text(
+          "Change Password",
+          style: TextStyle(color: AppColors.white),
+        ),
+        showBackArrow: true,
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.defaultSpace),

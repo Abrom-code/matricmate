@@ -9,6 +9,8 @@ import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
 class UserController extends GetxController {
   static UserController get instance => Get.find();
@@ -32,18 +34,29 @@ class UserController extends GetxController {
       userFetching.value = true;
 
       final dbUser = await _databaseService.getUser();
-
       if (dbUser.isNotEmpty) {
         this.user.value = UserModel.fromMap(dbUser.first);
-        return;
       }
 
+      final freshUser = await userRepository.fetchUserDetails();
+
+      if (freshUser!.email.isNotEmpty) {
+        this.user.value = freshUser;
+
+        final db = await _databaseService.database;
+        await db.insert(
+          'user',
+          freshUser.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
       final user = await userRepository.fetchUserDetails();
       this.user(user);
-      userFetching.value = false;
     } catch (e) {
-      userFetching.value = false;
+      AppLoggerHelper.error(e.toString());
       user(UserModel.empty());
+    } finally {
+      userFetching.value = false;
     }
   }
 

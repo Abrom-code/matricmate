@@ -8,13 +8,14 @@ import 'package:matricmate/utils/network_manager/network_manager.dart';
 class UpdateProfileController extends GetxController {
   static UpdateProfileController get instance => Get.find();
 
-  final userController = UserController.instance; // Use your instance getter
+  final userController = UserController.instance;
   final userRepository = UserRepository.instance;
 
   late final TextEditingController firstName;
   late final TextEditingController lastName;
   late final RxString selectedStream;
   final RxBool isUpdating = false.obs;
+  final user = UserController.instance.user;
 
   GlobalKey<FormState> updateFormKey = GlobalKey<FormState>();
 

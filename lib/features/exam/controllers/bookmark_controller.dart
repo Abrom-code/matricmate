@@ -3,6 +3,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -28,6 +29,7 @@ class BookmarkController extends GetxController {
     try {
       final db = await _databaseService.database;
       final bookmarkQn = BookmarkModel(
+        userId: UserController.instance.user.value.id,
         questionId: qnId,
         savedAt: DateTime.now().millisecondsSinceEpoch,
       );
@@ -61,7 +63,9 @@ class BookmarkController extends GetxController {
   Future<void> loadBookmarks() async {
     final data = await _databaseService.loadBookmarkedQuestions();
 
-    bookmarkedQuestionIds.value = data;
+    bookmarkedQuestionIds.value = data
+        .where((dt) => dt.userId == UserController.instance.user.value.id)
+        .toList();
     // ignore: invalid_use_of_protected_member
     bookmarkedIds.value = data.map((b) => b.questionId).toSet();
 

@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/screens/question/widgets/explanation_bo
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
@@ -130,6 +131,7 @@ class NormarQuesionsSection extends GetView<QuestionController> {
                       } else {
                         if (isLast) {
                           final result = ResultModel(
+                            userId: UserController.instance.user.value.id,
                             testId: examQn.testId,
                             selectedAnswers: controller.selectedAnswers,
                             testQuestions: controller.testQuestions.toList(),

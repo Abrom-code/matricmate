@@ -6,17 +6,16 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE user(
-        id TEXT NOT NULL UNIQUE,
-        first_name TEXT NOT NULL ,
+        id TEXT PRIMARY KEY,
+        first_name TEXT NOT NULL,
         last_name TEXT,
-        email NOT NULL TEXT,
-        stream TEXT,
-        );
+        email TEXT NOT NULL,
+        stream TEXT
+      );
     ''');
 
     await db.execute('''
       CREATE TABLE subjects (
-        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
         is_natural INTEGER NOT NULL,
@@ -27,7 +26,6 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE chapters (
-        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         subject_id INTEGER NOT NULL,
         grade INTEGER NOT NULL,
@@ -39,7 +37,6 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE passages (
-        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         content TEXT NOT NULL,
         image_url TEXT
@@ -48,7 +45,6 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE tests (
-        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         subject_id INTEGER NOT NULL,
         grade INTEGER,
@@ -64,7 +60,6 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE questions (
-        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         subject_id INTEGER NOT NULL,
         grade INTEGER NOT NULL,

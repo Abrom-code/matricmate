@@ -6,12 +6,14 @@ class ResultModel {
   final List<QuestionModel> testQuestions;
   final Map<int, int> selectedAnswers;
   final int correctAnswers;
+  final String userId;
 
   ResultModel({
     required this.testQuestions,
     required this.selectedAnswers,
     required this.correctAnswers,
     required this.testId,
+    required this.userId,
   });
 
   Map<String, dynamic> toMap() {
@@ -24,6 +26,7 @@ class ResultModel {
 
       'correctAnswers': correctAnswers,
       'test_id': testId,
+      'user_id': userId,
     };
   }
 
@@ -45,6 +48,7 @@ class ResultModel {
 
       correctAnswers: map['correctAnswers'] ?? 0,
       testId: map['test_id'],
+      userId: map['user_id'],
     );
   }
 }

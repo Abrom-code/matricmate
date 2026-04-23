@@ -3,6 +3,7 @@ import 'package:matricmate/data/database/local_db_schema.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -159,7 +160,9 @@ class DatabaseService extends GetxController {
     final db = await database;
     final result = await db.query('results');
 
-    return result.length;
+    return result
+        .where((r) => r['user_id'] == UserController.instance.user.value.id)
+        .length;
   }
 
   /// DatabaseService.dart

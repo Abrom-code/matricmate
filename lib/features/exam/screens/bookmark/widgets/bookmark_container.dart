@@ -4,6 +4,7 @@ import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/bookmark_qn_container.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
@@ -20,7 +21,11 @@ class BookmarkContainer extends GetView<BookmarkController> {
     final isGrater = qn.questionText.length > 150;
     final bookmark = controller.bookmarkedQuestionIds.firstWhere(
       (b) => b.questionId == qn.id,
-      orElse: () => BookmarkModel(questionId: qn.id, savedAt: 0),
+      orElse: () => BookmarkModel(
+        userId: UserController.instance.user.value.id,
+        questionId: qn.id,
+        savedAt: 0,
+      ),
     );
 
     final savedAt = bookmark.savedAt;

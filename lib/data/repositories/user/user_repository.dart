@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:matricmate/data/database/database_service.dart';
+import 'package:sqflite/sql.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
@@ -7,11 +9,18 @@ class UserRepository extends GetxController {
   static UserRepository get instance => Get.find();
 
   final SupabaseClient _supabase = Supabase.instance.client;
+  final DatabaseService databaseService = DatabaseService.instance;
 
   /// SAVE (UPSERT)
   Future<void> saveUserRecord(UserModel user) async {
     try {
       await _supabase.from('users').upsert(user.toJson(), onConflict: 'id');
+      final db = await databaseService.database;
+      await db.insert(
+        'user',
+        user.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     } catch (e) {
       throw e.toString();
     }
@@ -55,6 +64,13 @@ class UserRepository extends GetxController {
   Future<void> updateFullUserRecord(UserModel user) async {
     try {
       await _supabase.from('users').update(user.toJson()).eq('id', user.id);
+      final db = await databaseService.database;
+      await db.insert('user', {
+        ...user.toMap(),
+        'email': user.email.isNotEmpty
+            ? user.email
+            : (await databaseService.getUser()).first['email'],
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (e) {
       throw e.toString();
     }

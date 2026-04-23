@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
+import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
@@ -12,6 +13,7 @@ import 'package:matricmate/utils/helpers/toast_helper.dart';
 class UserController extends GetxController {
   static UserController get instance => Get.find();
 
+  final DatabaseService _databaseService = DatabaseService.instance;
   Rx<UserModel> user = UserModel.empty().obs;
 
   final userRepository = Get.put(UserRepository());
@@ -28,6 +30,14 @@ class UserController extends GetxController {
   Future<void> fetchUserRecord() async {
     try {
       userFetching.value = true;
+
+      final dbUser = await _databaseService.getUser();
+
+      if (dbUser.isNotEmpty) {
+        this.user.value = UserModel.fromMap(dbUser.first);
+        return;
+      }
+
       final user = await userRepository.fetchUserDetails();
       this.user(user);
       userFetching.value = false;

@@ -26,6 +26,10 @@ class UserModel {
     );
   }
 
+  // from local db
+  factory UserModel.fromMap(Map<String, dynamic> json) =>
+      UserModel.fromJson(json);
+
   /// TO JSON (Dart → Supabase)
   Map<String, dynamic> toJson() {
     return {
@@ -36,6 +40,9 @@ class UserModel {
       'stream': stream,
     };
   }
+
+  // to local db
+  Map<String, dynamic> toMap() => toJson();
 
   UserModel copyWith({
     String? id,

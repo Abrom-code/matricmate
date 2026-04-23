@@ -22,10 +22,7 @@ class AuthenticationRepository extends GetxController {
 
   @override
   void onReady() {
-    // Remove splash screen
     FlutterNativeSplash.remove();
-
-    // Initialize user stream and bind to the redirection logic
     firebaseUser = Rx<User?>(_auth.currentUser);
     firebaseUser.bindStream(_auth.userChanges());
 

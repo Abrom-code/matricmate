@@ -5,7 +5,18 @@ class DBschema {
     await db.execute('PRAGMA foreign_keys = ON');
 
     await db.execute('''
+      CREATE TABLE user(
+        id TEXT NOT NULL UNIQUE,
+        first_name TEXT NOT NULL ,
+        last_name TEXT,
+        email NOT NULL TEXT,
+        stream TEXT,
+        );
+    ''');
+
+    await db.execute('''
       CREATE TABLE subjects (
+        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
         is_natural INTEGER NOT NULL,
@@ -16,6 +27,7 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE chapters (
+        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         subject_id INTEGER NOT NULL,
         grade INTEGER NOT NULL,
@@ -27,6 +39,7 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE passages (
+        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         content TEXT NOT NULL,
         image_url TEXT
@@ -35,6 +48,7 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE tests (
+        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         subject_id INTEGER NOT NULL,
         grade INTEGER,
@@ -50,6 +64,7 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE questions (
+        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY,
         subject_id INTEGER NOT NULL,
         grade INTEGER NOT NULL,
@@ -73,6 +88,7 @@ class DBschema {
 
     await db.execute('''
       CREATE TABLE results (
+        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         test_id INTEGER UNIQUE,
         testQuestions TEXT,
@@ -82,6 +98,7 @@ class DBschema {
     ''');
     await db.execute('''
       CREATE TABLE bookmarks (
+        user_id TEXT NOT NULL UNIQUE,
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         question_id INTEGER UNIQUE,
         saved_at INTEGER NOT NULL

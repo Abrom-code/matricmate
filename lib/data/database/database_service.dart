@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
+import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:path/path.dart';
@@ -26,6 +27,15 @@ class DatabaseService extends GetxController {
         await DBschema.create(db);
       },
     );
+  }
+
+  Future<List<Map<String, dynamic>>> getUser() async {
+    try {
+      final db = await database;
+      return db.query('user');
+    } catch (e) {
+      throw e.toString();
+    }
   }
 
   // Get subjects

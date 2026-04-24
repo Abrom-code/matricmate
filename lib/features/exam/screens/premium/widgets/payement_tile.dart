@@ -11,6 +11,7 @@ Widget paymentTile({
   VoidCallback? onTap,
   required bool isFeatured,
   Widget? detail,
+  showIcon = true,
 }) {
   final dark = AppHelperFuntions.isDark(context);
   return GestureDetector(
@@ -61,12 +62,13 @@ Widget paymentTile({
                       ],
                     ),
                   ),
-                  Icon(
-                    selected
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
-                    color: selected ? Colors.green : Colors.grey,
-                  ),
+                  if (showIcon)
+                    Icon(
+                      selected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                      color: selected ? Colors.green : Colors.grey,
+                    ),
                 ],
               ),
               if (detail != null) detail,

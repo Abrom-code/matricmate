@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/validators/validators.dart';
@@ -8,9 +11,11 @@ class LinkInputFiled extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<PremiumController>();
     final isDark = AppHelperFuntions.isDark(context);
 
     return TextFormField(
+      controller: controller.urlFiledController,
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
       style: const TextStyle(fontSize: 14),
       validator: (value) => AppValidator.isValidUrl(value!),
@@ -19,6 +24,13 @@ class LinkInputFiled extends StatelessWidget {
         hintStyle: Theme.of(context).textTheme.labelMedium,
         // Prefix icon
         prefixIcon: const Icon(Icons.link, color: Colors.teal),
+        // suffix icon
+        suffixIcon: InkWell(
+          onTap: () async {
+            await controller.pasteFromClipboard();
+          },
+          child: const Icon(Icons.paste, size: 20, color: Colors.teal),
+        ),
 
         // Filled background
         filled: true,

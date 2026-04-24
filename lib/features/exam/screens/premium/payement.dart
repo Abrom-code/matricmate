@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/link_input_field.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_detail.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
@@ -17,11 +18,12 @@ class PayementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppHelperFuntions.isDark(context);
+    final controller = Get.find<PremiumController>();
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          "Payment",
+          "${method.title} - Payment",
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
@@ -55,7 +57,7 @@ class PayementScreen extends StatelessWidget {
               subtitle: method.subtitle,
               icon: method.icon,
               context: context,
-              selected: true,
+              showIcon: false,
               isFeatured: method.isFeatured,
               detail: PayementDetail(method: method),
             ),
@@ -70,6 +72,7 @@ class PayementScreen extends StatelessWidget {
             const SizedBox(height: AppSizes.spaceBtwItems * 2),
 
             Form(
+              key: controller.paymentFormKey,
               child: Column(
                 children: [
                   LinkInputFiled(),

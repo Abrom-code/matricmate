@@ -21,59 +21,56 @@ class PremiumController extends GetxController {
   final TextEditingController urlFiledController = TextEditingController();
   GlobalKey<FormState> paymentFormKey = GlobalKey<FormState>();
 
-  ///  Paste verification link
+  /// Paste clipboard
   Future<void> pasteFromClipboard() async {
     final data = await Clipboard.getData('text/plain');
 
-    if (data != null && data.text != null) {
-      urlFiledController.text = data.text!;
+    if (data?.text != null) {
+      urlFiledController.text = data!.text!;
     }
   }
 
-  ///  Pick receipt image
+  /// Pick image
   Future<void> pickRecipt() async {
     try {
       final picker = ImagePicker();
-      final XFile? pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-      );
+      final file = await picker.pickImage(source: ImageSource.gallery);
 
-      if (pickedFile != null) {
-        receipt.value = pickedFile;
+      if (file != null) {
+        receipt.value = file;
       }
-    } catch (e) {
+    } catch (_) {
       ToastHelper.error("Error", "Failed to pick image");
     }
   }
 
-  ///  COMPLETE PAYMENT FLOW (MAIN LOGIC)
   Future<void> completePayment() async {
     try {
       final userId = UserController.instance.user.value.id;
+
       if (userId.isEmpty) {
-        ToastHelper.warning("Error", "Unexpected error happend!");
+        ToastHelper.warning("Error", "Unexpected error happened!");
         return;
       }
+
       if (!paymentFormKey.currentState!.validate()) return;
 
       if (receipt.value == null) {
-        ToastHelper.warning("Warning", "Please upload the receipt!");
+        ToastHelper.warning("Warning", "Please upload receipt!");
         return;
       }
 
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet!", "Please connect to internet!");
+        ToastHelper.warning("No Internet!", "Connect to internet!");
         return;
       }
 
       isUploading.value = true;
 
-      //  Upload receipt image
       final receiptUrl = await _repo.uploadReceipt(receipt.value!, userId);
 
-      //  Save receipt in DB
       await _repo.savePaymentReceipt(
         userId: userId,
         receiptUrl: receiptUrl,
@@ -81,12 +78,12 @@ class PremiumController extends GetxController {
         verificationUrl: urlFiledController.text.trim(),
       );
 
-      //  Set user to pending
       await _repo.setUserPending(userId);
       await UserController.instance.fetchUserRecord();
 
       Get.off(() => PaymentVerificationScreen());
-      ToastHelper.success("Success", "Payment submitted successfully");
+
+      ToastHelper.success("Success", "Payment submitted!");
     } catch (e) {
       ToastHelper.error("Error", e.toString());
     } finally {
@@ -99,31 +96,29 @@ class PremiumController extends GetxController {
       final userId = UserController.instance.user.value.id;
 
       if (userId.isEmpty) {
-        ToastHelper.warning("Error", "Unexpected error happened!");
+        ToastHelper.warning("Error", "Unexpected error!");
         return;
       }
 
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet!", "Please connect to internet!");
+        ToastHelper.warning("No Internet!", "Connect to internet!");
         return;
       }
 
       isUploading.value = true;
 
-      // 1. Cancel in backend
       await _repo.cancelPayment(userId);
 
-      // 2. Reload user data
       await UserController.instance.fetchUserRecord();
 
-      // 3. Clear local state
       receipt.value = null;
       urlFiledController.clear();
 
       Get.back();
-      ToastHelper.success("Cancelled", "Payment cancelled successfully");
+
+      ToastHelper.success("Cancelled", "Payment cancelled");
     } catch (e) {
       ToastHelper.error("Error", e.toString());
     } finally {

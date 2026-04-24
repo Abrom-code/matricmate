@@ -51,4 +51,16 @@ class PaymentRepository {
         .update({'subscription_status': 'pending'})
         .eq('id', userId);
   }
+
+  /// Cancel payment → remove receipt + reset user status
+  Future<void> cancelPayment(String userId) async {
+    // 1. Delete payment receipt records
+    await _supabase.from('payment_receipts').delete().eq('user_id', userId);
+
+    // 2. Reset user status to inactive
+    await _supabase
+        .from('users')
+        .update({'subscription_status': 'inactive'})
+        .eq('id', userId);
+  }
 }

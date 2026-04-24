@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_instance/get_instance.dart';
+import 'package:get/route_manager.dart';
+import 'package:get/state_manager.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
+import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -9,6 +16,7 @@ class PaymentVerificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(PremiumController());
     final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
       appBar: Appbar(
@@ -23,74 +31,109 @@ class PaymentVerificationScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 60),
+          child: Obx(() {
+            final user = UserController.instance.user.value;
+            final isFetching = UserController.instance.userFetching.value;
+            final isLoading = controller.isUploading.value;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 60),
 
-              // Title
-              const Text(
-                "Payment Verification in Progress",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
+                // Title
+                const Text(
+                  "Payment Verification in Progress",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
 
-              const SizedBox(height: 15),
+                const SizedBox(height: 15),
 
-              // Subtitle
-              const Text(
-                "We are verifying your receipt. This usually takes a few hours. "
-                "Please click the refresh status button after around 30 minutes. If this couldn't work, please contact the our support on Telegram.",
-                textAlign: TextAlign.justify,
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
+                // Subtitle
+                const Text(
+                  "We are verifying your receipt. This usually takes a few hours. "
+                  "Please click the refresh status button after around 30 minutes. If this couldn't work, please contact the our support on Telegram.",
+                  textAlign: TextAlign.justify,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
 
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-              // Refresh button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.refresh),
-                  label: const Text("Refresh Status"),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                // Refresh button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      await UserController.instance.checkPaymentStatus();
+                      if (user.isActive) {
+                        Get.offAll(() => NavigationMenu());
+                      }
+                    },
+                    icon: isFetching ? null : Icon(Icons.refresh),
+                    label: isFetching && !isLoading
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: AppColors.white.withValues(alpha: .5),
+                            ),
+                          )
+                        : Text(
+                            "Refresh Payment",
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 15),
+                const SizedBox(height: 15),
 
-              // Cancel button
-              TextButton(
-                onPressed: () {},
-                child: const Text(
-                  "Cancel Payment",
+                // Cancel button
+                TextButton(
+                  onPressed: () {
+                    AppDialogBoxes.showOkCancelDialog(
+                      context: context,
+                      title: "Cancel Payment",
+                      subtitle: "Are you sure you want to cancel this payment?",
+                      onPressed: () {
+                        Get.back();
+                        controller.cancelPayment();
+                      },
+                    );
+                  },
+                  child: isLoading
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: AppColors.white.withValues(alpha: .5),
+                          ),
+                        )
+                      : Text(
+                          "Cancel Payment",
+                          style: TextStyle(fontSize: 16, color: Colors.red),
+                        ),
+                ),
+                const SizedBox(height: 15),
+                Divider(),
+                const SizedBox(height: 15),
+
+                Text(
+                  "Need help with your Payment?",
                   style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
+                    color: dark ? AppColors.grey : AppColors.darkerGrey,
                   ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              Divider(),
-              const SizedBox(height: 15),
+                const SizedBox(height: 15),
 
-              Text(
-                "Need help with your Payment?",
-                style: TextStyle(
-                  color: dark ? AppColors.grey : AppColors.darkerGrey,
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              TelegramChatButton(),
-            ],
-          ),
+                TelegramChatButton(),
+              ],
+            );
+          }),
         ),
       ),
     );

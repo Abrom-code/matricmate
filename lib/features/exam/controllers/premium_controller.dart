@@ -93,4 +93,41 @@ class PremiumController extends GetxController {
       isUploading.value = false;
     }
   }
+
+  Future<void> cancelPayment() async {
+    try {
+      final userId = UserController.instance.user.value.id;
+
+      if (userId.isEmpty) {
+        ToastHelper.warning("Error", "Unexpected error happened!");
+        return;
+      }
+
+      final isConnected = await NetworkManager.instance.hasRealInternet();
+
+      if (!isConnected) {
+        ToastHelper.warning("No Internet!", "Please connect to internet!");
+        return;
+      }
+
+      isUploading.value = true;
+
+      // 1. Cancel in backend
+      await _repo.cancelPayment(userId);
+
+      // 2. Reload user data
+      await UserController.instance.fetchUserRecord();
+
+      // 3. Clear local state
+      receipt.value = null;
+      urlFiledController.clear();
+
+      Get.back();
+      ToastHelper.success("Cancelled", "Payment cancelled successfully");
+    } catch (e) {
+      ToastHelper.error("Error", e.toString());
+    } finally {
+      isUploading.value = false;
+    }
+  }
 }

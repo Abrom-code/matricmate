@@ -6,10 +6,13 @@ import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -70,12 +73,24 @@ class SubjectsScreen extends StatelessWidget {
         final filteredSubjects = subjectController.subjects.where((subject) {
           return subject.isCommon || subject.isNatural == isNaturalStream;
         }).toList();
+        final isInactive = UserController.instance.user.value.isInactive;
 
         return SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(AppSizes.defaultSpace),
             child: Column(
               children: [
+                if (isInactive)
+                  PremiumBanner(
+                    onTap: () {
+                      Get.bottomSheet(
+                        const PremiumBottomSheet(),
+                        isScrollControlled: true,
+                      );
+                    },
+                  ),
+                if (isInactive) const SizedBox(height: AppSizes.spaceBtwItems),
+
                 GridLayout(
                   itemCount: filteredSubjects.length,
                   itemBuilder: (_, index) {

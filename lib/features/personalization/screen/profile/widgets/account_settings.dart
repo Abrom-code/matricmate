@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/profile_tile.dart';
 import 'package:matricmate/features/personalization/screen/update/change_password.dart';
 import 'package:matricmate/features/personalization/screen/update/update_profile.dart';
@@ -14,6 +16,7 @@ class AccountSettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
+    final isInactive = UserController.instance.user.value.isInactive;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSizes.md),
@@ -40,6 +43,18 @@ class AccountSettings extends StatelessWidget {
             trailing: Icon(Icons.keyboard_arrow_right),
             onTap: () {},
           ),
+          if (isInactive)
+            ProfileTile(
+              icon: Icon(Icons.workspace_premium, color: Colors.amber),
+              title: "Upgrade Premium",
+              trailing: Icon(Icons.keyboard_arrow_right),
+              onTap: () {
+                Get.bottomSheet(
+                  const PremiumBottomSheet(),
+                  isScrollControlled: true,
+                );
+              },
+            ),
           ProfileTile(
             icon: Icon(Icons.sunny),
             title: "Change Theme",

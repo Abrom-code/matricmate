@@ -64,6 +64,7 @@ class PremiumScreen extends StatelessWidget {
                   title: method.title,
                   subtitle: method.subtitle,
                   icon: method.icon,
+                  isFeatured: method.isFeatured,
                   selected: method == controller.selectdMethod.value,
                   context: context,
                   onTap: () => controller.selectdMethod.value = method,

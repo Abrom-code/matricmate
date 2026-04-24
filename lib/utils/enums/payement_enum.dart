@@ -40,4 +40,15 @@ extension PaymentMethodExtension on PaymentMethod {
         return Icons.account_balance_wallet_outlined;
     }
   }
+
+  bool get isFeatured {
+    switch (this) {
+      case PaymentMethod.telebirr:
+        return true;
+      case PaymentMethod.cbe:
+      case PaymentMethod.abyssinia:
+      case PaymentMethod.mpesa:
+        return false;
+    }
+  }
 }

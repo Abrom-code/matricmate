@@ -74,7 +74,7 @@ class PremiumBottomSheet extends StatelessWidget {
             height: 55,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.green, AppColors.primary, Color(0xFF3A7BFF)],
+                colors: [Colors.green, AppColors.primary, Colors.green],
               ),
               borderRadius: BorderRadius.circular(16),
             ),

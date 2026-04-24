@@ -99,7 +99,10 @@ class AppDrawer extends StatelessWidget {
                       Get.offAll(() => NavigationMenu(initialIndex: 2)),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.workspace_premium),
+                  leading: const Icon(
+                    Icons.workspace_premium,
+                    color: Colors.amber,
+                  ),
                   title: const Text("Subscribe Premium"),
                   onTap: () {
                     Get.back();

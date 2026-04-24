@@ -4,7 +4,6 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

@@ -29,6 +29,29 @@ extension PaymentMethodExtension on PaymentMethod {
     }
   }
 
+  String get accountName {
+    switch (this) {
+      case PaymentMethod.telebirr:
+      case PaymentMethod.cbe:
+      case PaymentMethod.abyssinia:
+      case PaymentMethod.mpesa:
+        return "Beshasha Desmon";
+    }
+  }
+
+  String get accountNumber {
+    switch (this) {
+      case PaymentMethod.telebirr:
+        return "0983878287";
+      case PaymentMethod.cbe:
+        return "1000786878626";
+      case PaymentMethod.abyssinia:
+        return "187978686";
+      case PaymentMethod.mpesa:
+        return "0783738782";
+    }
+  }
+
   IconData get icon {
     switch (this) {
       case PaymentMethod.telebirr:

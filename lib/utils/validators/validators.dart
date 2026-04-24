@@ -21,6 +21,21 @@ class AppValidator {
     return null;
   }
 
+  static String? isValidUrl(String value) {
+    if (value.isEmpty) return "Enter valid url";
+    final uri = Uri.tryParse(value);
+
+    final valid =
+        uri != null &&
+        uri.hasScheme &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.host.isNotEmpty;
+    if (!valid) {
+      return "Invalid url!";
+    } else
+      return null;
+  }
+
   static String? validateStream(String? value) {
     if (value == null || value.isEmpty) {
       return 'Stream is required.';

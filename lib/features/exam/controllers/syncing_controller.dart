@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:sqflite/sqflite.dart';
@@ -34,6 +35,7 @@ class SyncingController extends GetxController {
       refreshing.value = true;
 
       await syncSubjects();
+      await UserController.instance.fetchUserRecord();
 
       final localSubjects = await _databaseService.getSubjects();
       final downloadedIds = localSubjects
@@ -197,7 +199,7 @@ class SyncingController extends GetxController {
           .from('passages')
           .select()
           .inFilter('id', passageIds);
-      
+
       final remote = (remoteData as List)
           .map((p) => PassageModel.fromJson(p))
           .toList();

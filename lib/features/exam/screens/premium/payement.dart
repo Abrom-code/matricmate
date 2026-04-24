@@ -92,26 +92,36 @@ class PayementScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.all(AppSizes.md),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal.shade700,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      bottomNavigationBar: Obx(() {
+        return Container(
+          padding: EdgeInsets.all(AppSizes.md),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal.shade700,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-            ),
-            onPressed: () {},
-            child: Text(
-              "Complete Payment",
-              style: TextStyle(fontSize: 16, color: Colors.white),
+              onPressed: controller.isUploading.value
+                  ? () {}
+                  : () => controller.completePayment(),
+              child: controller.isUploading.value
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(color: AppColors.white),
+                    )
+                  : Text(
+                      "Complete Payment",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
             ),
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }

@@ -64,7 +64,7 @@ class UserController extends GetxController {
         );
       }
     } catch (e) {
-      AppLoggerHelper.error(e.toString());
+      ToastHelper.error("Error", "Unexpected Error happend!");
     } finally {
       userFetching.value = false;
     }

@@ -45,7 +45,7 @@ class ToastHelper {
       margin: const EdgeInsets.all(12),
       borderRadius: 12,
       icon: Icon(icon, color: Colors.white),
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 2),
       isDismissible: true,
       forwardAnimationCurve: Curves.easeOutBack,
       animationDuration: const Duration(milliseconds: 300),

@@ -4,6 +4,7 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payement.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
@@ -78,29 +79,39 @@ class PremiumScreen extends StatelessWidget {
           }),
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.all(AppSizes.md),
-        child: SizedBox(
-          width: double.infinity,
+      bottomNavigationBar: Obx(() {
+        final isPending = UserController.instance.user.value.isPending;
+        print(isPending.toString());
+        return Container(
+          padding: EdgeInsets.all(AppSizes.md),
+          child: SizedBox(
+            width: double.infinity,
 
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal.shade700,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isPending
+                    ? Colors.grey.shade700
+                    : Colors.teal.shade700,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: isPending
+                  ? () {}
+                  : () => Get.to(
+                      () => PayementScreen(
+                        method: controller.selectedMethod.value,
+                      ),
+                    ),
+              child: Text(
+                isPending ? "Processing Payment..." : "Continue to Payment",
+                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
-            onPressed: () => Get.to(
-              () => PayementScreen(method: controller.selectedMethod.value),
-            ),
-            child: Text(
-              "Continue to Payment",
-              style: TextStyle(fontSize: 16, color: Colors.white),
-            ),
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }

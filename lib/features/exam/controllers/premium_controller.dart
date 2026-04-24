@@ -7,6 +7,7 @@ import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/logging/logging.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class PremiumController extends GetxController {
@@ -19,6 +20,7 @@ class PremiumController extends GetxController {
   final isUploading = false.obs;
 
   final TextEditingController urlFiledController = TextEditingController();
+
   GlobalKey<FormState> paymentFormKey = GlobalKey<FormState>();
 
   /// Paste clipboard
@@ -44,6 +46,7 @@ class PremiumController extends GetxController {
     }
   }
 
+  /// COMPLETE PAYMENT
   Future<void> completePayment() async {
     try {
       final userId = UserController.instance.user.value.id;
@@ -53,13 +56,16 @@ class PremiumController extends GetxController {
         return;
       }
 
+      //  form validation (KEEPED)
       if (!paymentFormKey.currentState!.validate()) return;
 
+      //  image check (KEEPED)
       if (receipt.value == null) {
         ToastHelper.warning("Warning", "Please upload receipt!");
         return;
       }
 
+      //  network check (KEEPED)
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
@@ -69,16 +75,22 @@ class PremiumController extends GetxController {
 
       isUploading.value = true;
 
-      final receiptUrl = await _repo.uploadReceipt(receipt.value!, userId);
+      // upload
+      final result = await _repo.uploadReceipt(receipt.value!, userId);
 
+      // save
       await _repo.savePaymentReceipt(
         userId: userId,
-        receiptUrl: receiptUrl,
+        receiptPath: result["filePath"]!, // FIXED
+        receiptUrl: result["url"]!,
         paymentMethod: selectedMethod.value.name,
         verificationUrl: urlFiledController.text.trim(),
       );
 
+      // set pending
       await _repo.setUserPending(userId);
+
+      // refresh user
       await UserController.instance.fetchUserRecord();
 
       Get.off(() => PaymentVerificationScreen());
@@ -91,6 +103,7 @@ class PremiumController extends GetxController {
     }
   }
 
+  /// CANCEL PAYMENT
   Future<void> cancelPayment() async {
     try {
       final userId = UserController.instance.user.value.id;
@@ -100,6 +113,7 @@ class PremiumController extends GetxController {
         return;
       }
 
+      // network check
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
@@ -120,6 +134,7 @@ class PremiumController extends GetxController {
 
       ToastHelper.success("Cancelled", "Payment cancelled");
     } catch (e) {
+      AppLoggerHelper.error(e.toString());
       ToastHelper.error("Error", e.toString());
     } finally {
       isUploading.value = false;

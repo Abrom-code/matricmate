@@ -110,7 +110,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
-                            color: AppColors.white.withValues(alpha: .5),
+                            color: AppColors.error.withValues(alpha: .5),
                           ),
                         )
                       : Text(

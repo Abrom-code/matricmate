@@ -4,6 +4,7 @@ import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
+import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -49,24 +50,32 @@ class GradeTestsPage extends GetView<TestController> {
               final test = tests[index];
 
               final hasQn = controller.testHasQuestions[test.id] ?? false;
-              final isActive =
-                  index < 1 || UserController.instance.user.value.isActive;
+              final isInactive = UserController.instance.user.value.isInactive;
+              final isPending = UserController.instance.user.value.isPending;
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
                 child: Obx(
                   () => TestTile(
-                    icon: isActive ? Icons.quiz : Icons.lock,
-                    iconColor: isActive ? Colors.teal : Colors.amber,
+                    icon: (isInactive || isPending) && index < 1
+                        ? Icons.quiz
+                        : Icons.lock,
+                    iconColor: (isInactive || isPending) && index < 1
+                        ? Colors.teal
+                        : Colors.amber,
                     currentStep: controller.getCurrentStep(test.id),
                     maxStep: controller.getMaxStep(test.id),
                     testName: test.title,
                     onTap: () {
                       if (!hasQn) {
-                        if (!isActive) {
+                        if (isInactive) {
                           Get.bottomSheet(
                             const PremiumBottomSheet(),
                             isScrollControlled: true,
                           );
+                          return;
+                        }
+                        if (isPending) {
+                          Get.to(() => const PaymentVerificationScreen());
                           return;
                         }
                         ToastHelper.info(

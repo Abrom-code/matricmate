@@ -1,148 +1,104 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/features/exam/controllers/premium_controller.dart';
+import 'package:matricmate/features/exam/screens/premium/payement_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/enums/payement_enum.dart';
 
-class PremiumBottomSheet extends StatelessWidget {
-  const PremiumBottomSheet({super.key});
+class PremiumScreen extends StatelessWidget {
+  const PremiumScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        color: dark ? AppColors.dark : Colors.grey.shade300,
+    final controller = Get.put(PremiumController());
+    final methods = PaymentMethod.values;
+    return Scaffold(
+      appBar: Appbar(
+        showBackArrow: true,
+        title: Text(
+          "Upgrade Premium",
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall!.apply(color: AppColors.white),
+        ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          /// TITLE
-          const Text(
-            "Unlock Your Full Potential",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 6),
-
-          const Text(
-            "Precision tools designed for the modern scholar.",
-            style: TextStyle(fontSize: 13, color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 20),
-
-          /// FEATURES
-          _featureTile(
-            Icons.menu_book,
-            "Full Mock Exams",
-            "Complete simulated testing environments.",
-            Colors.blue,
-            dark,
-          ),
-          _featureTile(
-            Icons.analytics_outlined,
-            "Advanced Analytics",
-            "Deep insights into your learning patterns.",
-            Colors.green,
-            dark,
-          ),
-          _featureTile(
-            Icons.block,
-            "Ad-Free Experience",
-            "Pure focus, zero distractions during study.",
-            Colors.grey,
-            dark,
-          ),
-
-          const SizedBox(height: 20),
-
-          /// BUTTON
-          Container(
-            width: double.infinity,
-            height: 55,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.green, AppColors.primary, Color(0xFF3A7BFF)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Obx(() {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Total Amount Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.teal.shade700,
                   borderRadius: BorderRadius.circular(16),
                 ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      "Total Amount Due",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "250 ETB",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              onPressed: () {},
-              child: const Text(
-                "Go Premium",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
 
-          const SizedBox(height: 10),
-        ],
-      ),
-    );
-  }
+              const SizedBox(height: 20),
 
-  /// FEATURE TILE
-  static Widget _featureTile(
-    IconData icon,
-    String title,
-    String subtitle,
-    Color color,
-    bool dark,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: dark ? const Color.fromARGB(255, 14, 14, 14) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color),
-          ),
+              // Payment Options
+              ...methods.map((method) {
+                return paymentTile(
+                  title: method.title,
+                  subtitle: method.subtitle,
+                  icon: method.icon,
+                  selected: method == controller.selectdMethod.value,
+                  context: context,
+                  onTap: () => controller.selectdMethod.value = method,
+                );
+              }).toList(),
 
-          const SizedBox(width: 12),
+              const SizedBox(height: 16),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+              const Spacer(),
+
+              // Button
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal.shade700,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                onPressed: () {},
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Continue to Payment",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward_ios_outlined, color: Colors.white),
+                  ],
                 ),
-              ],
-            ),
-          ),
-
-          const Icon(Icons.check_circle, color: Colors.teal, size: 18),
-        ],
+              ),
+            ],
+          );
+        }),
       ),
     );
   }

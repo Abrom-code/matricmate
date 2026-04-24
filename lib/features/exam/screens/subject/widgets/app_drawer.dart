@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
-import 'package:matricmate/features/exam/screens/subject/subjects.dart';
-import 'package:matricmate/features/personalization/screen/profile/profile.dart';
+import 'package:matricmate/features/exam/screens/premium/premium_bottom_sheet.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -103,7 +101,13 @@ class AppDrawer extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.workspace_premium),
                   title: const Text("Subscribe Premium"),
-                  onTap: () {},
+                  onTap: () {
+                    Get.back();
+                    Get.bottomSheet(
+                      const PremiumBottomSheet(),
+                      isScrollControlled: true,
+                    );
+                  },
                 ),
                 Divider(),
 

@@ -1,0 +1,43 @@
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class TelegramChatButton extends StatelessWidget {
+  const TelegramChatButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.center,
+      child: OutlinedButton(
+        onPressed: () {
+          _openTelegram();
+        },
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.telegram, size: 25, color: Colors.lightBlue),
+            SizedBox(width: 10),
+            Text("Chat on Telegram", style: TextStyle(color: Colors.blue)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openTelegram() async {
+    final Uri uri = Uri.parse("https://t.me/matric_mate");
+
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint("Telegram open failed: $e");
+    }
+  }
+}

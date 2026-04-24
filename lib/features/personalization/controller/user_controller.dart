@@ -65,6 +65,22 @@ class UserController extends GetxController {
     }
   }
 
+  Future<void> checkPaymentStatus() async {
+    await UserController.instance.fetchUserRecord();
+
+    final user = UserController.instance.user.value;
+
+    if (user.isActive) {
+      ToastHelper.success("Success", "Your account is activated!");
+      return;
+    }
+
+    if (user.isPending) {
+      ToastHelper.warning("Progress", "Your payment is still processing!");
+      return;
+    }
+  }
+
   Future<void> saveUserRecord(UserCredential? userCredentials) async {
     try {
       if (userCredentials != null) {

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payement.dart';
+import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -89,23 +90,21 @@ class PremiumScreen extends StatelessWidget {
 
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isPending
-                    ? Colors.grey.shade700
-                    : Colors.teal.shade700,
+                backgroundColor: Colors.teal.shade700,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               onPressed: isPending
-                  ? () {}
+                  ? () => Get.to(() => PaymentVerificationScreen())
                   : () => Get.to(
                       () => PayementScreen(
                         method: controller.selectedMethod.value,
                       ),
                     ),
               child: Text(
-                isPending ? "Processing Payment..." : "Continue to Payment",
+                isPending ? "Check Status" : "Continue to Payment",
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),

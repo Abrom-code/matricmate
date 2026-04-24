@@ -106,22 +106,6 @@ class AppHelperFuntions {
     return DateFormat(formate).format(date);
   }
 
-  static List<T> removeDuplicates<T>(List<T> list) {
-    return list.toSet().toList();
-  }
-
-  static List<Widget> wrapWidgets(List<Widget> widgets, int rowSize) {
-    final wrappedList = <Widget>[];
-    for (var i = 0; i < widgets.length; i += rowSize) {
-      final rowchildren = widgets.sublist(
-        i,
-        i + rowSize > widgets.length ? widgets.length : i + rowSize,
-      );
-      wrappedList.add(Row(children: rowchildren));
-    }
-    return wrappedList;
-  }
-
   static String getSubjectImage(String subject) {
     switch (subject) {
       case "Biology":

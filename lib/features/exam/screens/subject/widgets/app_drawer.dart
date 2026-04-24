@@ -5,7 +5,6 @@ import 'package:matricmate/features/personalization/controller/user_controller.d
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/themes/theme_controller.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -125,25 +124,7 @@ class AppDrawer extends StatelessWidget {
                       title: const Text("Refresh Payment"),
                       onTap: () async {
                         Get.back();
-                        await UserController.instance.fetchUserRecord();
-
-                        final user = UserController.instance.user.value;
-
-                        if (user.isActive) {
-                          ToastHelper.success(
-                            "Success",
-                            "Your account is activated!",
-                          );
-                          return;
-                        }
-
-                        if (user.isPending) {
-                          ToastHelper.warning(
-                            "Progress",
-                            "Your payment is still processing!",
-                          );
-                          return;
-                        }
+                        await UserController.instance.checkPaymentStatus();
                       },
                     ),
                   Divider(),
@@ -181,13 +162,7 @@ class AppDrawer extends StatelessWidget {
 
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: const [
-                Icon(Icons.send),
-                SizedBox(width: 10),
-                Text("aboipiatech@gmail.com"),
-              ],
-            ),
+            child: Text("Version 1.0.0"),
           ),
         ],
       ),

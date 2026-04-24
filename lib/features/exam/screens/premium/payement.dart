@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
+import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/link_input_field.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_detail.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/recipt_container.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
@@ -112,7 +114,9 @@ class PayementScreen extends StatelessWidget {
                   ? SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(color: AppColors.white),
+                      child: CircularProgressIndicator(
+                        color: AppColors.white.withValues(alpha: .5),
+                      ),
                     )
                   : Text(
                       "Complete Payment",

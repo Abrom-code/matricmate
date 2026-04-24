@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:matricmate/data/repositories/payment/payment_repository.dart';
+import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -82,8 +83,9 @@ class PremiumController extends GetxController {
 
       //  Set user to pending
       await _repo.setUserPending(userId);
+      await UserController.instance.fetchUserRecord();
 
-      Get.back();
+      Get.off(() => PaymentVerificationScreen());
       ToastHelper.success("Success", "Payment submitted successfully");
     } catch (e) {
       ToastHelper.error("Error", e.toString());

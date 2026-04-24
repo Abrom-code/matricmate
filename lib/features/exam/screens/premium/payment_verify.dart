@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PaymentVerificationScreen extends StatelessWidget {
   const PaymentVerificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
@@ -36,75 +39,10 @@ class PaymentVerificationScreen extends StatelessWidget {
 
               // Subtitle
               const Text(
-                "We are verifying your receipt. This usually takes a few minutes. "
-                "Please keep this screen open or check back later.",
-                textAlign: TextAlign.center,
+                "We are verifying your receipt. This usually takes a few hours. "
+                "Please click the refresh status button after around 30 minutes. If this couldn't work, please contact the our support on Telegram.",
+                textAlign: TextAlign.justify,
                 style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-
-              const SizedBox(height: 30),
-
-              // Card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    // Reference ID
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
-                          "REFERENCE ID",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          "#ABY-9821-XP",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // Amount
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
-                          "AMOUNT",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          "450.00 ETB",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
 
               const SizedBox(height: 40),
@@ -118,7 +56,6 @@ class PaymentVerificationScreen extends StatelessWidget {
                   icon: const Icon(Icons.refresh),
                   label: const Text("Refresh Status"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -139,6 +76,19 @@ class PaymentVerificationScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 15),
+              Divider(),
+              const SizedBox(height: 15),
+
+              Text(
+                "Need help with your Payment?",
+                style: TextStyle(
+                  color: dark ? AppColors.grey : AppColors.darkerGrey,
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              TelegramChatButton(),
             ],
           ),
         ),

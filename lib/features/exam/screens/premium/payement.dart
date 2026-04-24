@@ -76,14 +76,16 @@ class PayementScreen extends StatelessWidget {
               child: Column(
                 children: [
                   LinkInputFiled(),
-                  const SizedBox(height: AppSizes.spaceBtwItems),
+                  const SizedBox(height: AppSizes.spaceBtwSections),
 
-                  GestureDetector(
-                    onTap: () {
-                      // open file picker here
-                    },
-                    child: ReciptContainer(),
-                  ),
+                  Obx(() {
+                    final file = controller.receipt.value;
+
+                    return GestureDetector(
+                      onTap: () => controller.pickRecipt(),
+                      child: ReciptContainer(file: file),
+                    );
+                  }),
                 ],
               ),
             ),

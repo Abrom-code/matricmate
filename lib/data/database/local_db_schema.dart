@@ -10,7 +10,7 @@ class DBschema {
         first_name TEXT NOT NULL,
         last_name TEXT,
         email TEXT NOT NULL,
-        stream TEXT
+        stream TEXT,
         subscription_status TEXT DEFAULT 'inactive'
       );
     ''');

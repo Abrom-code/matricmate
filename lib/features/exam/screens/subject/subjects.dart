@@ -6,6 +6,7 @@ import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
+import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
@@ -73,6 +74,7 @@ class SubjectsScreen extends StatelessWidget {
           return subject.isCommon || subject.isNatural == isNaturalStream;
         }).toList();
         final isInactive = UserController.instance.user.value.isInactive;
+        final isPending = UserController.instance.user.value.isPending;
 
         return SingleChildScrollView(
           child: Padding(
@@ -90,6 +92,27 @@ class SubjectsScreen extends StatelessWidget {
                   ),
                 if (isInactive) const SizedBox(height: AppSizes.spaceBtwItems),
 
+                if (isPending)
+                  TextButton(
+                    onPressed: () {
+                      Get.to(() => const PaymentVerificationScreen());
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Check Payment Status",
+                          style: TextStyle(
+                            color: Colors.teal,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Icon(Icons.call_made),
+                      ],
+                    ),
+                  ),
+                if (isPending) const SizedBox(height: AppSizes.spaceBtwItems),
                 GridLayout(
                   itemCount: filteredSubjects.length,
                   itemBuilder: (_, index) {

@@ -38,23 +38,17 @@ class UserController extends GetxController {
     try {
       userFetching.value = true;
 
-      // 1. LOCAL FIRST (source of truth initially)
-      final dbUser = await _databaseService.getUser();
-
-      if (dbUser.isNotEmpty) {
-        user.value = UserModel.fromMap(dbUser.first);
-      }
-
-      // 2. REMOTE SYNC
       final freshUser = await userRepository.fetchUserDetails();
 
       if (freshUser == null) return;
 
-      // 3. ONLY UPDATE IF DIFFERENT (IMPORTANT FIX)
-      if (freshUser.id != user.value.id ||
-          freshUser.email != user.value.email ||
-          freshUser.firstName != user.value.firstName) {
+      final currentUser = user.value;
+
+      final statusChanged = freshUser.status != currentUser.status;
+
+      if (statusChanged) {
         user.value = freshUser;
+        user.refresh();
 
         final db = await _databaseService.database;
         await db.insert(
@@ -64,7 +58,8 @@ class UserController extends GetxController {
         );
       }
     } catch (e) {
-      ToastHelper.error("Error", "Unexpected Error happend!");
+      AppLoggerHelper.error(e.toString());
+      ToastHelper.error("Error", e.toString());
     } finally {
       userFetching.value = false;
     }

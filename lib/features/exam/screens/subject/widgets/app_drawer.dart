@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/themes/theme_controller.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -78,68 +80,101 @@ class AppDrawer extends StatelessWidget {
 
           // MENU ITEMS
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.home_outlined),
-                  title: Text("Home"),
-                  onTap: () => Get.back(),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.bookmark_outline),
-                  title: const Text("Bookmarks"),
-                  onTap: () =>
-                      Get.offAll(() => NavigationMenu(initialIndex: 1)),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.person_outline),
-                  title: const Text("Profile"),
-                  onTap: () =>
-                      Get.offAll(() => NavigationMenu(initialIndex: 2)),
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.workspace_premium,
-                    color: Colors.amber,
+            child: Obx(() {
+              final isPending = UserController.instance.user.value.isPending;
+              final isInactive = UserController.instance.user.value.isInactive;
+              return ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.home_outlined),
+                    title: Text("Home"),
+                    onTap: () => Get.back(),
                   ),
-                  title: const Text("Subscribe Premium"),
-                  onTap: () {
-                    Get.back();
-                    Get.bottomSheet(
-                      const PremiumBottomSheet(),
-                      isScrollControlled: true,
-                    );
-                  },
-                ),
-                Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.bookmark_outline),
+                    title: const Text("Bookmarks"),
+                    onTap: () =>
+                        Get.offAll(() => NavigationMenu(initialIndex: 1)),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: const Text("Profile"),
+                    onTap: () =>
+                        Get.offAll(() => NavigationMenu(initialIndex: 2)),
+                  ),
+                  if (isInactive)
+                    ListTile(
+                      leading: const Icon(
+                        Icons.workspace_premium,
+                        color: Colors.amber,
+                      ),
+                      title: const Text("Subscribe Premium"),
+                      onTap: () {
+                        Get.back();
+                        Get.bottomSheet(
+                          const PremiumBottomSheet(),
+                          isScrollControlled: true,
+                        );
+                      },
+                    ),
 
-                ListTile(
-                  leading: const Icon(
-                    Icons.telegram,
-                    color: Colors.lightBlue,
+                  if (isPending)
+                    ListTile(
+                      leading: const Icon(Icons.refresh),
+                      title: const Text("Refresh Payment"),
+                      onTap: () async {
+                        Get.back();
+                        await UserController.instance.fetchUserRecord();
 
-                    size: 30,
+                        final user = UserController.instance.user.value;
+
+                        if (user.isActive) {
+                          ToastHelper.success(
+                            "Success",
+                            "Your account is activated!",
+                          );
+                          return;
+                        }
+
+                        if (user.isPending) {
+                          ToastHelper.warning(
+                            "Progress",
+                            "Your payment is still processing!",
+                          );
+                          return;
+                        }
+                      },
+                    ),
+                  Divider(),
+
+                  ListTile(
+                    leading: const Icon(
+                      Icons.telegram,
+                      color: Colors.lightBlue,
+
+                      size: 30,
+                    ),
+                    title: const Text("Telegram"),
+                    onTap: () {},
                   ),
-                  title: const Text("Telegram"),
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.smart_display,
-                    color: Colors.red,
-                    size: 30,
+                  ListTile(
+                    leading: const Icon(
+                      Icons.smart_display,
+                      color: Colors.red,
+                      size: 30,
+                    ),
+                    title: const Text("YouTube"),
+                    onTap: () {},
                   ),
-                  title: const Text("YouTube"),
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading: const Icon(Icons.tiktok),
-                  title: const Text("TikTok"),
-                  onTap: () {},
-                ),
-              ],
-            ),
+                  ListTile(
+                    leading: const Icon(Icons.tiktok),
+                    title: const Text("TikTok"),
+                    onTap: () {},
+                  ),
+                ],
+              );
+            }),
           ),
 
           const Divider(height: 1),

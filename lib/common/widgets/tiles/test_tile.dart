@@ -13,12 +13,14 @@ class TestTile extends StatelessWidget {
     this.hasSubTitle = true,
     required this.currentStep,
     required this.maxStep,
+    this.iconColor = AppColors.primary,
   });
   final String testName;
   final IconData icon;
   final VoidCallback onTap;
   final bool hasSubTitle;
   final int currentStep, maxStep;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,7 @@ class TestTile extends StatelessWidget {
         ),
         child: ListTile(
           minVerticalPadding: 10,
-          leading: Icon(icon, color: AppColors.primary),
+          leading: Icon(icon, color: iconColor),
           title: Text(
             testName.toUpperCase(),
             style: Theme.of(

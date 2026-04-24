@@ -4,10 +4,13 @@ import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class GradeTestsPage extends GetView<TestController> {
   const GradeTestsPage({super.key, required this.grade, required this.subject});
@@ -46,19 +49,29 @@ class GradeTestsPage extends GetView<TestController> {
               final test = tests[index];
 
               final hasQn = controller.testHasQuestions[test.id] ?? false;
-
+              final isActive =
+                  index < 1 || UserController.instance.user.value.isActive;
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
                 child: Obx(
                   () => TestTile(
+                    icon: isActive ? Icons.quiz : Icons.lock,
+                    iconColor: isActive ? Colors.teal : Colors.amber,
                     currentStep: controller.getCurrentStep(test.id),
                     maxStep: controller.getMaxStep(test.id),
                     testName: test.title,
                     onTap: () {
                       if (!hasQn) {
-                        AppHelperFuntions.showAlert(
-                          "No Questions",
-                          "This test has no questions",
+                        if (!isActive) {
+                          Get.bottomSheet(
+                            const PremiumBottomSheet(),
+                            isScrollControlled: true,
+                          );
+                          return;
+                        }
+                        ToastHelper.info(
+                          "No Quesions!",
+                          "Quesions will be added soon!",
                         );
                         return;
                       }

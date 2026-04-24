@@ -131,8 +131,6 @@ class TestController extends GetxController {
       tests.map((test) async {
         final result = await _databaseService.loadSavedTestResult(test.id);
         if (result != null) {
-          AppLoggerHelper.error(result.correctAnswers.toString());
-
           testResults[test.id] = result;
         }
       }),

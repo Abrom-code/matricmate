@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/payement_tile.dart';
+import 'package:matricmate/features/exam/screens/premium/payement.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
 
@@ -65,9 +66,9 @@ class PremiumScreen extends StatelessWidget {
                   subtitle: method.subtitle,
                   icon: method.icon,
                   isFeatured: method.isFeatured,
-                  selected: method == controller.selectdMethod.value,
+                  selected: method == controller.selectedMethod.value,
                   context: context,
-                  onTap: () => controller.selectdMethod.value = method,
+                  onTap: () => controller.selectedMethod.value = method,
                 );
               }).toList(),
 
@@ -84,7 +85,9 @@ class PremiumScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () => Get.to(
+                  () => PayementScreen(method: controller.selectedMethod.value),
+                ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

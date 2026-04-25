@@ -17,6 +17,7 @@ class QuestionModel {
   String? imageUrl;
 
   int correctOptionIndex;
+
   String explanationEn;
   String explanationAm;
 
@@ -48,15 +49,19 @@ class QuestionModel {
       testId: map['test_id'],
 
       correctOptionIndex: map['correct_option_index'],
-      questionText: map['question_text'],
+      questionText: map['question_text'] ?? "",
 
       chapterId: map['chapter_id'],
       passageId: map['passage_id'],
       questionOrder: map['question_order'],
 
-      imageUrl: map['image_url'],
-      explanationEn: map['explanation_en'],
-      explanationAm: map['explanation_am'],
+      imageUrl: map['image_url']?.toString(),
+
+      explanationEn:
+          map['explanation_en']?.toString() ?? "No English Explanation!",
+      explanationAm:
+          map['explanation_am']?.toString() ?? "No Amharic Explanation!",
+
       options: map['options'] == null
           ? []
           : map['options'] is String
@@ -73,12 +78,10 @@ class QuestionModel {
       'id': id,
       'subject_id': subjectId,
       'grade': grade,
-
       'test_id': testId,
 
       'chapter_id': chapterId,
       'passage_id': passageId,
-
       'question_order': questionOrder,
 
       'question_text': questionText,
@@ -89,7 +92,6 @@ class QuestionModel {
       'explanation_en': explanationEn,
       'explanation_am': explanationAm,
 
-      // store as TEXT in SQLite / JSON in Supabase
       'options': jsonEncode(options),
     };
   }

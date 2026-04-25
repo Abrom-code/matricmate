@@ -69,13 +69,11 @@ class PaymentRepository {
       }
 
       // Attempt DB row deletion
-      final response = await _supabase
+      await _supabase
           .from('payment_receipts')
           .delete()
           .eq('user_id', userId)
           .select();
-
-      print("DB Delete Response: $response");
 
       // Update user status
       await _supabase

@@ -1,18 +1,17 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:uuid/uuid.dart';
 
 class DeviceService {
-  static const _storage = FlutterSecureStorage();
-  static const _key = 'device_id';
+  static final _storage = GetStorage();
 
   static Future<String> getDeviceId() async {
-    String? deviceId = await _storage.read(key: _key);
+    String? id = _storage.read('device_id');
 
-    if (deviceId == null) {
-      deviceId = const Uuid().v4();
-      await _storage.write(key: _key, value: deviceId);
+    if (id == null) {
+      id = const Uuid().v4();
+      await _storage.write('device_id', id);
     }
 
-    return deviceId;
+    return id;
   }
 }

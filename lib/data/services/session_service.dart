@@ -10,10 +10,9 @@ class SessionService {
           .from('user_sessions')
           .select()
           .eq('firebase_uid', uid)
-          .eq('is_active', true)
           .maybeSingle();
 
-      //  No session → allow
+      //  First login → register device
       if (existing == null) {
         await _supabase.from('user_sessions').insert({
           'firebase_uid': uid,
@@ -30,25 +29,10 @@ class SessionService {
       //  Different device → BLOCK
       ToastHelper.error(
         "Login Blocked",
-        "This account is already in use on another device.",
+        "This account is already used on another device.",
       );
 
       return false;
-
-      //  OR replace session (better UX)
-      /*
-      await _supabase
-          .from('user_sessions')
-          .update({'is_active': false})
-          .eq('firebase_uid', uid);
-
-      await _supabase.from('user_sessions').insert({
-        'firebase_uid': uid,
-        'device_id': deviceId,
-      });
-
-      return true;
-      */
     } catch (e) {
       ToastHelper.error("Error", "Session check failed.");
       return false;

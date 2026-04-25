@@ -50,18 +50,20 @@ class GradeTestsPage extends GetView<TestController> {
               final test = tests[index];
 
               final hasQn = controller.testHasQuestions[test.id] ?? false;
-              final isInactive = UserController.instance.user.value.isInactive;
-              final isPending = UserController.instance.user.value.isPending;
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
-                child: Obx(
-                  () => TestTile(
-                    icon: (isInactive || isPending) && index < 1
-                        ? Icons.quiz
-                        : Icons.lock,
-                    iconColor: (isInactive || isPending) && index < 1
-                        ? Colors.teal
-                        : Colors.amber,
+                child: Obx(() {
+                  final isInactive =
+                      UserController.instance.user.value.isInactive;
+                  final isPending =
+                      UserController.instance.user.value.isPending;
+                  final isActive = UserController.instance.user.value.isActive;
+
+                  final canAccess =
+                      isActive || ((isInactive || isPending) && index < 1);
+                  return TestTile(
+                    icon: canAccess ? Icons.quiz : Icons.lock,
+                    iconColor: canAccess ? Colors.teal : Colors.amber,
                     currentStep: controller.getCurrentStep(test.id),
                     maxStep: controller.getMaxStep(test.id),
                     testName: test.title,
@@ -96,8 +98,8 @@ class GradeTestsPage extends GetView<TestController> {
                         ),
                       );
                     },
-                  ),
-                ),
+                  );
+                }),
               );
             },
           );

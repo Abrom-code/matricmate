@@ -7,7 +7,6 @@ import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
-import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -65,9 +64,6 @@ class PaymentVerificationScreen extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () async {
                       await UserController.instance.checkPaymentStatus();
-                      if (user.isActive) {
-                        Get.offAll(() => NavigationMenu());
-                      }
                     },
                     icon: isFetching ? null : Icon(Icons.refresh),
                     label: isFetching && !isLoading

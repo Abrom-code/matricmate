@@ -41,8 +41,8 @@ class AllGradeExamsTile extends GetView<TestController> {
             () => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: TestTile(
-                icon: isInactive || isPending ? Icons.quiz : Icons.lock,
-                iconColor: isInactive || isPending ? Colors.teal : Colors.amber,
+                icon: (isInactive || isPending) ? Icons.lock : Icons.quiz,
+                iconColor: isInactive || isPending ? Colors.amber : Colors.teal,
                 currentStep: controller.getCurrentStep(test.id),
                 maxStep: controller.getMaxStep(test.id),
                 testName: test.title,

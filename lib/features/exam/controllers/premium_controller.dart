@@ -67,7 +67,6 @@ class PremiumController extends GetxController {
 
       isUploading.value = true;
 
-      await UserController.instance.fetchUserRecord();
       final userId = UserController.instance.user.value.id;
 
       if (userId.isEmpty) {

@@ -8,6 +8,7 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
+import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/logging/logging.dart';
@@ -65,6 +66,7 @@ class UserController extends GetxController {
     final user = UserController.instance.user.value;
 
     if (user.isActive) {
+      Get.offAll(() => NavigationMenu());
       ToastHelper.success("Success", "Your account is activated!");
       return;
     }

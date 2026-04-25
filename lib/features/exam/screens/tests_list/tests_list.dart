@@ -53,30 +53,33 @@ class TestListScreen extends GetView<TestController> {
               final test = tests[index];
 
               final hasQn = controller.testHasQuestions[test.id] ?? false;
-              final isInactive = UserController.instance.user.value.isInactive;
-              final isPending = UserController.instance.user.value.isPending;
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
-                child: Obx(
-                  () => TestTile(
+                child: Obx(() {
+                  final isInactive =
+                      UserController.instance.user.value.isInactive;
+                  final isPending =
+                      UserController.instance.user.value.isPending;
+                  final isActive = UserController.instance.user.value.isActive;
+
+                  final canAccess =
+                      isActive || ((isInactive || isPending) && index < 1);
+                  return TestTile(
                     testName: test.title,
-                    icon: (isInactive || isPending) && index < 1
-                        ? Icons.quiz
-                        : Icons.lock,
-                    iconColor: (isInactive || isPending) && index < 1
-                        ? Colors.teal
-                        : Colors.amber,
+                    icon: canAccess ? Icons.quiz : Icons.lock,
+                    iconColor: canAccess ? Colors.teal : Colors.amber,
                     currentStep: controller.getCurrentStep(test.id),
                     maxStep: controller.getMaxStep(test.id),
                     onTap: () {
-                      if (isInactive) {
+                      if (isInactive && index > 0) {
                         Get.bottomSheet(
                           const PremiumBottomSheet(),
                           isScrollControlled: true,
                         );
                         return;
                       }
-                      if (isPending) {
+                      if (isPending && index > 0) {
                         Get.to(() => const PaymentVerificationScreen());
                         return;
                       }
@@ -98,8 +101,8 @@ class TestListScreen extends GetView<TestController> {
                         ),
                       );
                     },
-                  ),
-                ),
+                  );
+                }),
               );
             },
           );

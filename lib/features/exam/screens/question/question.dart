@@ -7,7 +7,6 @@ import 'package:matricmate/features/exam/screens/question/widgets/normal_questio
 import 'package:matricmate/features/exam/screens/question/widgets/passage_container.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/passage_layout_ctrl.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class QuestionScreen extends GetView<QuestionController> {
@@ -91,26 +90,17 @@ class QuestionScreen extends GetView<QuestionController> {
           ),
           body: SingleChildScrollView(
             controller: pageScrollController,
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: currentQ.passageId != null ? 0 : AppSizes.defaultSpace,
-                left: AppSizes.defaultSpace,
-                right: AppSizes.defaultSpace,
-                bottom: AppSizes.defaultSpace,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// PASSAGE
-                  if (currentQ.passageId != null) ...[
-                    PassageContainer(controller: controller, block: block),
-                    const SizedBox(height: 20),
-                  ],
-
-                  ///  ONLY ONE QUESTION
-                  QuesitonSection(question: currentQ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                /// PASSAGE
+                if (currentQ.passageId != null) ...[
+                  PassageContainer(controller: controller, block: block),
                 ],
-              ),
+
+                ///  ONLY ONE QUESTION
+                QuesitonSection(question: currentQ),
+              ],
             ),
           ),
         );

@@ -38,43 +38,42 @@ class PassageContainer extends StatelessWidget {
                 color: dark
                     ? Colors.white.withValues(alpha: 0.15)
                     : Colors.black.withValues(alpha: 0.08),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+                blurRadius: 1,
+                offset: const Offset(0, 1),
               ),
             ],
             border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
           ),
 
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 16),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
 
-            child: Flexible(
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                padding: EdgeInsets.zero,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Passage Title",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17 * controller.textScale.value,
-                      ),
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.zero,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Passage Title",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17 * controller.textScale.value,
                     ),
+                  ),
 
-                    const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                    Text(
-                      block.passageText ?? "",
-                      style: TextStyle(
-                        fontSize: 15 * controller.textScale.value,
-                        height: 1.7,
-                        color: dark ? AppColors.grey : Colors.black87,
-                      ),
+                  Text(
+                    block.passageText ?? "",
+                    textAlign: TextAlign.justify,
+                    style: TextStyle(
+                      fontSize: 15 * controller.textScale.value,
+                      height: 1.7,
+                      color: dark ? AppColors.grey : Colors.black87,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

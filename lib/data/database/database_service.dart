@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';

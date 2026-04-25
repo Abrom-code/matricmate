@@ -31,8 +31,8 @@ class ChoiceButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(10),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
         decoration: BoxDecoration(
           color: isChecked
               ? (isCorrect
@@ -64,8 +64,8 @@ class ChoiceButton extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 25,
-              height: 25,
+              width: 20,
+              height: 20,
               decoration: BoxDecoration(
                 color: isChecked
                     ? (isCorrect

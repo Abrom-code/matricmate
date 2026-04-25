@@ -17,9 +17,8 @@ class QuestionSection extends StatelessWidget {
         children: [
           TextSpan(
             text: "$qnNumber. ",
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+              fontSize: 17,
               color: dark ? AppColors.grey : AppColors.darkerGrey,
             ),
           ),

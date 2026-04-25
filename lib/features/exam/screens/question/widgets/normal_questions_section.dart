@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
+import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/explanation_box.dart';
@@ -12,9 +13,9 @@ import 'package:matricmate/features/personalization/controller/user_controller.d
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class NormarQuesionsSection extends GetView<QuestionController> {
-  const NormarQuesionsSection({super.key});
-
+class QuesitonSection extends GetView<QuestionController> {
+  const QuesitonSection({super.key, required this.question});
+  final QuestionModel question;
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -22,27 +23,27 @@ class NormarQuesionsSection extends GetView<QuestionController> {
         return const Center(child: CircularProgressIndicator());
       }
 
-      final examQn = controller.testQuestions[controller.currentIndex.value];
-
-      final isChecked = controller.isAnswerChecked(examQn.id);
-      final selectedIndex = controller.getSelectedAnswer(examQn.id);
+      final isChecked = controller.isAnswerChecked(question.id);
+      final selectedIndex = controller.getSelectedAnswer(question.id);
 
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Quesition
           QuestionSection(
-            qnNumber: examQn.questionOrder,
-            examQn: examQn.questionText,
+            qnNumber: question.questionOrder,
+            examQn: question.questionText,
           ),
           const SizedBox(height: AppSizes.spaceBtwItems),
 
           // If there is Image
-          if (examQn.imageUrl != null) ImageSection(imgUrl: examQn.imageUrl),
-          if (examQn.imageUrl != null)
+          if (question.imageUrl != null)
+            ImageSection(imgUrl: question.imageUrl),
+          if (question.imageUrl != null)
             const SizedBox(height: AppSizes.spaceBtwItems),
 
           // options
-          ...examQn.options.asMap().entries.map((entry) {
+          ...question.options.asMap().entries.map((entry) {
             final index = entry.key;
             final option = entry.value;
 
@@ -51,17 +52,16 @@ class NormarQuesionsSection extends GetView<QuestionController> {
               isChecked: isChecked,
               optionTxt: option,
               index: index,
-              questionId: examQn.id,
-              correctIndex: examQn.correctOptionIndex,
+              questionId: question.id,
+              correctIndex: question.correctOptionIndex,
               onTap: () {
                 if (!isChecked) {
-                  controller.selectAnswer(examQn.id, index);
+                  controller.selectAnswer(question.id, index);
                 }
               },
             );
           }),
-          const SizedBox(height: AppSizes.spaceBtwItems),
-          if (controller.isAnswerChecked(examQn.id))
+          if (controller.isAnswerChecked(question.id))
             Column(
               children: [
                 // explanations
@@ -90,18 +90,21 @@ class NormarQuesionsSection extends GetView<QuestionController> {
 
                 if (controller.isExplanationExpanaded.value)
                   ExplanationBox(
-                    explanationEn: examQn.explanationEn,
-                    explanationAm: examQn.explanationAm,
+                    explanationEn: question.explanationEn,
+                    explanationAm: question.explanationAm,
                   ),
 
                 // Next/check answer button
-                const SizedBox(height: AppSizes.spaceBtwItems),
+                const SizedBox(height: AppSizes.spaceBtwItems / 2),
               ],
             ),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 2),
+                  ),
                   onPressed: controller.currentIndex.value > 0
                       ? () => controller.previousQuestion()
                       : null,
@@ -132,7 +135,7 @@ class NormarQuesionsSection extends GetView<QuestionController> {
                         if (isLast) {
                           final result = ResultModel(
                             userId: UserController.instance.user.value.id,
-                            testId: examQn.testId,
+                            testId: question.testId,
                             selectedAnswers: controller.selectedAnswers,
                             testQuestions: controller.testQuestions.toList(),
                             correctAnswers: controller.correctAnswers,
@@ -146,6 +149,9 @@ class NormarQuesionsSection extends GetView<QuestionController> {
                         }
                       }
                     },
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 2),
+                    ),
                     child: !isChecked
                         ? Text("Check Answer")
                         : (isLast

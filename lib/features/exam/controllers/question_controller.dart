@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
+import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -12,6 +13,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
 
+  // cache passage
+  final Map<int, String> _passageCache = {};
+
   final SupabaseClient supabase = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService.instance;
 
@@ -22,6 +26,15 @@ class QuestionController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isExplanationExpanaded = false.obs;
   final RxString languageSelected = "EN".obs;
+  var isFullScreenPassage = false.obs;
+
+  // question block
+  final RxList<QuestionBlock> blocks = <QuestionBlock>[].obs;
+  final RxInt currentBlockIndex = 0.obs;
+
+  // passage controller
+  var isPassageHidden = false.obs;
+  var textScale = 1.0.obs;
 
   @override
   void onInit() {
@@ -36,6 +49,7 @@ class QuestionController extends GetxController {
       isLoading.value = true;
 
       // reset state
+      currentBlockIndex.value = 0;
       testQuestions.clear();
       selectedAnswers.clear();
       isChecked.clear();
@@ -48,6 +62,7 @@ class QuestionController extends GetxController {
         testQuestions.assignAll(
           dbQuestions.map((e) => QuestionModel.fromMap(e)).toList(),
         );
+        blocks.assignAll(await buildBlocks(testQuestions));
         return;
       }
 
@@ -71,6 +86,7 @@ class QuestionController extends GetxController {
           .toList();
 
       testQuestions.assignAll(data);
+      blocks.assignAll(await buildBlocks(testQuestions));
 
       final db = await _databaseService.database;
 
@@ -88,9 +104,35 @@ class QuestionController extends GetxController {
     }
   }
 
+  void nextBlock() {
+    if (currentBlockIndex.value < blocks.length - 1) {
+      currentBlockIndex.value++;
+
+      // jump to first question of block
+      final firstQ = blocks[currentBlockIndex.value].questions.first;
+      currentIndex.value = testQuestions.indexOf(firstQ);
+
+      isExplanationExpanaded.value = false;
+    }
+  }
+
+  void previousBlock() {
+    if (currentBlockIndex.value > 0) {
+      currentBlockIndex.value--;
+
+      final firstQ = blocks[currentBlockIndex.value].questions.first;
+      currentIndex.value = testQuestions.indexOf(firstQ);
+
+      isExplanationExpanaded.value = false;
+    }
+  }
+
   void nextQuestion() {
     if (currentIndex.value < testQuestions.length - 1) {
       currentIndex.value++;
+
+      _syncBlockWithIndex();
+
       isExplanationExpanaded.value = false;
     }
   }
@@ -98,7 +140,21 @@ class QuestionController extends GetxController {
   void previousQuestion() {
     if (currentIndex.value > 0) {
       currentIndex.value--;
+
+      _syncBlockWithIndex();
+
       isExplanationExpanaded.value = false;
+    }
+  }
+
+  void _syncBlockWithIndex() {
+    final currentQ = testQuestions[currentIndex.value];
+
+    for (int i = 0; i < blocks.length; i++) {
+      if (blocks[i].questions.contains(currentQ)) {
+        currentBlockIndex.value = i;
+        break;
+      }
     }
   }
 
@@ -157,4 +213,93 @@ class QuestionController extends GetxController {
   bool isBookmarked(int questionId) {
     return BookmarkController.instance.bookmarkedIds.contains(questionId);
   }
+
+  Future<List<QuestionBlock>> buildBlocks(List<QuestionModel> questions) async {
+    final List<QuestionBlock> blocks = [];
+
+    QuestionBlock? current;
+
+    int? lastPassageId;
+    bool lastWasPassage = false;
+
+    for (final q in questions) {
+      final isPassage = q.passageId != null;
+
+      final isNewBlock =
+          current == null ||
+          q.passageId != lastPassageId ||
+          isPassage != lastWasPassage;
+
+      if (isNewBlock) {
+        if (current != null) {
+          blocks.add(current);
+        }
+
+        current = QuestionBlock(
+          passageId: q.passageId,
+          passageText: q.passageId != null
+              ? await getPassageText(q.passageId)
+              : null,
+          questions: [],
+        );
+
+        lastPassageId = q.passageId;
+        lastWasPassage = isPassage;
+      }
+
+      current.questions.add(q);
+    }
+
+    if (current != null) {
+      blocks.add(current);
+    }
+
+    return blocks;
+  }
+
+  Future<String> getPassageText(int? pId) async {
+    try {
+      if (pId == null) return "";
+
+      //  CACHE HIT
+      if (_passageCache.containsKey(pId)) {
+        return _passageCache[pId]!;
+      }
+
+      final passage = await _databaseService.getPassage(pId);
+
+      final text = passage.isEmpty ? "No passage" : passage;
+
+      // 🔥 SAVE TO CACHE
+      _passageCache[pId] = text;
+
+      return text;
+    } catch (e) {
+      ToastHelper.error("Error", e.toString());
+      return "Error loading passage";
+    }
+  }
+
+  void togglePassage() {
+    isPassageHidden.value = !isPassageHidden.value;
+  }
+
+  /// Increase text size
+  void increaseTextScale() {
+    if (textScale.value < 1.4) {
+      textScale.value += 0.1;
+    }
+  }
+
+  /// Decrease text size
+  void decreaseTextScale() {
+    if (textScale.value > 0.8) {
+      textScale.value -= 0.1;
+    }
+  }
+
+  void togglePassageSize() {
+    isFullScreenPassage.value = !isFullScreenPassage.value;
+  }
+
 }

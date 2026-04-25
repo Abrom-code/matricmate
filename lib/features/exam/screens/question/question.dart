@@ -4,6 +4,8 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/normal_questions_section.dart';
+import 'package:matricmate/features/exam/screens/question/widgets/passage_container.dart';
+import 'package:matricmate/features/exam/screens/question/widgets/passage_layout_ctrl.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -15,6 +17,7 @@ class QuestionScreen extends GetView<QuestionController> {
   Widget build(BuildContext context) {
     final bookmarkController = Get.find<BookmarkController>();
     final dark = AppHelperFuntions.isDark(context);
+    final ScrollController pageScrollController = ScrollController();
 
     return PopScope(
       canPop: false,
@@ -37,14 +40,15 @@ class QuestionScreen extends GetView<QuestionController> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-
-        if (controller.testQuestions.isEmpty) {
+        if (controller.blocks.isEmpty) {
           return const Scaffold(
             body: Center(child: Text("No Questions Available")),
           );
         }
-        final examQn = controller.testQuestions[controller.currentIndex.value];
+        final currentQ =
+            controller.testQuestions[controller.currentIndex.value];
 
+        final block = controller.blocks[controller.currentBlockIndex.value];
         return Scaffold(
           appBar: Appbar(
             leadingIcon: Icons.close,
@@ -58,18 +62,24 @@ class QuestionScreen extends GetView<QuestionController> {
                 Navigator.pop(context);
               },
             ),
-            title: Text(
-              "Question ${controller.currentIndex.value + 1} of ${controller.testQuestions.length}",
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            title: currentQ.passageId != null
+                ? PassageLayoutCtrl(controller: controller)
+                : Text(
+                    "Question ${controller.currentIndex.value + 1} of ${controller.testQuestions.length}",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
             centerTitle: true,
             actions: [
               Obx(() {
-                final isSaved = controller.isBookmarked(examQn.id);
+                final currentQ =
+                    controller.testQuestions[controller.currentIndex.value];
+
+                final isSaved = controller.isBookmarked(currentQ.id);
+
                 return IconButton(
                   onPressed: isSaved
-                      ? () => bookmarkController.removeFromBookmark(examQn.id)
-                      : () => bookmarkController.addToBookmark(examQn.id),
+                      ? () => bookmarkController.removeFromBookmark(currentQ.id)
+                      : () => bookmarkController.addToBookmark(currentQ.id),
                   icon: Icon(
                     isSaved ? Icons.bookmark : Icons.bookmark_outline,
                     color: isSaved ? AppColors.primary : null,
@@ -79,10 +89,28 @@ class QuestionScreen extends GetView<QuestionController> {
             ],
             backgroundColor: Colors.transparent,
           ),
-          body: const SingleChildScrollView(
+          body: SingleChildScrollView(
+            controller: pageScrollController,
             child: Padding(
-              padding: EdgeInsets.all(AppSizes.defaultSpace),
-              child: NormarQuesionsSection(),
+              padding: EdgeInsets.only(
+                top: currentQ.passageId != null ? 0 : AppSizes.defaultSpace,
+                left: AppSizes.defaultSpace,
+                right: AppSizes.defaultSpace,
+                bottom: AppSizes.defaultSpace,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// PASSAGE
+                  if (currentQ.passageId != null) ...[
+                    PassageContainer(controller: controller, block: block),
+                    const SizedBox(height: 20),
+                  ],
+
+                  ///  ONLY ONE QUESTION
+                  QuesitonSection(question: currentQ),
+                ],
+              ),
             ),
           ),
         );

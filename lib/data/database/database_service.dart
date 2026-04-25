@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
+import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:path/path.dart';
@@ -162,6 +165,16 @@ class DatabaseService extends GetxController {
     return result
         .where((r) => r['user_id'] == UserController.instance.user.value.id)
         .length;
+  }
+
+  Future<String> getPassage(int? pId) async {
+    final db = await database;
+    final result = await db.query('passages');
+
+    final res = result
+        .where((r) => r['id'] == pId)
+        .map((p) => PassageModel.fromMap(p));
+    return res.first.content;
   }
 
   /// DatabaseService.dart

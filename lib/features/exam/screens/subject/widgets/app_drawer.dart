@@ -82,19 +82,26 @@ class AppDrawer extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Icons.home_outlined),
                     title: Text("Home"),
-                    onTap: () => Get.back(),
+                    onTap: () {
+                      Get.back();
+                      Get.offAll(() => NavigationMenu(initialIndex: 0));
+                    },
                   ),
                   ListTile(
                     leading: const Icon(Icons.bookmark_outline),
                     title: const Text("Bookmarks"),
-                    onTap: () =>
-                        Get.offAll(() => NavigationMenu(initialIndex: 1)),
+                    onTap: () {
+                      Get.back();
+                      Get.offAll(() => NavigationMenu(initialIndex: 1));
+                    },
                   ),
                   ListTile(
                     leading: const Icon(Icons.person_outline),
                     title: const Text("Profile"),
-                    onTap: () =>
-                        Get.offAll(() => NavigationMenu(initialIndex: 2)),
+                    onTap: () {
+                      Get.back();
+                      Get.offAll(() => NavigationMenu(initialIndex: 2));
+                    },
                   ),
                   if (isInactive)
                     ListTile(

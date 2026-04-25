@@ -39,6 +39,7 @@ class AppbarStatusTitle extends StatelessWidget {
               context,
             ).textTheme.headlineSmall!.apply(color: AppColors.white),
           ),
+          const SizedBox(width: 10),
 
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

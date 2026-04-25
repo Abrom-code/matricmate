@@ -165,14 +165,29 @@ class DatabaseService extends GetxController {
         .length;
   }
 
-  Future<String> getPassage(int? pId) async {
+  Future<PassageModel> getPassage(int? pId) async {
     final db = await database;
-    final result = await db.query('passages');
 
-    final res = result
-        .where((r) => r['id'] == pId)
-        .map((p) => PassageModel.fromMap(p));
-    return res.first.content;
+    if (pId == null) {
+      return PassageModel(id: -1, content: "", title: "");
+    }
+
+    final result = await db.query(
+      'passages',
+      where: 'id = ?',
+      whereArgs: [pId],
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      return PassageModel(
+        id: -1,
+        content: "No passage found",
+        title: "Missing",
+      );
+    }
+
+    return PassageModel.fromMap(result.first);
   }
 
   /// DatabaseService.dart

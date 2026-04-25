@@ -40,6 +40,7 @@ class DBschema {
       CREATE TABLE passages (
         id INTEGER PRIMARY KEY,
         content TEXT NOT NULL,
+        title TEXT,
         image_url TEXT
       );
     ''');

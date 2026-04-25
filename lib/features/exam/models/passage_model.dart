@@ -2,19 +2,31 @@ class PassageModel {
   int id;
   String content;
   String? imageUrl;
-  PassageModel({required this.id, this.imageUrl, required this.content});
+  String? title;
+  PassageModel({
+    required this.id,
+    this.imageUrl,
+    required this.content,
+    this.title,
+  });
 
   factory PassageModel.fromJson(Map<String, dynamic> json) {
     return PassageModel(
       id: json['id'],
       content: json['content'],
       imageUrl: json['image_url'],
+      title: json['title'],
     );
   }
   factory PassageModel.fromMap(Map<String, dynamic> map) =>
       PassageModel.fromJson(map);
 
   Map<String, dynamic> toMap() {
-    return {'id': id, 'content': content, 'image_url': imageUrl};
+    return {
+      'id': id,
+      'content': content,
+      'image_url': imageUrl,
+      'title': title,
+    };
   }
 }

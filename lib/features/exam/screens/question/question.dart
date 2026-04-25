@@ -34,7 +34,7 @@ class QuestionScreen extends GetView<QuestionController> {
         );
       },
       child: Obx(() {
-        if (controller.isLoading.value) {
+        if (controller.isLoading.value || controller.isPassageLoading.value) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
@@ -44,6 +44,7 @@ class QuestionScreen extends GetView<QuestionController> {
             body: Center(child: Text("No Questions Available")),
           );
         }
+
         final currentQ =
             controller.testQuestions[controller.currentIndex.value];
 

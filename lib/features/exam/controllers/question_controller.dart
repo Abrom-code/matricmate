@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
+import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
@@ -14,7 +15,8 @@ class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
 
   // cache passage
-  final Map<int, String> _passageCache = {};
+  final Map<int, PassageModel> _passageCache = {};
+  final RxBool isPassageLoading = false.obs;
 
   final SupabaseClient supabase = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService.instance;
@@ -235,11 +237,15 @@ class QuestionController extends GetxController {
           blocks.add(current);
         }
 
+        PassageModel? passage;
+
+        if (q.passageId != null) {
+          passage = await getPassage(q.passageId);
+        }
+
         current = QuestionBlock(
           passageId: q.passageId,
-          passageText: q.passageId != null
-              ? await getPassageText(q.passageId)
-              : null,
+          passage: passage,
           questions: [],
         );
 
@@ -257,26 +263,35 @@ class QuestionController extends GetxController {
     return blocks;
   }
 
-  Future<String> getPassageText(int? pId) async {
+  Future<PassageModel> getPassage(int? pId) async {
     try {
-      if (pId == null) return "";
+      if (pId == null) {
+        return PassageModel(id: -1, content: "", title: "");
+      }
 
-      //  CACHE HIT
+      // CACHE HIT
       if (_passageCache.containsKey(pId)) {
         return _passageCache[pId]!;
       }
 
+      isPassageLoading.value = true;
+
       final passage = await _databaseService.getPassage(pId);
 
-      final text = passage.isEmpty ? "No passage" : passage;
+      // SAVE TO CACHE
+      _passageCache[pId] = passage;
 
-      // 🔥 SAVE TO CACHE
-      _passageCache[pId] = text;
-
-      return text;
+      return passage;
     } catch (e) {
       ToastHelper.error("Error", e.toString());
-      return "Error loading passage";
+
+      return PassageModel(
+        id: -1,
+        content: "Error loading passage",
+        title: "Error",
+      );
+    } finally {
+      isPassageLoading.value = false;
     }
   }
 
@@ -301,5 +316,4 @@ class QuestionController extends GetxController {
   void togglePassageSize() {
     isFullScreenPassage.value = !isFullScreenPassage.value;
   }
-
 }

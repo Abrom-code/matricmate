@@ -4,6 +4,7 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/bookmark_container.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/search_field.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -21,9 +22,14 @@ class BookmarkScreen extends GetView<BookmarkController> {
       return DefaultTabController(
         length: tabs.length,
         child: Scaffold(
+          key: controller.scaffoldKey,
+          drawer: AppDrawer(),
           appBar: Appbar(
+            leadingIcon: Icons.menu,
+            leadingOnPressed: () {
+              controller.scaffoldKey.currentState!.openDrawer();
+            },
             title: Text("Bookmarks", style: TextStyle(color: AppColors.white)),
-            centerTitle: true,
           ),
           body: NestedScrollView(
             headerSliverBuilder: (_, innerBoxScrolled) {

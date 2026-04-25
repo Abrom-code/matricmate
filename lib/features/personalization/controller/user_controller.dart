@@ -11,7 +11,6 @@ import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
 class UserController extends GetxController {
@@ -53,7 +52,6 @@ class UserController extends GetxController {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      AppLoggerHelper.error(e.toString());
       ToastHelper.error("Error", e.toString());
     } finally {
       userFetching.value = false;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/bindings/chapter_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/appbar/status_title.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
@@ -26,14 +27,9 @@ class SubjectsScreen extends StatelessWidget {
 
     return Scaffold(
       key: subjectController.scaffoldKey,
-      drawer: AppDrawer(userName: "Abrham", stream: "Natural"),
+      drawer: AppDrawer(),
       appBar: Appbar(
-        title: Text(
-          "MatricMate",
-          style: Theme.of(
-            context,
-          ).textTheme.headlineMedium!.apply(color: AppColors.white),
-        ),
+        title: AppbarStatusTitle(title: "MatricMate"),
         leadingIcon: Icons.menu,
         leadingOnPressed: () {
           subjectController.scaffoldKey.currentState!.openDrawer();

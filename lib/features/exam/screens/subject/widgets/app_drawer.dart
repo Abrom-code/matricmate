@@ -8,13 +8,13 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/themes/theme_controller.dart';
 
 class AppDrawer extends StatelessWidget {
-  final String userName;
-  final String stream;
-
-  const AppDrawer({super.key, required this.userName, required this.stream});
+  const AppDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final userName = UserController.instance.user.value.firstName;
+    final stream = UserController.instance.user.value.stream.toUpperCase();
+
     final dark = AppHelperFuntions.isDark(context);
     return Drawer(
       child: Column(

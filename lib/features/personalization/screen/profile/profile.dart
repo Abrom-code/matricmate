@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/personalization/controller/profile_controller.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/account_settings.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/analytics_container.dart';
@@ -19,9 +20,14 @@ class ProfileScreen extends StatelessWidget {
     final controller = Get.put(ProfileController());
     final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
+      key: controller.scaffoldKey,
+      drawer: AppDrawer(),
       appBar: Appbar(
+        leadingIcon: Icons.menu,
+        leadingOnPressed: () {
+          controller.scaffoldKey.currentState!.openDrawer();
+        },
         title: Text("Profile", style: TextStyle(color: AppColors.white)),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Padding(

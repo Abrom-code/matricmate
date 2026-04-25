@@ -31,7 +31,6 @@ class PaymentVerificationScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Obx(() {
-            final user = UserController.instance.user.value;
             final isFetching = UserController.instance.userFetching.value;
             final isLoading = controller.isUploading.value;
             return Column(

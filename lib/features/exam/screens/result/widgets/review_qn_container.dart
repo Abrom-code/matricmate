@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/screens/question/widgets/choice_button.
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/correct_check_button.dart';
+import 'package:matricmate/features/exam/screens/result/widgets/explanation_button.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -79,111 +80,11 @@ class ReviewContainer extends GetView<ReviewController> {
           // Explanation button
           Obx(() {
             final expanded = controller.isExpanded[qn.id] ?? false;
-            return Container(
-              width: double.infinity,
-              padding: expanded
-                  ? EdgeInsets.only(
-                      bottom: AppSizes.md,
-                      right: AppSizes.md,
-                      left: AppSizes.md,
-                      top: 0,
-                    )
-                  : EdgeInsets.symmetric(horizontal: AppSizes.md),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppSizes.sm),
-                color: dark
-                    ? const Color.fromARGB(255, 10, 10, 10)
-                    : AppColors.white,
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.all(5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                          ),
-                          onPressed: () => controller.toggle(qn.id),
-                          child: Row(
-                            mainAxisAlignment: !expanded
-                                ? MainAxisAlignment.spaceBetween
-                                : MainAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Why this is correct?",
-                                style: Theme.of(context).textTheme.bodyLarge!
-                                    .copyWith(color: AppColors.primary),
-                              ),
-                              Icon(
-                                expanded
-                                    ? Icons.arrow_right
-                                    : Icons.arrow_drop_down,
-                                color: AppColors.primary,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      if (expanded)
-                        DropdownButton<String>(
-                          padding: EdgeInsets.all(0),
-                          isDense: true,
-                          iconEnabledColor: AppColors.primary,
-                          underline: SizedBox(),
-                          value: controller.languageSelected.value,
-                          items: [
-                            DropdownMenuItem(
-                              value: 'EN',
-                              child: Text(
-                                "EN",
-                                style: Theme.of(context).textTheme.bodyMedium!
-                                    .copyWith(color: AppColors.primary),
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'AM',
-                              child: Text(
-                                "AM",
-                                style: Theme.of(context).textTheme.bodyMedium!
-                                    .copyWith(color: AppColors.primary),
-                              ),
-                            ),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) {
-                              controller.languageSelected.value = val;
-                            }
-                          },
-                        ),
-                    ],
-                  ),
-                  if (expanded)
-                    Column(
-                      children: [
-                        Divider(),
-                        Text(
-                          textAlign: TextAlign.justify,
-                          controller.languageSelected.value == "EN"
-                              ? qn.explanationEn
-                              : qn.explanationAm,
-                          style: Theme.of(context).textTheme.bodyLarge!
-                              .copyWith(
-                                fontSize: 15,
-                                color: dark
-                                    ? AppColors.grey
-                                    : AppColors.darkerGrey,
-                              ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+            return ExplanationButton(
+              expanded: expanded,
+              dark: dark,
+              controller: controller,
+              qn: qn,
             );
           }),
         ],

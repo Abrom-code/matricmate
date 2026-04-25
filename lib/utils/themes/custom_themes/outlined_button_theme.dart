@@ -24,7 +24,7 @@ class AppOutlinedButtonTheme {
   static final darkOutlinedButtonTheme = OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: Colors.white,
-      side: const BorderSide(color: Colors.tealAccent),
+      side: const BorderSide(color: Colors.teal),
       textStyle: const TextStyle(
         fontSize: 16,
         color: Colors.white,

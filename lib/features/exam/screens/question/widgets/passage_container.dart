@@ -48,25 +48,24 @@ class PassageContainer extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 16),
 
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "Passage Title",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17 * controller.textScale.value,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
+            child: Flexible(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: EdgeInsets.zero,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Passage Title",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17 * controller.textScale.value,
+                      ),
+                    ),
 
-                const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                Flexible(
-                  child: SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    child: Text(
+                    Text(
                       block.passageText ?? "",
                       style: TextStyle(
                         fontSize: 15 * controller.textScale.value,
@@ -74,9 +73,9 @@ class PassageContainer extends StatelessWidget {
                         color: dark ? AppColors.grey : Colors.black87,
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

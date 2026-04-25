@@ -43,7 +43,9 @@ class ChoiceButton extends StatelessWidget {
                     ? AppColors.darkerGrey.withValues(alpha: 0.3)
                     : Colors.grey[300])
               : (isSelected
-                    ? const Color.fromARGB(255, 115, 134, 144)
+                    ? dark
+                          ? Color.fromARGB(255, 73, 78, 80)
+                          : Color.fromARGB(255, 179, 195, 203)
                     : dark
                     ? AppColors.darkerGrey.withValues(alpha: 0.3)
                     : Colors.grey[300]),

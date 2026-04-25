@@ -42,21 +42,15 @@ class UserController extends GetxController {
 
       if (freshUser == null) return;
 
-      final currentUser = user.value;
+      user.value = freshUser;
+      user.refresh();
 
-      final statusChanged = freshUser.status != currentUser.status;
-
-      if (statusChanged) {
-        user.value = freshUser;
-        user.refresh();
-
-        final db = await _databaseService.database;
-        await db.insert(
-          'user',
-          freshUser.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
+      final db = await _databaseService.database;
+      await db.insert(
+        'user',
+        freshUser.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     } catch (e) {
       AppLoggerHelper.error(e.toString());
       ToastHelper.error("Error", e.toString());

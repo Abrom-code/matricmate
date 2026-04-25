@@ -48,13 +48,6 @@ class PremiumController extends GetxController {
   /// COMPLETE PAYMENT
   Future<void> completePayment() async {
     try {
-      final userId = UserController.instance.user.value.id;
-
-      if (userId.isEmpty) {
-        ToastHelper.warning("Error", "Unexpected error happened!");
-        return;
-      }
-
       //  form validation (KEEPED)
       if (!paymentFormKey.currentState!.validate()) return;
 
@@ -74,13 +67,21 @@ class PremiumController extends GetxController {
 
       isUploading.value = true;
 
+      await UserController.instance.fetchUserRecord();
+      final userId = UserController.instance.user.value.id;
+
+      if (userId.isEmpty) {
+        ToastHelper.error("Error", "No user id found!");
+        return;
+      }
+
       // upload
       final result = await _repo.uploadReceipt(receipt.value!, userId);
 
       // save
       await _repo.savePaymentReceipt(
         userId: userId,
-        receiptPath: result["filePath"]!, // FIXED
+        receiptPath: result["filePath"]!,
         receiptUrl: result["url"]!,
         paymentMethod: selectedMethod.value.name,
         verificationUrl: urlFiledController.text.trim(),

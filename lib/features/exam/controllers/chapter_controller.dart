@@ -1,17 +1,13 @@
 import 'package:get/get.dart';
-import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/repositories/exam/chapter_repository.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChapterController extends GetxController {
   static ChapterController get instance => Get.find();
-
-  final SupabaseClient supabase = Supabase.instance.client;
-  final DatabaseService _databaseService = DatabaseService.instance;
+  final ChapterRepository _repo = ChapterRepository();
 
   final RxList<ChapterModel> subjectChapters = <ChapterModel>[].obs;
 
@@ -38,7 +34,7 @@ class ChapterController extends GetxController {
 
       List<ChapterModel> data = [];
 
-      final dbChapters = await _databaseService.getSubjectChapters(subjectId);
+      final dbChapters = await _repo.getSubjectChaptersById(subjectId);
 
       if (dbChapters.isNotEmpty) {
         data = dbChapters.map((e) => ChapterModel.fromMap(e)).toList();
@@ -52,21 +48,12 @@ class ChapterController extends GetxController {
           return;
         }
 
-        final response = await supabase
-            .from('chapters')
-            .select()
-            .eq('subject_id', subjectId);
+        final response = await _repo.getChapterById(subjectId);
 
         data = (response as List).map((e) => ChapterModel.fromJson(e)).toList();
 
-        final db = await _databaseService.database;
-
         for (final chapter in data) {
-          await db.insert(
-            'chapters',
-            chapter.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+          await _repo.addChapter(chapter);
         }
       }
 
@@ -75,7 +62,11 @@ class ChapterController extends GetxController {
       // load flags AFTER chapters
       await loadChapterTestFlags(data);
     } catch (e) {
-      AppHelperFuntions.showAlert("Chapter Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       isChapterLoading.value = false;
     }
@@ -87,12 +78,20 @@ class ChapterController extends GetxController {
   }
 
   Future<void> loadChapterTestFlags(List<ChapterModel> chapters) async {
-    await Future.wait(
-      chapters.map((chapter) async {
-        final hasTests = await _databaseService.hasTests(chapter.id);
+    try {
+      await Future.wait(
+        chapters.map((chapter) async {
+          final hasTests = await _repo.hasTests(chapter.id);
 
-        chapterHasTests[chapter.id] = hasTests;
-      }),
-    );
+          chapterHasTests[chapter.id] = hasTests;
+        }),
+      );
+    } catch (e) {
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
+    }
   }
 }

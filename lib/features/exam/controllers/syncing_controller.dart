@@ -1,25 +1,23 @@
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:matricmate/data/repositories/exam/subject_repository.dart';
+import 'package:matricmate/data/repositories/exam/sync_repository.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class SyncingController extends GetxController {
   static SyncingController get instance => Get.find();
+  final SubjectRepository _subjectRepo = SubjectRepository();
+  final SyncRepository _syncRepository = SyncRepository();
 
-  final SupabaseClient supabase = Supabase.instance.client;
-  final DatabaseService _databaseService = DatabaseService.instance;
   final refreshing = false.obs;
 
   Future<void> syncAll() async {
@@ -37,7 +35,7 @@ class SyncingController extends GetxController {
       await syncSubjects();
       await UserController.instance.fetchUserRecord();
 
-      final localSubjects = await _databaseService.getSubjects();
+      final localSubjects = await _subjectRepo.getLocalSubjects();
       final downloadedIds = localSubjects
           .where((s) => s['is_downloaded'] == 1)
           .map((s) => s['id'].toString())
@@ -49,8 +47,12 @@ class SyncingController extends GetxController {
         await syncQuestions(downloadedIds);
       }
       ToastHelper.success("Success", "All Subjects are refreshed");
-    } on Exception {
-      ToastHelper.error("Faild", "Faild to refresh!");
+    } catch (e) {
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       refreshing.value = false;
     }
@@ -59,14 +61,11 @@ class SyncingController extends GetxController {
   //  SYNC SUBJECTS
   Future<void> syncSubjects() async {
     try {
-      final localSubjects = await _databaseService.getSubjects();
-      final remoteData = await supabase.from("subjects").select();
+      final localSubjects = await _subjectRepo.getLocalSubjects();
+      final remoteData = await _subjectRepo.getSupabaseSubjects();
       final remote = (remoteData as List)
           .map((e) => SubjectMoModel.fromJson(e))
           .toList();
-
-      final db = await _databaseService.database;
-      final batch = db.batch();
 
       for (final s in remote) {
         final local = localSubjects.firstWhereOrNull(
@@ -74,148 +73,136 @@ class SyncingController extends GetxController {
         );
 
         if (local == null) {
-          batch.insert('subjects', s.toMap());
+          _syncRepository.insertBatch('subjects', s.toMap());
         } else {
-          batch.update(
-            'subjects',
-            {...s.toMap(), 'is_downloaded': local['is_downloaded']},
-            where: 'id = ?',
-            whereArgs: [s.id],
-          );
+          _syncRepository.updateBatch(s, local);
         }
       }
 
       final remoteIds = remote.map((e) => e.id).toSet();
       for (final local in localSubjects) {
         if (!remoteIds.contains(local['id'])) {
-          batch.delete('subjects', where: 'id = ?', whereArgs: [local['id']]);
+          _syncRepository.deleteBatch(local);
         }
       }
 
-      await batch.commit(noResult: true);
+      await _syncRepository.commitBatch();
       SubjectsController.instance.loadSubjects();
     } catch (e) {
-      AppHelperFuntions.showAlert("Subject Sync", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 
   //  SYNC CHAPTERS
   Future<void> syncChapters(List<String> subjectIds) async {
     try {
-      final remoteData = await supabase
-          .from('chapters')
-          .select()
-          .inFilter('subject_id', subjectIds);
+      final remoteData = await _syncRepository.getBySubjectId(
+        'chapters',
+        subjectIds,
+      );
       final remote = (remoteData as List)
           .map((rc) => ChapterModel.fromJson(rc))
           .toList();
 
-      final db = await _databaseService.database;
-      final batch = db.batch();
       for (final c in remote) {
-        batch.insert(
-          'chapters',
-          c.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        _syncRepository.insertBatch('chapters', c.toMap());
       }
-      await batch.commit(noResult: true);
+      await _syncRepository.commitBatch();
     } catch (e) {
-      AppHelperFuntions.showAlert("Chapter Sync", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 
   //  SYNC TESTS
   Future<void> syncTests(List<String> subjectIds) async {
     try {
-      final remoteData = await supabase
-          .from('tests')
-          .select()
-          .inFilter('subject_id', subjectIds);
+      final remoteData = await _syncRepository.getBySubjectId(
+        'tests',
+        subjectIds,
+      );
       final remote = (remoteData as List)
           .map((rc) => TestModel.fromJson(rc))
           .toList();
 
-      final db = await _databaseService.database;
-      final batch = db.batch();
       for (final t in remote) {
-        batch.insert(
-          'tests',
-          t.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        _syncRepository.insertBatch('tests', t.toMap());
       }
-      await batch.commit(noResult: true);
+      await _syncRepository.commitBatch();
     } catch (e) {
-      AppHelperFuntions.showAlert("Test Sync", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 
   //  SYNC QUESTIONS & PASSAGES
   Future<void> syncQuestions(List<String> subjectIds) async {
     try {
-      final remoteData = await supabase
-          .from('questions')
-          .select()
-          .inFilter('subject_id', subjectIds);
-      final remote = (remoteData as List)
-          .map((rc) => QuestionModel.fromJson(rc))
-          .toList();
+      final remoteData = await _syncRepository.getBySubjectId(
+        'questions',
+        subjectIds,
+      );
+      final remote = (remoteData as List).map(
+        (rc) => QuestionModel.fromJson(rc),
+      );
 
-      final db = await _databaseService.database;
-      final batch = db.batch();
       final List<int> passageIds = [];
 
       for (final q in remote) {
         final questionMap = q.toMap();
         questionMap['options'] = jsonEncode(q.options);
 
-        batch.insert(
-          'questions',
-          questionMap,
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        _syncRepository.insertBatch('questions', questionMap);
 
         if (q.passageId != null) {
           passageIds.add(q.passageId!);
         }
       }
 
-      await batch.commit(noResult: true);
+      await _syncRepository.commitBatch();
 
       // Sync Passages referenced by these questions
       if (passageIds.isNotEmpty) {
         await syncPassages(passageIds.toSet().toList());
       }
     } catch (e) {
-      AppHelperFuntions.showAlert("Questions Sync", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 
   //  SYNC PASSAGES
   Future<void> syncPassages(List<int> passageIds) async {
     try {
-      final remoteData = await supabase
-          .from('passages')
-          .select()
-          .inFilter('id', passageIds);
+      final remoteData = await _syncRepository.getPassages(passageIds);
 
       final remote = (remoteData as List)
           .map((p) => PassageModel.fromJson(p))
           .toList();
 
-      final db = await _databaseService.database;
-      final batch = db.batch();
       for (final p in remote) {
-        batch.insert(
-          'passages',
-          p.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        _syncRepository.insertBatch('passages', p.toMap());
       }
-      await batch.commit(noResult: true);
+      await _syncRepository.commitBatch();
     } catch (e) {
-      AppHelperFuntions.showAlert("Passage Sync", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 }

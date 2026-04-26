@@ -12,7 +12,7 @@ class BookmarkRepository {
     try {
       final db = await _dbService.database;
       await db.insert(
-        'chapters',
+        'bookmarks',
         bookmarkQn.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );

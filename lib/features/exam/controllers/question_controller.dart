@@ -1,25 +1,23 @@
 import 'package:get/get.dart';
-import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/repositories/exam/question_repository.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
 
+  final QuestionRepository _repo = QuestionRepository();
+
   // cache passage
   final Map<int, PassageModel> _passageCache = {};
   final RxBool isPassageLoading = false.obs;
-
-  final SupabaseClient supabase = Supabase.instance.client;
-  final DatabaseService _databaseService = DatabaseService.instance;
 
   final RxList<QuestionModel> testQuestions = <QuestionModel>[].obs;
   final RxMap<int, int> selectedAnswers = <int, int>{}.obs;
@@ -58,7 +56,7 @@ class QuestionController extends GetxController {
       currentIndex.value = 0;
       isExplanationExpanaded.value = false;
 
-      final dbQuestions = await _databaseService.getQuestionsByTest(testId);
+      final dbQuestions = await _repo.getQnByTestIdLocal(testId);
 
       if (dbQuestions.isNotEmpty) {
         testQuestions.assignAll(
@@ -77,11 +75,7 @@ class QuestionController extends GetxController {
         return;
       }
 
-      final response = await supabase
-          .from('questions')
-          .select()
-          .eq('test_id', testId)
-          .order('question_order');
+      final response = await _repo.getQnByTestIdRemote(testId);
 
       final data = (response as List)
           .map((e) => QuestionModel.fromJson(e))
@@ -90,17 +84,15 @@ class QuestionController extends GetxController {
       testQuestions.assignAll(data);
       blocks.assignAll(await buildBlocks(testQuestions));
 
-      final db = await _databaseService.database;
-
       for (final q in data) {
-        await db.insert(
-          'questions',
-          q.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await _repo.addQn(q);
       }
     } catch (e) {
-      AppHelperFuntions.showAlert("Question Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       isLoading.value = false;
     }
@@ -198,16 +190,15 @@ class QuestionController extends GetxController {
 
   Future<bool> saveResult(ResultModel result) async {
     try {
-      final db = await _databaseService.database;
-      await db.insert(
-        'results',
-        result.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _repo.saveResult(result);
       ToastHelper.success("Success", "Your result is saved!");
       return true;
     } catch (e) {
-      ToastHelper.error("Faild!", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
       return false;
     }
   }
@@ -217,50 +208,59 @@ class QuestionController extends GetxController {
   }
 
   Future<List<QuestionBlock>> buildBlocks(List<QuestionModel> questions) async {
-    final List<QuestionBlock> blocks = [];
+    try {
+      final List<QuestionBlock> blocks = [];
 
-    QuestionBlock? current;
+      QuestionBlock? current;
 
-    int? lastPassageId;
-    bool lastWasPassage = false;
+      int? lastPassageId;
+      bool lastWasPassage = false;
 
-    for (final q in questions) {
-      final isPassage = q.passageId != null;
+      for (final q in questions) {
+        final isPassage = q.passageId != null;
 
-      final isNewBlock =
-          current == null ||
-          q.passageId != lastPassageId ||
-          isPassage != lastWasPassage;
+        final isNewBlock =
+            current == null ||
+            q.passageId != lastPassageId ||
+            isPassage != lastWasPassage;
 
-      if (isNewBlock) {
-        if (current != null) {
-          blocks.add(current);
+        if (isNewBlock) {
+          if (current != null) {
+            blocks.add(current);
+          }
+
+          PassageModel? passage;
+
+          if (q.passageId != null) {
+            passage = await getPassage(q.passageId);
+          }
+
+          current = QuestionBlock(
+            passageId: q.passageId,
+            passage: passage,
+            questions: [],
+          );
+
+          lastPassageId = q.passageId;
+          lastWasPassage = isPassage;
         }
 
-        PassageModel? passage;
-
-        if (q.passageId != null) {
-          passage = await getPassage(q.passageId);
-        }
-
-        current = QuestionBlock(
-          passageId: q.passageId,
-          passage: passage,
-          questions: [],
-        );
-
-        lastPassageId = q.passageId;
-        lastWasPassage = isPassage;
+        current.questions.add(q);
       }
 
-      current.questions.add(q);
-    }
+      if (current != null) {
+        blocks.add(current);
+      }
 
-    if (current != null) {
-      blocks.add(current);
+      return blocks;
+    } catch (e) {
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
+      throw e.toString();
     }
-
-    return blocks;
   }
 
   Future<PassageModel> getPassage(int? pId) async {
@@ -276,20 +276,14 @@ class QuestionController extends GetxController {
 
       isPassageLoading.value = true;
 
-      final passage = await _databaseService.getPassage(pId);
+      final passage = await _repo.getPassage(pId);
 
       // SAVE TO CACHE
       _passageCache[pId] = passage;
 
       return passage;
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
-
-      return PassageModel(
-        id: -1,
-        content: "Error loading passage",
-        title: "Error",
-      );
+      throw AppExceptionHandler.handle(e);
     } finally {
       isPassageLoading.value = false;
     }

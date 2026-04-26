@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
@@ -40,7 +41,13 @@ class AuthenticationRepository extends GetxController {
     if (user != null) {
       // User is Logged In
       if (user.emailVerified) {
-        await SyncingController.instance.syncAll();
+        final syncController = Get.put(SyncingController());
+
+        AppFullScreenLoader.openLoadingDialog("Loading...");
+        await syncController.syncAll();
+        AppFullScreenLoader.stopLoading();
+
+        Get.delete<SyncingController>();
         Get.offAll(() => const NavigationMenu());
       } else {
         Get.offAll(() => VerifyEmailScreen(email: _auth.currentUser?.email));

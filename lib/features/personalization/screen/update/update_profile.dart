@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/personalization/controller/update_profile_controller.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart'; 
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -41,6 +41,7 @@ class EditProfileScreen extends StatelessWidget {
                   children: [
                     TextFormField(
                       controller: controller.firstName,
+                      textCapitalization: TextCapitalization.sentences,
                       validator: (val) =>
                           AppValidator.validateEmptyText("First Name", val),
                       onTapOutside: (e) => FocusScope.of(context).unfocus(),
@@ -52,6 +53,7 @@ class EditProfileScreen extends StatelessWidget {
                     const SizedBox(height: AppSizes.spaceBtwItems),
                     TextFormField(
                       controller: controller.lastName,
+                      textCapitalization: TextCapitalization.sentences,
                       validator: (val) =>
                           AppValidator.validateEmptyText("Last Name", val),
                       onTapOutside: (e) => FocusScope.of(context).unfocus(),

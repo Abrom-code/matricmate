@@ -19,10 +19,12 @@ class SignupForm extends StatelessWidget {
             children: [
               Expanded(
                 child: TextFormField(
+                  controller: controller.firstName,
+                  textCapitalization: TextCapitalization.sentences,
+                  textCapitalization: TextCapitalization.sentences,
                   validator: (val) =>
                       AppValidator.validateEmptyText("First Name", val),
                   onTapOutside: (e) => FocusScope.of(context).unfocus(),
-                  controller: controller.firstName,
                   expands: false,
                   decoration: const InputDecoration(
                     labelText: AppTextStrings.firstName,
@@ -36,6 +38,7 @@ class SignupForm extends StatelessWidget {
               Expanded(
                 child: TextFormField(
                   controller: controller.lastName,
+                  textCapitalization: TextCapitalization.sentences,
                   validator: (val) =>
                       AppValidator.validateEmptyText("Last Name", val),
                   onTapOutside: (e) => FocusScope.of(context).unfocus(),

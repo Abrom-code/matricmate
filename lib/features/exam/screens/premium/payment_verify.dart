@@ -8,7 +8,6 @@ import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PaymentVerificationScreen extends StatelessWidget {
   const PaymentVerificationScreen({super.key});
@@ -16,7 +15,6 @@ class PaymentVerificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(PremiumController());
-    final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,

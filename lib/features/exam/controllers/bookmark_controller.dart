@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/repositories/exam/bookmark_repository.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:sqflite/sqflite.dart';
 
 class BookmarkController extends GetxController {
   static BookmarkController get instance => Get.find();
-  final DatabaseService _databaseService = DatabaseService.instance;
+  final BookmarkRepository _repo = BookmarkRepository();
 
   final RxList<BookmarkModel> bookmarkedQuestionIds = <BookmarkModel>[].obs;
   final RxList<QuestionModel> bookmarkedQuestions = <QuestionModel>[].obs;
@@ -29,62 +29,71 @@ class BookmarkController extends GetxController {
 
   Future<void> addToBookmark(int qnId) async {
     try {
-      final db = await _databaseService.database;
       final bookmarkQn = BookmarkModel(
         userId: UserController.instance.user.value.id,
         questionId: qnId,
         savedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
-      await db.insert(
-        'bookmarks',
-        bookmarkQn.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _repo.addBookmark(bookmarkQn);
 
       await loadBookmarks();
       ToastHelper.success("Success", "Added to bookmark!");
     } catch (e) {
-      ToastHelper.error("Failed!", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 
   Future<void> removeFromBookmark(int qnId) async {
     try {
-      final db = await _databaseService.database;
-
-      await db.delete('bookmarks', where: 'question_id = ?', whereArgs: [qnId]);
+      await _repo.deleteBookmark(qnId);
 
       await loadBookmarks();
       ToastHelper.success("Removed", "Bookmark is removed!");
     } catch (e) {
-      ToastHelper.error("Failed!", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 
   Future<void> loadBookmarks() async {
-    final data = await _databaseService.loadBookmarkedQuestions();
+    try {
+      final data = await _repo.loadBookmarks();
 
-    bookmarkedQuestionIds.value = data
-        .where((dt) => dt.userId == UserController.instance.user.value.id)
-        .toList();
-    // ignore: invalid_use_of_protected_member
-    bookmarkedIds.value = data.map((b) => b.questionId).toSet();
+      bookmarkedQuestionIds.value = data
+          .where((dt) => dt.userId == UserController.instance.user.value.id)
+          .toList();
+      // ignore: invalid_use_of_protected_member
+      bookmarkedIds.value = data.map((b) => b.questionId).toSet();
 
-    final allQns = await _databaseService.getQuestions();
+      final allQns = await _repo.getQns();
 
-    bookmarkedQuestions.value = data
-        .map((b) {
-          final qnList = allQns.where((q) => q['id'] == b.questionId);
+      bookmarkedQuestions.value = data
+          .map((b) {
+            final qnList = allQns.where((q) => q['id'] == b.questionId);
 
-          if (qnList.isNotEmpty) {
-            return QuestionModel.fromMap(qnList.first);
-          }
+            if (qnList.isNotEmpty) {
+              return QuestionModel.fromMap(qnList.first);
+            }
 
-          return null;
-        })
-        .whereType<QuestionModel>()
-        .toList();
+            return null;
+          })
+          .whereType<QuestionModel>()
+          .toList();
+    } catch (e) {
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
+    }
   }
 
   ///  SAFE SUBJECT LIST

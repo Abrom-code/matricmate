@@ -1,19 +1,14 @@
 import 'package:get/get.dart';
-import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/repositories/exam/test_repository.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TestController extends GetxController {
   static TestController get instance => Get.find();
-
-  final SupabaseClient supabaseClient = Supabase.instance.client;
-  final DatabaseService _databaseService = DatabaseService.instance;
-
+  final TestRepository _testRepository = TestRepository();
   final RxList<TestModel> chapterTest = <TestModel>[].obs;
   final RxList<TestModel> allGradeTests = <TestModel>[].obs;
   final RxList<TestModel> singleGradeTests = <TestModel>[].obs;
@@ -47,7 +42,7 @@ class TestController extends GetxController {
       testHasQuestions.clear();
       testResults.clear();
 
-      final dbChapterTests = await _databaseService.getSubjectTests(subjectId);
+      final dbChapterTests = await _testRepository.getLocalTestsById(subjectId);
 
       late List<TestModel> data;
 
@@ -63,21 +58,12 @@ class TestController extends GetxController {
           return;
         }
 
-        final response = await supabaseClient
-            .from('tests')
-            .select()
-            .eq('subject_id', subjectId);
+        final response = await _testRepository.getRemoteTestsById(subjectId);
 
         data = (response as List).map((e) => TestModel.fromJson(e)).toList();
 
-        final db = await _databaseService.database;
-
         for (final test in data) {
-          await db.insert(
-            'tests',
-            test.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+          await _testRepository.addTest(test);
         }
       }
 
@@ -87,17 +73,29 @@ class TestController extends GetxController {
       loadAllGradeTests();
       await loadTestResults(data);
     } catch (e) {
-      AppHelperFuntions.showAlert("Test Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 
   Future<void> loadTestQuestionFlags(List<TestModel> tests) async {
-    await Future.wait(
-      tests.map((test) async {
-        final hasQn = await _databaseService.hasQuestions(test.id);
-        testHasQuestions[test.id] = hasQn;
-      }),
-    );
+    try {
+      await Future.wait(
+        tests.map((test) async {
+          final hasQn = await _testRepository.hasQns(test.id);
+          testHasQuestions[test.id] = hasQn;
+        }),
+      );
+    } catch (e) {
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
+    }
   }
 
   List<TestModel> getTestsByGradeAndChapter(int? grade, int? chapterId) {
@@ -120,20 +118,24 @@ class TestController extends GetxController {
         .toList();
   }
 
-  Future<bool> hasQuestions(int testId) async {
-    return await _databaseService.hasQuestions(testId);
-  }
-
   // load saved test
   Future<void> loadTestResults(List<TestModel> tests) async {
-    await Future.wait(
-      tests.map((test) async {
-        final result = await _databaseService.loadSavedTestResult(test.id);
-        if (result != null) {
-          testResults[test.id] = result;
-        }
-      }),
-    );
+    try {
+      await Future.wait(
+        tests.map((test) async {
+          final result = await _testRepository.loadSavedResults(test.id);
+          if (result != null) {
+            testResults[test.id] = result;
+          }
+        }),
+      );
+    } catch (e) {
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
+    }
   }
 
   int getCurrentStep(int testId) {

@@ -65,7 +65,7 @@ class PassageContainer extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  Text(
+                  SelectableText(
                     block.passage?.content ?? "",
                     textAlign: TextAlign.justify,
                     style: TextStyle(

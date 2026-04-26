@@ -2,7 +2,6 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TestRepository {
@@ -27,12 +26,7 @@ class TestRepository {
 
   Future<void> addTest(TestModel test) async {
     try {
-      final db = await _dbService.database;
-      await db.insert(
-        'tests',
-        test.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _dbService.insetData('tests', test.toMap());
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

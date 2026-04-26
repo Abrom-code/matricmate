@@ -1,7 +1,6 @@
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BookmarkRepository {
@@ -10,12 +9,7 @@ class BookmarkRepository {
 
   Future<void> addBookmark(BookmarkModel bookmarkQn) async {
     try {
-      final db = await _dbService.database;
-      await db.insert(
-        'bookmarks',
-        bookmarkQn.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _dbService.insetData('bookmarks', bookmarkQn.toMap());
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

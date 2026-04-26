@@ -73,12 +73,7 @@ class SubjectRepository {
   // add singgle subject to local db
   Future<void> addSubject(SubjectMoModel subject) async {
     try {
-      final db = await _dbService.database;
-      await db.insert(
-        'subjects',
-        subject.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _dbService.insetData('subjects', subject.toMap());
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

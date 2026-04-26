@@ -1,7 +1,6 @@
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChapterRepository {
@@ -28,11 +27,10 @@ class ChapterRepository {
       throw AppExceptionHandler.handle(e);
     }
   }
-  Future<bool> hasTests(
-    int chapterId,
-  ) async {
+
+  Future<bool> hasTests(int chapterId) async {
     try {
-      return  await _dbService.hasTests(chapterId);
+      return await _dbService.hasTests(chapterId);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -40,12 +38,7 @@ class ChapterRepository {
 
   Future<void> addChapter(ChapterModel chapter) async {
     try {
-      final db = await _dbService.database;
-      await db.insert(
-        'chapters',
-        chapter.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _dbService.insetData('chapters', chapter.toMap());
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

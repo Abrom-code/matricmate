@@ -32,12 +32,7 @@ class QuestionRepository {
 
   Future<void> addQn(QuestionModel q) async {
     try {
-      final db = await _dbService.database;
-      await db.insert(
-        'questions',
-        q.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _dbService.insetData('questions', q.toMap());
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

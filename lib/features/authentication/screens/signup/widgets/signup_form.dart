@@ -21,7 +21,6 @@ class SignupForm extends StatelessWidget {
                 child: TextFormField(
                   controller: controller.firstName,
                   textCapitalization: TextCapitalization.sentences,
-                  textCapitalization: TextCapitalization.sentences,
                   validator: (val) =>
                       AppValidator.validateEmptyText("First Name", val),
                   onTapOutside: (e) => FocusScope.of(context).unfocus(),

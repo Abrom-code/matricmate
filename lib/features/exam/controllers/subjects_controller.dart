@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/subject_repository/subject_repository.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -68,7 +69,11 @@ class SubjectsController extends GetxController {
         await _repo.addSubject(subject);
       }
     } catch (e) {
-      AppHelperFuntions.showAlert("Subject Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       isLoading.value = false;
     }
@@ -95,7 +100,11 @@ class SubjectsController extends GetxController {
       ///  Refresh subjects
       await loadSubjects();
     } catch (e) {
-      AppHelperFuntions.showAlert("Subject Download Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       downloadingMap[subject] = false;
     }

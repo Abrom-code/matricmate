@@ -1,3 +1,4 @@
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -7,16 +8,20 @@ class PaymentRepository {
 
   /// Upload receipt
   Future<Map<String, String>> uploadReceipt(XFile file, String userId) async {
-    final bytes = await File(file.path).readAsBytes();
+    try {
+      final bytes = await File(file.path).readAsBytes();
 
-    final fileName =
-        'receipt_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'receipt_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    await _supabase.storage.from('receipts').uploadBinary(fileName, bytes);
+      await _supabase.storage.from('receipts').uploadBinary(fileName, bytes);
 
-    final url = _supabase.storage.from('receipts').getPublicUrl(fileName);
+      final url = _supabase.storage.from('receipts').getPublicUrl(fileName);
 
-    return {"filePath": fileName, "url": url};
+      return {"filePath": fileName, "url": url};
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
   }
 
   /// Save payment
@@ -38,10 +43,14 @@ class PaymentRepository {
 
   /// Set pending
   Future<void> setUserPending(String userId) async {
-    await _supabase
-        .from('users')
-        .update({'subscription_status': 'pending'})
-        .eq('id', userId);
+    try {
+      await _supabase
+          .from('users')
+          .update({'subscription_status': 'pending'})
+          .eq('id', userId);
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
   }
 
   /// Cancel payment
@@ -81,8 +90,7 @@ class PaymentRepository {
           .update({'subscription_status': 'inactive'})
           .eq('id', userId);
     } catch (e) {
-      print("Full Error in cancelPayment: $e");
-      throw e.toString();
+      throw AppExceptionHandler.handle(e);
     }
   }
 }

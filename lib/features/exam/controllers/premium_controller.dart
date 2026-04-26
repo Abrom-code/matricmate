@@ -6,6 +6,7 @@ import 'package:matricmate/data/repositories/payment/payment_repository.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -96,7 +97,11 @@ class PremiumController extends GetxController {
 
       ToastHelper.success("Success", "Payment submitted!");
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       isUploading.value = false;
     }
@@ -133,7 +138,11 @@ class PremiumController extends GetxController {
 
       ToastHelper.success("Cancelled", "Payment cancelled");
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       isUploading.value = false;
     }

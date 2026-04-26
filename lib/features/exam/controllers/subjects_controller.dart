@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/data/database/database_service.dart';
-import 'package:matricmate/data/services/download_subject.dart';
+import 'package:matricmate/data/repositories/subject_repository/subject_repository.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SubjectsController extends GetxController {
   static SubjectsController get instance => Get.find();
 
-  final SupabaseClient supabase = Supabase.instance.client;
-  final DatabaseService _dbService = DatabaseService.instance;
+  final SubjectRepository _repo = SubjectRepository();
 
   final RxBool isLoading = false.obs;
   final RxBool isDownloading = false.obs;
@@ -43,7 +39,7 @@ class SubjectsController extends GetxController {
     try {
       isLoading.value = true;
 
-      final dbSubjects = await _dbService.getSubjects();
+      final dbSubjects = await _repo.getLocalSubjects();
 
       if (dbSubjects.isNotEmpty) {
         subjects.assignAll(
@@ -60,7 +56,7 @@ class SubjectsController extends GetxController {
         );
       }
 
-      final response = await supabase.from("subjects").select();
+      final response = await _repo.getSupabaseSubjects();
 
       final data = (response as List)
           .map((e) => SubjectMoModel.fromJson(e))
@@ -68,14 +64,8 @@ class SubjectsController extends GetxController {
 
       subjects.assignAll(data);
 
-      final db = await _dbService.database;
-
       for (final subject in data) {
-        await db.insert(
-          'subjects',
-          subject.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await _repo.addSubject(subject);
       }
     } catch (e) {
       AppHelperFuntions.showAlert("Subject Error", e.toString());
@@ -96,20 +86,13 @@ class SubjectsController extends GetxController {
         return;
       }
       downloadingMap[subject] = true;
-      final service = SubjectDownloadService();
-      await service.downloadSubject(subjectId);
+
+      await _repo.downloadSubject(subjectId);
 
       /// Mark as downloaded in DB
-      final db = await _dbService.database;
+      await _repo.updateIsDownloaded(subject);
 
-      await db.update(
-        'subjects',
-        {'is_downloaded': 1},
-        where: 'name = ?',
-        whereArgs: [subject],
-      );
-
-      /// 4. Refresh subjects
+      ///  Refresh subjects
       await loadSubjects();
     } catch (e) {
       AppHelperFuntions.showAlert("Subject Download Error", e.toString());

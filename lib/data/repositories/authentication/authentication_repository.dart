@@ -6,6 +6,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/exceptions/firebase_auth_exceptions.dart';
@@ -34,11 +35,12 @@ class AuthenticationRepository extends GetxController {
   }
 
   /// Decide where to send the user based on Auth state
-  void screenRedirect() {
+  Future<void> screenRedirect() async {
     final user = _auth.currentUser;
     if (user != null) {
       // User is Logged In
       if (user.emailVerified) {
+        await SyncingController.instance.syncAll();
         Get.offAll(() => const NavigationMenu());
       } else {
         Get.offAll(() => VerifyEmailScreen(email: _auth.currentUser?.email));

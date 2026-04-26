@@ -20,7 +20,7 @@ class LinkInputFiled extends StatelessWidget {
       style: const TextStyle(fontSize: 14),
       validator: (value) => AppValidator.isValidUrl(value!),
       decoration: InputDecoration(
-        hintText: "https://cbe.com:299/verify....",
+        hintText: "https://transaction...",
         hintStyle: Theme.of(context).textTheme.labelMedium,
         // Prefix icon
         prefixIcon: const Icon(Icons.link, color: Colors.teal),
@@ -63,7 +63,7 @@ class LinkInputFiled extends StatelessWidget {
         ),
 
         // Optional label
-        labelText: "Payment Link",
+        labelText: "Transaction Link",
         labelStyle: const TextStyle(color: Colors.teal),
       ),
     );

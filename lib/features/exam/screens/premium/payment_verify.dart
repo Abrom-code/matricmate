@@ -117,14 +117,6 @@ class PaymentVerificationScreen extends StatelessWidget {
                 Divider(),
                 const SizedBox(height: 15),
 
-                Text(
-                  "Need help with your Payment?",
-                  style: TextStyle(
-                    color: dark ? AppColors.grey : AppColors.darkerGrey,
-                  ),
-                ),
-                const SizedBox(height: 15),
-
                 TelegramChatButton(),
               ],
             );

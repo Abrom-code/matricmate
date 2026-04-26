@@ -5,6 +5,7 @@ import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payement.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -75,6 +76,9 @@ class PremiumScreen extends StatelessWidget {
                     onTap: () => controller.selectedMethod.value = method,
                   );
                 }).toList(),
+
+                const SizedBox(height: 50),
+                TelegramChatButton(),
               ],
             );
           }),

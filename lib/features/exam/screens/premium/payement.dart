@@ -6,6 +6,7 @@ import 'package:matricmate/features/exam/screens/premium/widgets/link_input_fiel
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_detail.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/recipt_container.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
@@ -89,6 +90,10 @@ class PayementScreen extends StatelessWidget {
                 ],
               ),
             ),
+
+            const SizedBox(height: AppSizes.spaceBtwItems * 2),
+            Divider(),
+            TelegramChatButton(),
           ],
         ),
       ),

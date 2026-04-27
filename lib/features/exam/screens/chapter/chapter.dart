@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/tiles/chpater_tile.dart';
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
@@ -72,7 +73,7 @@ class ChapterScreen extends GetView<ChapterController> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Obx(() {
                     if (controller.isChapterLoading.value) {
-                      return const Center(child: CircularProgressIndicator());
+                      return AppCircularLoading(title: 'Loading');
                     }
 
                     final chapters = controller.getChaptersByGrade(grade);

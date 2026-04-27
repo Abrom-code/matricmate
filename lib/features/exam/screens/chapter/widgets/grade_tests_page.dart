@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
+import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
@@ -19,7 +20,6 @@ class GradeTestsPage extends GetView<TestController> {
   Widget build(BuildContext context) {
     final grade = controller.grade;
     final subject = controller.title;
-
 
     return Scaffold(
       appBar: Appbar(
@@ -87,7 +87,10 @@ class GradeTestsPage extends GetView<TestController> {
                         context,
                         "Want to take a test?",
                         "You will be redirected to questions section.",
-                        () => Get.toNamed(Routes.questions, arguments: test.id),
+                        () {
+                          Get.toNamed(Routes.questions, arguments: test.id);
+                          Get.delete<QuestionController>();
+                        },
                       );
                     },
                   );

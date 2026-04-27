@@ -22,6 +22,8 @@ class TestController extends GetxController {
   final RxString chapter = ''.obs;
   final RxInt chapterNumber = 0.obs;
 
+  final RxBool isLoading = false.obs;
+
   @override
   void onInit() {
     final args = Get.arguments ?? {};
@@ -41,6 +43,7 @@ class TestController extends GetxController {
 
   Future<void> loadAllChapterTests(int subjectId) async {
     try {
+      isLoading.value = true;
       chapterTest.clear();
       testHasQuestions.clear();
       testResults.clear();
@@ -81,6 +84,8 @@ class TestController extends GetxController {
       } else {
         ToastHelper.error("Unexpected Error", e.toString());
       }
+    } finally {
+      isLoading.value = false;
     }
   }
 

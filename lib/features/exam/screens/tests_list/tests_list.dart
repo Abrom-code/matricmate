@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
+import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
@@ -34,6 +36,9 @@ class TestListScreen extends GetView<TestController> {
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Obx(() {
+          if (controller.isLoading.value)
+            return AppCircularLoading(title: 'Loading');
+
           final tests = controller.getTestsByGradeAndChapter(
             grade.value,
             chapterId.value,
@@ -90,7 +95,10 @@ class TestListScreen extends GetView<TestController> {
                         context,
                         "Want to take a test?",
                         "You will be redirected to questions section.",
-                        () => Get.toNamed(Routes.questions, arguments: test.id),
+                        () {
+                          Get.toNamed(Routes.questions, arguments: test.id);
+                          Get.delete<QuestionController>();
+                        },
                       );
                     },
                   );

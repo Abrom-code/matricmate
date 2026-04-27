@@ -95,4 +95,22 @@ class QuestionModel {
       'options': jsonEncode(options),
     };
   }
+
+  factory QuestionModel.empty() {
+    return QuestionModel(
+      id: 0,
+      subjectId: 0,
+      grade: null,
+      testId: 0,
+      correctOptionIndex: 0,
+      questionText: "",
+      options: [],
+      chapterId: null,
+      passageId: null,
+      questionOrder: null,
+      imageUrl: null,
+      explanationEn: "No English Explanation!",
+      explanationAm: "No Amharic Explanation!",
+    );
+  }
 }

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/appbar/status_title.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
@@ -51,16 +52,7 @@ class SubjectsScreen extends StatelessWidget {
         if (UserController.instance.userFetching.value ||
             subjectController.isLoading.value ||
             syncController.refreshing.value) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: AppSizes.spaceBtwItems),
-                Text('Loading...'),
-              ],
-            ),
-          );
+          return AppCircularLoading(title: 'Loading');
         }
 
         final isNaturalStream =

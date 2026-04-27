@@ -35,14 +35,13 @@ class QuestionController extends GetxController {
   // passage controller
   var isPassageHidden = false.obs;
   var textScale = 1.0.obs;
-  late QuestionModel question;
-  late int testId;
+  final Rx<QuestionModel> question = QuestionModel.empty().obs;
+  final RxInt testId = 1.obs;
 
   @override
   void onInit() {
-    question = Get.arguments['chapter'];
-    testId = Get.arguments['test_id'] ?? 0;
-    loadTestQuestions(testId);
+    testId.value = Get.arguments['test_id'] ?? 0;
+    loadTestQuestions(testId.value);
 
     super.onInit();
   }

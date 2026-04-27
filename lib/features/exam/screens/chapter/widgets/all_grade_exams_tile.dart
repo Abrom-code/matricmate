@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
+import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
-import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
@@ -71,11 +71,10 @@ class AllGradeExamsTile extends StatelessWidget {
                     context,
                     "Want to take a test?",
                     "You will be redirected to questions section.",
-                    () => Get.to(
-                      () => QuestionScreen(),
-                      binding: QuestionBinding(),
-                      arguments: test.id,
-                    ),
+                    () {
+                      Get.toNamed(Routes.questions, arguments: test.id);
+                      Get.delete<QuestionController>();
+                    },
                   );
                 },
               ),

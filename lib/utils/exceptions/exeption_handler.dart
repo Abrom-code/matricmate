@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_failure_model.dart';
@@ -12,6 +13,14 @@ import 'sqflite_expcetions.dart';
 import 'supabase_exception.dart';
 
 class AppExceptionHandler {
+  static void handleResponse(dynamic e) {
+    if (e is AppFailure) {
+      ToastHelper.error(e.title, e.message);
+    } else {
+      ToastHelper.error("Unexpected Error", e.toString());
+    }
+  }
+
   static AppFailure handle(Object e) {
     // Firebase Auth
     if (e is FirebaseAuthException) {

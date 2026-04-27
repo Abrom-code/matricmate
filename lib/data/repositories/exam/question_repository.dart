@@ -17,18 +17,6 @@ class QuestionRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getQnByTestIdRemote(int testId) async {
-    try {
-      return await supabase
-          .from('questions')
-          .select()
-          .eq('test_id', testId)
-          .order('question_order');
-    } catch (e) {
-      throw AppExceptionHandler.handle(e);
-    }
-  }
-
   Future<void> addQn(QuestionModel q) async {
     try {
       await _dbService.insetData('questions', q.toMap());
@@ -56,22 +44,6 @@ class QuestionRepository {
   Future<PassageModel> getLocalPassage(int pId) async {
     try {
       return await _dbService.getPassage(pId);
-    } catch (e) {
-      throw AppExceptionHandler.handle(e);
-    }
-  }
-
-  Future<PassageModel?> getRemotePassage(int id) async {
-    try {
-      final res = await supabase
-          .from('passages')
-          .select()
-          .eq('id', id)
-          .maybeSingle();
-
-      if (res == null) return null;
-
-      return PassageModel.fromMap(res);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

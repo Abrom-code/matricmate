@@ -4,9 +4,10 @@ import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
@@ -60,33 +61,8 @@ class QuestionController extends GetxController {
         blocks.assignAll(await buildBlocks(testQuestions));
         return;
       }
-
-      final isConnected = await NetworkManager.instance.hasRealInternet();
-      if (!isConnected) {
-        ToastHelper.warning("No Internet!", "Please check your connection.");
-        return;
-      }
-
-      final response = await _repo.getQnByTestIdRemote(testId);
-      final data = (response as List)
-          .map((e) => QuestionModel.fromJson(e))
-          .toList();
-
-      testQuestions.assignAll(data);
-      blocks.assignAll(await buildBlocks(testQuestions));
-
-      for (final q in data) {
-        _repo.addQn(q);
-        if (q.passageId != null) {
-          final local = await _repo.getLocalPassage(q.passageId!);
-          if (local.id == -1 || local.content.isEmpty) {
-            final remote = await _repo.getRemotePassage(q.passageId!);
-            if (remote != null) await _repo.addPassage(remote);
-          }
-        }
-      }
     } catch (e) {
-      handleException(e);
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isLoading.value = false;
     }
@@ -124,7 +100,7 @@ class QuestionController extends GetxController {
           lastPassageId = q.passageId;
           lastWasPassage = isPassage;
         }
-        current!.questions.add(q);
+        current.questions.add(q);
       }
 
       if (current != null) newBlocks.add(current);
@@ -143,11 +119,48 @@ class QuestionController extends GetxController {
     return passage;
   }
 
-  void handleException(dynamic e) {
-    if (e is AppFailure) {
-      ToastHelper.error(e.title, e.message);
+  /// --- ANSWER & RESULT LOGIC ---
+
+  /// Mark a specific question as "checked" so the UI can show the correct/incorrect colors
+  void checkAnswer(int questionId) {
+    // Only check if an answer has actually been selected
+    if (selectedAnswers.containsKey(questionId)) {
+      isChecked[questionId] = true;
     } else {
-      ToastHelper.error("Unexpected Error", e.toString());
+      ToastHelper.warning("No Selection", "Please select an option first!");
+    }
+  }
+
+  /// Dynamic getter to calculate the total correct answers at any time
+  int get correctAnswers {
+    int score = 0;
+    for (final q in testQuestions) {
+      final selected = selectedAnswers[q.id];
+      // Check if the selected index matches the model's correct index
+      if (selected != null && selected == q.correctOptionIndex) {
+        score++;
+      }
+    }
+    return score;
+  }
+
+  Future<void> saveResult(ResultModel result) async {
+    try {
+      await _repo.saveResult(result);
+
+      ToastHelper.success(
+        "Test Completed",
+        "Your results have been synced successfully!",
+      );
+    } catch (e) {
+      if (e is AppFailure) {
+        ToastHelper.error(
+          "Sync Failed",
+          "Result saved locally only. ${e.message}",
+        );
+      } else {
+        ToastHelper.error("Unexpected Error", "Could not sync result.");
+      }
     }
   }
 
@@ -195,4 +208,12 @@ class QuestionController extends GetxController {
   void togglePassage() => isPassageHidden.value = !isPassageHidden.value;
   void togglePassageSize() =>
       isFullScreenPassage.value = !isFullScreenPassage.value;
+
+  bool isAnswerChecked(int questionId) {
+    return isChecked[questionId] ?? false;
+  }
+
+  int? getSelectedAnswer(int questionId) {
+    return selectedAnswers[questionId];
+  }
 }

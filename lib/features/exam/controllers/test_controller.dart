@@ -52,26 +52,7 @@ class TestController extends GetxController {
 
       late List<TestModel> data;
 
-      if (dbChapterTests.isNotEmpty) {
-        data = dbChapterTests.map((e) => TestModel.fromMap(e)).toList();
-      } else {
-        final isConnectd = await NetworkManager.instance.hasRealInternet();
-        if (!isConnectd) {
-          ToastHelper.warning(
-            "No Internet!",
-            "Please turn on mobile data or connect to WIFI!",
-          );
-          return;
-        }
-
-        final response = await _testRepository.getRemoteTestsById(subjectId);
-
-        data = (response as List).map((e) => TestModel.fromJson(e)).toList();
-
-        for (final test in data) {
-          await _testRepository.addTest(test);
-        }
-      }
+      data = dbChapterTests.map((e) => TestModel.fromMap(e)).toList();
 
       chapterTest.assignAll(data);
 

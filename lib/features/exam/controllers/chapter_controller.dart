@@ -3,7 +3,6 @@ import 'package:matricmate/data/repositories/exam/chapter_repository.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class ChapterController extends GetxController {
   static ChapterController get instance => Get.find();
@@ -38,26 +37,7 @@ class ChapterController extends GetxController {
 
       final dbChapters = await _repo.getSubjectChaptersById(subjectId);
 
-      if (dbChapters.isNotEmpty) {
-        data = dbChapters.map((e) => ChapterModel.fromMap(e)).toList();
-      } else {
-        final isConnectd = await NetworkManager.instance.hasRealInternet();
-        if (!isConnectd) {
-          ToastHelper.warning(
-            "No Internet!",
-            "Please turn on mobile data or connect to WIFI!",
-          );
-          return;
-        }
-
-        final response = await _repo.getChapterById(subjectId);
-
-        data = (response as List).map((e) => ChapterModel.fromJson(e)).toList();
-
-        for (final chapter in data) {
-          await _repo.addChapter(chapter);
-        }
-      }
+      data = dbChapters.map((e) => ChapterModel.fromMap(e)).toList();
 
       subjectChapters.assignAll(data);
 

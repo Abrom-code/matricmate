@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/authentication/screens/password_configration/reset_password.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class ForgetPasswordController extends GetxController {
   static ForgetPasswordController get instance => Get.find();
+  final AuthenticationRepository _authenticationRepository =
+      AuthenticationRepository();
 
   final email = TextEditingController();
   final isLoading = false.obs;
@@ -27,14 +30,18 @@ class ForgetPasswordController extends GetxController {
         return;
       }
 
-      await AuthenticationRepository.instance.sendResetPasswordEmail(
+      await _authenticationRepository.sendResetPasswordEmail(
         email.value.text.trim(),
       );
       ToastHelper.success("Email sent", "Please check your inbox!");
 
       Get.to(() => ResetPassword(email: email.text.trim()));
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       isLoading.value = false;
     }

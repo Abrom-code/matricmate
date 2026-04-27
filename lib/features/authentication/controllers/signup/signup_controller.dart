@@ -4,11 +4,14 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class SignupController extends GetxController {
   static SignupController get instance => Get.find();
+  final AuthenticationRepository _authenticationRepository =
+      AuthenticationRepository();
 
   final hidePassword = true.obs;
   final firstName = TextEditingController();
@@ -46,7 +49,7 @@ class SignupController extends GetxController {
       isSigning.value = true;
 
       // REGISTER USER (Firebase)
-      final userCredential = await AuthenticationRepository.instance
+      final userCredential = await _authenticationRepository
           .registerWithEmailAndPassword(
             email.text.trim(),
             password.text.trim(),
@@ -66,7 +69,11 @@ class SignupController extends GetxController {
 
       Get.to(() => VerifyEmailScreen(email: email.text.trim()));
     } catch (e) {
-      ToastHelper.error("Faild", e.toString());
+       if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       isSigning.value = false;
     }

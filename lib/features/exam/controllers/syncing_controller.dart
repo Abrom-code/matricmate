@@ -33,6 +33,7 @@ class SyncingController extends GetxController {
       refreshing.value = true;
 
       await syncSubjects();
+
       await UserController.instance.fetchUserRecord();
 
       final localSubjects = await _subjectRepo.getLocalSubjects();

@@ -13,6 +13,8 @@ class VerifyEmailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(VerifyEmailController());
+    final AuthenticationRepository _authenticationRepository =
+        AuthenticationRepository();
 
     return Scaffold(
       appBar: AppBar(
@@ -20,7 +22,7 @@ class VerifyEmailScreen extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () async {
-              await AuthenticationRepository.instance.logout();
+              await _authenticationRepository.logout();
             },
             icon: const Icon(CupertinoIcons.clear),
           ),

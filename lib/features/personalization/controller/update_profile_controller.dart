@@ -8,25 +8,26 @@ import 'package:matricmate/utils/network_manager/network_manager.dart';
 class UpdateProfileController extends GetxController {
   static UpdateProfileController get instance => Get.find();
 
-  final userController = UserController.instance;
-  final userRepository = UserRepository.instance;
+  final UserRepository _userRepository = Get.find<UserRepository>();
+  final UserController _userController = Get.find<UserController>();
 
-  late final TextEditingController firstName;
-  late final TextEditingController lastName;
-  late final RxString selectedStream;
+  late TextEditingController firstName;
+  late TextEditingController lastName;
+  late RxString selectedStream;
+
   final RxBool isUpdating = false.obs;
-  final user = UserController.instance.user;
 
   GlobalKey<FormState> updateFormKey = GlobalKey<FormState>();
 
   @override
   void onInit() {
     super.onInit();
-    firstName = TextEditingController(
-      text: userController.user.value.firstName,
-    );
-    lastName = TextEditingController(text: userController.user.value.lastName);
-    selectedStream = userController.user.value.stream.obs;
+
+    final user = _userController.user.value;
+
+    firstName = TextEditingController(text: user.firstName);
+    lastName = TextEditingController(text: user.lastName);
+    selectedStream = user.stream.obs;
   }
 
   Future<void> updateProfile() async {
@@ -34,29 +35,35 @@ class UpdateProfileController extends GetxController {
       if (!updateFormKey.currentState!.validate()) return;
 
       final isConnected = await NetworkManager.instance.hasRealInternet();
+
       if (!isConnected) {
         ToastHelper.warning("No Internet", "Check your connection.");
         return;
       }
 
-      final updatedUser = userController.user.value.copyWith(
+      isUpdating.value = true;
+
+      final currentUser = _userController.user.value;
+
+      final updatedUser = currentUser.copyWith(
         firstName: firstName.text.trim(),
         lastName: lastName.text.trim(),
         stream: selectedStream.value,
       );
-      isUpdating.value = true;
 
-      await userRepository.updateFullUserRecord(updatedUser);
+      // 1. update remote + local DB
+      await _userRepository.updateFullUserRecord(updatedUser);
 
-      userController.user.value = updatedUser;
+      // 2. single source refresh (correct way)
+      await _userController.fetchUserRecord();
 
-      await userController.fetchUserRecord();
-      isUpdating.value = false;
       Get.back();
-      ToastHelper.success("Success", "Profile updated Successfully");
+
+      ToastHelper.success("Success", "Profile updated successfully");
     } catch (e) {
-      isUpdating.value = false;
       ToastHelper.error("Error", e.toString());
+    } finally {
+      isUpdating.value = false;
     }
   }
 }

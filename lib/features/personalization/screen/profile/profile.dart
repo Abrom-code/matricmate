@@ -17,6 +17,8 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AuthenticationRepository _authenticationRepository =
+        AuthenticationRepository();
     final controller = Get.put(ProfileController());
     final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
@@ -62,7 +64,7 @@ class ProfileScreen extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () => AppDialogBoxes.showOkCancelDialog(
                     context: context,
-                    onPressed: () => AuthenticationRepository.instance.logout(),
+                    onPressed: () => _authenticationRepository.logout(),
                   ),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.red),

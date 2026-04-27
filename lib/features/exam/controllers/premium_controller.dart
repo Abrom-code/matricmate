@@ -6,7 +6,6 @@ import 'package:matricmate/data/repositories/payment/payment_repository.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -14,6 +13,7 @@ class PremiumController extends GetxController {
   static PremiumController get instance => Get.find();
 
   final PaymentRepository _repo = PaymentRepository();
+  final UserController _userController = Get.find<UserController>();
 
   final selectedMethod = PaymentMethod.telebirr.obs;
   final receipt = Rxn<XFile>();
@@ -23,7 +23,6 @@ class PremiumController extends GetxController {
 
   GlobalKey<FormState> paymentFormKey = GlobalKey<FormState>();
 
-  /// Paste clipboard
   Future<void> pasteFromClipboard() async {
     final data = await Clipboard.getData('text/plain');
 
@@ -32,7 +31,6 @@ class PremiumController extends GetxController {
     }
   }
 
-  /// Pick image
   Future<void> pickRecipt() async {
     try {
       final picker = ImagePicker();
@@ -46,19 +44,15 @@ class PremiumController extends GetxController {
     }
   }
 
-  /// COMPLETE PAYMENT
   Future<void> completePayment() async {
     try {
-      //  form validation (KEEPED)
       if (!paymentFormKey.currentState!.validate()) return;
 
-      //  image check (KEEPED)
       if (receipt.value == null) {
         ToastHelper.warning("Warning", "Please upload receipt!");
         return;
       }
 
-      //  network check (KEEPED)
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
@@ -68,17 +62,15 @@ class PremiumController extends GetxController {
 
       isUploading.value = true;
 
-      final userId = UserController.instance.user.value.id;
+      final userId = _userController.user.value.id;
 
       if (userId.isEmpty) {
-        ToastHelper.error("Error", "No user id found!");
+        ToastHelper.error("Error", "No user found!");
         return;
       }
 
-      // upload
       final result = await _repo.uploadReceipt(receipt.value!, userId);
 
-      // save
       await _repo.savePaymentReceipt(
         userId: userId,
         receiptPath: result["filePath"]!,
@@ -87,37 +79,30 @@ class PremiumController extends GetxController {
         verificationUrl: urlFiledController.text.trim(),
       );
 
-      // set pending
       await _repo.setUserPending(userId);
 
-      // refresh user
-      await UserController.instance.fetchUserRecord();
+      // 🔥 FIX: no manual fetch with id anymore
+      await _userController.fetchUserRecord();
 
       Get.off(() => PaymentVerificationScreen());
 
       ToastHelper.success("Success", "Payment submitted!");
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      ToastHelper.error("Error", e.toString());
     } finally {
       isUploading.value = false;
     }
   }
 
-  /// CANCEL PAYMENT
   Future<void> cancelPayment() async {
     try {
-      final userId = UserController.instance.user.value.id;
+      final userId = _userController.user.value.id;
 
       if (userId.isEmpty) {
         ToastHelper.warning("Error", "Unexpected error!");
         return;
       }
 
-      // network check
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
@@ -129,7 +114,7 @@ class PremiumController extends GetxController {
 
       await _repo.cancelPayment(userId);
 
-      await UserController.instance.fetchUserRecord();
+      await _userController.fetchUserRecord();
 
       receipt.value = null;
       urlFiledController.clear();
@@ -138,11 +123,7 @@ class PremiumController extends GetxController {
 
       ToastHelper.success("Cancelled", "Payment cancelled");
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      ToastHelper.error("Error", e.toString());
     } finally {
       isUploading.value = false;
     }

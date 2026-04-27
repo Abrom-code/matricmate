@@ -5,12 +5,17 @@ import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
+import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class LoginController extends GetxController {
   static LoginController get instance => Get.find();
+  final authRepo = Get.find<AuthenticationRepository>();
+  final authController = Get.find<AuthenticationController>();
+
   final _localStroage = GetStorage();
 
   final rememberMe = false.obs;
@@ -53,13 +58,13 @@ class LoginController extends GetxController {
         return;
       }
 
-      await AuthenticationRepository.instance.loginUsingEmailAndPassword(
+      await authRepo.loginUsingEmailAndPassword(
         email.value.text.trim(),
         password.value.text.trim(),
       );
 
       //  Get UID
-      final uid = AuthenticationRepository.instance.authUser!.uid;
+      final uid = authRepo.currentUser!.uid;
 
       //  Get device ID
       final deviceId = await DeviceService.getDeviceId();
@@ -74,9 +79,13 @@ class LoginController extends GetxController {
       }
 
       //  Proceed if allowed
-      AuthenticationRepository.instance.screenRedirect();
+      authController.screenRedirect();
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       isLoaging.value = false;
     }

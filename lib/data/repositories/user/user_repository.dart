@@ -1,20 +1,21 @@
-import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:sqflite/sql.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 
-class UserRepository extends GetxController {
-  static UserRepository get instance => Get.find();
-
+/// SAVE (UPSERT)
+class UserRepository {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final SupabaseClient _supabase = Supabase.instance.client;
   final DatabaseService databaseService = DatabaseService.instance;
+  String? get _uid => _auth.currentUser?.uid;
 
-  /// SAVE (UPSERT)
   Future<void> saveUserRecord(UserModel user) async {
     try {
       await _supabase.from('users').upsert(user.toJson(), onConflict: 'id');
+
       final db = await databaseService.database;
       await db.insert(
         'user',
@@ -22,67 +23,59 @@ class UserRepository extends GetxController {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      throw e.toString();
+      throw AppExceptionHandler.handle(e);
     }
   }
 
-  /// FETCH USER
-  Future<UserModel?> fetchUserDetails() async {
+  Future<UserModel?> fetchCurrentUserDetails() async {
+    final uid = _uid;
+    if (uid == null) return null;
+
+    final data = await _supabase
+        .from('users')
+        .select()
+        .eq('id', uid)
+        .maybeSingle();
+
+    if (data == null) return null;
+
+    return UserModel.fromJson(data);
+  }
+
+  Future<void> updateSingleField(
+    String userId,
+    Map<String, dynamic> json,
+  ) async {
     try {
-      final userId = AuthenticationRepository.instance.authUser?.uid;
-
-      if (userId == null) return null;
-
-      final data = await _supabase
-          .from('users')
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
-
-      if (data == null) return null;
-
-      return UserModel.fromJson(data);
+      json.remove('id');
+      await _supabase.from('users').update(json).eq('id', userId);
     } catch (e) {
-      return null;
+      throw AppExceptionHandler.handle(e);
     }
   }
 
-  /// UPDATE SINGLE FIELD
-  Future<void> updateSingleField(Map<String, dynamic> json) async {
-    try {
-      final userId = AuthenticationRepository.instance.authUser?.uid;
-
-      json.remove('id'); // safety
-
-      await _supabase.from('users').update(json).eq('id', userId!);
-    } catch (e) {
-      throw e.toString();
-    }
-  }
-
-  /// FULL UPDATE
   Future<void> updateFullUserRecord(UserModel user) async {
     try {
       await _supabase.from('users').update(user.toJson()).eq('id', user.id);
+
       final db = await databaseService.database;
-      await db.insert('user', {
-        ...user.toMap(),
-        'email': user.email.isNotEmpty
-            ? user.email
-            : (await databaseService.getUser()).first['email'],
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+      await db.insert(
+        'user',
+        user.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     } catch (e) {
-      throw e.toString();
+      throw AppExceptionHandler.handle(e);
     }
   }
 
-  /// DELETE USER
   Future<void> deleteUserRecord(String userId) async {
     try {
       await _supabase.from('users').delete().eq('id', userId);
       await _supabase.from('user_sessions').delete().eq('firebase_uid', userId);
     } catch (e) {
-      throw e.toString();
+      throw AppExceptionHandler.handle(e);
     }
   }
 }

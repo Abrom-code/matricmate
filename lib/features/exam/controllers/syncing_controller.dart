@@ -90,11 +90,7 @@ class SyncingController extends GetxController {
       await _syncRepository.commitBatch();
       SubjectsController.instance.loadSubjects();
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      throw e;
     }
   }
 
@@ -114,11 +110,7 @@ class SyncingController extends GetxController {
       }
       await _syncRepository.commitBatch();
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      throw e;
     }
   }
 
@@ -138,11 +130,7 @@ class SyncingController extends GetxController {
       }
       await _syncRepository.commitBatch();
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      throw e;
     }
   }
 
@@ -177,11 +165,7 @@ class SyncingController extends GetxController {
         await syncPassages(passageIds.toSet().toList());
       }
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      throw e;
     }
   }
 
@@ -199,11 +183,7 @@ class SyncingController extends GetxController {
       }
       await _syncRepository.commitBatch();
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      throw e;
     }
   }
 }

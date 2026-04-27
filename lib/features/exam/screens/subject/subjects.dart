@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/bindings/chapter_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/appbar/status_title.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
-import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';

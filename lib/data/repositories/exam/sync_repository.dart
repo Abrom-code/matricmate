@@ -63,7 +63,7 @@ class SyncRepository {
   ) async {
     try {
       return await supabase
-          .from('chapters')
+          .from(table)
           .select()
           .inFilter('subject_id', subjectIds);
     } catch (e) {

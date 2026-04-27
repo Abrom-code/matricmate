@@ -60,7 +60,7 @@ class PassageContainer extends StatelessWidget {
                   Center(
                     child: SelectableText(
                       block.passage?.content ?? "Loading...",
-                      textAlign: TextAlign.center,
+                      textAlign: TextAlign.justify,
                       style: TextStyle(
                         fontSize: 15 * controller.textScale.value,
                         height: 1.7,

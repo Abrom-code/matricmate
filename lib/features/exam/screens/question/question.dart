@@ -9,7 +9,6 @@ import 'package:matricmate/features/exam/screens/question/widgets/passage_contai
 import 'package:matricmate/features/exam/screens/question/widgets/passage_layout_ctrl.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/logging/logging.dart';
 
 class QuestionScreen extends GetView<QuestionController> {
   const QuestionScreen({super.key});
@@ -30,23 +29,25 @@ class QuestionScreen extends GetView<QuestionController> {
           "Want to Exit?",
           "Your progress will be saved.",
           () {
-            Navigator.pop(context);
-            Navigator.pop(context);
+            Navigator.pop(context); // Close Dialog
+            Navigator.pop(context); // Exit Screen
           },
         );
       },
       child: Obx(() {
-        if (controller.isLoading.value || controller.isPassageLoading.value) {
-          return AppCircularLoading();
-        }
-        if (controller.blocks.isEmpty) {
+        // 1. Handle Case: Data Loaded but Empty
+        if (!controller.isLoading.value && controller.testQuestions.isEmpty) {
           return const Scaffold(
             body: Center(child: Text("No Questions Available")),
           );
         }
 
-        final currentQ =
-            controller.testQuestions[controller.currentIndex.value];
+        // 2. Safe Access to Current Question
+        // We check length to avoid "Index out of range" during initial reactive updates
+        final bool hasData = controller.testQuestions.isNotEmpty;
+        final currentQ = hasData
+            ? controller.testQuestions[controller.currentIndex.value]
+            : null;
 
         return Scaffold(
           appBar: Appbar(
@@ -55,54 +56,62 @@ class QuestionScreen extends GetView<QuestionController> {
             leadingOnPressed: () => AppHelperFuntions.showAppDialog(
               context,
               "Want to Exit?",
-              "Your progress will not saved.",
+              "Your progress will not be saved.",
               () {
                 Navigator.pop(context);
                 Navigator.pop(context);
               },
             ),
-            title: currentQ.passageId != null
+            // Title switches based on whether it's a passage or normal question
+            title: (currentQ != null && currentQ.passageId != null)
                 ? PassageLayoutCtrl(controller: controller)
                 : Text(
-                    "Question ${controller.currentIndex.value + 1} of ${controller.testQuestions.length}",
+                    hasData
+                        ? "Question ${controller.currentIndex.value + 1} of ${controller.testQuestions.length}"
+                        : "Loading...",
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
             centerTitle: true,
             actions: [
-              Obx(() {
-                final currentQ =
-                    controller.testQuestions[controller.currentIndex.value];
-
-                final isSaved = controller.isBookmarked(currentQ.id);
-
-                return IconButton(
-                  onPressed: isSaved
-                      ? () => bookmarkController.removeFromBookmark(currentQ.id)
-                      : () => bookmarkController.addToBookmark(currentQ.id),
-                  icon: Icon(
-                    isSaved ? Icons.bookmark : Icons.bookmark_outline,
-                    color: isSaved ? AppColors.primary : null,
-                  ),
-                );
-              }),
+              // Only show bookmark icon if data is available
+              if (currentQ != null)
+                Obx(() {
+                  final isSaved = controller.isBookmarked(currentQ.id);
+                  return IconButton(
+                    onPressed: isSaved
+                        ? () =>
+                              bookmarkController.removeFromBookmark(currentQ.id)
+                        : () => bookmarkController.addToBookmark(currentQ.id),
+                    icon: Icon(
+                      isSaved ? Icons.bookmark : Icons.bookmark_outline,
+                      color: isSaved ? AppColors.primary : null,
+                    ),
+                  );
+                }),
             ],
             backgroundColor: Colors.transparent,
           ),
-          body: SingleChildScrollView(
-            controller: pageScrollController,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// PASSAGE
-                if (currentQ.passageId != null) ...[
-                  PassageContainer(controller: controller),
-                ],
 
-                ///  ONLY ONE QUESTION
-                QuesitonSection(question: currentQ),
-              ],
-            ),
-          ),
+          body:
+              (controller.isLoading.value || controller.isPassageLoading.value)
+              ? const AppCircularLoading()
+              : SingleChildScrollView(
+                  controller: pageScrollController,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// PASSAGE SECTION
+                      if (currentQ?.passageId != null) ...[
+                        PassageContainer(controller: controller),
+                      ],
+
+                      /// QUESTION SECTION
+                      if (currentQ != null) ...[
+                        QuesitonSection(question: currentQ),
+                      ],
+                    ],
+                  ),
+                ),
         );
       }),
     );

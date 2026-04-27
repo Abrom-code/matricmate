@@ -1,33 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
-import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class TestListScreen extends GetView<TestController> {
-  const TestListScreen({
-    super.key,
-    required this.subject,
-    required this.chapter,
-    this.chapterId,
-    this.chapterNumber,
-    this.grade,
-  });
-  final String subject, chapter;
-  final int? chapterId;
-  final int? chapterNumber, grade;
+  const TestListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final subject = controller.title;
+    final chapter = controller.chapter;
+    final chapterId = controller.chapterId;
+    final grade = controller.grade;
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
@@ -94,11 +87,7 @@ class TestListScreen extends GetView<TestController> {
                         context,
                         "Want to take a test?",
                         "You will be redirected to questions section.",
-                        () => Get.off(
-                          () => QuestionScreen(),
-                          binding: QuestionBinding(),
-                          arguments: test.id,
-                        ),
+                        () => Get.toNamed(Routes.questions, arguments: test.id),
                       );
                     },
                   );

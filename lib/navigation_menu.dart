@@ -1,58 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
-import 'package:matricmate/features/exam/screens/subject/subjects.dart';
-import 'package:matricmate/features/personalization/screen/profile/profile.dart';
-import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/routes/routes.dart';
 
 class NavigationMenu extends StatelessWidget {
-  final int initialIndex;
+  const NavigationMenu({super.key});
 
-  const NavigationMenu({super.key, this.initialIndex = 0});
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(NavigationController());
-    controller.selectedIdx.value = initialIndex;
+    final controller = Get.find<NavigationController>();
+
     return Scaffold(
       bottomNavigationBar: Obx(
         () => NavigationBar(
           height: 60,
-          elevation: 0,
           selectedIndex: controller.selectedIdx.value,
-          onDestinationSelected: (index) =>
-              controller.selectedIdx.value = index,
-          destinations: [
+          onDestinationSelected: controller.changePage,
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.home), label: "Questions"),
             NavigationDestination(
-              label: "Questions",
-              icon: Icon(
-                Icons.home,
-                color: controller.selectedIdx.value == 0
-                    ? AppColors.primary
-                    : Colors.grey,
-              ),
-            ),
-            NavigationDestination(
+              icon: Icon(Icons.bookmark),
               label: "Bookmarks",
-              icon: Icon(
-                Icons.bookmark,
-                color: controller.selectedIdx.value == 1
-                    ? AppColors.primary
-                    : Colors.grey,
-              ),
             ),
-            NavigationDestination(
-              label: "Profile",
-              icon: Icon(
-                Icons.person,
-                color: controller.selectedIdx.value == 2
-                    ? AppColors.primary
-                    : Colors.grey,
-              ),
-            ),
+            NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
           ],
         ),
       ),
-      body: Obx(() => controller.screens[controller.selectedIdx.value]),
+
+      body: Navigator(
+        key: Get.nestedKey(NavigationController.navigatorId),
+        initialRoute: Routes.home,
+        onGenerateRoute: (settings) {
+          final routePage = AppRoutes.pages.firstWhere(
+            (page) => page.name == settings.name,
+            orElse: () => AppRoutes.pages.first,
+          );
+
+          return GetPageRoute(
+            routeName: routePage.name,
+            page: routePage.page,
+            binding: routePage.binding,
+            settings: settings,
+          );
+        },
+      ),
     );
   }
 }
@@ -60,5 +51,19 @@ class NavigationMenu extends StatelessWidget {
 class NavigationController extends GetxController {
   final Rx<int> selectedIdx = 0.obs;
 
-  final screens = [SubjectsScreen(), BookmarkScreen(), ProfileScreen()];
+  static const int navigatorId = 1;
+
+  final List<String> routes = [
+    Routes.home,
+    Routes.bookmark,
+    Routes.userProfile,
+  ];
+
+  void changePage(int index) {
+    if (selectedIdx.value == index) return;
+
+    selectedIdx.value = index;
+
+    Get.offNamed(routes[index], id: navigatorId);
+  }
 }

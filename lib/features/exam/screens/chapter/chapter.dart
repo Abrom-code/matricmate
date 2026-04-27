@@ -1,30 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/bindings/test_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/tiles/chpater_tile.dart';
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_grade_exams_tile.dart';
-import 'package:matricmate/features/exam/screens/chapter/widgets/grade_tests_page.dart';
-import 'package:matricmate/features/exam/screens/tests_list/tests_list.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ChapterScreen extends GetView<ChapterController> {
-  const ChapterScreen({
-    super.key,
-    required this.title,
-    required this.subjectId,
-  });
-  final String title;
-  final int subjectId;
+  const ChapterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final title = controller.title;
+    final subjectId = controller.subjectId;
     final tabController = Get.find<GradeSelectionController>();
     return Scaffold(
       appBar: Appbar(
@@ -91,10 +85,13 @@ class ChapterScreen extends GetView<ChapterController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AllChaptersButton(
-                          onPressed: () => Get.to(
-                            () => GradeTestsPage(grade: grade, subject: title),
-                            binding: TestBinding(),
-                            arguments: {'subject_id': subjectId},
+                          onPressed: () => Get.toNamed(
+                            Routes.gradeTests,
+                            arguments: {
+                              'subject_id': subjectId,
+                              'grade': grade,
+                              'subject': title,
+                            },
                           ),
                         ),
                         const Divider(height: AppSizes.spaceBtwSections),
@@ -116,15 +113,15 @@ class ChapterScreen extends GetView<ChapterController> {
                               chapterTitle: chapter.title,
                               onTap: () {
                                 if (hasTests) {
-                                  Get.to(
-                                    () => TestListScreen(
-                                      subject: title,
-                                      grade: chapter.grade,
-                                      chapter: chapter.title,
-                                      chapterId: chapter.id,
-                                    ),
-                                    arguments: {'subject_id': subjectId},
-                                    binding: TestBinding(),
+                                  Get.toNamed(
+                                    Routes.testLists,
+                                    arguments: {
+                                      'subject_id': subjectId,
+                                      'grade': grade,
+                                      'subject': title,
+                                      'chapter': chapter.title,
+                                      'chapter_id': chapter.id,
+                                    },
                                   );
                                 } else {
                                   ToastHelper.info(

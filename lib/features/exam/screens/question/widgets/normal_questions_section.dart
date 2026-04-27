@@ -8,8 +8,8 @@ import 'package:matricmate/features/exam/screens/question/widgets/choice_button.
 import 'package:matricmate/features/exam/screens/question/widgets/explanation_box.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
-import 'package:matricmate/features/exam/screens/result/result.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
@@ -150,7 +150,10 @@ class QuesitonSection extends GetView<QuestionController> {
                             controller.saveResult(result);
                             TestController.instance.testResults[result.testId] =
                                 result;
-                            Get.offAll(() => ResultScreen(result: result));
+                            Get.offNamed(
+                              Routes.result,
+                              arguments: {'result': result},
+                            );
                           } else {
                             controller.nextQuestion();
                           }

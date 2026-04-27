@@ -84,7 +84,7 @@ class AppDrawer extends StatelessWidget {
                     title: Text("Home"),
                     onTap: () {
                       Get.back();
-                      Get.offAll(() => NavigationMenu(initialIndex: 0));
+                      Get.find<NavigationController>().changePage(0);
                     },
                   ),
                   ListTile(
@@ -92,7 +92,7 @@ class AppDrawer extends StatelessWidget {
                     title: const Text("Bookmarks"),
                     onTap: () {
                       Get.back();
-                      Get.offAll(() => NavigationMenu(initialIndex: 1));
+                      Get.find<NavigationController>().changePage(1);
                     },
                   ),
                   ListTile(
@@ -100,7 +100,7 @@ class AppDrawer extends StatelessWidget {
                     title: const Text("Profile"),
                     onTap: () {
                       Get.back();
-                      Get.offAll(() => NavigationMenu(initialIndex: 2));
+                      Get.find<NavigationController>().changePage(2);
                     },
                   ),
                   if (isInactive)

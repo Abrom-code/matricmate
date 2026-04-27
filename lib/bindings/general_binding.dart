@@ -7,6 +7,7 @@ import 'package:matricmate/features/authentication/controllers/authentication_co
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:matricmate/utils/themes/theme_controller.dart';
 
@@ -16,6 +17,7 @@ class GeneralBinding extends Bindings {
     Get.put(NetworkManager(), permanent: true);
     Get.put(DatabaseService(), permanent: true);
     Get.put(ThemeController(), permanent: true);
+    Get.put(NavigationController(), permanent: true);
 
     Get.put(AuthenticationRepository(), permanent: true);
     Get.put(UserRepository(), permanent: true);

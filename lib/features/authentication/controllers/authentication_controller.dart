@@ -52,7 +52,6 @@ class AuthenticationController extends GetxController {
         Get.offAll(() => VerifyEmailScreen(email: user.email));
       }
     } else {
-      deviceStorage.writeIfNull('isFirstTime', true);
       Get.offAll(() => const LoginScreen());
     }
   }

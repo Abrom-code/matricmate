@@ -1,7 +1,22 @@
 class Routes {
+  // exam
   static const home = '/';
   static const bookmark = '/bookmark';
+  static const chapter = '/chapter';
+  static const tests = '/tests';
+  static const gradeTests = '/gradeTests';
+  static const testLists = '/test_lists';
+  static const questions = '/questions';
+  static const questionsSections = '/questions-section';
+  static const result = '/result';
+  static const review = '/review';
+  static const navigationMenu = '/navigationMenu';
+
+  // profile
   static const userProfile = '/user-profile';
+  static const updateProfile = '/update-profile';
+
+  // auth
   static const signup = '/signup';
   static const signupSuccess = '/signup-success';
   static const verifyEmail = '/verify-email';

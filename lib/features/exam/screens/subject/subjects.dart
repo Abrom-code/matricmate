@@ -13,6 +13,7 @@ import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_
 import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -123,13 +124,12 @@ class SubjectsScreen extends StatelessWidget {
                         subject.id,
                       ),
                       onTap: () => subject.isDownloaded
-                          ? Get.to(
-                              () => ChapterScreen(
-                                title: subject.name,
-                                subjectId: subject.id,
-                              ),
-                              binding: ChapterBinding(),
-                              arguments: subject.id,
+                          ? Get.toNamed(
+                              Routes.chapter,
+                              arguments: {
+                                'title': subject.name,
+                                'id': subject.id,
+                              },
                             )
                           : null,
                     );

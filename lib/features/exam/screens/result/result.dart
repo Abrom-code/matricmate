@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/bindings/review_binding.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/helpers/badges.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
-import 'package:matricmate/features/exam/screens/result/result_review.dart';
 import 'package:matricmate/navigation_menu.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ResultScreen extends StatelessWidget {
-  const ResultScreen({super.key, required this.result});
-  final ResultModel result;
+class ResultScreen extends GetView<ResultController> {
+  const ResultScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final result = controller.result;
     final dark = AppHelperFuntions.isDark(context);
     final examBadge = ExamBadgeHelper.getBadge(
       result.correctAnswers / result.testQuestions.length,
@@ -102,11 +101,8 @@ class ResultScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => Get.to(
-                    () => const TestReviewScreen(),
-                    binding: ReviewBinding(),
-                    arguments: result,
-                  ),
+                  onPressed: () =>
+                      Get.toNamed(Routes.review, arguments: result),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     spacing: 10,
@@ -127,7 +123,8 @@ class ResultScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => Get.offAll(() => const NavigationMenu()),
+                  onPressed: () =>
+                      Get.find<NavigationController>().changePage(0),
                   child: Row(
                     spacing: 10,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -148,5 +145,17 @@ class ResultScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class ResultController extends GetxController {
+  static ResultController get instance => Get.find();
+
+  late ResultModel result;
+
+  @override
+  void onInit() {
+    result = Get.arguments['result'];
+    super.onInit();
   }
 }

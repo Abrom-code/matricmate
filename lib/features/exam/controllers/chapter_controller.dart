@@ -15,15 +15,17 @@ class ChapterController extends GetxController {
 
   final RxBool isChapterLoading = false.obs;
 
+  late String title;
+  late int subjectId;
+
   @override
   void onInit() {
     super.onInit();
 
-    final subjectId = Get.arguments;
+    title = Get.arguments['title'] ?? 'Default Title';
+    subjectId = Get.arguments['id'] ?? 0;
 
-    if (subjectId != null) {
-      loadSubjectChapters(subjectId);
-    }
+    loadSubjectChapters(subjectId);
   }
 
   Future<void> loadSubjectChapters(int subjectId) async {

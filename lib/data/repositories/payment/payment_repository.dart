@@ -1,3 +1,4 @@
+import 'package:matricmate/data/services/ensure_supabase_auth.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
@@ -9,6 +10,7 @@ class PaymentRepository {
   /// Upload receipt
   Future<Map<String, String>> uploadReceipt(XFile file, String userId) async {
     try {
+      await ensureSupabaseAuth();
       final bytes = await File(file.path).readAsBytes();
 
       final fileName =
@@ -32,6 +34,7 @@ class PaymentRepository {
     required String paymentMethod,
     required String verificationUrl,
   }) async {
+    await ensureSupabaseAuth();
     await _supabase.from('payment_receipts').insert({
       'user_id': userId,
       'receipt_path': receiptPath,
@@ -44,6 +47,7 @@ class PaymentRepository {
   /// Set pending
   Future<void> setUserPending(String userId) async {
     try {
+      await ensureSupabaseAuth();
       await _supabase
           .from('users')
           .update({'subscription_status': 'pending'})
@@ -56,6 +60,7 @@ class PaymentRepository {
   /// Cancel payment
   Future<void> cancelPayment(String userId) async {
     try {
+      await ensureSupabaseAuth();
       final data = await _supabase
           .from('payment_receipts')
           .select('receipt_path')

@@ -35,14 +35,12 @@ class QuestionController extends GetxController {
   // passage controller
   var isPassageHidden = false.obs;
   var textScale = 1.0.obs;
-  final Rx<QuestionModel> question = QuestionModel.empty().obs;
-  final RxInt testId = 1.obs;
+  late int testId;
 
   @override
   void onInit() {
-    testId.value = Get.arguments['test_id'] ?? 0;
-    loadTestQuestions(testId.value);
-
+    testId = Get.arguments['test_id'] ?? 0;
+    loadTestQuestions(testId);
     super.onInit();
   }
 
@@ -88,6 +86,34 @@ class QuestionController extends GetxController {
 
       for (final q in data) {
         await _repo.addQn(q);
+        if (q.passageId != null) {
+          final local = await _repo.getLocalPassage(q.passageId!);
+
+          if (local.id == -1 || local.content.isEmpty) {
+            final remote = await _repo.getRemotePassage(q.passageId!);
+
+            if (remote != null) {
+              await _repo.addPassage(remote);
+            }
+          }
+        }
+      }
+      final passageIds = data
+          .where((q) => q.passageId != null)
+          .map((q) => q.passageId!)
+          .toSet()
+          .toList();
+
+      for (final id in passageIds) {
+        final local = await _repo.getLocalPassage(id);
+
+        if (local.id == -1 || local.content.isEmpty) {
+          final remote = await _repo.getRemotePassage(id);
+
+          if (remote != null) {
+            await _repo.addPassage(remote);
+          }
+        }
       }
     } catch (e) {
       if (e is AppFailure) {
@@ -278,7 +304,7 @@ class QuestionController extends GetxController {
 
       isPassageLoading.value = true;
 
-      final passage = await _repo.getPassage(pId);
+      final passage = await _repo.getLocalPassage(pId);
 
       // SAVE TO CACHE
       _passageCache[pId] = passage;

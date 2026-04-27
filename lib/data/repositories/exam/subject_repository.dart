@@ -8,54 +8,64 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SubjectRepository {
   final supabase = Supabase.instance.client;
   final DatabaseService _dbService = DatabaseService.instance;
-
   Future<void> downloadSubject(int subjectId) async {
     try {
       final db = await _dbService.database;
+      final batch = db.batch();
 
-      /// CHAPTERS
+      // 1. Chapters
       final chapters = await supabase
           .from('chapters')
           .select()
           .eq('subject_id', subjectId);
-
-      for (final ch in chapters) {
-        await db.insert(
+      for (var ch in chapters)
+        batch.insert(
           'chapters',
           ch,
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
-      }
 
-      /// TESTS
+      // 2. Tests
       final tests = await supabase
           .from('tests')
           .select()
           .eq('subject_id', subjectId);
+      for (var t in tests)
+        batch.insert('tests', t, conflictAlgorithm: ConflictAlgorithm.replace);
 
-      for (final t in tests) {
-        await db.insert(
-          'tests',
-          t,
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-
-      /// QUESTIONS (IMPORTANT — you were missing this)
-      final questions = await supabase
+      // 3. Questions & Collect Passage IDs
+      final questionsData = await supabase
           .from('questions')
           .select()
           .eq('subject_id', subjectId);
+      final Set<int> passageIds = {};
 
-      for (final q in questions) {
+      for (var q in questionsData) {
         final question = QuestionModel.fromMap(q);
-
-        await db.insert(
+        if (question.passageId != null) passageIds.add(question.passageId!);
+        batch.insert(
           'questions',
           question.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
+
+      // 4. Passages (The missing piece)
+      if (passageIds.isNotEmpty) {
+        final passages = await supabase
+            .from('passages')
+            .select()
+            .inFilter('id', passageIds.toList());
+        for (var p in passages) {
+          batch.insert(
+            'passages',
+            p,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+
+      await batch.commit(noResult: true);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -70,10 +80,16 @@ class SubjectRepository {
     }
   }
 
-  // add singgle subject to local db
   Future<void> addSubject(SubjectMoModel subject) async {
     try {
-      await _dbService.insetData('subjects', subject.toMap());
+      final db = await _dbService.database;
+
+      await db.insert('subjects', {
+        'id': subject.id,
+        'name': subject.name,
+        'is_natural': subject.isNatural ? 1 : 0,
+        'is_common': subject.isCommon ? 1 : 0,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

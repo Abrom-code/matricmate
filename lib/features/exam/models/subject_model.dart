@@ -38,7 +38,7 @@ class SubjectMoModel {
       'name': name,
       'is_natural': isNatural ? 1 : 0,
       'is_common': isCommon ? 1 : 0,
-      'is_downloaded': 0,
+      'is_downloaded': isDownloaded ? 1 : 0,
     };
   }
 }

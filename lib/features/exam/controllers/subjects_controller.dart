@@ -46,23 +46,22 @@ class SubjectsController extends GetxController {
     }
   }
 
-  /// FULL SYNC (login / refresh)
   Future<void> syncSubjects() async {
     try {
       final isConnected = await NetworkManager.instance.hasRealInternet();
       if (!isConnected) return;
 
+      // 1. Fetch from Supabase
       final response = await _repo.getSupabaseSubjects();
-
-      final data = (response as List)
+      final remoteData = (response as List)
           .map((e) => SubjectMoModel.fromJson(e))
           .toList();
 
-      subjects.assignAll(data);
-
-      for (final subject in data) {
+      for (final subject in remoteData) {
         await _repo.addSubject(subject);
       }
+
+      await loadLocalSubjects();
     } catch (e) {
       ToastHelper.error("Sync failed", e.toString());
     }

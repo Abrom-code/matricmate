@@ -3,7 +3,6 @@ import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class QuestionRepository {
@@ -38,22 +37,41 @@ class QuestionRepository {
     }
   }
 
-  Future<void> saveResult(ResultModel result) async {
+  Future<void> addPassage(PassageModel p) async {
     try {
-      final db = await _dbService.database;
-      await db.insert(
-        'results',
-        result.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _dbService.insetData('passages', p.toMap());
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
   }
 
-  Future<PassageModel> getPassage(int pId) async {
+  Future<void> saveResult(ResultModel result) async {
+    try {
+      await _dbService.insetData('results', result.toMap());
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  Future<PassageModel> getLocalPassage(int pId) async {
     try {
       return await _dbService.getPassage(pId);
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  Future<PassageModel?> getRemotePassage(int id) async {
+    try {
+      final res = await supabase
+          .from('passages')
+          .select()
+          .eq('id', id)
+          .maybeSingle();
+
+      if (res == null) return null;
+
+      return PassageModel.fromMap(res);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

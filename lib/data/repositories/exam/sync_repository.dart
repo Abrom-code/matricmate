@@ -8,77 +8,57 @@ class SyncRepository {
   final supabase = Supabase.instance.client;
   final DatabaseService _dbService = DatabaseService.instance;
 
-  Future<void> insertBatch(String table, Map<String, dynamic> value) async {
-    try {
-      final db = await _dbService.database;
-      final batch = db.batch();
+  // Shared batch variable
+  Batch? _activeBatch;
 
-      batch.insert(table, value, conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch (e) {
-      throw AppExceptionHandler.handle(e);
+  Future<Batch> _getBatch() async {
+    if (_activeBatch == null) {
+      final db = await _dbService.database;
+      _activeBatch = db.batch();
     }
+    return _activeBatch!;
   }
 
-  Future<void> updateBatch(SubjectMoModel s, Map<String, dynamic> local) async {
-    try {
-      final db = await _dbService.database;
-      final batch = db.batch();
+  Future<void> insertBatch(String table, Map<String, dynamic> value) async {
+    final batch = await _getBatch();
+    batch.insert(table, value, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
-      batch.update(
-        'subjects',
-        {...s.toMap(), 'is_downloaded': local['is_downloaded']},
-        where: 'id = ?',
-        whereArgs: [s.id],
-      );
+  Future<void> updateBatch(SubjectMoModel s, int localDownloadStatus) async {
+    try {
+      final batch = await _getBatch();
+
+      final data = s.toMap();
+
+      data['is_downloaded'] = localDownloadStatus;
+
+      batch.update('subjects', data, where: 'id = ?', whereArgs: [s.id]);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
   }
 
   Future<void> deleteBatch(Map<String, dynamic> local) async {
-    try {
-      final db = await _dbService.database;
-      final batch = db.batch();
-
-      batch.delete('subjects', where: 'id = ?', whereArgs: [local['id']]);
-    } catch (e) {
-      throw AppExceptionHandler.handle(e);
-    }
+    final batch = await _getBatch();
+    batch.delete('subjects', where: 'id = ?', whereArgs: [local['id']]);
   }
 
   Future<void> commitBatch() async {
-    try {
-      final db = await _dbService.database;
-      final batch = db.batch();
-
-      await batch.commit(noResult: true);
-    } catch (e) {
-      throw AppExceptionHandler.handle(e);
+    if (_activeBatch != null) {
+      await _activeBatch!.commit(noResult: true);
+      _activeBatch = null;
     }
   }
 
+  // API Methods
   Future<List<Map<String, dynamic>>> getBySubjectId(
     String table,
-    List<String> subjectIds,
+    List<String> ids,
   ) async {
-    try {
-      return await supabase
-          .from(table)
-          .select()
-          .inFilter('subject_id', subjectIds);
-    } catch (e) {
-      throw AppExceptionHandler.handle(e);
-    }
+    return await supabase.from(table).select().inFilter('subject_id', ids);
   }
 
   Future<List<Map<String, dynamic>>> getPassages(List<int> passageIds) async {
-    try {
-      return await supabase
-          .from('passages')
-          .select()
-          .inFilter('id', passageIds);
-    } catch (e) {
-      throw AppExceptionHandler.handle(e);
-    }
+    return await supabase.from('passages').select().inFilter('id', passageIds);
   }
 }

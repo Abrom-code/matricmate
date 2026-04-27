@@ -39,7 +39,7 @@ class ToastHelper {
     Get.snackbar(
       title,
       message,
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
       backgroundColor: backgroundColor.withValues(alpha: 0.9),
       colorText: Colors.white,
       margin: const EdgeInsets.all(12),

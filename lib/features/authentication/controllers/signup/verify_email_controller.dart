@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/success_screen/success_screen.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class VerifyEmailController extends GetxController {
@@ -28,7 +29,11 @@ class VerifyEmailController extends GetxController {
       await _authRepo.sendEmailVerification();
       ToastHelper.success("Email sent", "Please check your inbox!");
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     }
   }
 
@@ -51,7 +56,11 @@ class VerifyEmailController extends GetxController {
           );
         }
       } catch (e) {
-        ToastHelper.error("Error", e.toString());
+        if (e is AppFailure) {
+          ToastHelper.error(e.title, e.message);
+        } else {
+          ToastHelper.error("Unexpected Error", e.toString());
+        }
       }
     });
   }

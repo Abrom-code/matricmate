@@ -78,4 +78,12 @@ class UserRepository {
       throw AppExceptionHandler.handle(e);
     }
   }
+
+  Future<void> addUser(UserModel user) async {
+    try {
+      await databaseService.insetData('subjects', user.toMap());
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
 }

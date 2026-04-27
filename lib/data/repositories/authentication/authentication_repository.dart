@@ -85,13 +85,21 @@ class AuthenticationRepository {
   }
 
   Future<void> deleteFirebaseAccount() async {
-    final user = _auth.currentUser;
-    if (user == null) throw 'No authenticated user';
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw 'No authenticated user';
 
-    await user.delete();
+      await user.delete();
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
   }
 
   Future<void> reloadUser() async {
-    await _auth.currentUser?.reload();
+    try {
+      await _auth.currentUser?.reload();
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
   }
 }

@@ -3,15 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
-import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/navigation_menu.dart';
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:sqflite/sqflite.dart';
 
 class UserController extends GetxController {
   static UserController get instance => Get.find();
@@ -21,7 +20,6 @@ class UserController extends GetxController {
 
   final UserRepository _userRepository = Get.find<UserRepository>();
 
-  final DatabaseService _databaseService = DatabaseService.instance;
 
   Rx<UserModel> user = UserModel.empty().obs;
 
@@ -40,6 +38,28 @@ class UserController extends GetxController {
     });
   }
 
+  Future<void> logOut() async {
+    try {
+      Get.back();
+      AppFullScreenLoader.openLoadingDialog("Logging out...");
+
+      await _authRepo.logout();
+
+      user.value = UserModel.empty();
+
+      AppFullScreenLoader.stopLoading();
+
+      Get.offAll(() => const LoginScreen());
+    } catch (e) {
+      AppFullScreenLoader.stopLoading();
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
+    }
+  }
+
   Future<void> fetchUserRecord() async {
     try {
       userFetching.value = true;
@@ -50,12 +70,14 @@ class UserController extends GetxController {
 
       user.value = freshUser;
 
-      final db = await _databaseService.database;
-      await db.insert(
-        'user',
-        freshUser.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _userRepository.addUser(freshUser);
+    } catch (e) {
+      AppFullScreenLoader.stopLoading();
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
     } finally {
       userFetching.value = false;
     }
@@ -119,14 +141,28 @@ class UserController extends GetxController {
           Get.offAll(() => const LoginScreen());
         } catch (e) {
           AppFullScreenLoader.stopLoading();
-          ToastHelper.error("Error", e.toString());
+          AppFullScreenLoader.stopLoading();
+          if (e is AppFailure) {
+            ToastHelper.error(e.title, e.message);
+          } else {
+            ToastHelper.error("Unexpected Error", e.toString());
+          }
         }
       },
     );
   }
 
   Future<void> deleteUserAccount() async {
-    showDeleteDialog();
+    try {
+      showDeleteDialog();
+    } catch (e) {
+      AppFullScreenLoader.stopLoading();
+      if (e is AppFailure) {
+        ToastHelper.error(e.title, e.message);
+      } else {
+        ToastHelper.error("Unexpected Error", e.toString());
+      }
+    }
   }
 
   void showDeleteDialog() {
@@ -158,7 +194,7 @@ class UserController extends GetxController {
                 "Your data has been permanently removed.",
               );
             } catch (e) {
-              ToastHelper.error("Error", e.toString());
+              throw e;
             } finally {
               isDeleting.value = false;
             }

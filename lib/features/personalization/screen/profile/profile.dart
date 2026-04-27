@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
-import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/personalization/controller/profile_controller.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/account_settings.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/analytics_container.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/profile_section.dart';
@@ -17,8 +17,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthenticationRepository _authenticationRepository =
-        AuthenticationRepository();
+    final _userController = Get.find<UserController>();
     final controller = Get.put(ProfileController());
     final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
@@ -64,7 +63,7 @@ class ProfileScreen extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () => AppDialogBoxes.showOkCancelDialog(
                     context: context,
-                    onPressed: () => _authenticationRepository.logout(),
+                    onPressed: () => _userController.logOut(),
                   ),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.red),

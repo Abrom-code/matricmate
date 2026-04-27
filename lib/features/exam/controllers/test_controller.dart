@@ -4,7 +4,6 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class TestController extends GetxController {
   static TestController get instance => Get.find();

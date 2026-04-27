@@ -1,3 +1,4 @@
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
@@ -133,25 +134,36 @@ class SyncingController extends GetxController {
       'questions',
       subjectIds,
     );
-
     final remote = (remoteData as List)
         .map((e) => QuestionModel.fromJson(e))
         .toList();
 
-    final Set<int> passageIds = {};
+    final List<String> imageUrls = [];
 
     for (final q in remote) {
       _syncRepository.insertBatch('questions', q.toMap());
 
-      if (q.passageId != null) {
-        passageIds.add(q.passageId!);
+      if (q.imageUrl != null && q.imageUrl!.isNotEmpty) {
+        imageUrls.add(q.imageUrl!);
       }
     }
 
     await _syncRepository.commitBatch();
 
-    if (passageIds.isNotEmpty) {
-      await syncPassages(passageIds.toList());
+    if (imageUrls.isNotEmpty) {
+      await _downloadImages(imageUrls);
+    }
+  }
+
+  Future<void> _downloadImages(List<String> urls) async {
+    final cache = DefaultCacheManager();
+
+    for (final url in urls) {
+      try {
+        await cache.downloadFile(url);
+      } catch (e) {
+        throw e;
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/normal_questions_section.dart';
@@ -8,6 +9,7 @@ import 'package:matricmate/features/exam/screens/question/widgets/passage_contai
 import 'package:matricmate/features/exam/screens/question/widgets/passage_layout_ctrl.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/logging/logging.dart';
 
 class QuestionScreen extends GetView<QuestionController> {
   const QuestionScreen({super.key});
@@ -35,9 +37,7 @@ class QuestionScreen extends GetView<QuestionController> {
       },
       child: Obx(() {
         if (controller.isLoading.value || controller.isPassageLoading.value) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return AppCircularLoading();
         }
         if (controller.blocks.isEmpty) {
           return const Scaffold(
@@ -48,7 +48,6 @@ class QuestionScreen extends GetView<QuestionController> {
         final currentQ =
             controller.testQuestions[controller.currentIndex.value];
 
-        final block = controller.blocks[controller.currentBlockIndex.value];
         return Scaffold(
           appBar: Appbar(
             leadingIcon: Icons.close,
@@ -96,7 +95,7 @@ class QuestionScreen extends GetView<QuestionController> {
               children: [
                 /// PASSAGE
                 if (currentQ.passageId != null) ...[
-                  PassageContainer(controller: controller, block: block),
+                  PassageContainer(controller: controller),
                 ],
 
                 ///  ONLY ONE QUESTION

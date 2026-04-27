@@ -1,30 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart'
-    show Obx;
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
-import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PassageContainer extends StatelessWidget {
-  const PassageContainer({
-    super.key,
-    required this.controller,
-    required this.block,
-  });
+  const PassageContainer({super.key, required this.controller});
 
   final QuestionController controller;
-  final QuestionBlock block;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
 
     return Obx(() {
+      final block = controller.blocks[controller.currentBlockIndex.value];
+
       return AnimatedContainer(
         duration: const Duration(milliseconds: 300),
 
-        // keeps your expand/collapse behavior
         constraints: BoxConstraints(
           maxHeight: controller.isFullScreenPassage.value
               ? MediaQuery.of(context).size.height * 0.8
@@ -47,14 +41,12 @@ class PassageContainer extends StatelessWidget {
 
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-
             child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
-              padding: EdgeInsets.zero,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 10),
+
                   Text(
                     block.passage?.title ?? "",
                     style: TextStyle(
@@ -65,15 +57,18 @@ class PassageContainer extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  SelectableText(
-                    block.passage?.content ?? "",
-                    textAlign: TextAlign.justify,
-                    style: TextStyle(
-                      fontSize: 15 * controller.textScale.value,
-                      height: 1.7,
-                      color: dark ? AppColors.grey : Colors.black87,
+                  Center(
+                    child: SelectableText(
+                      block.passage?.content ?? "Loading...",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15 * controller.textScale.value,
+                        height: 1.7,
+                        color: dark ? AppColors.grey : Colors.black87,
+                      ),
                     ),
                   ),
+
                   const SizedBox(height: 10),
                 ],
               ),

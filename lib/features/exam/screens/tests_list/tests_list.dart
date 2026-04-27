@@ -96,8 +96,11 @@ class TestListScreen extends GetView<TestController> {
                         "Want to take a test?",
                         "You will be redirected to questions section.",
                         () {
-                          Get.toNamed(Routes.questions, arguments: test.id);
-                          Get.delete<QuestionController>();
+                          Get.back();
+                          Get.toNamed(
+                            Routes.questions,
+                            arguments: {'test_id': test.id},
+                          );
                         },
                       );
                     },

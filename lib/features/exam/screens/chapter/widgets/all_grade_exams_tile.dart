@@ -72,7 +72,10 @@ class AllGradeExamsTile extends StatelessWidget {
                     "Want to take a test?",
                     "You will be redirected to questions section.",
                     () {
-                      Get.toNamed(Routes.questions, arguments: test.id);
+                      Get.toNamed(
+                        Routes.questions,
+                        arguments: {'test_id': test.id},
+                      );
                       Get.delete<QuestionController>();
                     },
                   );

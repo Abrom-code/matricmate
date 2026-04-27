@@ -20,7 +20,6 @@ class UserController extends GetxController {
 
   final UserRepository _userRepository = Get.find<UserRepository>();
 
-
   Rx<UserModel> user = UserModel.empty().obs;
 
   final RxBool isDeleting = false.obs;
@@ -30,12 +29,26 @@ class UserController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // only react to auth changes
-    _authRepo.userChanges.listen((firebaseUser) {
+    _authRepo.userChanges.listen((firebaseUser) async {
       if (firebaseUser != null) {
-        fetchUserRecord();
+        // ONLY update local state, NOT network fetch
+        await loadLocalUser();
+      } else {
+        user.value = UserModel.empty();
       }
     });
+  }
+
+  Future<void> loadLocalUser() async {
+    try {
+      final local = await _userRepository.getLocalUser();
+
+      if (local != null) {
+        user.value = local;
+      }
+    } catch (e) {
+      ToastHelper.error("Error", "Failed to load local user");
+    }
   }
 
   Future<void> logOut() async {
@@ -70,14 +83,7 @@ class UserController extends GetxController {
 
       user.value = freshUser;
 
-      await _userRepository.addUser(freshUser);
-    } catch (e) {
-      AppFullScreenLoader.stopLoading();
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      await _userRepository.updateLocalUser(freshUser); 
     } finally {
       userFetching.value = false;
     }

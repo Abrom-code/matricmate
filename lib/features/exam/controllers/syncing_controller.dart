@@ -88,7 +88,7 @@ class SyncingController extends GetxController {
       }
 
       await _syncRepository.commitBatch();
-      SubjectsController.instance.loadSubjects();
+      SubjectsController.instance.syncSubjects();
     } catch (e) {
       throw e;
     }

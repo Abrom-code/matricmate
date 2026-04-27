@@ -12,6 +12,16 @@ class UserRepository {
   final DatabaseService databaseService = DatabaseService.instance;
   String? get _uid => _auth.currentUser?.uid;
 
+  Future<UserModel?> getLocalUser() async {
+    final db = await databaseService.database;
+
+    final result = await db.query('user', limit: 1);
+
+    if (result.isEmpty) return null;
+
+    return UserModel.fromMap(result.first);
+  }
+
   Future<void> saveUserRecord(UserModel user) async {
     try {
       await _supabase.from('users').upsert(user.toJson(), onConflict: 'id');
@@ -79,7 +89,7 @@ class UserRepository {
     }
   }
 
-  Future<void> addUser(UserModel user) async {
+  Future<void> updateLocalUser(UserModel user) async {
     try {
       await databaseService.insetData('user', user.toMap());
     } catch (e) {

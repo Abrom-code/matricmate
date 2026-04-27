@@ -6,15 +6,16 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
-import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
+import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class AuthenticationController extends GetxController {
   static AuthenticationController get instance => Get.find();
@@ -38,21 +39,29 @@ class AuthenticationController extends GetxController {
   Future<void> screenRedirect() async {
     final user = authRepo.currentUser;
 
-    if (user != null) {
-      if (user.emailVerified) {
-        final syncController = Get.put(SyncingController());
-
-        AppFullScreenLoader.openLoadingDialog("Loading...");
-        await syncController.syncAll();
-        AppFullScreenLoader.stopLoading();
-
-        Get.delete<SyncingController>();
-        Get.offAll(() => const NavigationMenu());
-      } else {
-        Get.offAll(() => VerifyEmailScreen(email: user.email));
-      }
-    } else {
+    if (user == null) {
       Get.offAll(() => const LoginScreen());
+      return;
+    }
+
+    if (!user.emailVerified) {
+      Get.offAll(() => VerifyEmailScreen(email: user.email));
+      return;
+    }
+
+    await UserController.instance.loadLocalUser();
+    await SubjectsController.instance.loadLocalSubjects();
+
+    Get.offAll(() => const NavigationMenu());
+
+    final hasInternet = await NetworkManager.instance.hasRealInternet();
+
+    if (hasInternet) {
+      Future(() async {
+        try {
+          await UserController.instance.fetchUserRecord();
+        } catch (_) {}
+      });
     }
   }
 

@@ -29,7 +29,6 @@ Future<void> main() async {
     url: ApiConstants.supabaseUrl,
     anonKey: ApiConstants.supabaseApiKey,
   );
-  await Supabase.instance.client.auth.signInAnonymously();
 
   runApp(const App());
 }

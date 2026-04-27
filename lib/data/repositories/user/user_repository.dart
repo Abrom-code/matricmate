@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/ensure_supabase_auth.dart';
+import 'package:matricmate/data/services/ensure_supabase_auth.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:sqflite/sql.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,6 +27,7 @@ class UserRepository {
   Future<void> saveUserRecord(UserModel user) async {
     try {
       await ensureSupabaseAuth();
+      await ensureSupabaseAuth();
       await _supabase.from('users').upsert(user.toJson(), onConflict: 'id');
 
       final db = await databaseService.database;
@@ -40,6 +42,7 @@ class UserRepository {
   }
 
   Future<UserModel?> fetchCurrentUserDetails() async {
+    await ensureSupabaseAuth();
     await ensureSupabaseAuth();
     final uid = _uid;
     if (uid == null) return null;
@@ -74,6 +77,7 @@ class UserRepository {
 
   Future<void> deleteUserRecord(String userId) async {
     try {
+      await ensureSupabaseAuth();
       await ensureSupabaseAuth();
       await _supabase.from('users').delete().eq('id', userId);
       await _supabase.from('user_sessions').delete().eq('firebase_uid', userId);

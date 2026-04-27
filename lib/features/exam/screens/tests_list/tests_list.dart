@@ -34,7 +34,10 @@ class TestListScreen extends GetView<TestController> {
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Obx(() {
-          final tests = controller.getTestsByGradeAndChapter(grade, chapterId);
+          final tests = controller.getTestsByGradeAndChapter(
+            grade.value,
+            chapterId.value,
+          );
 
           if (tests.isEmpty) {
             return const Center(child: Text("No Tests Found"));

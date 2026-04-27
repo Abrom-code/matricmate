@@ -32,11 +32,6 @@ class AppRoutes {
       binding: ChapterBinding(),
     ),
     GetPage(
-      name: Routes.chapter,
-      page: () => ChapterScreen(),
-      binding: ChapterBinding(),
-    ),
-    GetPage(
       name: Routes.gradeTests,
       page: () => GradeTestsPage(),
       binding: TestBinding(),

@@ -10,12 +10,13 @@ import 'package:matricmate/features/personalization/controller/user_controller.d
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class AllGradeExamsTile extends GetView<TestController> {
+class AllGradeExamsTile extends StatelessWidget {
   const AllGradeExamsTile({super.key, required this.subjectId});
   final int subjectId;
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<TestController>();
     return Obx(() {
       final tests = controller.allGradeTests;
 

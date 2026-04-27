@@ -19,9 +19,7 @@ class GradeTestsPage extends GetView<TestController> {
   Widget build(BuildContext context) {
     final grade = controller.grade;
     final subject = controller.title;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadGradeTests(grade);
-    });
+
 
     return Scaffold(
       appBar: Appbar(

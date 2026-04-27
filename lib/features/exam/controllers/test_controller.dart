@@ -15,22 +15,26 @@ class TestController extends GetxController {
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
   final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
 
-  late String title;
-  late int subjectId;
-  late int grade;
-  late int chapterId;
-  late String chapter;
-  late int chapterNumber;
+  final RxString title = ''.obs;
+  final RxInt subjectId = 0.obs;
+  final RxInt grade = 9.obs;
+  final RxInt chapterId = 0.obs;
+  final RxString chapter = ''.obs;
+  final RxInt chapterNumber = 0.obs;
 
   @override
   void onInit() {
-    title = Get.arguments['subject'] ?? 'Default Title';
-    subjectId = Get.arguments['subject_id'] ?? 0;
-    subjectId = Get.arguments['chapter'] ?? "Default Title";
-    subjectId = Get.arguments['chapter_id'] ?? 0;
-    subjectId = Get.arguments['chapter_umber'] ?? 0;
+    final args = Get.arguments ?? {};
 
-    loadAllChapterTests(subjectId);
+    title.value = args['subject'] ?? '';
+    subjectId.value = args['subject_id'] ?? 0;
+    chapter.value = args['chapter'] ?? '';
+    chapterId.value = args['chapter_id'] ?? 0;
+    chapterNumber.value = args['chapter_number'] ?? 0;
+    grade.value = args['grade'] ?? 9;
+
+    loadGradeTests(grade.value);
+    loadAllChapterTests(subjectId.value);
 
     super.onInit();
   }

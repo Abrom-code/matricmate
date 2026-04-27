@@ -121,6 +121,7 @@ class ChapterScreen extends GetView<ChapterController> {
                                       'subject': title,
                                       'chapter': chapter.title,
                                       'chapter_id': chapter.id,
+                                      'chapter_number': chapter.chapterNumber,
                                     },
                                   );
                                 } else {

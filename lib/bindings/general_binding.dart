@@ -4,7 +4,6 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
-import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -27,6 +26,5 @@ class GeneralBinding extends Bindings {
 
     Get.put(UserController(), permanent: true);
     Get.put(SubjectsController(), permanent: true);
-    Get.put(BookmarkController(), permanent: true);
   }
 }

@@ -1,4 +1,5 @@
 import 'package:get/get_navigation/src/routes/get_route.dart';
+import 'package:matricmate/bindings/bookmark_binding.dart';
 import 'package:matricmate/bindings/chapter_binding.dart';
 import 'package:matricmate/bindings/question_binding.dart';
 import 'package:matricmate/bindings/result_binding.dart';
@@ -25,7 +26,11 @@ class AppRoutes {
     // main
     GetPage(name: Routes.navigationMenu, page: () => const NavigationMenu()),
     GetPage(name: Routes.home, page: () => const SubjectsScreen()),
-    GetPage(name: Routes.bookmark, page: () => const BookmarkScreen()),
+    GetPage(
+      name: Routes.bookmark,
+      page: () => const BookmarkScreen(),
+      binding: BookmarkBinding(),
+    ),
     GetPage(
       name: Routes.chapter,
       page: () => ChapterScreen(),

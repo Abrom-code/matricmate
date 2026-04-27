@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/ensure_supabase_auth.dart';
-import 'package:matricmate/data/services/ensure_supabase_auth.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:sqflite/sql.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

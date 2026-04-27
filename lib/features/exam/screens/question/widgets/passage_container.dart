@@ -47,15 +47,15 @@ class PassageContainer extends StatelessWidget {
                 children: [
                   const SizedBox(height: 10),
 
-                  Text(
-                    block.passage?.title ?? "",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17 * controller.textScale.value,
+                  if (block.passage?.title != null)
+                    Text(
+                      block.passage?.title ?? "",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17 * controller.textScale.value,
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 10),
+                  if (block.passage?.title != null) const SizedBox(height: 10),
 
                   Center(
                     child: SelectableText(

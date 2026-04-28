@@ -27,6 +27,7 @@ class UserController extends GetxController {
 
   final RxBool isDeleting = false.obs;
   final userFetching = false.obs;
+  final isPasswordHidden = true.obs;
 
   @override
   void onInit() {
@@ -173,7 +174,23 @@ class UserController extends GetxController {
           children: [
             const Text("Enter your password to confirm"),
             const SizedBox(height: 10),
-            TextField(controller: passwordController, obscureText: true),
+            Obx(
+              () => TextField(
+                controller: passwordController,
+                obscureText: isPasswordHidden.value,
+                decoration: InputDecoration(
+                  suffixIcon: IconButton(
+                    onPressed: () =>
+                        isPasswordHidden.value = !isPasswordHidden.value,
+                    icon: Icon(
+                      !isPasswordHidden.value
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

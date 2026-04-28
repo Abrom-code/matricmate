@@ -1,7 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
+import 'package:matricmate/data/services/device_service.dart';
+import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
@@ -55,6 +58,8 @@ class SignupController extends GetxController {
             password.text.trim(),
           );
 
+      final uid = userCredential.user!.uid;
+
       //  SAVE USER DATA
       final newUser = UserModel(
         id: userCredential.user!.uid,
@@ -67,6 +72,14 @@ class SignupController extends GetxController {
       final userRepository = Get.find<UserRepository>();
       await userRepository.saveUserRecord(newUser);
 
+      final deviceId = await DeviceService.getDeviceId();
+
+      final isAllowed = await SessionService().validateSession(uid, deviceId);
+
+      if (!isAllowed) {
+        await FirebaseAuth.instance.signOut();
+        return;
+      }
       Get.offAllNamed(
         Routes.verifyEmail,
         arguments: {'email': email.text.trim()},

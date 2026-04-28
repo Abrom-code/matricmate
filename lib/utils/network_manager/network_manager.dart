@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 
-import 'package:matricmate/utils/logging/logging.dart';
-
 class NetworkManager extends GetxController {
   static NetworkManager get instance => Get.find();
 
@@ -26,7 +24,6 @@ class NetworkManager extends GetxController {
       // ignore: unrelated_type_equality_checks
       return result != ConnectivityResult.none;
     } catch (e) {
-      AppLoggerHelper.error("Connectivity check failed", e);
       return false;
     }
   }

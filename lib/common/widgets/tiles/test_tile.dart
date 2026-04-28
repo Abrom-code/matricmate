@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class TestTile extends StatelessWidget {
@@ -43,12 +42,11 @@ class TestTile extends StatelessWidget {
               context,
             ).textTheme.titleSmall!.apply(color: AppColors.primary),
           ),
-          subtitle: LinearProgressBar(
-            currentStep: currentStep,
-            maxSteps: maxStep,
-            borderRadius: BorderRadiusGeometry.circular(6),
-            progressColor: AppColors.primary,
+          subtitle: LinearProgressIndicator(
+            value: currentStep / maxStep,
             backgroundColor: dark ? AppColors.darkGrey : AppColors.grey,
+            color: AppColors.primary,
+            minHeight: 6,
           ),
           visualDensity: VisualDensity(vertical: 2),
 

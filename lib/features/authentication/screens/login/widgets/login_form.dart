@@ -6,13 +6,11 @@ import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
-class LoginForm extends StatelessWidget {
+class LoginForm extends GetView<LoginController> {
   const LoginForm({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(LoginController());
-
     return Form(
       key: controller.loginFormkey,
       child: Column(
@@ -67,8 +65,10 @@ class LoginForm extends StatelessWidget {
             () => SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => controller.emailAndPasswordLogin(),
-                child: controller.isLoaging.value
+                onPressed: controller.isLogging.value
+                    ? null
+                    : () => controller.emailAndPasswordLogin(),
+                child: controller.isLogging.value
                     ? SizedBox(
                         height: 18,
                         width: 18,

@@ -8,6 +8,7 @@ import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -23,7 +24,7 @@ class LoginController extends GetxController {
   final hidePassword = true.obs;
   final email = TextEditingController();
   final password = TextEditingController();
-  final RxBool isLoaging = false.obs;
+  final RxBool isLogging = false.obs;
 
   GlobalKey<FormState> loginFormkey = GlobalKey<FormState>();
 
@@ -46,9 +47,6 @@ class LoginController extends GetxController {
         _localStroage.remove("userLoginCredentials");
       }
 
-      // loading
-      isLoaging.value = true;
-
       // Network check
       final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
@@ -58,6 +56,8 @@ class LoginController extends GetxController {
         );
         return;
       }
+      // loading
+      isLogging.value = true;
 
       await authRepo.loginUsingEmailAndPassword(
         email.value.text.trim(),
@@ -75,7 +75,7 @@ class LoginController extends GetxController {
 
       if (!isAllowed) {
         await FirebaseAuth.instance.signOut();
-        Get.off(() => LoginScreen());
+        Get.offAllNamed(Routes.signIn);
         return;
       }
 
@@ -88,7 +88,7 @@ class LoginController extends GetxController {
         ToastHelper.error("Unexpected Error", e.toString());
       }
     } finally {
-      isLoaging.value = false;
+      isLogging.value = false;
     }
   }
 

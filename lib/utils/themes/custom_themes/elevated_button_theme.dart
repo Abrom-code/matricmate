@@ -10,8 +10,8 @@ class AppElevatedButtonTheme {
       elevation: 0,
       foregroundColor: Colors.white,
       backgroundColor: Colors.teal,
-      disabledForegroundColor: Colors.grey,
-      disabledBackgroundColor: Colors.grey,
+      disabledForegroundColor: Colors.teal.shade300,
+      disabledBackgroundColor: Colors.teal.shade100,
       side: const BorderSide(color: Colors.teal),
       padding: const EdgeInsets.symmetric(vertical: 18),
       textStyle: const TextStyle(
@@ -21,7 +21,7 @@ class AppElevatedButtonTheme {
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
-  ); 
+  );
 
   /// --- Dark Theme
   static final darkElevatedButtonTheme = ElevatedButtonThemeData(
@@ -29,8 +29,8 @@ class AppElevatedButtonTheme {
       elevation: 0,
       foregroundColor: Colors.white,
       backgroundColor: Colors.teal,
-      disabledForegroundColor: Colors.grey,
-      disabledBackgroundColor: Colors.grey,
+      disabledForegroundColor: Colors.teal.shade300,
+      disabledBackgroundColor: Colors.teal.shade100,
       side: const BorderSide(color: Colors.teal),
       padding: const EdgeInsets.symmetric(vertical: 18),
       textStyle: const TextStyle(

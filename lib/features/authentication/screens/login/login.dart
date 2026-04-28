@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/features/authentication/screens/login/widgets/login_form.dart';
 import 'package:matricmate/features/authentication/screens/login/widgets/login_header.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends GetView<LoginController> {
   const LoginScreen({super.key});
 
   @override

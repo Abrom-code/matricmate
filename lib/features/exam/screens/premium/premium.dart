@@ -76,9 +76,6 @@ class PremiumScreen extends StatelessWidget {
                     onTap: () => controller.selectedMethod.value = method,
                   );
                 }).toList(),
-
-                const SizedBox(height: 50),
-                TelegramChatButton(),
               ],
             );
           }),

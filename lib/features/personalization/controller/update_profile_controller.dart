@@ -51,10 +51,10 @@ class UpdateProfileController extends GetxController {
         stream: selectedStream.value,
       );
 
-      // 1. update remote + local DB
+      //  update remote + local DB
       await _userRepository.updateFullUserRecord(updatedUser);
 
-      // 2. single source refresh (correct way)
+      //  single source refresh
       await _userController.fetchUserRecord();
 
       Get.back();

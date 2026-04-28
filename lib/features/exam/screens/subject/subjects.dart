@@ -23,7 +23,7 @@ class SubjectsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subjectController = SubjectsController.instance;
-    final syncController = Get.put(SyncingController());
+    final syncController = Get.find<SyncingController>();
 
     return Scaffold(
       key: subjectController.scaffoldKey,
@@ -38,7 +38,7 @@ class SubjectsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: AppSizes.defaultSpace / 2),
             child: IconButton(
-              onPressed: () => syncController.syncAll(),
+              onPressed: () => subjectController.syncAll(),
               icon: Icon(
                 Icons.refresh,
                 size: AppSizes.iconMd * 1.2,

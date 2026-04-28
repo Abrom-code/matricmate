@@ -51,7 +51,6 @@ class SyncingController extends GetxController {
       }
 
       await SubjectsController.instance.syncSubjects();
-      ToastHelper.success("Success", "All data synced successfully");
     } catch (e) {
       if (e is AppFailure) {
         ToastHelper.error(e.title, e.message);

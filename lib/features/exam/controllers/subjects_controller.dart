@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -44,6 +45,11 @@ class SubjectsController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> syncAll() async {
+    await SyncingController.instance.syncAll();
+    ToastHelper.success("Success", "All subjects synced successfully!");
   }
 
   Future<void> syncSubjects() async {

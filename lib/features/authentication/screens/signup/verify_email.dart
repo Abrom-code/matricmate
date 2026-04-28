@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/controllers/signup/verify_email_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
 class VerifyEmailScreen extends GetView<VerifyEmailController> {
@@ -51,14 +53,19 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
 
               const SizedBox(height: AppSizes.spaceBtwItems),
 
-              Obx(
-                () => SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: controller.isVerified.value
+              SizedBox(
+                width: double.infinity,
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed: !controller.isChecking.value
                         ? controller.checkEmailVerification
                         : null,
-                    child: const Text("Continue"),
+                    child: controller.isChecking.value
+                        ? AppCircularBottonLoading()
+                        : Text(
+                            "I've Verified",
+                            style: TextStyle(color: AppColors.white),
+                          ),
                   ),
                 ),
               ),

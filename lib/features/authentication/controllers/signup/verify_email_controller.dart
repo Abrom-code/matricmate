@@ -16,7 +16,7 @@ class VerifyEmailController extends GetxController {
   final AuthenticationRepository _authRepo =
       Get.find<AuthenticationRepository>();
 
-  final isVerified = false.obs;
+  final isChecking = false.obs;
 
   Timer? _timer;
 
@@ -28,7 +28,6 @@ class VerifyEmailController extends GetxController {
     super.onInit();
     email.value = Get.arguments['email'] ?? '';
     sendEmailVerification();
-    startEmailVerificationWatcher();
   }
 
   Future<void> sendEmailVerification() async {
@@ -40,42 +39,11 @@ class VerifyEmailController extends GetxController {
     }
   }
 
-  void startEmailVerificationWatcher() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      try {
-        await _authRepo.reloadUser();
-
-        final user = _authRepo.currentUser;
-
-        if (user?.emailVerified ?? false) {
-          timer.cancel();
-
-          // prevent double sync
-          if (!_hasSynced) {
-            _hasSynced = true;
-            await SyncingController.instance.syncAll();
-          }
-
-          Get.offAllNamed(
-            Routes.success,
-
-            arguments: {
-              'title': "Email Verified",
-              'sub_title': "Your account is now active.",
-            },
-          );
-        }
-      } catch (e) {
-        AppExceptionHandler.handleResponse(e);
-      }
-    });
-  }
-
-  //  Manual button check
-  void checkEmailVerification() async {
+  Future<void> checkEmailVerification() async {
     try {
-      await _authRepo.reloadUser();
+      isChecking.value = true;
 
+      await _authRepo.reloadUser();
       final user = _authRepo.currentUser;
 
       if (user != null && user.emailVerified) {
@@ -83,10 +51,9 @@ class VerifyEmailController extends GetxController {
           _hasSynced = true;
           await SyncingController.instance.syncAll();
         }
-        isVerified.value = true;
+
         Get.offAllNamed(
           Routes.success,
-
           arguments: {
             'title': "Account Created",
             'sub_title': "Account created successfully",
@@ -98,6 +65,8 @@ class VerifyEmailController extends GetxController {
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
+    } finally {
+      isChecking.value = false;
     }
   }
 

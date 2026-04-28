@@ -48,7 +48,7 @@ class SuccessScreen extends GetView<SuccessController> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: controller.onPressed.value,
+                      onPressed: controller.onPressed,
                       child: Text(controller.buttonText.value),
                     ),
                   ),
@@ -63,19 +63,24 @@ class SuccessScreen extends GetView<SuccessController> {
 }
 
 class SuccessController extends GetxController {
-  static SuccessController get instance => Get.find();
-
   final title = "".obs;
   final subTitle = "".obs;
-  final onPressed = () {}.obs;
   final buttonText = "Continue".obs;
+  final nextRoute = "".obs;
 
   @override
   void onInit() {
-    title.value = Get.arguments['title'];
-    subTitle.value = Get.arguments['sub_title'];
-    onPressed.value = Get.arguments['on_pressed'];
-    buttonText.value = Get.arguments['button_text'];
+    final args = Get.arguments;
+
+    title.value = args['title'] ?? '';
+    subTitle.value = args['sub_title'] ?? '';
+    buttonText.value = args['button_text'] ?? 'Continue';
+    nextRoute.value = args['next_route'] ?? '';
+
     super.onInit();
+  }
+
+  void onPressed() {
+    Get.offAllNamed(nextRoute.value);
   }
 }

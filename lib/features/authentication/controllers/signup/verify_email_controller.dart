@@ -16,7 +16,7 @@ class VerifyEmailController extends GetxController {
   final AuthenticationRepository _authRepo =
       Get.find<AuthenticationRepository>();
 
-  final isLoading = false.obs;
+  final isVerified = false.obs;
 
   Timer? _timer;
 
@@ -41,10 +41,8 @@ class VerifyEmailController extends GetxController {
   }
 
   void startEmailVerificationWatcher() {
-    _timer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       try {
-        isLoading.value = true;
-
         await _authRepo.reloadUser();
 
         final user = _authRepo.currentUser;
@@ -58,20 +56,17 @@ class VerifyEmailController extends GetxController {
             await SyncingController.instance.syncAll();
           }
 
-          isLoading.value = false;
-
           Get.offAllNamed(
             Routes.success,
 
             arguments: {
               'title': "Email Verified",
               'sub_title': "Your account is now active.",
-              'on_pressed': () => _authController.screenRedirect(),
+              'next_route': Routes.navigationMenu,
             },
           );
         }
       } catch (e) {
-        isLoading.value = false;
         _handleError(e);
       }
     });
@@ -80,8 +75,6 @@ class VerifyEmailController extends GetxController {
   //  Manual button check
   void checkEmailVerification() async {
     try {
-      isLoading.value = true;
-
       await _authRepo.reloadUser();
 
       final user = _authRepo.currentUser;
@@ -91,7 +84,7 @@ class VerifyEmailController extends GetxController {
           _hasSynced = true;
           await SyncingController.instance.syncAll();
         }
-
+        isVerified.value = true;
         Get.offAllNamed(
           Routes.success,
 
@@ -106,8 +99,6 @@ class VerifyEmailController extends GetxController {
       }
     } catch (e) {
       _handleError(e);
-    } finally {
-      isLoading.value = false;
     }
   }
 

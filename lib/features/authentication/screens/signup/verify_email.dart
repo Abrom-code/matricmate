@@ -51,14 +51,17 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
 
               const SizedBox(height: AppSizes.spaceBtwItems),
 
-              Obx(() {
-                return controller.isLoading.value
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: controller.checkEmailVerification,
-                        child: const Text("Continue"),
-                      );
-              }),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: controller.isVerified.value
+                        ? controller.checkEmailVerification
+                        : null,
+                    child: const Text("Continue"),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: AppSizes.spaceBtwItems),
 
@@ -69,14 +72,6 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
                   child: const Text(AppTextStrings.resendEmail),
                 ),
               ),
-
-              const SizedBox(height: AppSizes.spaceBtwItems),
-
-              Obx(() {
-                return controller.isLoading.value
-                    ? const CircularProgressIndicator()
-                    : const SizedBox();
-              }),
             ],
           ),
         ),

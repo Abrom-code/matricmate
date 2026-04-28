@@ -49,6 +49,10 @@ class ToastHelper {
       isDismissible: true,
       forwardAnimationCurve: Curves.easeOutBack,
       animationDuration: const Duration(milliseconds: 300),
+      mainButton: TextButton(
+        onPressed: () => Get.back(),
+        child: const Icon(Icons.close, color: Colors.white, size: 20),
+      ),
     );
   }
 }

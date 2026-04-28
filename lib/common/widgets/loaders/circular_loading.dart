@@ -27,10 +27,6 @@ class AppCircularBottonLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 18,
-      width: 18,
-      child: CircularProgressIndicator(color: AppColors.accent),
-    );
+    return SizedBox(height: 18, width: 18, child: CircularProgressIndicator());
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
@@ -69,11 +70,7 @@ class LoginForm extends GetView<LoginController> {
                     ? null
                     : () => controller.emailAndPasswordLogin(),
                 child: controller.isLogging.value
-                    ? SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(),
-                      )
+                    ? AppCircularBottonLoading()
                     : Text(AppTextStrings.signIn),
               ),
             ),

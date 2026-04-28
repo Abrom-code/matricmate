@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/signup/signup_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -112,13 +113,11 @@ class SignupForm extends GetView<SignupController> {
             () => SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => controller.signup(),
+                onPressed: controller.isSigning.value
+                    ? null
+                    : () => controller.signup(),
                 child: controller.isSigning.value
-                    ? SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(),
-                      )
+                    ? AppCircularBottonLoading()
                     : Text(AppTextStrings.createAccount),
               ),
             ),

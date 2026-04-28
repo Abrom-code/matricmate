@@ -64,7 +64,7 @@ class SignupController extends GetxController {
         stream: selectedStream.value.trim(),
       );
 
-      final userRepository = Get.put(UserRepository());
+      final userRepository = Get.find<UserRepository>();
       await userRepository.saveUserRecord(newUser);
 
       Get.offAllNamed(

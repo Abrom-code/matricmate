@@ -12,7 +12,7 @@ class SessionService {
           .eq('firebase_uid', uid)
           .maybeSingle();
 
-      //  First login → register device
+      //  register device
       if (existing == null) {
         await _supabase.from('user_sessions').insert({
           'firebase_uid': uid,
@@ -21,21 +21,29 @@ class SessionService {
         return true;
       }
 
-      //  Same device → allow
+      // Same device → allow
       if (existing['device_id'] == deviceId) {
         return true;
       }
 
-      //  Different device → BLOCK
-      ToastHelper.error(
-        "Login Blocked",
-        "This account is already used on another device.",
-      );
+      // Different device
+      await _supabase
+          .from('user_sessions')
+          .update({'device_id': deviceId})
+          .eq('firebase_uid', uid);
 
-      return false;
+      return true;
     } catch (e) {
       ToastHelper.error("Error", "Session check failed.");
       return false;
+    }
+  }
+
+  Future<void> removeSession(String uid) async {
+    try {
+      await _supabase.from('user_sessions').delete().eq('firebase_uid', uid);
+    } catch (e) {
+      ToastHelper.error("Error", "Failed to remove session");
     }
   }
 }

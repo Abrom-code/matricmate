@@ -38,6 +38,14 @@ class PremiumBottomSheet extends StatelessWidget {
 
           /// FEATURES
           _featureTile(
+            Icons.emoji_events,
+            "All Entrance Exams",
+            "Get access to past and model entrance exam papers.",
+            Colors.orange,
+            dark,
+          ),
+
+          _featureTile(
             Icons.menu_book,
             "All Chapter Tests",
             "Access every chapter-based test across all subjects.",
@@ -50,14 +58,6 @@ class PremiumBottomSheet extends StatelessWidget {
             "All Grade Tests",
             "Practice full syllabus tests for your grade level.",
             Colors.deepPurple,
-            dark,
-          ),
-
-          _featureTile(
-            Icons.emoji_events,
-            "All Entrance Exams",
-            "Get access to past and model entrance exam papers.",
-            Colors.orange,
             dark,
           ),
 

@@ -10,6 +10,9 @@ class Routes {
   static const questionsSections = '/questions-section';
   static const result = '/result';
   static const review = '/review';
+  static const ready = '/ready';
+
+  // nav
   static const navigationMenu = '/navigation-menu';
 
   // profile

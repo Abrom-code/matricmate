@@ -22,6 +22,9 @@ class AppExceptionHandler {
   }
 
   static AppFailure handle(Object e) {
+    if (e is AppFailure) {
+      return e;
+    }
     // Firebase Auth
     if (e is FirebaseAuthException) {
       return AppFailure(

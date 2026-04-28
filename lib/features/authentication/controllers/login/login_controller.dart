@@ -6,9 +6,7 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
-import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
-import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -75,7 +73,7 @@ class LoginController extends GetxController {
 
       if (!isAllowed) {
         await FirebaseAuth.instance.signOut();
-        Get.offAllNamed(Routes.signIn);
+
         return;
       }
 

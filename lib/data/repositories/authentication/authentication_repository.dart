@@ -72,7 +72,7 @@ class AuthenticationRepository {
 
       await _auth.currentUser!.reauthenticateWithCredential(credential);
     } catch (e) {
-      throw AppExceptionHandler.handle(e);
+      rethrow;
     }
   }
 
@@ -91,7 +91,7 @@ class AuthenticationRepository {
 
       await user.delete();
     } catch (e) {
-      throw AppExceptionHandler.handle(e);
+      rethrow;
     }
   }
 
@@ -99,7 +99,7 @@ class AuthenticationRepository {
     try {
       await _auth.currentUser?.reload();
     } catch (e) {
-      throw AppExceptionHandler.handle(e);
+      rethrow;
     }
   }
 }

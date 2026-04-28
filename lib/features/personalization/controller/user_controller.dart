@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
@@ -10,7 +11,8 @@ import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class UserController extends GetxController {
@@ -47,7 +49,7 @@ class UserController extends GetxController {
         user.value = local;
       }
     } catch (e) {
-      ToastHelper.error("Error", "Failed to load local user");
+      AppExceptionHandler.handleResponse(e);
     }
   }
 
@@ -65,11 +67,7 @@ class UserController extends GetxController {
       Get.offAllNamed(Routes.signIn);
     } catch (e) {
       AppFullScreenLoader.stopLoading();
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     }
   }
 
@@ -148,11 +146,7 @@ class UserController extends GetxController {
         } catch (e) {
           AppFullScreenLoader.stopLoading();
           AppFullScreenLoader.stopLoading();
-          if (e is AppFailure) {
-            ToastHelper.error(e.title, e.message);
-          } else {
-            ToastHelper.error("Unexpected Error", e.toString());
-          }
+          AppExceptionHandler.handleResponse(e);
         }
       },
     );
@@ -163,11 +157,7 @@ class UserController extends GetxController {
       showDeleteDialog();
     } catch (e) {
       AppFullScreenLoader.stopLoading();
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     }
   }
 
@@ -175,39 +165,56 @@ class UserController extends GetxController {
     final passwordController = TextEditingController();
 
     Get.defaultDialog(
+      titlePadding: EdgeInsets.only(top: 18.0),
       title: "Delete Account",
-      content: Column(
-        children: [
-          const Text("Enter your password to confirm"),
-          const SizedBox(height: 10),
-          TextField(controller: passwordController, obscureText: true),
-        ],
+      content: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            const Text("Enter your password to confirm"),
+            const SizedBox(height: 10),
+            TextField(controller: passwordController, obscureText: true),
+          ],
+        ),
       ),
-      confirm: Obx(
-        () => ElevatedButton(
-          onPressed: () async {
-            try {
-              isDeleting.value = true;
+      confirm: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SizedBox(
+          width: double.infinity,
+          child: Obx(
+            () => OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppColors.error),
+              ),
+              onPressed: isDeleting.value
+                  ? null
+                  : () async {
+                      try {
+                        isDeleting.value = true;
 
-              await Get.find<AuthenticationController>().deleteAccount(
-                passwordController.text.trim(),
-              );
+                        await Get.find<AuthenticationController>()
+                            .deleteAccount(passwordController.text.trim());
 
-              Get.back();
+                        Get.back();
 
-              ToastHelper.success(
-                "Account Deleted",
-                "Your data has been permanently removed.",
-              );
-            } catch (e) {
-              throw e;
-            } finally {
-              isDeleting.value = false;
-            }
-          },
-          child: isDeleting.value
-              ? const CircularProgressIndicator()
-              : const Text("Delete"),
+                        ToastHelper.success(
+                          "Account Deleted",
+                          "Your data has been permanently removed.",
+                        );
+                      } catch (e) {
+                        AppExceptionHandler.handleResponse(e);
+                      } finally {
+                        isDeleting.value = false;
+                      }
+                    },
+              child: isDeleting.value
+                  ? const AppCircularBottonLoading(color: AppColors.error)
+                  : const Text(
+                      "Delete",
+                      style: TextStyle(color: AppColors.error),
+                    ),
+            ),
+          ),
         ),
       ),
     );

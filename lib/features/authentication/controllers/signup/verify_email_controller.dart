@@ -4,7 +4,7 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class VerifyEmailController extends GetxController {
@@ -36,7 +36,7 @@ class VerifyEmailController extends GetxController {
       await _authRepo.sendEmailVerification();
       ToastHelper.success("Email sent", "Please check your inbox!");
     } catch (e) {
-      _handleError(e);
+      AppExceptionHandler.handleResponse(e);
     }
   }
 
@@ -62,12 +62,11 @@ class VerifyEmailController extends GetxController {
             arguments: {
               'title': "Email Verified",
               'sub_title': "Your account is now active.",
-              'next_route': Routes.navigationMenu,
             },
           );
         }
       } catch (e) {
-        _handleError(e);
+        AppExceptionHandler.handleResponse(e);
       }
     });
   }
@@ -98,15 +97,7 @@ class VerifyEmailController extends GetxController {
         ToastHelper.warning("Not verified", "Please verify your email first");
       }
     } catch (e) {
-      _handleError(e);
-    }
-  }
-
-  void _handleError(dynamic e) {
-    if (e is AppFailure) {
-      ToastHelper.error(e.title, e.message);
-    } else {
-      ToastHelper.error("Unexpected Error", e.toString());
+      AppExceptionHandler.handleResponse(e);
     }
   }
 

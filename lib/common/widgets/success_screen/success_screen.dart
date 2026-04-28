@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/icons/circular_icon.dart';
+import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
 class SuccessScreen extends GetView<SuccessController> {
@@ -48,7 +49,8 @@ class SuccessScreen extends GetView<SuccessController> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: controller.onPressed,
+                      onPressed:
+                          AuthenticationController.instance.screenRedirect,
                       child: Text(controller.buttonText.value),
                     ),
                   ),
@@ -75,12 +77,7 @@ class SuccessController extends GetxController {
     title.value = args['title'] ?? '';
     subTitle.value = args['sub_title'] ?? '';
     buttonText.value = args['button_text'] ?? 'Continue';
-    nextRoute.value = args['next_route'] ?? '';
 
     super.onInit();
-  }
-
-  void onPressed() {
-    Get.offAllNamed(nextRoute.value);
   }
 }

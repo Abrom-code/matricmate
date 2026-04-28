@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
-import 'package:matricmate/features/authentication/screens/password_configration/reset_password.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -35,7 +35,10 @@ class ForgetPasswordController extends GetxController {
       );
       ToastHelper.success("Email sent", "Please check your inbox!");
 
-      Get.to(() => ResetPassword(email: email.text.trim()));
+      Get.toNamed(
+        Routes.resetPassowrd,
+        arguments: {'email': email.text.trim()},
+      );
     } catch (e) {
       if (e is AppFailure) {
         ToastHelper.error(e.title, e.message);

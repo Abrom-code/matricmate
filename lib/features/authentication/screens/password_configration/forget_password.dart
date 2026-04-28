@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/controllers/login/forget_password_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
-class ForgetPassword extends StatelessWidget {
+class ForgetPassword extends GetView<ForgetPasswordController> {
   const ForgetPassword({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(ForgetPasswordController());
+    final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        iconTheme: IconThemeData(
+          color: dark ? AppColors.white : AppColors.black,
+        ),
+      ),
       body: Padding(
         padding: EdgeInsets.all(AppSizes.defaultSpace),
         child: Form(
@@ -37,7 +43,7 @@ class ForgetPassword extends StatelessWidget {
                 onTapOutside: (e) => FocusScope.of(context).unfocus(),
                 decoration: InputDecoration(
                   labelText: AppTextStrings.email,
-                  prefixIcon: Icon(Icons.arrow_right),
+                  prefixIcon: Icon(Icons.email),
                 ),
               ),
 

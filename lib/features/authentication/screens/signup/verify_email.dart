@@ -6,14 +6,11 @@ import 'package:matricmate/features/authentication/controllers/signup/verify_ema
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class VerifyEmailScreen extends StatelessWidget {
-  const VerifyEmailScreen({super.key, this.email});
-  final String? email;
+class VerifyEmailScreen extends GetView<VerifyEmailController> {
+  const VerifyEmailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<VerifyEmailController>();
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -38,7 +35,12 @@ class VerifyEmailScreen extends StatelessWidget {
 
               const SizedBox(height: AppSizes.spaceBtwItems),
 
-              Text(email ?? "", style: Theme.of(context).textTheme.labelLarge),
+              Obx(
+                () => Text(
+                  controller.email.value,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ),
 
               const SizedBox(height: AppSizes.spaceBtwItems),
 

@@ -10,7 +10,7 @@ class Routes {
   static const questionsSections = '/questions-section';
   static const result = '/result';
   static const review = '/review';
-  static const navigationMenu = '/navigationMenu';
+  static const navigationMenu = '/navigation-menu';
 
   // profile
   static const userProfile = '/user-profile';
@@ -21,6 +21,10 @@ class Routes {
   static const signupSuccess = '/signup-success';
   static const verifyEmail = '/verify-email';
   static const signIn = '/sign-in';
-  static const resetPassword = '/reset-password';
+  static const changePassword = '/change-password';
   static const forgetPassword = '/forget-password';
+  static const resetPassowrd = '/reset-password';
+
+  // success screen
+  static const success = '/success';
 }

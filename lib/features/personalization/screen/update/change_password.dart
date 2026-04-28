@@ -6,13 +6,11 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
-class ChangePassword extends StatelessWidget {
+class ChangePassword extends GetView<ChangePasswordController> {
   const ChangePassword({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(ChangePasswordController());
-
     return Scaffold(
       appBar: Appbar(
         title: const Text(

@@ -8,6 +8,13 @@ class ResetPasswordController extends GetxController {
   final AuthenticationRepository _authenticationRepository =
       AuthenticationRepository();
 
+  final email = "".obs;
+  @override
+  void onInit() {
+    email.value = Get.arguments['email'];
+    super.onInit();
+  }
+
   Future<void> sendResetEmail(String email) async {
     try {
       await _authenticationRepository.sendResetPasswordEmail(email);

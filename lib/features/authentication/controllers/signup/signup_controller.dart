@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
-import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -67,9 +67,12 @@ class SignupController extends GetxController {
       final userRepository = Get.put(UserRepository());
       await userRepository.saveUserRecord(newUser);
 
-      Get.to(() => VerifyEmailScreen(email: email.text.trim()));
+      Get.offAllNamed(
+        Routes.verifyEmail,
+        arguments: {'email': email.text.trim()},
+      );
     } catch (e) {
-       if (e is AppFailure) {
+      if (e is AppFailure) {
         ToastHelper.error(e.title, e.message);
       } else {
         ToastHelper.error("Unexpected Error", e.toString());

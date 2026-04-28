@@ -2,20 +2,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/controllers/login/reset_password_controller.dart';
-import 'package:matricmate/features/authentication/screens/login/login.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ResetPassword extends StatelessWidget {
-  const ResetPassword({super.key, required this.email});
-  final String email;
+class ResetPassword extends GetView<ResetPasswordController> {
+  const ResetPassword({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(ResetPasswordController());
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -54,18 +51,20 @@ class ResetPassword extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => Get.offAll(() => const LoginScreen()),
+                  onPressed: () => Get.offAllNamed(Routes.signIn),
                   child: Text("Done"),
                 ),
               ),
 
               const SizedBox(height: AppSizes.spaceBtwItems),
-
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => controller.sendResetEmail(email),
-                  child: Text(AppTextStrings.resendEmail),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () =>
+                        controller.sendResetEmail(controller.email.value),
+                    child: Text(AppTextStrings.resendEmail),
+                  ),
                 ),
               ),
             ],

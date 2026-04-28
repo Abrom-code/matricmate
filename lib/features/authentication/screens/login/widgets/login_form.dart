@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/features/authentication/screens/password_configration/forget_password.dart';
-import 'package:matricmate/features/authentication/screens/signup/signup.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
@@ -85,7 +85,7 @@ class LoginForm extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => Get.offAll(const SignupScreen()),
+              onPressed: () => Get.offNamed(Routes.signup),
               child: Text(AppTextStrings.createAccount),
             ),
           ),

@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/profile_tile.dart';
-import 'package:matricmate/features/personalization/screen/update/change_password.dart';
 import 'package:matricmate/features/personalization/screen/update/update_profile.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -35,7 +35,7 @@ class AccountSettings extends StatelessWidget {
             icon: Icon(Icons.lock),
             title: "Change Password",
             trailing: Icon(Icons.keyboard_arrow_right),
-            onTap: () => Get.to(() => ChangePassword()),
+            onTap: () => Get.toNamed(Routes.changePassword),
           ),
           ProfileTile(
             icon: Icon(Icons.help),

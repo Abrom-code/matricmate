@@ -9,6 +9,7 @@ import 'package:matricmate/features/authentication/controllers/authentication_co
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/navigation_menu.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
@@ -31,7 +32,6 @@ class UserController extends GetxController {
 
     _authRepo.userChanges.listen((firebaseUser) async {
       if (firebaseUser != null) {
-        // ONLY update local state, NOT network fetch
         await loadLocalUser();
       } else {
         user.value = UserModel.empty();
@@ -62,7 +62,7 @@ class UserController extends GetxController {
 
       AppFullScreenLoader.stopLoading();
 
-      Get.offAll(() => const LoginScreen());
+      Get.offAllNamed(Routes.signIn);
     } catch (e) {
       AppFullScreenLoader.stopLoading();
       if (e is AppFailure) {
@@ -83,7 +83,7 @@ class UserController extends GetxController {
 
       user.value = freshUser;
 
-      await _userRepository.updateLocalUser(freshUser); 
+      await _userRepository.updateLocalUser(freshUser);
     } finally {
       userFetching.value = false;
     }

@@ -5,12 +5,11 @@ import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
-class SignupForm extends StatelessWidget {
+class SignupForm extends GetView<SignupController> {
   const SignupForm({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(SignupController());
     return Form(
       key: controller.signupFormKey,
       child: Column(

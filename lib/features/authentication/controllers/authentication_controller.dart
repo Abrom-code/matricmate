@@ -9,11 +9,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
-import 'package:matricmate/features/authentication/screens/login/login.dart';
-import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
-import 'package:matricmate/navigation_menu.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -40,19 +38,19 @@ class AuthenticationController extends GetxController {
     final user = authRepo.currentUser;
 
     if (user == null) {
-      Get.offAll(() => const LoginScreen());
+      Get.offAllNamed(Routes.signIn);
       return;
     }
 
     if (!user.emailVerified) {
-      Get.offAll(() => VerifyEmailScreen(email: user.email));
+      Get.offAllNamed(Routes.verifyEmail, arguments: {'email': user.email});
       return;
     }
 
     await UserController.instance.loadLocalUser();
     await SubjectsController.instance.loadLocalSubjects();
 
-    Get.offAll(() => const NavigationMenu());
+    Get.offAllNamed(Routes.navigationMenu);
 
     final hasInternet = await NetworkManager.instance.hasRealInternet();
 
@@ -71,7 +69,7 @@ class AuthenticationController extends GetxController {
 
       await authRepo.logout();
 
-      Get.offAll(() => const LoginScreen());
+      Get.offAllNamed(Routes.signIn);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -95,7 +93,7 @@ class AuthenticationController extends GetxController {
       // delete firebase
       await authRepo.deleteFirebaseAccount();
 
-      Get.offAll(() => const LoginScreen());
+      Get.offAllNamed(Routes.signIn);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

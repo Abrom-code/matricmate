@@ -29,7 +29,7 @@ class PremiumBottomSheet extends StatelessWidget {
           const SizedBox(height: 6),
 
           const Text(
-            "Precision tools designed for the modern scholar.",
+            "Precision tools designed for the modern students.",
             style: TextStyle(fontSize: 13, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
@@ -39,30 +39,33 @@ class PremiumBottomSheet extends StatelessWidget {
           /// FEATURES
           _featureTile(
             Icons.menu_book,
-            "Full Mock Exams",
-            "Complete simulated testing environments.",
+            "All Chapter Tests",
+            "Access every chapter-based test across all subjects.",
             Colors.blue,
             dark,
           ),
+
+          _featureTile(
+            Icons.school,
+            "All Grade Tests",
+            "Practice full syllabus tests for your grade level.",
+            Colors.deepPurple,
+            dark,
+          ),
+
+          _featureTile(
+            Icons.emoji_events,
+            "All Entrance Exams",
+            "Get access to past and model entrance exam papers.",
+            Colors.orange,
+            dark,
+          ),
+
           _featureTile(
             Icons.analytics_outlined,
-            "Advanced Analytics",
-            "Deep insights into your learning patterns.",
+            "Full Analytics Dashboard",
+            "Track accuracy, progress, weak chapters, and performance insights.",
             Colors.green,
-            dark,
-          ),
-          _featureTile(
-            Icons.block,
-            "Ad-Free Experience",
-            "Pure focus, zero distractions during study.",
-            Colors.grey,
-            dark,
-          ),
-          _featureTile(
-            Icons.block,
-            "Ad-Free Experience",
-            "Pure focus, zero distractions during study.",
-            Colors.grey,
             dark,
           ),
 

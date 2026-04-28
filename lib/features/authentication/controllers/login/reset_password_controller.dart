@@ -8,6 +8,8 @@ class ResetPasswordController extends GetxController {
   final AuthenticationRepository _authenticationRepository =
       AuthenticationRepository();
 
+  final isSending = false.obs;
+
   final email = "".obs;
   @override
   void onInit() {
@@ -17,6 +19,7 @@ class ResetPasswordController extends GetxController {
 
   Future<void> sendResetEmail(String email) async {
     try {
+      isSending.value = true;
       await _authenticationRepository.sendResetPasswordEmail(email);
       ToastHelper.success("Email sent", "Please check your inbox!");
     } catch (e) {
@@ -25,6 +28,8 @@ class ResetPasswordController extends GetxController {
       } else {
         ToastHelper.error("Unexpected Error", e.toString());
       }
+    } finally {
+      isSending.value = false;
     }
   }
 }

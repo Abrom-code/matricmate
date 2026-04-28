@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/forget_password_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -49,11 +50,18 @@ class ForgetPassword extends GetView<ForgetPasswordController> {
 
               const SizedBox(height: AppSizes.spaceBtwItems * 2),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => controller.resetPassword(),
-                  child: const Text(AppTextStrings.submit),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(),
+                    onPressed: controller.isLoading.value
+                        ? null
+                        : () => controller.resetPassword(),
+                    child: controller.isLoading.value
+                        ? AppCircularBottonLoading()
+                        : Text(AppTextStrings.submit),
+                  ),
                 ),
               ),
             ],

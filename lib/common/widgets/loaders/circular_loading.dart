@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
 class AppCircularLoading extends StatelessWidget {
@@ -16,6 +17,20 @@ class AppCircularLoading extends StatelessWidget {
           Text(title),
         ],
       ),
+    );
+  }
+}
+
+class AppCircularBottonLoading extends StatelessWidget {
+  const AppCircularBottonLoading({super.key, this.title = 'Loading...'});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 18,
+      width: 18,
+      child: CircularProgressIndicator(color: AppColors.accent),
     );
   }
 }

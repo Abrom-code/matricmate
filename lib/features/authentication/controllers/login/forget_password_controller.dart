@@ -33,7 +33,10 @@ class ForgetPasswordController extends GetxController {
       await _authenticationRepository.sendResetPasswordEmail(
         email.value.text.trim(),
       );
-      ToastHelper.success("Email sent", "Please check your inbox!");
+      ToastHelper.success(
+        "Email sent",
+        "If an you already resgistered, please check your inbox!",
+      );
 
       Get.toNamed(
         Routes.resetPassowrd,

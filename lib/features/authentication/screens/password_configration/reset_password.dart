@@ -4,9 +4,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/controllers/login/reset_password_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
-import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ResetPassword extends GetView<ResetPasswordController> {
   const ResetPassword({super.key});
@@ -28,11 +26,7 @@ class ResetPassword extends GetView<ResetPasswordController> {
           padding: EdgeInsets.all(AppSizes.defaultSpace),
           child: Column(
             children: [
-              Image.asset(
-                AppImages.firstOnboardingImage,
-                width: AppHelperFuntions.screenWidth() * 0.8,
-              ),
-              const SizedBox(height: AppSizes.spaceBtwItems),
+              const SizedBox(height: AppSizes.spaceBtwItems * 3),
 
               Text(
                 AppTextStrings.changeYourPasswordTitle,
@@ -57,13 +51,17 @@ class ResetPassword extends GetView<ResetPasswordController> {
               ),
 
               const SizedBox(height: AppSizes.spaceBtwItems),
-              Obx(
-                () => SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () =>
-                        controller.sendResetEmail(controller.email.value),
-                    child: Text(AppTextStrings.resendEmail),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () =>
+                      controller.sendResetEmail(controller.email.value),
+                  child: Obx(
+                    () => Text(
+                      controller.isSending.value
+                          ? "Sending..."
+                          : AppTextStrings.resendEmail,
+                    ),
                   ),
                 ),
               ),

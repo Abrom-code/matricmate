@@ -38,15 +38,15 @@ class ReviewContainer extends GetView<ReviewController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Quesion ${qn.questionOrder} of ${result.testQuestions.length}",
+                "${qn.questionOrder} of ${result.testQuestions.length}",
                 style: Theme.of(
                   context,
                 ).textTheme.labelMedium!.apply(fontSizeDelta: 3),
               ),
               result.selectedAnswers[qn.id] == null
                   ? CorrectCheckButton(
-                      color: dark ? AppColors.grey : AppColors.darkerGrey,
-                      icon: Icons.timer,
+                      color: dark ? AppColors.darkGrey : AppColors.darkerGrey,
+                      icon: Icons.timer_outlined,
                       text: "Not Answered",
                     )
                   : result.selectedAnswers[qn.id] == qn.correctOptionIndex

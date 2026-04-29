@@ -150,11 +150,6 @@ class QuestionController extends GetxController {
   Future<void> saveResult(ResultModel result) async {
     try {
       await _repo.saveResult(result);
-
-      ToastHelper.success(
-        "Test Completed",
-        "Your results have been saved successfully!",
-      );
     } catch (e) {
       if (e is AppFailure) {
         ToastHelper.error(
@@ -227,6 +222,9 @@ class QuestionController extends GetxController {
     remainingSeconds.value = minutes * 60;
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (remainingSeconds.value == 2)
+        ToastHelper.warning("Time's up!", "Submitting ...");
+
       if (remainingSeconds.value <= 1) {
         remainingSeconds.value = 0;
         timer.cancel();
@@ -240,9 +238,6 @@ class QuestionController extends GetxController {
   }
 
   void _onTimeUp() {
-    ToastHelper.warning("Time's up!", "Submitting your exam...");
-
-    // auto-submit logic (example)
     final result = ResultModel(
       userId: UserController.instance.user.value.id,
       testId: testId,
@@ -253,7 +248,7 @@ class QuestionController extends GetxController {
 
     saveResult(result);
 
-    Get.offAllNamed(Routes.result, arguments: {'result': result});
+    Get.offNamed(Routes.result, arguments: {'result': result});
   }
 
   String get formattedTime {

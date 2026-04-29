@@ -11,7 +11,6 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'dart:developer' as console;
 
 class TestListScreen extends GetView<TestController> {
   const TestListScreen({super.key});
@@ -58,7 +57,6 @@ class TestListScreen extends GetView<TestController> {
               final point = test.point;
               final time = test.time;
               final title = '$subject: ${test.title}';
-              console.log(controller.getCurrentStep(test.id).toString());
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),

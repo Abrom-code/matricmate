@@ -102,9 +102,8 @@ class QuesitonSection extends GetView<QuestionController> {
                       explanationEn: question.explanationEn,
                       explanationAm: question.explanationAm,
                     ),
-
-                  // Next/check answer button
-                  const SizedBox(height: AppSizes.spaceBtwItems / 2),
+                  if (controller.isExplanationExpanaded.value)
+                    const SizedBox(height: 10),
                 ],
               ),
             Row(

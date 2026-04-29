@@ -90,6 +90,7 @@ class UserController extends GetxController {
   }
 
   Future<void> checkPaymentStatus() async {
+    await fetchUserRecord();
     final current = user.value;
 
     if (current.isActive) {

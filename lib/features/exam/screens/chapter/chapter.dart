@@ -65,7 +65,10 @@ class ChapterScreen extends GetView<ChapterController> {
                     padding: EdgeInsets.symmetric(
                       horizontal: AppSizes.defaultSpace,
                     ),
-                    child: AllGradeExamsTile(subject:title, subjectId: subjectId),
+                    child: AllGradeExamsTile(
+                      subject: title,
+                      subjectId: subjectId,
+                    ),
                   );
                 }
 

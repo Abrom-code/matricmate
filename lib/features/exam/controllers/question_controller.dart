@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'dart:developer' as console;
 
 class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
@@ -19,7 +20,7 @@ class QuestionController extends GetxController {
 
   // States
   final RxBool isLoading = false.obs;
-  final RxBool isPassageLoading = false.obs; // Synchronized with UI refactor
+  final RxBool isPassageLoading = false.obs;
   final RxList<QuestionModel> testQuestions = <QuestionModel>[].obs;
   final RxList<QuestionBlock> blocks = <QuestionBlock>[].obs;
 
@@ -113,17 +114,12 @@ class QuestionController extends GetxController {
   Future<PassageModel> getPassage(int? pId) async {
     if (pId == null) return PassageModel(id: -1, content: "", title: "");
     if (_passageCache.containsKey(pId)) return _passageCache[pId]!;
-
     final passage = await _repo.getLocalPassage(pId);
     _passageCache[pId] = passage;
     return passage;
   }
 
-  /// --- ANSWER & RESULT LOGIC ---
-
-  /// Mark a specific question as "checked" so the UI can show the correct/incorrect colors
   void checkAnswer(int questionId) {
-    // Only check if an answer has actually been selected
     if (selectedAnswers.containsKey(questionId)) {
       isChecked[questionId] = true;
     } else {
@@ -131,7 +127,6 @@ class QuestionController extends GetxController {
     }
   }
 
-  /// Dynamic getter to calculate the total correct answers at any time
   int get correctAnswers {
     int score = 0;
     for (final q in testQuestions) {

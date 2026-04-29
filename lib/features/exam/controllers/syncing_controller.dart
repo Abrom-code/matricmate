@@ -138,9 +138,14 @@ class SyncingController extends GetxController {
         .toList();
 
     final List<String> imageUrls = [];
+    final Set<int> passageIds = {};
 
     for (final q in remote) {
       _syncRepository.insertBatch('questions', q.toMap());
+
+      if (q.passageId != null) {
+        passageIds.add(q.passageId!);
+      }
 
       if (q.imageUrl != null && q.imageUrl!.isNotEmpty) {
         imageUrls.add(q.imageUrl!);
@@ -148,6 +153,10 @@ class SyncingController extends GetxController {
     }
 
     await _syncRepository.commitBatch();
+
+    if (passageIds.isNotEmpty) {
+      await syncPassages(passageIds.toList());
+    }
 
     if (imageUrls.isNotEmpty) {
       await _downloadImages(imageUrls);

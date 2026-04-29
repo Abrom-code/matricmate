@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/screens/ready/widgets/attribute_box.dart';
 import 'package:matricmate/features/exam/screens/ready/widgets/timer_container.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -8,9 +9,13 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ReadyDialog extends StatelessWidget {
-  const ReadyDialog({super.key, required this.qnCount, required this.time});
-  final int qnCount;
-  final int time;
+  const ReadyDialog({
+    super.key,
+    required this.qnCount,
+    required this.time,
+    required this.testId,
+  });
+  final int qnCount, time, testId;
 
   @override
   Widget build(BuildContext context) {
@@ -74,8 +79,9 @@ class ReadyDialog extends StatelessWidget {
                       onPressed: () {
                         Get.offNamed(
                           Routes.questions,
-                          arguments: {'test_id': 5},
+                          arguments: {'test_id': testId},
                         );
+                        Get.delete<QuestionController>();
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,

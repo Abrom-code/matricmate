@@ -92,7 +92,13 @@ class TestListScreen extends GetView<TestController> {
                         );
                         return;
                       }
-                      Get.dialog(ReadyDialog(qnCount: qnCount, time: time));
+                      Get.dialog(
+                        ReadyDialog(
+                          qnCount: qnCount,
+                          time: time,
+                          testId: test.id,
+                        ),
+                      );
                     },
                   );
                 }),

@@ -29,21 +29,12 @@ class QuestionScreen extends GetView<QuestionController> {
           "Want to Exit?",
           "Your progress will be saved.",
           () {
-            Navigator.pop(context); // Close Dialog
-            Navigator.pop(context); // Exit Screen
+            Navigator.pop(context);
+            Navigator.pop(context);
           },
         );
       },
       child: Obx(() {
-        // 1. Handle Case: Data Loaded but Empty
-        if (!controller.isLoading.value && controller.testQuestions.isEmpty) {
-          return const Scaffold(
-            body: Center(child: Text("No Questions Available")),
-          );
-        }
-
-        // 2. Safe Access to Current Question
-        // We check length to avoid "Index out of range" during initial reactive updates
         final bool hasData = controller.testQuestions.isNotEmpty;
         final currentQ = hasData
             ? controller.testQuestions[controller.currentIndex.value]
@@ -62,7 +53,7 @@ class QuestionScreen extends GetView<QuestionController> {
                 Navigator.pop(context);
               },
             ),
-            // Title switches based on whether it's a passage or normal question
+
             title: (currentQ != null && currentQ.passageId != null)
                 ? PassageLayoutCtrl(controller: controller)
                 : Text(
@@ -73,7 +64,6 @@ class QuestionScreen extends GetView<QuestionController> {
                   ),
             centerTitle: true,
             actions: [
-              // Only show bookmark icon if data is available
               if (currentQ != null)
                 Obx(() {
                   final isSaved = controller.isBookmarked(currentQ.id);

@@ -6,7 +6,7 @@ import 'package:matricmate/common/widgets/tiles/chpater_tile.dart';
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
-import 'package:matricmate/features/exam/screens/chapter/widgets/all_grade_exams_tile.dart';
+import 'package:matricmate/features/exam/screens/chapter/widgets/subject_test.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';

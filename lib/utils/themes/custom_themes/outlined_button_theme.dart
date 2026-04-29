@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 
 /* -- Light & Dark Outlined Button Themes -- */
 class AppOutlinedButtonTheme {
@@ -25,6 +26,8 @@ class AppOutlinedButtonTheme {
     style: OutlinedButton.styleFrom(
       foregroundColor: Colors.white,
       side: const BorderSide(color: Colors.teal),
+      disabledBackgroundColor: AppColors.dark,
+      disabledForegroundColor: AppColors.dark,
       textStyle: const TextStyle(
         fontSize: 16,
         color: Colors.white,

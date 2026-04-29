@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/tiles/test_tile.dart';
-import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
@@ -73,9 +72,9 @@ class AllGradeExamsTile extends StatelessWidget {
                     return;
                   }
 
-                  Get.dialog(ReadyDialog(qnCount: qnCount, time: time));
-
-                  Get.delete<QuestionController>();
+                  Get.dialog(
+                    ReadyDialog(qnCount: qnCount, time: time, testId: test.id),
+                  );
                 },
               ),
             ),

@@ -12,12 +12,14 @@ import 'package:matricmate/features/personalization/controller/user_controller.d
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class QuesitonSection extends GetView<QuestionController> {
   const QuesitonSection({super.key, required this.question});
   final QuestionModel question;
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFuntions.isDark(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSizes.defaultSpace,
@@ -118,7 +120,21 @@ class QuesitonSection extends GetView<QuestionController> {
                         : null,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [Icon(Icons.arrow_left), Text("Previous")],
+                      children: [
+                        Icon(Icons.arrow_left),
+                        Text(
+                          "Previous",
+                          style: TextStyle(
+                            color: !dark
+                                ? null
+                                : !dark
+                                ? null
+                                : !(controller.currentIndex.value > 0)
+                                ? AppColors.darkGrey
+                                : AppColors.grey,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -134,43 +150,68 @@ class QuesitonSection extends GetView<QuestionController> {
                     final isLast =
                         controller.currentIndex.value ==
                         controller.testQuestions.length - 1;
+                    final currentSelected = controller.getSelectedAnswer(q.id);
 
                     return OutlinedButton(
-                      onPressed: () async {
-                        if (!isChecked) {
-                          controller.checkAnswer(q.id);
-                        } else {
-                          if (isLast) {
-                            final result = ResultModel(
-                              userId: UserController.instance.user.value.id,
-                              testId: question.testId,
-                              selectedAnswers: controller.selectedAnswers,
-                              testQuestions: controller.testQuestions.toList(),
-                              correctAnswers: controller.correctAnswers,
-                            );
-                            controller.saveResult(result);
-                            TestController.instance.testResults[result.testId] =
-                                result;
-                            Get.offNamed(
-                              Routes.result,
-                              arguments: {'result': result},
-                            );
-                          } else {
-                            controller.nextQuestion();
-                          }
-                        }
-                      },
+                      onPressed: currentSelected == null
+                          ? null
+                          : () async {
+                              if (!isChecked) {
+                                controller.checkAnswer(q.id);
+                              } else {
+                                if (isLast) {
+                                  final result = ResultModel(
+                                    userId:
+                                        UserController.instance.user.value.id,
+                                    testId: question.testId,
+                                    selectedAnswers: controller.selectedAnswers,
+                                    testQuestions: controller.testQuestions
+                                        .toList(),
+                                    correctAnswers: controller.correctAnswers,
+                                  );
+                                  controller.saveResult(result);
+                                  TestController.instance.testResults[result
+                                          .testId] =
+                                      result;
+                                  Get.offNamed(
+                                    Routes.result,
+                                    arguments: {'result': result},
+                                  );
+                                } else {
+                                  controller.nextQuestion();
+                                }
+                              }
+                            },
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 13),
                       ),
                       child: !isChecked
-                          ? Text("Check Answer")
+                          ? Text(
+                              "Check Answer",
+                              style: TextStyle(
+                                color: !dark
+                                    ? null
+                                    : currentSelected == null
+                                    ? AppColors.darkGrey
+                                    : AppColors.grey,
+                              ),
+                            )
                           : (isLast
-                                ? Text("Finished")
+                                ? Text(
+                                    "Finished",
+                                    style: TextStyle(
+                                      color: !dark ? null : AppColors.grey,
+                                    ),
+                                  )
                                 : Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text("Next"),
+                                      Text(
+                                        "Next",
+                                        style: TextStyle(
+                                          color: !dark ? null : AppColors.grey,
+                                        ),
+                                      ),
                                       Icon(Icons.arrow_right),
                                     ],
                                   )),

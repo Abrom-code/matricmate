@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+
 class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
 
@@ -35,7 +36,7 @@ class QuestionController extends GetxController {
 
   @override
   void onInit() {
-    testId = Get.arguments['test_id'] ?? 0;
+    testId = Get.arguments['test_id'];
     loadTestQuestions(testId);
     super.onInit();
   }
@@ -118,11 +119,7 @@ class QuestionController extends GetxController {
   }
 
   void checkAnswer(int questionId) {
-    if (selectedAnswers.containsKey(questionId)) {
-      isChecked[questionId] = true;
-    } else {
-      ToastHelper.warning("No Selection", "Please select an option first!");
-    }
+    isChecked[questionId] = true;
   }
 
   int get correctAnswers {

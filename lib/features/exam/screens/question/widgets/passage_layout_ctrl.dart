@@ -14,8 +14,10 @@ class PassageLayoutCtrl extends StatelessWidget {
     final dark = AppHelperFuntions.isDark(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
               icon: Icon(
@@ -28,16 +30,6 @@ class PassageLayoutCtrl extends StatelessWidget {
               constraints: const BoxConstraints(),
             ),
 
-            Obx(
-              () => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  '${(controller.textScale.value * 100).toInt()}%',
-                  style: TextStyle(fontSize: 12),
-                ),
-              ),
-            ),
-
             IconButton(
               icon: Icon(
                 Icons.text_increase,
@@ -48,19 +40,26 @@ class PassageLayoutCtrl extends StatelessWidget {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
-            Obx(
-              () => IconButton(
-                icon: Icon(
-                  !controller.isFullScreenPassage.value
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_up,
-                  color: dark ? AppColors.grey : Colors.black87,
-                ),
-
-                onPressed: controller.togglePassageSize,
-              ),
-            ),
           ],
+        ),
+        if (controller.isTimed)
+          Obx(
+            () => Text(
+              '(${controller.formattedTime})',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        Obx(
+          () => IconButton(
+            icon: Icon(
+              !controller.isFullScreenPassage.value
+                  ? Icons.keyboard_arrow_down
+                  : Icons.keyboard_arrow_up,
+              color: dark ? AppColors.grey : Colors.black87,
+            ),
+
+            onPressed: controller.togglePassageSize,
+          ),
         ),
       ],
     );

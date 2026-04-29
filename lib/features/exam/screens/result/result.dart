@@ -122,16 +122,14 @@ class ResultScreen extends GetView<ResultController> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => Get.until(
-                    (route) => route.settings.name == Routes.navigationMenu,
-                  ),
+                  onPressed: () => Get.back(),
                   child: Row(
                     spacing: 10,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.arrow_left, color: AppColors.primary),
                       Text(
-                        "Back to Subjects",
+                        "Back to Tests",
                         style: Theme.of(
                           context,
                         ).textTheme.titleSmall!.apply(color: AppColors.primary),

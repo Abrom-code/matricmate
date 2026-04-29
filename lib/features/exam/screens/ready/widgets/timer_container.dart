@@ -4,8 +4,15 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
 class TimerContainer extends StatelessWidget {
-  const TimerContainer({super.key, required this.time});
+  const TimerContainer({
+    super.key,
+    required this.time,
+    required this.value,
+    required this.onChange,
+  });
   final int time;
+  final bool value;
+  final VoidCallback onChange;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +30,7 @@ class TimerContainer extends StatelessWidget {
                   context,
                 ).textTheme.headlineSmall!.copyWith(color: AppColors.primary),
               ),
-              Switch(value: false, onChanged: (v) {}),
+              Switch(value: value, onChanged: (_) => onChange()),
             ],
           ),
           const SizedBox(height: AppSizes.spaceBtwItems / 2),

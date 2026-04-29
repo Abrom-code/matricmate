@@ -50,7 +50,6 @@ class NavigationMenu extends StatelessWidget {
 
 class NavigationController extends GetxController {
   final Rx<int> selectedIdx = 0.obs;
-
   static const int navigatorId = 1;
 
   final List<String> routes = [
@@ -59,11 +58,20 @@ class NavigationController extends GetxController {
     Routes.userProfile,
   ];
 
+  // Add this specific method
+  void backToHome() {
+    selectedIdx.value = 0;
+
+    final nestedNavigator = Get.nestedKey(navigatorId)!.currentState;
+
+    if (nestedNavigator != null) {
+      nestedNavigator.popUntil((route) => route.isFirst);
+    }
+  }
+
   void changePage(int index) {
     if (selectedIdx.value == index) return;
-
     selectedIdx.value = index;
-
     Get.offNamed(routes[index], id: navigatorId);
   }
 }

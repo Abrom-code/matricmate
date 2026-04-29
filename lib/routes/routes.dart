@@ -23,7 +23,7 @@ import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/grade_test.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
-import 'package:matricmate/features/exam/screens/result/result_review.dart';
+import 'package:matricmate/features/exam/screens/result/review.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/personalization/screen/profile/profile.dart';

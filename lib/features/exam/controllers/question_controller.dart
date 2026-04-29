@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/question_repository.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
@@ -5,6 +7,8 @@ import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
+import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -23,6 +27,10 @@ class QuestionController extends GetxController {
   final RxList<QuestionModel> testQuestions = <QuestionModel>[].obs;
   final RxList<QuestionBlock> blocks = <QuestionBlock>[].obs;
 
+  // timer
+  final RxInt remainingSeconds = 0.obs;
+  Timer? _timer;
+
   final RxMap<int, int> selectedAnswers = <int, int>{}.obs;
   final RxMap<int, bool> isChecked = <int, bool>{}.obs;
   final RxInt currentIndex = 0.obs;
@@ -33,11 +41,16 @@ class QuestionController extends GetxController {
   var isPassageHidden = false.obs;
   var textScale = 1.0.obs;
   late int testId;
+  late bool isTimed;
+  late int time;
 
   @override
   void onInit() {
     testId = Get.arguments['test_id'];
+    isTimed = Get.arguments['is_timed'];
+    time = Get.arguments['time'];
     loadTestQuestions(testId);
+    if (isTimed) startTimer(time);
     super.onInit();
   }
 
@@ -205,5 +218,57 @@ class QuestionController extends GetxController {
 
   int? getSelectedAnswer(int questionId) {
     return selectedAnswers[questionId];
+  }
+
+  /// timer section
+  void startTimer(int minutes) {
+    _timer?.cancel();
+
+    remainingSeconds.value = minutes * 60;
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (remainingSeconds.value <= 1) {
+        remainingSeconds.value = 0;
+        timer.cancel();
+
+        _onTimeUp();
+        return;
+      }
+
+      remainingSeconds.value--;
+    });
+  }
+
+  void _onTimeUp() {
+    ToastHelper.warning("Time's up!", "Submitting your exam...");
+
+    // auto-submit logic (example)
+    final result = ResultModel(
+      userId: UserController.instance.user.value.id,
+      testId: testId,
+      selectedAnswers: selectedAnswers,
+      testQuestions: testQuestions.toList(),
+      correctAnswers: correctAnswers,
+    );
+
+    saveResult(result);
+
+    Get.offAllNamed(Routes.result, arguments: {'result': result});
+  }
+
+  String get formattedTime {
+    final hours = remainingSeconds.value ~/ 3600;
+    final minutes = (remainingSeconds.value % 3600) ~/ 60;
+    final seconds = remainingSeconds.value % 60;
+
+    return '${hours.toString().padLeft(2, '0')}:'
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void onClose() {
+    _timer?.cancel();
+    super.onClose();
   }
 }

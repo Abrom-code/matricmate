@@ -20,7 +20,7 @@ class ReadyDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
-
+    final controller = Get.put(ReadyController());
     return Dialog(
       backgroundColor: dark ? AppColors.dark : AppColors.light,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -68,7 +68,13 @@ class ReadyDialog extends StatelessWidget {
 
                   const SizedBox(height: AppSizes.spaceBtwSections),
 
-                  TimerContainer(time: time),
+                  Obx(
+                    () => TimerContainer(
+                      time: time,
+                      value: controller.isTimed.value,
+                      onChange: controller.changeTimed,
+                    ),
+                  ),
 
                   const SizedBox(height: AppSizes.spaceBtwSections),
 
@@ -79,7 +85,11 @@ class ReadyDialog extends StatelessWidget {
                       onPressed: () {
                         Get.offNamed(
                           Routes.questions,
-                          arguments: {'test_id': testId},
+                          arguments: {
+                            'test_id': testId,
+                            'is_timed': controller.isTimed.value,
+                            "time": 2,
+                          },
                         );
                         Get.delete<QuestionController>();
                       },
@@ -121,5 +131,14 @@ class ReadyDialog extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class ReadyController extends GetxController {
+  static ReadyController get instance => Get.find();
+  final isTimed = false.obs;
+
+  void changeTimed() {
+    isTimed.value = !isTimed.value;
   }
 }

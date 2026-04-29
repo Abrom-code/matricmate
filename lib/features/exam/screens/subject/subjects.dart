@@ -52,7 +52,7 @@ class SubjectsScreen extends StatelessWidget {
         if (UserController.instance.userFetching.value ||
             subjectController.isLoading.value ||
             syncController.refreshing.value) {
-          return AppCircularLoading(title: 'Loading');
+          return AppCircularLoading(title: 'Loading...');
         }
 
         final isNaturalStream =

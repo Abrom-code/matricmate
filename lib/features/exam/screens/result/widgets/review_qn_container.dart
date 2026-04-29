@@ -43,7 +43,13 @@ class ReviewContainer extends GetView<ReviewController> {
                   context,
                 ).textTheme.labelMedium!.apply(fontSizeDelta: 3),
               ),
-              result.selectedAnswers[qn.id] == qn.correctOptionIndex
+              result.selectedAnswers[qn.id] == null
+                  ? CorrectCheckButton(
+                      color: dark ? AppColors.grey : AppColors.darkerGrey,
+                      icon: Icons.timer,
+                      text: "Not Answered",
+                    )
+                  : result.selectedAnswers[qn.id] == qn.correctOptionIndex
                   ? CorrectCheckButton()
                   : CorrectCheckButton(
                       color: Colors.red,

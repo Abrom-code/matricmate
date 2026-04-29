@@ -123,8 +123,7 @@ class ResultScreen extends GetView<ResultController> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () =>
-                      Get.find<NavigationController>().changePage(0),
+                  onPressed: () => Get.offAll(() => const NavigationMenu()),
                   child: Row(
                     spacing: 10,
                     mainAxisAlignment: MainAxisAlignment.center,

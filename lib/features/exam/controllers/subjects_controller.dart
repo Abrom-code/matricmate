@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
@@ -18,8 +17,6 @@ class SubjectsController extends GetxController {
   final RxList<SubjectMoModel> subjects = <SubjectMoModel>[].obs;
 
   final RxString selectedStream = UserController.instance.user.value.stream.obs;
-
-  final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void onInit() {

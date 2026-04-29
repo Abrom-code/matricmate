@@ -18,7 +18,7 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class SubjectsScreen extends StatelessWidget {
-  const SubjectsScreen({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +26,13 @@ class SubjectsScreen extends StatelessWidget {
     final syncController = Get.find<SyncingController>();
 
     return Scaffold(
-      key: subjectController.scaffoldKey,
+      key: scaffoldKey,
       drawer: AppDrawer(),
       appBar: Appbar(
         title: AppbarStatusTitle(title: "MatricMate"),
         leadingIcon: Icons.menu,
         leadingOnPressed: () {
-          subjectController.scaffoldKey.currentState!.openDrawer();
+          Scaffold.of(context).openDrawer();
         },
         actions: [
           Padding(

@@ -13,7 +13,7 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +21,12 @@ class ProfileScreen extends StatelessWidget {
     final controller = Get.put(ProfileController());
     final dark = AppHelperFuntions.isDark(context);
     return Scaffold(
-      key: controller.scaffoldKey,
+      key: scaffoldKey,
       drawer: AppDrawer(),
       appBar: Appbar(
         leadingIcon: Icons.menu,
         leadingOnPressed: () {
-          controller.scaffoldKey.currentState!.openDrawer();
+          Scaffold.of(context).openDrawer();
         },
         title: Text("Profile", style: TextStyle(color: AppColors.white)),
       ),

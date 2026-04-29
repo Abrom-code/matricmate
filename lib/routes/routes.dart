@@ -37,10 +37,10 @@ class AppRoutes {
   static final pages = [
     // main
     GetPage(name: Routes.navigationMenu, page: () => const NavigationMenu()),
-    GetPage(name: Routes.home, page: () => const SubjectsScreen()),
+    GetPage(name: Routes.home, page: () => SubjectsScreen()),
     GetPage(
       name: Routes.bookmark,
-      page: () => const BookmarkScreen(),
+      page: () => BookmarkScreen(),
       binding: BookmarkBinding(),
     ),
     GetPage(
@@ -75,7 +75,7 @@ class AppRoutes {
     ),
 
     // profile
-    GetPage(name: Routes.userProfile, page: () => const ProfileScreen()),
+    GetPage(name: Routes.userProfile, page: () => ProfileScreen()),
 
     // auth
     GetPage(

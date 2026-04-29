@@ -10,7 +10,7 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class BookmarkScreen extends GetView<BookmarkController> {
-  const BookmarkScreen({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +22,12 @@ class BookmarkScreen extends GetView<BookmarkController> {
       return DefaultTabController(
         length: tabs.length,
         child: Scaffold(
-          key: controller.scaffoldKey,
+          key: scaffoldKey,
           drawer: AppDrawer(),
           appBar: Appbar(
             leadingIcon: Icons.menu,
             leadingOnPressed: () {
-              controller.scaffoldKey.currentState!.openDrawer();
+              scaffoldKey.currentState!.openDrawer();
             },
             title: Text("Bookmarks", style: TextStyle(color: AppColors.white)),
           ),

@@ -6,7 +6,6 @@ class ProfileController extends GetxController {
   static ProfileController get instance => Get.find();
   final DatabaseService _databaseService = DatabaseService.instance;
   final completedTest = 0.obs;
-  final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void onInit() {

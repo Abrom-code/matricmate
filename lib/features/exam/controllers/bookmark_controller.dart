@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/bookmark_repository.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -19,7 +18,6 @@ class BookmarkController extends GetxController {
 
   final RxString languageSelected = "EN".obs;
   final RxBool isQnExpanded = false.obs;
-  final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void onInit() {

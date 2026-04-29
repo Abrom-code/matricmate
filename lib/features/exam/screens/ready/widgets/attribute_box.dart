@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/shapes/rounded_container.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class AttributeBox extends StatelessWidget {
   const AttributeBox({
@@ -17,7 +16,6 @@ class AttributeBox extends StatelessWidget {
   final IconData icon;
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
     return RoundedContainer(
       width: 95,
       height: 120,
@@ -36,9 +34,7 @@ class AttributeBox extends StatelessWidget {
 
           Text(
             label.toUpperCase(),
-            style: TextStyle(
-              color: dark ? AppColors.darkGrey : AppColors.darkerGrey,
-            ),
+            style: Theme.of(context).textTheme.labelSmall,
           ),
         ],
       ),

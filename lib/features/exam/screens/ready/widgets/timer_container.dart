@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/shapes/rounded_container.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class TimerContainer extends StatelessWidget {
   const TimerContainer({super.key, required this.time});
@@ -10,40 +9,32 @@ class TimerContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
-
     return RoundedContainer(
-      radius: AppSizes.md,
-      padding: EdgeInsets.fromLTRB(
-        AppSizes.defaultSpace,
-        AppSizes.defaultSpace / 2,
-        AppSizes.defaultSpace,
-        AppSizes.defaultSpace,
-      ),
+      radius: AppSizes.sm,
+      padding: EdgeInsets.all(10),
       child: Column(
         children: [
-          ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 0),
-            leading: Icon(
-              Icons.watch_later_outlined,
-              color: Colors.brown,
-              size: 25,
-            ),
-            title: Text(
-              "Timed Mode",
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            trailing: Switch(value: true, onChanged: null),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Timed Mode",
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall!.copyWith(color: AppColors.primary),
+              ),
+              Switch(value: false, onChanged: (v) {}),
+            ],
           ),
           const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
           Text(
-            "When enabled, a $time-minute timer will apply, The test will be completed when time expires.",
-            style: TextStyle(
-              color: dark ? AppColors.grey : AppColors.darkerGrey,
-              fontSize: 16,
-            ),
+            "When enabled, a $time-minute timer will apply, The test will be closed when time expires.",
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall!.copyWith(fontSize: 14),
           ),
+          const SizedBox(height: AppSizes.spaceBtwItems / 2),
         ],
       ),
     );

@@ -8,8 +8,6 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'dart:developer' as console;
-
 class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
 
@@ -145,7 +143,7 @@ class QuestionController extends GetxController {
 
       ToastHelper.success(
         "Test Completed",
-        "Your results have been synced successfully!",
+        "Your results have been saved successfully!",
       );
     } catch (e) {
       if (e is AppFailure) {

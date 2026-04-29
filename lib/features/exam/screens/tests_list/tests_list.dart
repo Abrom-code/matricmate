@@ -6,8 +6,8 @@ import 'package:matricmate/common/widgets/tiles/test_tile.dart';
 import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
-import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -54,9 +54,7 @@ class TestListScreen extends GetView<TestController> {
               final hasQn = controller.testHasQuestions[test.id] ?? false;
 
               final qnCount = test.questionCount;
-              final point = test.point;
               final time = test.time;
-              final title = '$subject: ${test.title}';
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
@@ -94,17 +92,7 @@ class TestListScreen extends GetView<TestController> {
                         );
                         return;
                       }
-
-                      Get.toNamed(
-                        Routes.ready,
-                        arguments: {
-                          'test_id': test.id,
-                          'point': point,
-                          'time': time,
-                          'qn_count': qnCount,
-                          'title': title,
-                        },
-                      );
+                      Get.dialog(ReadyDialog(qnCount: qnCount, time: time));
                     },
                   );
                 }),

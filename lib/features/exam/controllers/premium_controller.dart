@@ -6,6 +6,7 @@ import 'package:matricmate/data/repositories/payment/payment_repository.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -122,7 +123,7 @@ class PremiumController extends GetxController {
 
       ToastHelper.success("Cancelled", "Payment cancelled");
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isUploading.value = false;
     }

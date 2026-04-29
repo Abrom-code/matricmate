@@ -64,21 +64,19 @@ class PaymentRepository {
       final data = await _supabase
           .from('payment_receipts')
           .select('receipt_path')
-          .eq('user_id', userId)
-          .maybeSingle();
+          .eq('user_id', userId);
 
-      if (data != null) {
-        final String filePath = data['receipt_path'];
+      if (data.isNotEmpty) {
+        final List<String> filesToDelete = data
+            .map((e) => e['receipt_path'].toString().trim())
+            .toList();
 
-        final List<String> filesToDelete = [filePath.trim()];
         final List<FileObject> deletedFiles = await _supabase.storage
             .from('receipts')
             .remove(filesToDelete);
 
         if (deletedFiles.isEmpty) {
-          print(
-            "Storage Warning: No file was deleted. Check path or policies.",
-          );
+          throw Exception("Failed to delete any receipt files");
         }
       }
 

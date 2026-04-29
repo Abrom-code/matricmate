@@ -64,7 +64,8 @@ class UserController extends GetxController {
       user.value = UserModel.empty();
 
       AppFullScreenLoader.stopLoading();
-
+      final nav = Get.find<NavigationController>();
+      nav.selectedIdx.value = 0;
       Get.offAllNamed(Routes.signIn);
     } catch (e) {
       AppFullScreenLoader.stopLoading();

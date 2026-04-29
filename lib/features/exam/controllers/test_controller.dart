@@ -71,10 +71,10 @@ class TestController extends GetxController {
 
   Future<void> loadTestQuestionFlags(List<TestModel> tests) async {
     try {
-      await tests.map((test) async {
+      for (final test in tests) {
         final hasQn = await _testRepository.hasQns(test.id);
         testHasQuestions[test.id] = hasQn;
-      });
+      }
     } catch (e) {
       if (e is AppFailure) {
         ToastHelper.error(e.title, e.message);
@@ -107,12 +107,12 @@ class TestController extends GetxController {
   // load saved test
   Future<void> loadTestResults(List<TestModel> tests) async {
     try {
-      await tests.map((test) async {
+      for (final test in tests) {
         final result = await _testRepository.loadSavedResults(test.id);
         if (result != null) {
           testResults[test.id] = result;
         }
-      });
+      }
     } catch (e) {
       if (e is AppFailure) {
         ToastHelper.error(e.title, e.message);

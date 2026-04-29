@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -32,9 +33,7 @@ class ExplanationButton extends StatelessWidget {
           : EdgeInsets.symmetric(horizontal: AppSizes.md),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSizes.sm),
-        color: dark
-            ? const Color.fromARGB(255, 10, 10, 10)
-            : AppColors.white,
+        color: dark ? const Color.fromARGB(255, 10, 10, 10) : AppColors.white,
       ),
       child: Column(
         children: [
@@ -57,71 +56,71 @@ class ExplanationButton extends StatelessWidget {
                     children: [
                       Text(
                         "Why this is correct?",
-                        style: Theme.of(context).textTheme.bodyLarge!
-                            .copyWith(color: AppColors.primary),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                       Icon(
-                        expanded
-                            ? Icons.arrow_right
-                            : Icons.arrow_drop_down,
+                        expanded ? Icons.arrow_right : Icons.arrow_drop_down,
                         color: AppColors.primary,
                       ),
                     ],
                   ),
                 ),
               ),
-    
+
               if (expanded)
-                DropdownButton<String>(
-                  padding: EdgeInsets.all(0),
-                  isDense: true,
-                  iconEnabledColor: AppColors.primary,
-                  underline: SizedBox(),
-                  value: controller.languageSelected.value,
-                  items: [
-                    DropdownMenuItem(
-                      value: 'EN',
-                      child: Text(
-                        "EN",
-                        style: Theme.of(context).textTheme.bodyMedium!
-                            .copyWith(color: AppColors.primary),
+                Obx(
+                  () => DropdownButton<String>(
+                    padding: EdgeInsets.all(0),
+                    isDense: true,
+                    iconEnabledColor: AppColors.primary,
+                    underline: SizedBox(),
+                    value: controller.languageSelected.value,
+                    items: [
+                      DropdownMenuItem(
+                        value: 'EN',
+                        child: Text(
+                          "EN",
+                          style: Theme.of(context).textTheme.bodyMedium!
+                              .copyWith(color: AppColors.primary),
+                        ),
                       ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'AM',
-                      child: Text(
-                        "AM",
-                        style: Theme.of(context).textTheme.bodyMedium!
-                            .copyWith(color: AppColors.primary),
+                      DropdownMenuItem(
+                        value: 'AM',
+                        child: Text(
+                          "AM",
+                          style: Theme.of(context).textTheme.bodyMedium!
+                              .copyWith(color: AppColors.primary),
+                        ),
                       ),
-                    ),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) {
-                      controller.languageSelected.value = val;
-                    }
-                  },
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        controller.languageSelected.value = val;
+                      }
+                    },
+                  ),
                 ),
             ],
           ),
           if (expanded)
-            Column(
-              children: [
-                Divider(),
-                Text(
-                  textAlign: TextAlign.justify,
-                  controller.languageSelected.value == "EN"
-                      ? qn.explanationEn
-                      : qn.explanationAm,
-                  style: Theme.of(context).textTheme.bodyLarge!
-                      .copyWith(
-                        fontSize: 15,
-                        color: dark
-                            ? AppColors.grey
-                            : AppColors.darkerGrey,
-                      ),
-                ),
-              ],
+            Obx(
+              () => Column(
+                children: [
+                  Divider(),
+                  Text(
+                    textAlign: TextAlign.justify,
+                    controller.languageSelected.value == "EN"
+                        ? qn.explanationEn
+                        : qn.explanationAm,
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      fontSize: 15,
+                      color: dark ? AppColors.grey : AppColors.darkerGrey,
+                    ),
+                  ),
+                ],
+              ),
             ),
         ],
       ),

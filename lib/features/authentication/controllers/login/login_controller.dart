@@ -38,8 +38,8 @@ class LoginController extends GetxController {
 
       if (rememberMe.value) {
         _localStroage.writeIfNull("userLoginCredentials", [
-          email.value,
-          password.value,
+          email.text.trim(),
+          password.text.trim(),
         ]);
       } else {
         _localStroage.remove("userLoginCredentials");

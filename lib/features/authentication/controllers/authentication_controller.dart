@@ -11,6 +11,7 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -50,7 +51,7 @@ class AuthenticationController extends GetxController {
     await UserController.instance.loadLocalUser();
     await SubjectsController.instance.loadLocalSubjects();
 
-    Get.offAllNamed(Routes.navigationMenu);
+    Get.offAll(() => const NavigationMenu());
 
     final hasInternet = await NetworkManager.instance.hasRealInternet();
 

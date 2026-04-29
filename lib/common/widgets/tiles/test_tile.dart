@@ -43,10 +43,11 @@ class TestTile extends StatelessWidget {
             ).textTheme.titleSmall!.apply(color: AppColors.primary),
           ),
           subtitle: LinearProgressIndicator(
+            borderRadius: BorderRadius.circular(10),
             value: currentStep / maxStep,
             backgroundColor: dark ? AppColors.darkGrey : AppColors.grey,
             color: AppColors.primary,
-            minHeight: 6,
+            minHeight: 8,
           ),
           visualDensity: VisualDensity(vertical: 2),
 

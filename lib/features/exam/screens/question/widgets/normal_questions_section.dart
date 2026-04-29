@@ -68,6 +68,8 @@ class QuesitonSection extends GetView<QuestionController> {
                 },
               );
             }),
+            if (!controller.isAnswerChecked(question.id))
+              const SizedBox(height: AppSizes.spaceBtwSections),
             if (controller.isAnswerChecked(question.id))
               Column(
                 children: [
@@ -110,7 +112,7 @@ class QuesitonSection extends GetView<QuestionController> {
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 2),
+                      padding: EdgeInsets.symmetric(vertical: 13),
                     ),
                     onPressed: controller.currentIndex.value > 0
                         ? () => controller.previousQuestion()
@@ -160,7 +162,7 @@ class QuesitonSection extends GetView<QuestionController> {
                         }
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 2),
+                        padding: EdgeInsets.symmetric(vertical: 13),
                       ),
                       child: !isChecked
                           ? Text("Check Answer")

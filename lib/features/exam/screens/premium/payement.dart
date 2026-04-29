@@ -111,7 +111,7 @@ class PayementScreen extends StatelessWidget {
                 ),
               ),
               onPressed: controller.isUploading.value
-                  ? () {}
+                  ? null
                   : () => controller.completePayment(),
               child: controller.isUploading.value
                   ? SizedBox(

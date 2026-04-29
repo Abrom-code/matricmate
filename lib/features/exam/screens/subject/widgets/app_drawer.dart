@@ -28,12 +28,6 @@ class AppDrawer extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppColors.darkerGrey,
-                    child: Icon(Icons.person, color: Colors.white, size: 30),
-                  ),
-                  const SizedBox(width: 20),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

@@ -81,7 +81,6 @@ class PremiumController extends GetxController {
 
       await _repo.setUserPending(userId);
 
-      // 🔥 FIX: no manual fetch with id anymore
       await _userController.fetchUserRecord();
 
       Get.off(() => PaymentVerificationScreen());

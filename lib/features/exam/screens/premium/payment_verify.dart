@@ -87,17 +87,20 @@ class PaymentVerificationScreen extends StatelessWidget {
 
                 // Cancel button
                 TextButton(
-                  onPressed: () {
-                    AppDialogBoxes.showOkCancelDialog(
-                      context: context,
-                      title: "Cancel Payment",
-                      subtitle: "Are you sure you want to cancel this payment?",
-                      onPressed: () {
-                        Get.back();
-                        controller.cancelPayment();
-                      },
-                    );
-                  },
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          AppDialogBoxes.showOkCancelDialog(
+                            context: context,
+                            title: "Cancel Payment",
+                            subtitle:
+                                "Are you sure you want to cancel this payment?",
+                            onPressed: () {
+                              Get.back();
+                              controller.cancelPayment();
+                            },
+                          );
+                        },
                   child: isLoading
                       ? SizedBox(
                           width: 18,

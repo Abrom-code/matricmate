@@ -28,27 +28,58 @@ class AppHelperFuntions {
     );
   }
 
-  static void showImageZoom(
+  static Future<void> showImageZoom(
     BuildContext context,
     String imageUrl, {
     bool isAssetImage = false,
   }) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.all(0),
-        child: InteractiveViewer(
-          panEnabled: true,
-          minScale: 1.0,
-          maxScale: 4.0,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: isAssetImage
-                ? Image.asset(imageUrl, fit: BoxFit.contain)
-                : Image.network(imageUrl, fit: BoxFit.contain),
-          ),
-        ),
+    return Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        pageBuilder: (context, _, __) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: SizedBox.expand(
+              child: Stack(
+                children: [
+                  // 🔥 FULL SCREEN INTERACTIVE VIEW
+                  Positioned.fill(
+                    child: InteractiveViewer(
+                      panEnabled: true,
+                      minScale: 1.0,
+                      maxScale: 5.0,
+                      child: Center(
+                        child: isAssetImage
+                            ? Image.asset(imageUrl, fit: BoxFit.contain)
+                            : Image.network(imageUrl, fit: BoxFit.contain),
+                      ),
+                    ),
+                  ),
+
+                  // CLOSE BUTTON
+                  Positioned(
+                    top: 40,
+                    right: 20,
+                    child: SafeArea(
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        transitionsBuilder: (context, animation, _, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
       ),
     );
   }

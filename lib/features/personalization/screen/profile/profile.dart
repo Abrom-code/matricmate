@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
       appBar: Appbar(
         leadingIcon: Icons.menu,
         leadingOnPressed: () {
-          Scaffold.of(context).openDrawer();
+          scaffoldKey.currentState?.openDrawer();
         },
         title: Text("Profile", style: TextStyle(color: AppColors.white)),
       ),

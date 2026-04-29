@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/helpers/badges.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
-import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -123,7 +122,9 @@ class ResultScreen extends GetView<ResultController> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => Get.offAll(() => const NavigationMenu()),
+                  onPressed: () => Get.until(
+                    (route) => route.settings.name == Routes.navigationMenu,
+                  ),
                   child: Row(
                     spacing: 10,
                     mainAxisAlignment: MainAxisAlignment.center,

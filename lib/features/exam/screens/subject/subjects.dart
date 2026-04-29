@@ -32,7 +32,7 @@ class SubjectsScreen extends StatelessWidget {
         title: AppbarStatusTitle(title: "MatricMate"),
         leadingIcon: Icons.menu,
         leadingOnPressed: () {
-          Scaffold.of(context).openDrawer();
+          scaffoldKey.currentState?.openDrawer();
         },
         actions: [
           Padding(

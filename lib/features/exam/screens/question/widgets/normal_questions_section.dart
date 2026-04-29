@@ -17,9 +17,11 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 class QuesitonSection extends GetView<QuestionController> {
   const QuesitonSection({super.key, required this.question});
   final QuestionModel question;
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFuntions.isDark(context);
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSizes.defaultSpace,
@@ -32,27 +34,29 @@ class QuesitonSection extends GetView<QuestionController> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final isChecked = controller.isAnswerChecked(question.id);
-        final selectedIndex = controller.getSelectedAnswer(question.id);
+        // 🔥 ALWAYS use current question from controller
+        final q = controller.testQuestions[controller.currentIndex.value];
+
+        final isChecked = controller.isAnswerChecked(q.id);
+        final selectedIndex = controller.getSelectedAnswer(q.id);
+        final isLast =
+            controller.currentIndex.value ==
+            controller.testQuestions.length - 1;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Quesition
-            QuestionSection(
-              qnNumber: question.questionOrder,
-              examQn: question.questionText,
-            ),
+            /// QUESTION
+            QuestionSection(qnNumber: q.questionOrder, examQn: q.questionText),
             const SizedBox(height: AppSizes.spaceBtwItems),
 
-            // If there is Image
-            if (question.imageUrl != null)
-              ImageSection(imgUrl: question.imageUrl),
-            if (question.imageUrl != null)
+            /// IMAGE
+            if (q.imageUrl != null) ImageSection(imgUrl: q.imageUrl),
+            if (q.imageUrl != null)
               const SizedBox(height: AppSizes.spaceBtwItems),
 
-            // options
-            ...question.options.asMap().entries.map((entry) {
+            /// OPTIONS
+            ...q.options.asMap().entries.map((entry) {
               final index = entry.key;
               final option = entry.value;
 
@@ -61,21 +65,22 @@ class QuesitonSection extends GetView<QuestionController> {
                 isChecked: isChecked,
                 optionTxt: option,
                 index: index,
-                questionId: question.id,
-                correctIndex: question.correctOptionIndex,
+                questionId: q.id,
+                correctIndex: q.correctOptionIndex,
                 onTap: () {
                   if (!isChecked) {
-                    controller.selectAnswer(question.id, index);
+                    controller.selectAnswer(q.id, index);
                   }
                 },
               );
             }),
-            if (!controller.isAnswerChecked(question.id))
-              const SizedBox(height: AppSizes.spaceBtwSections),
-            if (controller.isAnswerChecked(question.id))
+
+            if (!isChecked) const SizedBox(height: AppSizes.spaceBtwItems),
+
+            /// EXPLANATION
+            if (isChecked)
               Column(
                 children: [
-                  // explanations
                   TextButton(
                     onPressed: () => controller.isExplanationExpanaded.value =
                         !controller.isExplanationExpanaded.value,
@@ -86,13 +91,11 @@ class QuesitonSection extends GetView<QuestionController> {
                               ? Icons.keyboard_arrow_up
                               : Icons.keyboard_arrow_right,
                           color: AppColors.primary,
-                          size: 24,
                         ),
                         Text(
                           "Explanation",
                           style: Theme.of(context).textTheme.titleMedium!.apply(
                             color: AppColors.primary,
-                            fontSizeDelta: 1.4,
                           ),
                         ),
                       ],
@@ -101,22 +104,25 @@ class QuesitonSection extends GetView<QuestionController> {
 
                   if (controller.isExplanationExpanaded.value)
                     ExplanationBox(
-                      explanationEn: question.explanationEn,
-                      explanationAm: question.explanationAm,
+                      explanationEn: q.explanationEn,
+                      explanationAm: q.explanationAm,
                     ),
-                  if (controller.isExplanationExpanaded.value)
-                    const SizedBox(height: 10),
                 ],
               ),
+            if (isChecked) const SizedBox(height: AppSizes.spaceBtwItems / 2),
+            if (!isChecked) const SizedBox(height: AppSizes.spaceBtwItems),
+
+            /// BUTTONS
             Row(
               children: [
+                /// PREVIOUS
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 13),
+                      padding: EdgeInsets.all(13),
                     ),
                     onPressed: controller.currentIndex.value > 0
-                        ? () => controller.previousQuestion()
+                        ? controller.previousQuestion
                         : null,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -125,13 +131,11 @@ class QuesitonSection extends GetView<QuestionController> {
                         Text(
                           "Previous",
                           style: TextStyle(
-                            color: !dark
-                                ? null
-                                : !dark
-                                ? null
-                                : !(controller.currentIndex.value > 0)
-                                ? AppColors.darkGrey
-                                : AppColors.grey,
+                            color: dark
+                                ? controller.currentIndex.value <= 0
+                                      ? AppColors.darkGrey
+                                      : null
+                                : null,
                           ),
                         ),
                       ],
@@ -141,82 +145,57 @@ class QuesitonSection extends GetView<QuestionController> {
 
                 const SizedBox(width: 12),
 
+                /// NEXT / CHECK / FINISH
                 Expanded(
-                  child: Obx(() {
-                    final q =
-                        controller.testQuestions[controller.currentIndex.value];
-                    final isChecked = controller.isAnswerChecked(q.id);
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.all(13),
+                    ),
+                    onPressed: selectedIndex == null
+                        ? null
+                        : () async {
+                            if (!isChecked) {
+                              controller.checkAnswer(q.id);
+                              return;
+                            }
 
-                    final isLast =
-                        controller.currentIndex.value ==
-                        controller.testQuestions.length - 1;
-                    final currentSelected = controller.getSelectedAnswer(q.id);
+                            if (isLast) {
+                              final result = ResultModel(
+                                userId: UserController.instance.user.value.id,
+                                testId: q.testId,
+                                selectedAnswers: controller.selectedAnswers,
+                                testQuestions: controller.testQuestions
+                                    .toList(),
+                                correctAnswers: controller.correctAnswers,
+                              );
 
-                    return OutlinedButton(
-                      onPressed: currentSelected == null
-                          ? null
-                          : () async {
-                              if (!isChecked) {
-                                controller.checkAnswer(q.id);
-                              } else {
-                                if (isLast) {
-                                  final result = ResultModel(
-                                    userId:
-                                        UserController.instance.user.value.id,
-                                    testId: question.testId,
-                                    selectedAnswers: controller.selectedAnswers,
-                                    testQuestions: controller.testQuestions
-                                        .toList(),
-                                    correctAnswers: controller.correctAnswers,
-                                  );
-                                  controller.saveResult(result);
-                                  TestController.instance.testResults[result
-                                          .testId] =
-                                      result;
-                                  Get.offNamed(
-                                    Routes.result,
-                                    arguments: {'result': result},
-                                  );
-                                } else {
-                                  controller.nextQuestion();
-                                }
-                              }
-                            },
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 13),
+                              await controller.saveResult(result);
+
+                              TestController.instance.testResults[result
+                                      .testId] =
+                                  result;
+
+                              Get.offNamed(
+                                Routes.result,
+                                arguments: {'result': result},
+                              );
+                            } else {
+                              controller.nextQuestion();
+                            }
+                          },
+                    child: Text(
+                      !isChecked
+                          ? "Check Answer"
+                          : (isLast ? "Finished" : "Next"),
+                      style: TextStyle(
+                        color: dark
+                            ? selectedIndex == null
+                                  ? AppColors.darkGrey
+                                  : null
+                            : null,
                       ),
-                      child: !isChecked
-                          ? Text(
-                              "Check Answer",
-                              style: TextStyle(
-                                color: !dark
-                                    ? null
-                                    : currentSelected == null
-                                    ? AppColors.darkGrey
-                                    : AppColors.grey,
-                              ),
-                            )
-                          : (isLast
-                                ? Text(
-                                    "Finished",
-                                    style: TextStyle(
-                                      color: !dark ? null : AppColors.grey,
-                                    ),
-                                  )
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        "Next",
-                                        style: TextStyle(
-                                          color: !dark ? null : AppColors.grey,
-                                        ),
-                                      ),
-                                      Icon(Icons.arrow_right),
-                                    ],
-                                  )),
-                    );
-                  }),
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/review_qn_container.dart';
-import 'package:matricmate/navigation_menu.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
@@ -36,7 +36,9 @@ class TestReviewScreen extends GetView<ReviewController> {
       bottomNavigationBar: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () => Get.offAll(() => const NavigationMenu()),
+          onPressed: () => Get.until(
+            (route) => route.settings.name == Routes.navigationMenu,
+          ),
           child: Row(
             spacing: 10,
             mainAxisAlignment: MainAxisAlignment.center,

@@ -7,6 +7,7 @@ import 'package:matricmate/bindings/auth/forgot_password_binding.dart';
 import 'package:matricmate/bindings/auth/login_binding.dart';
 import 'package:matricmate/bindings/exam/question_binding.dart';
 import 'package:matricmate/bindings/auth/reset_password_binding.dart';
+import 'package:matricmate/bindings/exam/ready_bindings.dart';
 import 'package:matricmate/bindings/exam/result_binding.dart';
 import 'package:matricmate/bindings/exam/review_binding.dart';
 import 'package:matricmate/bindings/auth/signup_binding.dart';
@@ -22,6 +23,7 @@ import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/grade_tests_page.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
+import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
 import 'package:matricmate/features/exam/screens/result/result_review.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
@@ -111,6 +113,10 @@ class AppRoutes {
       page: () => const SuccessScreen(),
       binding: SuccessBinding(),
     ),
-    // Add more GetPage entries as needed
+    GetPage(
+      name: Routes.ready,
+      page: () => const ReadyScreen(),
+      binding: ReadyBindings(),
+    ),
   ];
 }

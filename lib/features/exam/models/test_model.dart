@@ -1,6 +1,6 @@
 class TestModel {
   int id, subjectId, questionCount;
-  int? grade, chapterId;
+  int? grade, chapterId, time, point;
   String title, type;
   DateTime createdAt;
 
@@ -13,6 +13,8 @@ class TestModel {
     required this.createdAt,
     required this.type,
     required this.title,
+    this.point,
+    this.time,
   });
 
   factory TestModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,8 @@ class TestModel {
       createdAt: DateTime.parse(json['created_at']),
       type: json['type'],
       title: json['title'],
+      point: json['point'] ?? json['question_count'],
+      time: json['time'] ?? -1,
     );
   }
 
@@ -41,6 +45,8 @@ class TestModel {
       'created_at': createdAt.toIso8601String(),
       'type': type,
       'title': title,
+      'time': time,
+      'point': point,
     };
   }
 }

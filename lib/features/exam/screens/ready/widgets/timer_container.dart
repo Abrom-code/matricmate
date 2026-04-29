@@ -5,7 +5,8 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class TimerContainer extends StatelessWidget {
-  const TimerContainer({super.key});
+  const TimerContainer({super.key, required this.time});
+  final int time;
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +26,8 @@ class TimerContainer extends StatelessWidget {
             contentPadding: EdgeInsets.symmetric(horizontal: 0),
             leading: Icon(
               Icons.watch_later_outlined,
-              color: AppColors.primary,
-              size: 30,
+              color: Colors.brown,
+              size: 25,
             ),
             title: Text(
               "Timed Mode",
@@ -37,7 +38,7 @@ class TimerContainer extends StatelessWidget {
           const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
           Text(
-            "When enabled, a 60-minute timer will apply, The test will be completed when time expires.",
+            "When enabled, a $time-minute timer will apply, The test will be completed when time expires.",
             style: TextStyle(
               color: dark ? AppColors.grey : AppColors.darkerGrey,
               fontSize: 16,

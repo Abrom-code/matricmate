@@ -50,6 +50,8 @@ class DBschema {
         id INTEGER PRIMARY KEY,
         subject_id INTEGER NOT NULL,
         grade INTEGER,
+        point INTEGER,
+        time INTEGER,
         chapter_id INTEGER,
         title TEXT NOT NULL,
         type TEXT NOT NULL DEFAULT 'chapter',

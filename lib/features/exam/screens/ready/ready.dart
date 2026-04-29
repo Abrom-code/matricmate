@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/screens/ready/widgets/attribute_box.dart';
 import 'package:matricmate/features/exam/screens/ready/widgets/instruction_box.dart';
 import 'package:matricmate/features/exam/screens/ready/widgets/timer_container.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ReadyScreen extends StatelessWidget {
+class ReadyScreen extends GetView<ReadyController> {
   const ReadyScreen({super.key});
 
   @override
@@ -30,7 +32,7 @@ class ReadyScreen extends StatelessWidget {
             const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
             Text(
-              "Physics: unit 4 - test one",
+              controller.title,
               style: Theme.of(
                 context,
               ).textTheme.titleLarge!.copyWith(color: AppColors.primary),
@@ -44,11 +46,11 @@ class ReadyScreen extends StatelessWidget {
                 runSpacing: AppSizes.defaultSpace,
                 runAlignment: WrapAlignment.center,
                 children: [
-                  AttributeBox(icon: Icons.quiz, value: 50, label: 'questions'),
-                  AttributeBox(icon: Icons.timer, value: 60, label: 'minutes'),
+                  AttributeBox(icon: Icons.quiz, value: controller.qnCount, label: 'questions'),
+                  AttributeBox(icon: Icons.timer, value: controller.time, label: 'minutes'),
                   AttributeBox(
                     icon: Icons.military_tech,
-                    value: 100,
+                    value: controller.point,
                     label: 'points',
                   ),
                 ],
@@ -56,7 +58,7 @@ class ReadyScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.spaceBtwSections),
 
-            TimerContainer(),
+            TimerContainer(time: controller.time),
             const SizedBox(height: AppSizes.spaceBtwSections),
 
             Text(
@@ -84,7 +86,10 @@ class ReadyScreen extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(AppSizes.defaultSpace / 2),
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () => Get.offNamed(
+              Routes.questions,
+              arguments: {'test_id': controller.testId},
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -105,5 +110,22 @@ class ReadyScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class ReadyController extends GetxController {
+  static ReadyController get intstance => Get.find();
+
+  late int testId, point, qnCount, time;
+  late String title;
+  @override
+  void onInit() {
+    final argument = Get.arguments;
+    testId = argument['test_id'];
+    point = argument['point'];
+    qnCount = argument['qn_count'];
+    time = argument['time'];
+    title = argument['title'];
+    super.onInit();
   }
 }

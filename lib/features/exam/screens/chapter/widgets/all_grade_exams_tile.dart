@@ -7,12 +7,16 @@ import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class AllGradeExamsTile extends StatelessWidget {
-  const AllGradeExamsTile({super.key, required this.subjectId});
+  const AllGradeExamsTile({
+    super.key,
+    required this.subjectId,
+    required this.subject,
+  });
   final int subjectId;
+  final String subject;
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +37,12 @@ class AllGradeExamsTile extends StatelessWidget {
         itemBuilder: (context, index) {
           final test = tests[index];
 
-          // use cached value only
           final hasQn = controller.testHasQuestions[test.id] ?? false;
+          final qnCount = test.questionCount;
+          final point = test.point;
+          final time = test.time;
+          final title = '$subject: ${test.title}';
+
           final isInactive = UserController.instance.user.value.isInactive;
           final isPending = UserController.instance.user.value.isPending;
 
@@ -67,18 +75,17 @@ class AllGradeExamsTile extends StatelessWidget {
                     return;
                   }
 
-                  AppHelperFuntions.showAppDialog(
-                    context,
-                    "Want to take a test?",
-                    "You will be redirected to questions section.",
-                    () {
-                      Get.toNamed(
-                        Routes.questions,
-                        arguments: {'test_id': test.id},
-                      );
-                      Get.delete<QuestionController>();
+                  Get.toNamed(
+                    Routes.ready,
+                    arguments: {
+                      'test_id': test.id,
+                      'point': point,
+                      'time': time,
+                      'qn_count': qnCount,
+                      'title': title,
                     },
                   );
+                  Get.delete<QuestionController>();
                 },
               ),
             ),

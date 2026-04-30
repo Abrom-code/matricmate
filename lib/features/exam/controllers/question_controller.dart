@@ -11,6 +11,7 @@ import 'package:matricmate/features/personalization/controller/user_controller.d
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class QuestionController extends GetxController {
@@ -251,15 +252,8 @@ class QuestionController extends GetxController {
     Get.offNamed(Routes.result, arguments: {'result': result});
   }
 
-  String get formattedTime {
-    final hours = remainingSeconds.value ~/ 3600;
-    final minutes = (remainingSeconds.value % 3600) ~/ 60;
-    final seconds = remainingSeconds.value % 60;
-
-    return '${hours.toString().padLeft(2, '0')}:'
-        '${minutes.toString().padLeft(2, '0')}:'
-        '${seconds.toString().padLeft(2, '0')}';
-  }
+  String formattedTime(int second) =>
+      AppFormatter.formattedTime(remainingSeconds.value);
 
   @override
   void onClose() {

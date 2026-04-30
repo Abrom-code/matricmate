@@ -3,14 +3,6 @@ class AppImages {
   static const String transparentLogo =
       "assets/images/logo/transparent_logo.png";
 
-  // Onboarding Images
-  static const String firstOnboardingImage =
-      "assets/images/onboarding/onboarding1.png";
-  static const String secondOnboardingImage =
-      "assets/images/onboarding/onboarding2.png";
-  static const String thirdOnboardingImage =
-      "assets/images/onboarding/onboarding3.png";
-  static const String testImage = "assets/images/onboarding/test.png";
   static const String unknownUser = "assets/images/profile/unknown.png";
 
   // Main Subjects picture

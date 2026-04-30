@@ -11,7 +11,7 @@ class AppHelperFuntions {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
-      debugPrint("Telegram open failed: $e");
+      debugPrint("$url open failed: $e");
     }
   }
 

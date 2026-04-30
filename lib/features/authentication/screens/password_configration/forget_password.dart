@@ -60,7 +60,7 @@ class ForgetPassword extends GetView<ForgetPasswordController> {
                         : () => controller.resetPassword(),
                     child: controller.isLoading.value
                         ? AppCircularBottonLoading()
-                        : Text(AppTextStrings.submit),
+                        : Text("Submit"),
                   ),
                 ),
               ),

@@ -50,8 +50,28 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
                 AppTextStrings.confirmEmailSubTitle,
                 style: Theme.of(context).textTheme.labelMedium,
               ),
-
               const SizedBox(height: AppSizes.spaceBtwItems),
+
+              RichText(
+                text: TextSpan(
+                  text:
+                      "If you don’t see the verification email in your inbox, kindly check your ",
+                  style: Theme.of(context).textTheme.labelMedium,
+                  children: [
+                    TextSpan(
+                      text: "Spam folder".toUpperCase(),
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                      ),
+                    ),
+                    TextSpan(text: " as well."),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppSizes.spaceBtwSections),
 
               SizedBox(
                 width: double.infinity,
@@ -74,10 +94,17 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
 
               SizedBox(
                 width: double.infinity,
-                child: TextButton(
-                  onPressed: controller.sendEmailVerification,
-                  child: const Text(AppTextStrings.resendEmail),
-                ),
+                child: Obx(() {
+                  final isResending = controller.isResending.value;
+                  return TextButton(
+                    onPressed: isResending
+                        ? null
+                        : controller.sendEmailVerification,
+                    child: isResending
+                        ? AppCircularBottonLoading(color: AppColors.primary)
+                        : Text(AppTextStrings.resendEmail),
+                  );
+                }),
               ),
             ],
           ),

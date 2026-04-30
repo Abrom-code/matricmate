@@ -17,6 +17,7 @@ class VerifyEmailController extends GetxController {
       Get.find<AuthenticationRepository>();
 
   final isChecking = false.obs;
+  final isResending = false.obs;
 
   Timer? _timer;
 
@@ -32,10 +33,13 @@ class VerifyEmailController extends GetxController {
 
   Future<void> sendEmailVerification() async {
     try {
+      isResending.value = true;
       await _authRepo.sendEmailVerification();
       ToastHelper.success("Email sent", "Please check your inbox!");
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
+    } finally {
+      isResending.value = false;
     }
   }
 

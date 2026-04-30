@@ -21,6 +21,7 @@ import 'package:matricmate/features/authentication/screens/signup/verify_email.d
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/grade_test.dart';
+import 'package:matricmate/features/exam/screens/entrance/entrance.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
 import 'package:matricmate/features/exam/screens/result/review.dart';
@@ -110,6 +111,11 @@ class AppRoutes {
       name: Routes.success,
       page: () => const SuccessScreen(),
       binding: SuccessBinding(),
+    ),
+    GetPage(
+      name: Routes.entrance,
+      page: () => EntranceScreen(),
+      // binding: SuccessBinding(),
     ),
   ];
 }

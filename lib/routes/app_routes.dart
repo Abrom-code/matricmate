@@ -5,6 +5,7 @@ class Routes {
   static const chapter = '/chapter';
   static const tests = '/tests';
   static const gradeTests = '/gradeTests';
+  static const entrance = '/entrance';
   static const testLists = '/test_lists';
   static const questions = '/questions';
   static const questionsSections = '/questions-section';

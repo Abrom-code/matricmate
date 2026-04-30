@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/routes/routes.dart';
 
@@ -13,16 +14,26 @@ class NavigationMenu extends StatelessWidget {
     return Scaffold(
       bottomNavigationBar: Obx(
         () => NavigationBar(
-          height: 60,
+          height: 70,
           selectedIndex: controller.selectedIdx.value,
           onDestinationSelected: controller.changePage,
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home), label: "Questions"),
             NavigationDestination(
-              icon: Icon(Icons.bookmark),
+              icon: Icon(Iconsax.message_question_copy),
+              label: "Test",
+            ),
+            NavigationDestination(
+              icon: Icon(Iconsax.book_1_copy),
+              label: "Euee",
+            ),
+            NavigationDestination(
+              icon: Icon(Iconsax.archive_tick_copy),
               label: "Bookmarks",
             ),
-            NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
+            NavigationDestination(
+              icon: Icon(Iconsax.user_copy),
+              label: "Profile",
+            ),
           ],
         ),
       ),
@@ -54,6 +65,7 @@ class NavigationController extends GetxController {
 
   final List<String> routes = [
     Routes.home,
+    Routes.entrance,
     Routes.bookmark,
     Routes.userProfile,
   ];

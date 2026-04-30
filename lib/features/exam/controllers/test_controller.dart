@@ -9,8 +9,9 @@ class TestController extends GetxController {
   static TestController get instance => Get.find();
   final TestRepository _testRepository = TestRepository();
   final RxList<TestModel> chapterTest = <TestModel>[].obs;
-  final RxList<TestModel> allGradeTests = <TestModel>[].obs;
-  final RxList<TestModel> singleGradeTests = <TestModel>[].obs;
+  final RxList<TestModel> modelTests = <TestModel>[].obs;
+  final RxList<TestModel> entranceTests = <TestModel>[].obs;
+  final RxList<TestModel> gradeTests = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
   final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
 
@@ -56,7 +57,7 @@ class TestController extends GetxController {
       chapterTest.assignAll(data);
 
       await loadTestQuestionFlags(data);
-      loadAllGradeTests();
+      loadModelests();
       await loadTestResults(data);
     } catch (e) {
       if (e is AppFailure) {
@@ -92,14 +93,18 @@ class TestController extends GetxController {
         .toList();
   }
 
-  void loadAllGradeTests() {
-    allGradeTests.value = chapterTest
-        .where((t) => t.type == 'subject')
+  void loadModelests() {
+    modelTests.value = chapterTest.where((t) => t.type == 'model').toList();
+  }
+
+  void loadEntranceTests() {
+    entranceTests.value = chapterTest
+        .where((t) => t.type == 'entrance')
         .toList();
   }
 
   void loadGradeTests(int grade) {
-    singleGradeTests.value = chapterTest
+    gradeTests.value = chapterTest
         .where((t) => t.type == 'grade' && t.grade == grade)
         .toList();
   }

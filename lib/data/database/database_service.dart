@@ -225,6 +225,20 @@ class DatabaseService extends GetxController {
     }
   }
 
+  Future<int> getETestNumbers(int subjectId) async {
+    try {
+      final db = await database;
+      final result = await db.query(
+        'tests',
+        where: 'type = ? AND subject_id = ?',
+        whereArgs: ['entrance', subjectId],
+      );
+      return result.length;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<PassageModel> getPassage(int? pId) async {
     try {
       final db = await database;

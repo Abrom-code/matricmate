@@ -80,6 +80,14 @@ class SubjectRepository {
     }
   }
 
+  Future<int> testNumbers(int id) async {
+    try {
+      return await _dbService.getETestNumbers(id);
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
   Future<void> addSubject(SubjectMoModel subject) async {
     try {
       final db = await _dbService.database;

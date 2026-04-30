@@ -25,7 +25,7 @@ class TestListScreen extends GetView<TestController> {
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          '$subject - $chapter'.toUpperCase(),
+          '$subject ${chapter.isNotEmpty ? '- $chapter' : ''}'.toUpperCase(),
           style: Theme.of(
             context,
           ).textTheme.titleSmall!.apply(color: AppColors.white),

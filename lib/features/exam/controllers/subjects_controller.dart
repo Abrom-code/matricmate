@@ -16,6 +16,7 @@ class SubjectsController extends GetxController {
   final RxMap<String, bool> downloadingMap = <String, bool>{}.obs;
 
   final RxList<SubjectMoModel> subjects = <SubjectMoModel>[].obs;
+  final RxMap<int, int> testNumbers = <int, int>{}.obs;
 
   final RxString selectedStream = UserController.instance.user.value.stream.obs;
 
@@ -40,6 +41,7 @@ class SubjectsController extends GetxController {
       subjects.assignAll(
         dbSubjects.map((e) => SubjectMoModel.fromMap(e)).toList(),
       );
+      await loadTestNumbers(subjects);
     } finally {
       isLoading.value = false;
     }
@@ -92,6 +94,20 @@ class SubjectsController extends GetxController {
       await loadLocalSubjects();
     } finally {
       downloadingMap[subject] = false;
+    }
+  }
+
+  Future<void> loadTestNumbers(List<SubjectMoModel> subjects) async {
+    try {
+      await Future.wait(
+        subjects.map((s) async {
+          final tests = await _repo.testNumbers(s.id);
+
+          testNumbers[s.id] = tests;
+        }),
+      );
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
     }
   }
 

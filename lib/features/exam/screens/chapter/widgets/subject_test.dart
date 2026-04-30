@@ -21,7 +21,7 @@ class AllGradeExamsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<TestController>();
     return Obx(() {
-      final tests = controller.allGradeTests;
+      final tests = controller.modelTests;
 
       // empty state
       if (tests.isEmpty) {

@@ -13,6 +13,7 @@ import 'sqflite_expcetions.dart';
 import 'supabase_exception.dart';
 
 class AppExceptionHandler {
+  AppExceptionHandler._();
   static void handleResponse(dynamic e) {
     if (e is AppFailure) {
       ToastHelper.error(e.title, e.message);

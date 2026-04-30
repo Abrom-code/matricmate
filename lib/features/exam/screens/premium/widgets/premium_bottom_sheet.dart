@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/instance_manager.dart';
+import 'package:matricmate/common/widgets/tiles/tile.dart';
 import 'package:matricmate/features/exam/screens/premium/premium.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -63,7 +64,7 @@ class PremiumBottomSheet extends StatelessWidget {
 
           _featureTile(
             Icons.psychology_alt_outlined,
-            "Amharic and English Explanations",
+            "Amharic Explanations",
             'Get detail explanation for each questions in "Amharic" and English',
             Colors.teal,
             dark,
@@ -113,7 +114,7 @@ class PremiumBottomSheet extends StatelessWidget {
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
         color: dark ? const Color.fromARGB(255, 14, 14, 14) : Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -121,39 +122,18 @@ class PremiumBottomSheet extends StatelessWidget {
           BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color),
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        ],
+      child: AppTile(
+        isBorderVisible: false,
+        titleColor: null,
+        icon: icon,
+        iconColor: color,
+        title: title,
+        iconBgColor: color,
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        subTitle: Text(
+          subtitle,
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
       ),
     );
   }

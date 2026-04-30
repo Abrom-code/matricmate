@@ -93,8 +93,8 @@ class LoginController extends GetxController {
   void loadCredentials() {
     final savedCredentials = _localStroage.read("userLoginCredentials");
     if (savedCredentials != null) {
-      email.value = savedCredentials[0];
-      password.value = savedCredentials[1];
+      email.text = savedCredentials[0];
+      password.text = savedCredentials[1];
       rememberMe.value = true;
     }
   }

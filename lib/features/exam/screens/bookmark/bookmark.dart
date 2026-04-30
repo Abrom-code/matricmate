@@ -80,7 +80,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
                       child: ListView.separated(
                         itemCount: filtered.length,
                         separatorBuilder: (_, _) =>
-                            Divider(height: AppSizes.spaceBtwSections),
+                            SizedBox(height: AppSizes.spaceBtwItems),
                         itemBuilder: (_, index) {
                           final qn = filtered[index];
                           return BookmarkContainer(qn: qn);

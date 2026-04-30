@@ -4,7 +4,7 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class BookmarkController extends GetxController {
@@ -18,6 +18,7 @@ class BookmarkController extends GetxController {
 
   final RxString languageSelected = "EN".obs;
   final RxBool isQnExpanded = false.obs;
+  final RxBool isLodaing = false.obs;
 
   @override
   void onInit() {
@@ -32,17 +33,12 @@ class BookmarkController extends GetxController {
         questionId: qnId,
         savedAt: DateTime.now().millisecondsSinceEpoch,
       );
-
       await _repo.addBookmark(bookmarkQn);
 
       await loadBookmarks();
       ToastHelper.success("Success", "Added to bookmark!");
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     }
   }
 
@@ -53,16 +49,14 @@ class BookmarkController extends GetxController {
       await loadBookmarks();
       ToastHelper.success("Removed", "Bookmark is removed!");
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     }
   }
 
   Future<void> loadBookmarks() async {
     try {
+      isLodaing.value = true;
+
       final data = await _repo.loadBookmarks();
 
       bookmarkedQuestionIds.value = data
@@ -86,11 +80,9 @@ class BookmarkController extends GetxController {
           .whereType<QuestionModel>()
           .toList();
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isLodaing.value = false;
     }
   }
 

@@ -29,13 +29,24 @@ class ExplanationBox extends StatelessWidget {
             ? AppColors.darkerGrey.withValues(alpha: 0.5)
             : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: BoxBorder.all(color: AppColors.primary.withValues(alpha: .5)),
       ),
       child: Obx(
         () => Stack(
           children: [
             // Language Toggle (Top Right)
             Positioned(top: 5, right: 5, child: LanguageToggle()),
-
+            Positioned(
+              top: 10,
+              left: 15,
+              child: Text(
+                "Explanation",
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall!.copyWith(fontSize: 16),
+              ),
+            ),
+            Divider(height: 78),
             // Explanation text
             Padding(
               padding: const EdgeInsets.only(
@@ -44,12 +55,14 @@ class ExplanationBox extends StatelessWidget {
                 left: 16,
                 bottom: 16,
               ),
-              child: Text(
+              child: SelectableText(
                 controller.languageSelected.value == "AM"
                     ? explanationAm
                     : explanationEn,
                 textAlign: TextAlign.justify,
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall!.copyWith(fontSize: 14),
               ),
             ),
           ],

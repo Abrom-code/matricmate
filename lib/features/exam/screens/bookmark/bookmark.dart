@@ -69,7 +69,8 @@ class BookmarkScreen extends GetView<BookmarkController> {
                 children: controller.subjects.map((subject) {
                   return Obx(() {
                     final filtered = controller.getBySubject(subject);
-
+                    if (controller.isLodaing.value)
+                      return AppCircularLoading(title: "Loading...");
                     if (filtered.isEmpty) {
                       return Center(child: Text("No bookmark found"));
                     }

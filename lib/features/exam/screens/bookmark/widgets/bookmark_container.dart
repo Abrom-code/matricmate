@@ -67,10 +67,10 @@ class BookmarkContainer extends GetView<BookmarkController> {
                       context,
                       "Do you want to remove?",
                       "It will be deleted from your bookmark!",
-                      () {
-                        controller.removeFromBookmark(qn.id);
-                        Navigator.pop(context);
+                      () async {
+                        Get.back();
 
+                        await controller.removeFromBookmark(qn.id);
                         FocusManager.instance.primaryFocus?.unfocus();
                       },
                     ),
@@ -105,12 +105,10 @@ class BookmarkContainer extends GetView<BookmarkController> {
                       ),
                     ],
                   ),
-                  IconButton(
-                    onPressed: () => Get.to(BookmarkedQnContainer(qn: qn)),
-                    icon: Icon(Icons.keyboard_arrow_right),
-                  ),
+                  Icon(Icons.keyboard_arrow_right),
                 ],
               ),
+              const SizedBox(height: AppSizes.spaceBtwItems / 2),
             ],
           ),
         ),

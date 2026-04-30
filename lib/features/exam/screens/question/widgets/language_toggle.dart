@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
-import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class LanguageToggle extends StatelessWidget {
@@ -15,7 +14,9 @@ class LanguageToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: dark ? AppColors.darkGrey : Colors.grey.shade300, // background
+        color: dark
+            ? const Color.fromARGB(255, 71, 71, 71)
+            : Colors.grey.shade300, // background
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -52,7 +53,7 @@ class LanguageToggle extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected
               ? dark
-                    ? AppColors.darkerGrey
+                    ? const Color.fromARGB(255, 44, 44, 44)
                     : Colors.grey.shade100
               : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
@@ -61,7 +62,7 @@ class LanguageToggle extends StatelessWidget {
           text,
           style: TextStyle(
             color: selected
-                ? Colors.green
+                ? Colors.teal
                 : dark
                 ? Colors.white70
                 : Colors.black54,

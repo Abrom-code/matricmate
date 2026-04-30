@@ -74,9 +74,7 @@ class AppDrawer extends StatelessWidget {
               final isPending = UserController.instance.user.value.isPending;
               final isInactive = UserController.instance.user.value.isInactive;
               return ListView(
-                padding: EdgeInsets.symmetric(
-                  vertical: AppSizes.defaultSpace / 2,
-                ),
+                padding: EdgeInsets.only(bottom: AppSizes.defaultSpace / 2),
                 children: [
                   AppListTile(
                     icon: Icon(Icons.home_outlined),
@@ -106,7 +104,7 @@ class AppDrawer extends StatelessWidget {
                   if (isInactive)
                     AppListTile(
                       icon: Icon(Icons.workspace_premium, color: Colors.amber),
-                      title: 'Profile',
+                      title: 'Premium',
                       onTap: () {
                         Navigator.of(context).pop();
                         Get.bottomSheet(

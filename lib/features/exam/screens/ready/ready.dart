@@ -88,7 +88,7 @@ class ReadyDialog extends StatelessWidget {
                           arguments: {
                             'test_id': testId,
                             'is_timed': controller.isTimed.value,
-                            "time": 1,
+                            "time": time,
                           },
                         );
                         Get.delete<QuestionController>();

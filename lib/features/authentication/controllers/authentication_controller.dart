@@ -26,8 +26,6 @@ class AuthenticationController extends GetxController {
 
   @override
   void onReady() {
-    FlutterNativeSplash.remove();
-
     firebaseUser = Rx<User?>(authRepo.currentUser);
     firebaseUser.bindStream(authRepo.userChanges);
 
@@ -39,11 +37,13 @@ class AuthenticationController extends GetxController {
 
     if (user == null) {
       Get.offAllNamed(Routes.signIn);
+      FlutterNativeSplash.remove();
       return;
     }
 
     if (!user.emailVerified) {
       Get.offAllNamed(Routes.verifyEmail, arguments: {'email': user.email});
+      FlutterNativeSplash.remove();
       return;
     }
 
@@ -61,6 +61,7 @@ class AuthenticationController extends GetxController {
         } catch (_) {}
       });
     }
+    FlutterNativeSplash.remove();
   }
 
   Future<void> logout() async {

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -52,11 +51,7 @@ class SyncingController extends GetxController {
 
       await SubjectsController.instance.syncSubjects();
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      rethrow;
     } finally {
       refreshing.value = false;
     }

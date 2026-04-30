@@ -3,6 +3,7 @@ import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -45,8 +46,12 @@ class SubjectsController extends GetxController {
   }
 
   Future<void> syncAll() async {
-    await SyncingController.instance.syncAll();
-    ToastHelper.success("Success", "All subjects synced successfully!");
+    try {
+      await SyncingController.instance.syncAll();
+      ToastHelper.success("Success", "All subjects synced successfully!");
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
   }
 
   Future<void> syncSubjects() async {

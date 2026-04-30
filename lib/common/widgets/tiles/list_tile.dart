@@ -10,11 +10,13 @@ class AppListTile extends StatelessWidget {
     this.onTap,
     required this.title,
     this.trailing,
+    this.isDense,
   });
   final Widget icon;
   final VoidCallback? onTap;
   final String title;
   final Widget? trailing;
+  final bool? isDense;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,7 @@ class AppListTile extends StatelessWidget {
       color: Colors.transparent,
       clipBehavior: Clip.hardEdge,
       child: ListTile(
+        dense: isDense,
         leading: Container(
           padding: EdgeInsets.all(AppSizes.xs),
           decoration: BoxDecoration(

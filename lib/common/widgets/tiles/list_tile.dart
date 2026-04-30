@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ProfileTile extends StatelessWidget {
-  const ProfileTile({
+class AppListTile extends StatelessWidget {
+  const AppListTile({
     super.key,
     required this.icon,
     this.onTap,
@@ -17,6 +18,7 @@ class ProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFuntions.isDark(context);
     return Material(
       color: Colors.transparent,
       clipBehavior: Clip.hardEdge,
@@ -29,7 +31,12 @@ class ProfileTile extends StatelessWidget {
           ),
           child: icon,
         ),
-        title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+        title: Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+            color: dark ? AppColors.grey : AppColors.darkerGrey,
+          ),
+        ),
         trailing: trailing,
         onTap: onTap,
       ),

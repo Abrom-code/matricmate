@@ -57,15 +57,15 @@ class PremiumBottomSheet extends StatelessWidget {
             Icons.school,
             "All Grade Tests",
             "Practice full syllabus tests for your grade level.",
-            Colors.deepPurple,
+            Colors.green,
             dark,
           ),
 
           _featureTile(
-            Icons.analytics_outlined,
-            "Full Analytics Dashboard",
-            "Track accuracy, progress, weak chapters, and performance insights.",
-            Colors.green,
+            Icons.psychology_alt_outlined,
+            "Amharic and English Explanations",
+            'Get detail explanation for each questions in "Amharic" and English',
+            Colors.teal,
             dark,
           ),
 

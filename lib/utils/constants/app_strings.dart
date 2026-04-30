@@ -58,4 +58,7 @@ class AppTextStrings {
       "Didn't get the email? Check your junk/spam or resend it.";
   static const String yourAccountCreatedTitle =
       "Your account successfully created!";
+
+  // urls
+  static const String telegramChannel = "https://t.me/matric_mate";
 }

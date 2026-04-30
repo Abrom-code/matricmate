@@ -87,6 +87,8 @@ class SubjectsScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Icon(Icons.loop),
+                        const SizedBox(width: AppSizes.sm),
                         Text(
                           "Check Payment Status",
                           style: TextStyle(
@@ -95,7 +97,6 @@ class SubjectsScreen extends StatelessWidget {
                             fontSize: 15,
                           ),
                         ),
-                        Icon(Icons.call_made),
                       ],
                     ),
                   ),

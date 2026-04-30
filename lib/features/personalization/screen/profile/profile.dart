@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/personalization/controller/profile_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -30,51 +31,56 @@ class ProfileScreen extends StatelessWidget {
         },
         title: Text("Profile", style: TextStyle(color: AppColors.white)),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(AppSizes.defaultSpace),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: ProfileSection()),
-              const SizedBox(height: AppSizes.spaceBtwSections),
+      body: Obx(() {
+        if (UserController.instance.userFetching.value) {
+          return AppCircularLoading(title: 'Loading...');
+        }
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(AppSizes.defaultSpace),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(child: ProfileSection()),
+                const SizedBox(height: AppSizes.spaceBtwSections),
 
-              Obx(
-                () => AnalyticsContainer(
-                  title: "Tests completed",
-                  value: controller.completedTest.value,
-                ),
-              ),
-              const SizedBox(height: AppSizes.spaceBtwSections),
-
-              Text(
-                "ACCOUNT SETTINGS",
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  color: dark ? AppColors.grey : AppColors.darkerGrey,
-                ),
-              ),
-              SizedBox(height: AppSizes.spaceBtwItems),
-
-              AccountSettings(),
-              SizedBox(height: AppSizes.spaceBtwSections),
-
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => AppDialogBoxes.showOkCancelDialog(
-                    context: context,
-                    onPressed: () => _userController.logOut(),
+                Obx(
+                  () => AnalyticsContainer(
+                    title: "Tests completed",
+                    value: controller.completedTest.value,
                   ),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.red),
-                  ),
-                  child: Text('Log Out', style: TextStyle(color: Colors.red)),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSizes.spaceBtwSections),
+
+                Text(
+                  "ACCOUNT SETTINGS",
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: dark ? AppColors.grey : AppColors.darkerGrey,
+                  ),
+                ),
+                SizedBox(height: AppSizes.spaceBtwItems),
+
+                AccountSettings(),
+                SizedBox(height: AppSizes.spaceBtwSections),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => AppDialogBoxes.showOkCancelDialog(
+                      context: context,
+                      onPressed: () => _userController.logOut(),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.red),
+                    ),
+                    child: Text('Log Out', style: TextStyle(color: Colors.red)),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }

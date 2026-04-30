@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/status_title.dart';
+import 'package:matricmate/common/widgets/tiles/list_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
+import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/themes/theme_controller.dart';
 
@@ -71,41 +74,41 @@ class AppDrawer extends StatelessWidget {
               final isPending = UserController.instance.user.value.isPending;
               final isInactive = UserController.instance.user.value.isInactive;
               return ListView(
-                padding: EdgeInsets.zero,
+                padding: EdgeInsets.symmetric(
+                  vertical: AppSizes.defaultSpace / 2,
+                ),
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.home_outlined),
-                    title: Text("Home"),
+                  AppListTile(
+                    icon: Icon(Icons.home_outlined),
+                    title: 'Home',
                     onTap: () {
-                      Get.back();
+                      Navigator.of(context).pop();
                       Get.find<NavigationController>().changePage(0);
                     },
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.bookmark_outline),
-                    title: const Text("Bookmarks"),
+                  AppListTile(
+                    icon: Icon(Icons.bookmark_outline),
+                    title: 'Bookmarks',
                     onTap: () {
-                      Get.back();
+                      Navigator.of(context).pop();
                       Get.find<NavigationController>().changePage(1);
                     },
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.person_outline),
-                    title: const Text("Profile"),
+                  AppListTile(
+                    icon: Icon(Icons.person_outline),
+                    title: 'Profile',
                     onTap: () {
-                      Get.back();
+                      Navigator.of(context).pop();
                       Get.find<NavigationController>().changePage(2);
                     },
                   ),
+
                   if (isInactive)
-                    ListTile(
-                      leading: const Icon(
-                        Icons.workspace_premium,
-                        color: Colors.amber,
-                      ),
-                      title: const Text("Subscribe Premium"),
+                    AppListTile(
+                      icon: Icon(Icons.workspace_premium, color: Colors.amber),
+                      title: 'Profile',
                       onTap: () {
-                        Get.back();
+                        Navigator.of(context).pop();
                         Get.bottomSheet(
                           const PremiumBottomSheet(),
                           isScrollControlled: true,
@@ -114,39 +117,49 @@ class AppDrawer extends StatelessWidget {
                     ),
 
                   if (isPending)
-                    ListTile(
-                      leading: const Icon(Icons.refresh),
-                      title: const Text("Refresh Payment"),
+                    AppListTile(
+                      icon: Icon(Icons.loop, color: Colors.amber),
+                      title: 'Refresh Payment',
                       onTap: () async {
-                        Get.back();
+                        Navigator.of(context).pop();
                         await UserController.instance.checkPaymentStatus();
                       },
                     ),
-                  Divider(),
 
-                  ListTile(
-                    leading: const Icon(
-                      Icons.telegram,
-                      color: Colors.lightBlue,
+                  const SizedBox(height: AppSizes.spaceBtwItems),
+                  Container(
+                    padding: EdgeInsets.only(left: AppSizes.defaultSpace),
+                    child: Text(
+                      "CONNECT & SUPPORT",
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                        color: dark ? AppColors.darkGrey : AppColors.darkerGrey,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.spaceBtwItems),
 
-                      size: 30,
-                    ),
-                    title: const Text("Telegram"),
-                    onTap: () {},
+                  AppListTile(
+                    icon: Icon(Icons.send_outlined),
+                    title: 'Join Telegram',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      AppHelperFuntions.openUrl(AppTextStrings.telegramChannel);
+                    },
                   ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.smart_display,
-                      color: Colors.red,
-                      size: 30,
-                    ),
-                    title: const Text("YouTube"),
-                    onTap: () {},
+
+                  AppListTile(
+                    icon: Icon(Icons.star_outline),
+                    title: 'Rate App',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.tiktok),
-                    title: const Text("TikTok"),
-                    onTap: () {},
+                  AppListTile(
+                    icon: Icon(Icons.share),
+                    title: 'Share with Friend',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
                 ],
               );

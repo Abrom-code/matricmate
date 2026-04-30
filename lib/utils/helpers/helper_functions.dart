@@ -2,30 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AppHelperFuntions {
-  static void showSnackBar(String message) {
-    ScaffoldMessenger.of(
-      Get.context!,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
+  static Future<void> openUrl(String url) async {
+    final Uri uri = Uri.parse(url);
 
-  static void showAlert(String title, String message) {
-    showDialog(
-      context: Get.context!,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint("Telegram open failed: $e");
+    }
   }
 
   static Future<void> showImageZoom(

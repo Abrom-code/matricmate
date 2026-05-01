@@ -63,7 +63,7 @@ class SyncRepository {
           .from('tests')
           .select()
           .inFilter('subject_id', subjectIds)
-          .eq('type', 'entrance');
+          .inFilter('type', ['entrance', 'model']);
 
       final List<int> testIds = [];
 

@@ -98,12 +98,15 @@ class DatabaseService extends GetxController {
   }
 
   // Get Subject tests
-  Future<List<Map<String, dynamic>>> getSubjectTests(int subjectId) async {
+  Future<List<Map<String, dynamic>>> getGradeTests(
+    int subjectId,
+    int grade,
+  ) async {
     try {
       final db = await database;
       return db.rawQuery(
-        'SELECT * FROM tests WHERE subject_id = (SELECT id FROM subjects WHERE id = ?)',
-        [subjectId],
+        'SELECT * FROM tests WHERE subject_id = (SELECT id FROM subjects WHERE id = ?) AND grade = ?',
+        [subjectId, grade],
       );
     } catch (e) {
       throw e;
@@ -113,12 +116,13 @@ class DatabaseService extends GetxController {
   // Get entrance tests
   Future<List<Map<String, dynamic>>> getSubjectEntranceTests(
     int subjectId,
+    String type,
   ) async {
     try {
       final db = await database;
       return db.rawQuery(
         'SELECT * FROM tests WHERE subject_id = (SELECT id FROM subjects WHERE id = ?) AND type=?',
-        [subjectId, 'entrance'],
+        [subjectId, type],
       );
     } catch (e) {
       throw e;
@@ -240,13 +244,13 @@ class DatabaseService extends GetxController {
     }
   }
 
-  Future<int> getETestNumbers(int subjectId) async {
+  Future<int> getETestNumbers(int subjectId, String type) async {
     try {
       final db = await database;
       final result = await db.query(
         'tests',
         where: 'type = ? AND subject_id = ?',
-        whereArgs: ['entrance', subjectId],
+        whereArgs: [type, subjectId],
       );
       return result.length;
     } catch (e) {

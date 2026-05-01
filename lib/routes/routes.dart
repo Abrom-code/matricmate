@@ -6,6 +6,7 @@ import 'package:matricmate/bindings/auth/email_verify_binding.dart';
 import 'package:matricmate/bindings/auth/forgot_password_binding.dart';
 import 'package:matricmate/bindings/auth/login_binding.dart';
 import 'package:matricmate/bindings/exam/entrance_binding.dart';
+import 'package:matricmate/bindings/exam/entrance_exams_binding.dart';
 import 'package:matricmate/bindings/exam/question_binding.dart';
 import 'package:matricmate/bindings/auth/reset_password_binding.dart';
 import 'package:matricmate/bindings/exam/result_binding.dart';
@@ -114,11 +115,15 @@ class AppRoutes {
       page: () => const SuccessScreen(),
       binding: SuccessBinding(),
     ),
-    GetPage(name: Routes.entrance, page: () => EntranceScreen()),
+    GetPage(
+      name: Routes.entrance,
+      page: () => EntranceScreen(),
+      binding: EntranceBinding(),
+    ),
     GetPage(
       name: Routes.entranceExams,
       page: () => EntranceExams(),
-      binding: EntranceBinding(),
+      binding: EntranceExamsBinding(),
     ),
   ];
 }

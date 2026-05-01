@@ -89,9 +89,9 @@ class SubjectRepository {
     }
   }
 
-  Future<int> testNumbers(int id) async {
+  Future<int> testNumbers(int id, String type) async {
     try {
-      return await _dbService.getETestNumbers(id);
+      return await _dbService.getETestNumbers(id, type);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

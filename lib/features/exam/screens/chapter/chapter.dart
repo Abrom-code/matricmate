@@ -6,7 +6,6 @@ import 'package:matricmate/features/exam/screens/chapter/widgets/chpater_tile.da
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
-import 'package:matricmate/features/exam/screens/chapter/widgets/subject_test.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -39,8 +38,7 @@ class ChapterScreen extends GetView<ChapterController> {
               horizontal: AppSizes.defaultSpace,
             ),
             child: TabBar(
-              tabAlignment: TabAlignment.start,
-              isScrollable: true,
+              tabAlignment: TabAlignment.fill,
               labelPadding: const EdgeInsets.symmetric(horizontal: 10),
               controller: tabController.tabController,
               labelStyle: const TextStyle(
@@ -59,18 +57,6 @@ class ChapterScreen extends GetView<ChapterController> {
               children: List.generate(tabController.tabs.length, (index) {
                 final tab = tabController.tabs[index];
                 final grade = tab["grade"];
-
-                if (grade == null) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppSizes.defaultSpace,
-                    ),
-                    child: AllGradeExamsTile(
-                      subject: title,
-                      subjectId: subjectId,
-                    ),
-                  );
-                }
 
                 return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),

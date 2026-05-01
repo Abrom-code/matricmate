@@ -4,6 +4,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/tiles/tile.dart';
+import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -19,7 +20,7 @@ class EntranceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<SubjectsController>();
-
+    final tabController = Get.find<ExamSelectionController>();
     return Scaffold(
       key: scaffoldKey,
       drawer: AppDrawer(),
@@ -35,57 +36,96 @@ class EntranceScreen extends StatelessWidget {
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.spaceBtwItems),
-        child: Obx(() {
-          if (UserController.instance.userFetching.value ||
-              controller.isLoading.value) {
-            return AppCircularLoading(title: 'Loading...');
-          }
+      body: Column(
+        children: [
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.defaultSpace,
+            ),
+            child: TabBar(
+              tabAlignment: TabAlignment.fill,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+              controller: tabController.tabController,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              tabs: tabController.tabs
+                  .map((t) => Tab(text: t["label"]))
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: TabBarView(
+              controller: tabController.tabController,
+              children: List.generate(tabController.tabs.length, (index) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.spaceBtwItems,
+                  ),
+                  child: Obx(() {
+                    if (UserController.instance.userFetching.value ||
+                        controller.isLoading.value) {
+                      return AppCircularLoading(title: 'Loading...');
+                    }
 
-          final isNaturalStream = controller.selectedStream.value == "natural";
-          final filteredSubjects = controller.subjects.where((subject) {
-            return subject.isCommon || subject.isNatural == isNaturalStream;
-          }).toList();
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ...filteredSubjects.map((subject) {
-                final examNums = controller.testNumbers[subject.id];
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: AppSizes.spaceBtwItems,
-                  ),
-                  child: AppTile(
-                    icon: Iconsax.book_square_copy,
-                    title: subject.name,
-                    subTitle: Text(
-                      "${examNums != 0 ? examNums : 'No'} entrance exams",
-                    ),
-                    onTap: () {
-                      if (examNums != 0) {
-                        Get.toNamed(
-                          Routes.entranceExams,
-                          arguments: {
-                            'subject_id': subject.id,
-                            'subject': subject.name,
-                          },
-                        );
-                      } else {
-                        ToastHelper.info(
-                          "No Exams Added",
-                          "Exams will be added soon!",
-                        );
-                      }
-                      ;
-                    },
-                  ),
+                    final isNaturalStream =
+                        controller.selectedStream.value == "natural";
+                    final filteredSubjects = controller.subjects.where((
+                      subject,
+                    ) {
+                      return subject.isCommon ||
+                          subject.isNatural == isNaturalStream;
+                    }).toList();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ...filteredSubjects.map((subject) {
+                          final examNums = index == 0
+                              ? controller.entranceTestNumbers[subject.id]
+                              : controller.modelTestNumbers[subject.id];
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSizes.spaceBtwItems,
+                            ),
+                            child: AppTile(
+                              icon: Iconsax.book_square_copy,
+                              title: subject.name,
+                              subTitle: Text(
+                                "${examNums != 0 ? examNums : 'No'} ${index == 0 ? 'entrance' : 'model'} exams",
+                              ),
+                              onTap: () {
+                                if (examNums != 0) {
+                                  Get.toNamed(
+                                    Routes.entranceExams,
+                                    arguments: {
+                                      'subject_id': subject.id,
+                                      'subject': subject.name,
+                                      'type': index == 0 ? 'entrance' : 'model',
+                                    },
+                                  );
+                                } else {
+                                  ToastHelper.info(
+                                    "No Exams Added",
+                                    "Exams will be added soon!",
+                                  );
+                                }
+                                ;
+                              },
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: AppSizes.spaceBtwSections),
+                      ],
+                    );
+                  }),
                 );
               }),
-              const SizedBox(height: AppSizes.spaceBtwSections),
-            ],
-          );
-        }),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -16,7 +16,8 @@ class SubjectsController extends GetxController {
   final RxMap<String, bool> downloadingMap = <String, bool>{}.obs;
 
   final RxList<SubjectMoModel> subjects = <SubjectMoModel>[].obs;
-  final RxMap<int, int> testNumbers = <int, int>{}.obs;
+  final RxMap<int, int> entranceTestNumbers = <int, int>{}.obs;
+  final RxMap<int, int> modelTestNumbers = <int, int>{}.obs;
 
   final RxString selectedStream = UserController.instance.user.value.stream.obs;
 
@@ -101,9 +102,11 @@ class SubjectsController extends GetxController {
     try {
       await Future.wait(
         subjects.map((s) async {
-          final tests = await _repo.testNumbers(s.id);
+          final entranceTests = await _repo.testNumbers(s.id, 'entrance');
+          final modelTests = await _repo.testNumbers(s.id, 'model');
 
-          testNumbers[s.id] = tests;
+          entranceTestNumbers[s.id] = entranceTests;
+          modelTestNumbers[s.id] = modelTests;
         }),
       );
     } catch (e) {

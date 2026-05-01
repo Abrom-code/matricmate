@@ -11,35 +11,36 @@ class EntranceExamsController extends GetxController {
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
   final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
 
-  final RxString subjectName = ''.obs;
-  final RxInt subjectId = 0.obs;
   final RxBool isLoading = false.obs;
+  late String subjectName;
+  late int subjectId;
+  late String type;
 
   @override
   void onInit() {
     final args = Get.arguments ?? {};
 
-    subjectName.value = args['subject'] ?? '';
-    subjectId.value = args['subject_id'] ?? 0;
-
-    loadEntranceTests(subjectId.value);
+    subjectName = args['subject'];
+    subjectId = args['subject_id'];
+    type = args['type'];
+    loadExams(subjectId, type);
 
     super.onInit();
   }
 
-  Future<void> loadEntranceTests(int subjectId) async {
+  Future<void> loadExams(int subjectId, String type) async {
     try {
       isLoading.value = true;
       testHasQuestions.clear();
       testResults.clear();
 
-      final dbEntranceTests = await _testRepository.getLocalEntranceTests(
-        subjectId,
+      final dbExams = await _testRepository.getLocalEntranceTests(
+        subjectId,type
       );
 
       late List<TestModel> data;
 
-      data = dbEntranceTests.map((e) => TestModel.fromMap(e)).toList();
+      data = dbExams.map((e) => TestModel.fromMap(e)).toList();
 
       entranceTests.assignAll(data);
 

@@ -44,12 +44,14 @@ class QuestionController extends GetxController {
   late int testId;
   late bool isTimed;
   late int time;
+  late int ctrlId;
 
   @override
   void onInit() {
     testId = Get.arguments['test_id'];
     isTimed = Get.arguments['is_timed'];
     time = Get.arguments['time'];
+    ctrlId = Get.arguments['id'];
     loadTestQuestions(testId);
     if (isTimed) startTimer(time);
     super.onInit();

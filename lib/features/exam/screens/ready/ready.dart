@@ -14,8 +14,9 @@ class ReadyDialog extends StatelessWidget {
     required this.qnCount,
     required this.time,
     required this.testId,
+    required this.id,
   });
-  final int qnCount, time, testId;
+  final int qnCount, time, testId, id;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +90,7 @@ class ReadyDialog extends StatelessWidget {
                             'test_id': testId,
                             'is_timed': controller.isTimed.value,
                             "time": time,
+                            'id': id,
                           },
                         );
                         Get.delete<QuestionController>();

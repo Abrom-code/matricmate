@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
+import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
+import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
@@ -168,6 +171,22 @@ class QuesitonSection extends GetView<QuestionController> {
                               );
 
                               await controller.saveResult(result);
+                              // grade test   id:0
+                              // chapter test id:1
+                              // exam         id:2
+                              switch (controller.ctrlId) {
+                                case 0:
+                                  final c = Get.find<GradeTestController>();
+                                  await c.loadTestResults(c.chapterTests);
+                                case 1:
+                                  final c = Get.find<ChapterTestController>();
+                                  await c.loadTestResults(c.chapterTest);
+                                case 2:
+                                  final c = Get.find<ExamsController>();
+                                  await c.loadTestResults(c.entranceTests);
+                                default:
+                                  break;
+                              }
                               Get.offNamed(
                                 Routes.result,
                                 arguments: {'result': result},

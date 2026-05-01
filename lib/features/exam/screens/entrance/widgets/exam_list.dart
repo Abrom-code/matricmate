@@ -86,6 +86,7 @@ class EntranceExams extends GetView<ExamsController> {
                           qnCount: qnCount,
                           time: time,
                           testId: test.id,
+                          id: 2,
                         ),
                       );
                     },

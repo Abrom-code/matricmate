@@ -97,7 +97,7 @@ class ChapterTestScreen extends GetView<ChapterTestController> {
                           qnCount: qnCount,
                           time: time,
                           testId: test.id,
-
+                          id: 1,
                         ),
                       );
                     },

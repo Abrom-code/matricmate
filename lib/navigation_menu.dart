@@ -24,7 +24,7 @@ class NavigationMenu extends StatelessWidget {
             ),
             NavigationDestination(
               icon: Icon(Iconsax.book_1_copy),
-              label: "EUEE",
+              label: "Exam",
             ),
             NavigationDestination(
               icon: Icon(Iconsax.archive_tick_copy),

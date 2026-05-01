@@ -89,6 +89,7 @@ class GradeTestsPage extends GetView<GradeTestController> {
                           qnCount: qnCount,
                           time: time,
                           testId: test.id,
+                          id: 0,
                         ),
                       );
                     },

@@ -1,11 +1,11 @@
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/bindings_interface.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
-import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
+import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
 
-class TestBinding extends Bindings {
+class GradeTestBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ChapterTestController>(() => ChapterTestController());
+    Get.lazyPut<GradeTestController>(() => GradeTestController());
   }
 }

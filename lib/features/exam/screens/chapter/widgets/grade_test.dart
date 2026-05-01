@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
-import 'package:matricmate/features/exam/controllers/test_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
@@ -11,13 +11,13 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class GradeTestsPage extends GetView<TestController> {
+class GradeTestsPage extends GetView<GradeTestController> {
   const GradeTestsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final grade = controller.grade;
-    final subject = controller.title;
+    final subject = controller.subjectName;
 
     return Scaffold(
       appBar: Appbar(
@@ -32,7 +32,7 @@ class GradeTestsPage extends GetView<TestController> {
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Obx(() {
-          final tests = controller.gradeTests;
+          final tests = controller.chapterTests;
 
           if (tests.isEmpty) {
             return const Center(child: Text("No Tests Found"));
@@ -66,7 +66,7 @@ class GradeTestsPage extends GetView<TestController> {
                     testName: test.title,
                     onTap: () {
                       if (!hasQn) {
-                        if (isInactive) {
+                        if (isInactive && index > 0) {
                           Get.bottomSheet(
                             const PremiumBottomSheet(),
                             isScrollControlled: true,

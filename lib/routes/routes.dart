@@ -7,6 +7,7 @@ import 'package:matricmate/bindings/auth/forgot_password_binding.dart';
 import 'package:matricmate/bindings/auth/login_binding.dart';
 import 'package:matricmate/bindings/exam/entrance_binding.dart';
 import 'package:matricmate/bindings/exam/entrance_exams_binding.dart';
+import 'package:matricmate/bindings/exam/grade_test_binding.dart';
 import 'package:matricmate/bindings/exam/question_binding.dart';
 import 'package:matricmate/bindings/auth/reset_password_binding.dart';
 import 'package:matricmate/bindings/exam/result_binding.dart';
@@ -53,11 +54,11 @@ class AppRoutes {
     GetPage(
       name: Routes.gradeTests,
       page: () => GradeTestsPage(),
-      binding: TestBinding(),
+      binding: GradeTestBinding(),
     ),
     GetPage(
       name: Routes.testLists,
-      page: () => TestListScreen(),
+      page: () => ChapterTestScreen(),
       binding: TestBinding(),
     ),
     GetPage(

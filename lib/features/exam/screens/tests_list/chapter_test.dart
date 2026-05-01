@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
-import 'package:matricmate/features/exam/controllers/test_controller.dart';
+import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
@@ -12,8 +12,8 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class TestListScreen extends GetView<TestController> {
-  const TestListScreen({super.key});
+class ChapterTestScreen extends GetView<ChapterTestController> {
+  const ChapterTestScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

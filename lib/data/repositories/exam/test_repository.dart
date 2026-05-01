@@ -6,23 +6,17 @@ import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 class TestRepository {
   final DatabaseService _dbService = DatabaseService.instance;
 
-  Future<List<Map<String, dynamic>>> getLocalTestsById(
-    int subjectId,
-    int grade,
-  ) async {
+  Future<List<Map<String, dynamic>>> getLocalTests({
+    required int subjectId,
+    int? grade,
+    String? type,
+  }) async {
     try {
-      return _dbService.getGradeTests(subjectId, grade);
-    } catch (e) {
-      throw AppExceptionHandler.handle(e);
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getLocalEntranceTests(
-    int subjectId,
-    String type,
-  ) async {
-    try {
-      return _dbService.getSubjectEntranceTests(subjectId, type);
+      return await _dbService.getTests(
+        subjectId: subjectId,
+        grade: grade,
+        type: type,
+      );
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

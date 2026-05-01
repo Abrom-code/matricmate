@@ -58,15 +58,6 @@ class DatabaseService extends GetxController {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getTests() async {
-    try {
-      final db = await database;
-      return db.query('tests');
-    } catch (e) {
-      throw e;
-    }
-  }
-
   Future<List<Map<String, dynamic>>> getQuestions() async {
     try {
       final db = await database;
@@ -98,34 +89,30 @@ class DatabaseService extends GetxController {
   }
 
   // Get Subject tests
-  Future<List<Map<String, dynamic>>> getGradeTests(
-    int subjectId,
-    int grade,
-  ) async {
+  Future<List<Map<String, dynamic>>> getTests({
+    required int subjectId,
+    int? grade,
+    String? type,
+  }) async {
     try {
       final db = await database;
-      return db.rawQuery(
-        'SELECT * FROM tests WHERE subject_id = (SELECT id FROM subjects WHERE id = ?) AND grade = ?',
-        [subjectId, grade],
-      );
-    } catch (e) {
-      throw e;
-    }
-  }
 
-  // Get entrance tests
-  Future<List<Map<String, dynamic>>> getSubjectEntranceTests(
-    int subjectId,
-    String type,
-  ) async {
-    try {
-      final db = await database;
-      return db.rawQuery(
-        'SELECT * FROM tests WHERE subject_id = (SELECT id FROM subjects WHERE id = ?) AND type=?',
-        [subjectId, type],
-      );
+      String query = 'SELECT * FROM tests WHERE subject_id = ?';
+      List<dynamic> args = [subjectId];
+
+      if (type != null) {
+        query += ' AND type = ?';
+        args.add(type);
+      }
+
+      if (grade != null) {
+        query += ' AND grade = ?';
+        args.add(grade);
+      }
+
+      return db.rawQuery(query, args);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 

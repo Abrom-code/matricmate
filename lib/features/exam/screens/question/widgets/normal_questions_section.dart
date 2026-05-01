@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
-import 'package:matricmate/features/exam/controllers/test_controller.dart';
+import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
@@ -34,7 +34,6 @@ class QuesitonSection extends GetView<QuestionController> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // 🔥 ALWAYS use current question from controller
         final q = controller.testQuestions[controller.currentIndex.value];
 
         final isChecked = controller.isAnswerChecked(q.id);
@@ -170,11 +169,6 @@ class QuesitonSection extends GetView<QuestionController> {
                               );
 
                               await controller.saveResult(result);
-
-                              TestController.instance.testResults[result
-                                      .testId] =
-                                  result;
-
                               Get.offNamed(
                                 Routes.result,
                                 arguments: {'result': result},

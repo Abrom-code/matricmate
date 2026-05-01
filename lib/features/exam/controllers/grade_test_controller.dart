@@ -4,58 +4,47 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 
-class TestController extends GetxController {
-  static TestController get instance => Get.find();
+class GradeTestController extends GetxController {
+  static GradeTestController get instance => Get.find();
   final TestRepository _testRepository = TestRepository();
-  final RxList<TestModel> chapterTest = <TestModel>[].obs;
-  final RxList<TestModel> modelTests = <TestModel>[].obs;
-  final RxList<TestModel> gradeTests = <TestModel>[].obs;
+  final RxList<TestModel> chapterTests = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
   final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
 
-  final RxString title = ''.obs;
-  final RxInt subjectId = 0.obs;
-  final RxInt grade = 9.obs;
-  final RxInt chapterId = 0.obs;
-  final RxString chapter = ''.obs;
-  final RxInt chapterNumber = 0.obs;
-
   final RxBool isLoading = false.obs;
+  late String subjectName;
+  late int subjectId, grade;
 
   @override
   void onInit() {
     final args = Get.arguments ?? {};
 
-    title.value = args['subject'] ?? '';
-    subjectId.value = args['subject_id'] ?? 0;
-    chapter.value = args['chapter'] ?? '';
-    chapterId.value = args['chapter_id'] ?? 0;
-    chapterNumber.value = args['chapter_number'] ?? 0;
-    grade.value = args['grade'] ?? 9;
-
-    loadGradeTests(grade.value);
-    loadAllChapterTests(subjectId.value);
-
+    subjectName = args['subject'];
+    subjectId = args['subject_id'];
+    grade = args['grade'];
+    loadTests(subjectId, grade);
     super.onInit();
   }
 
-  Future<void> loadAllChapterTests(int subjectId) async {
+  Future<void> loadTests(int subjectId, int grade) async {
     try {
       isLoading.value = true;
-      chapterTest.clear();
       testHasQuestions.clear();
       testResults.clear();
 
-      final dbChapterTests = await _testRepository.getLocalTestsById(subjectId);
+      final dbExams = await _testRepository.getLocalTests(
+        subjectId: subjectId,
+        grade: grade,
+        type: 'grade',
+      );
 
       late List<TestModel> data;
 
-      data = dbChapterTests.map((e) => TestModel.fromMap(e)).toList();
+      data = dbExams.map((e) => TestModel.fromMap(e)).toList();
 
-      chapterTest.assignAll(data);
+      chapterTests.assignAll(data);
 
       await loadTestQuestionFlags(data);
-      loadModelests();
       await loadTestResults(data);
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -73,24 +62,6 @@ class TestController extends GetxController {
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
-  }
-
-  List<TestModel> getTestsByGradeAndChapter(int? grade, int? chapterId) {
-    if (grade == null || chapterId == null) return chapterTest;
-
-    return chapterTest
-        .where((e) => e.grade == grade && e.chapterId == chapterId)
-        .toList();
-  }
-
-  void loadModelests() {
-    modelTests.value = chapterTest.where((t) => t.type == 'model').toList();
-  }
-
-  void loadGradeTests(int grade) {
-    gradeTests.value = chapterTest
-        .where((t) => t.type == 'grade' && t.grade == grade)
-        .toList();
   }
 
   // load saved test

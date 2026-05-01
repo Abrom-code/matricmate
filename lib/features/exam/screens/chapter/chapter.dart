@@ -115,10 +115,7 @@ class ChapterScreen extends GetView<ChapterController> {
                                     },
                                   );
                                 } else {
-                                  ToastHelper.info(
-                                    "No Tests",
-                                    "Tests will be added soon!",
-                                  );
+                                  ToastHelper.info("No tests added!");
                                 }
                               },
                             ),

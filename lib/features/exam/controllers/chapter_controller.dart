@@ -1,8 +1,7 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/chapter_repository.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
-import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 
 class ChapterController extends GetxController {
   static ChapterController get instance => Get.find();
@@ -44,11 +43,7 @@ class ChapterController extends GetxController {
       // load flags AFTER chapters
       await loadChapterTestFlags(data);
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isChapterLoading.value = false;
     }
@@ -69,11 +64,7 @@ class ChapterController extends GetxController {
         }),
       );
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     }
   }
 }

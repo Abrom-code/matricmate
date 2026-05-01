@@ -51,7 +51,7 @@ class SubjectsController extends GetxController {
   Future<void> syncAll() async {
     try {
       await SyncingController.instance.syncAll();
-      ToastHelper.success("Success", "All subjects synced successfully!");
+      ToastHelper.success("All subjects synced successfully!");
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
@@ -74,7 +74,7 @@ class SubjectsController extends GetxController {
 
       await loadLocalSubjects();
     } catch (e) {
-      ToastHelper.error("Sync failed", e.toString());
+      AppExceptionHandler.handleResponse(e);
     }
   }
 
@@ -83,7 +83,7 @@ class SubjectsController extends GetxController {
     try {
       final isConnected = await NetworkManager.instance.hasRealInternet();
       if (!isConnected) {
-        ToastHelper.warning("No Internet!", "Connect to internet first");
+        ToastHelper.warning("No Internet!");
         return;
       }
 
@@ -93,6 +93,9 @@ class SubjectsController extends GetxController {
       await _repo.updateIsDownloaded(subject);
 
       await loadLocalSubjects();
+      ToastHelper.success("Subject downloaded successfully");
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
     } finally {
       downloadingMap[subject] = false;
     }

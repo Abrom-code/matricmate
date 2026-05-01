@@ -77,10 +77,7 @@ class GradeTestsPage extends GetView<GradeTestController> {
                           Get.to(() => const PaymentVerificationScreen());
                           return;
                         }
-                        ToastHelper.info(
-                          "No Quesions!",
-                          "Quesions will be added soon!",
-                        );
+                        ToastHelper.info("No quesions added!");
                         return;
                       }
 

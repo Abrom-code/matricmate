@@ -74,10 +74,7 @@ class EntranceExams extends GetView<ExamsController> {
                           Get.to(() => const PaymentVerificationScreen());
                           return;
                         }
-                        ToastHelper.info(
-                          "No Quesions!",
-                          "Quesions will be added soon!",
-                        );
+                        ToastHelper.info("No quesions added!");
                         return;
                       }
 

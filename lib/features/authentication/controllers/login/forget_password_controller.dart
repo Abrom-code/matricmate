@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -23,17 +24,14 @@ class ForgetPasswordController extends GetxController {
       // Network check
       final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
-        ToastHelper.warning(
-          "No Internet!",
-          "Please turn on mobile data or connect to WIFI!",
-        );
+        ToastHelper.warning("Please turn on mobile data or connect to WIFI!");
         return;
       }
 
       await _authenticationRepository.sendResetPasswordEmail(
         email.value.text.trim(),
       );
-      ToastHelper.success(
+      SnackbarHelper.success(
         "Email sent",
         "If an you already resgistered, please check your inbox!",
       );
@@ -43,11 +41,7 @@ class ForgetPasswordController extends GetxController {
         arguments: {'email': email.text.trim()},
       );
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isLoading.value = false;
     }

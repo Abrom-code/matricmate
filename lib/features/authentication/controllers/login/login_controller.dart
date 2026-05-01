@@ -7,7 +7,7 @@ import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -48,10 +48,7 @@ class LoginController extends GetxController {
       // Network check
       final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
-        ToastHelper.warning(
-          "No Internet!",
-          "Please turn on mobile data or connect to WIFI!",
-        );
+        ToastHelper.warning("No Internet!");
         return;
       }
       // loading
@@ -80,11 +77,7 @@ class LoginController extends GetxController {
       await SyncingController.instance.syncAll();
       authController.screenRedirect();
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isLogging.value = false;
     }

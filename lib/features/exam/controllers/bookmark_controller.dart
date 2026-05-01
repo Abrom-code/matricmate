@@ -36,7 +36,7 @@ class BookmarkController extends GetxController {
       await _repo.addBookmark(bookmarkQn);
 
       await loadBookmarks();
-      ToastHelper.success("Success", "Added to bookmark!");
+      ToastHelper.success("Added to bookmark!");
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
@@ -47,7 +47,7 @@ class BookmarkController extends GetxController {
       await _repo.deleteBookmark(qnId);
 
       await loadBookmarks();
-      ToastHelper.success("Removed", "Bookmark is removed!");
+      ToastHelper.success("Bookmark is removed!");
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }

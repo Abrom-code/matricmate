@@ -13,6 +13,7 @@ import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class UserController extends GetxController {
@@ -95,12 +96,12 @@ class UserController extends GetxController {
 
     if (current.isActive) {
       Get.offAll(() => NavigationMenu());
-      ToastHelper.success("Success", "Your account is activated!");
+      ToastHelper.success("Your account is activated!");
       return;
     }
 
     if (current.isPending) {
-      ToastHelper.warning("Progress", "Your payment is still processing!");
+      SnackbarHelper.warning("Progress", "Your payment is still processing!");
     }
   }
 
@@ -122,7 +123,7 @@ class UserController extends GetxController {
 
       await _userRepository.saveUserRecord(newUser);
     } catch (e) {
-      ToastHelper.warning("Data not saved", "Something went wrong");
+      SnackbarHelper.warning("Data not saved", "Something went wrong");
     }
   }
 
@@ -216,7 +217,7 @@ class UserController extends GetxController {
 
                         Get.back();
 
-                        ToastHelper.success(
+                        SnackbarHelper.success(
                           "Account Deleted",
                           "Your data has been permanently removed.",
                         );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -37,7 +38,7 @@ class UpdateProfileController extends GetxController {
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet", "Check your connection.");
+        ToastHelper.warning("No Internet");
         return;
       }
 
@@ -59,9 +60,9 @@ class UpdateProfileController extends GetxController {
 
       Get.back();
 
-      ToastHelper.success("Success", "Profile updated successfully");
+      ToastHelper.success("Profile updated successfully");
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isUpdating.value = false;
     }

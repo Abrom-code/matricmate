@@ -35,7 +35,7 @@ class VerifyEmailController extends GetxController {
     try {
       isResending.value = true;
       await _authRepo.sendEmailVerification();
-      ToastHelper.success("Email sent", "Please check your inbox!");
+      ToastHelper.success("Email sent");
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -65,7 +65,7 @@ class VerifyEmailController extends GetxController {
           },
         );
       } else {
-        ToastHelper.warning("Not verified", "Please verify your email first");
+        ToastHelper.warning("Not verified, please verify your email first");
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);

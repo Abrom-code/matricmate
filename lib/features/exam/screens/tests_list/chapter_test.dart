@@ -86,10 +86,7 @@ class ChapterTestScreen extends GetView<ChapterTestController> {
                         return;
                       }
                       if (!hasQn) {
-                        ToastHelper.info(
-                          "No Questions",
-                          "This test has no questions",
-                        );
+                        ToastHelper.info("Has no questions");
                         return;
                       }
                       Get.dialog(

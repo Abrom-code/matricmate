@@ -1,5 +1,5 @@
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class SessionService {
   final _supabase = Supabase.instance.client;
@@ -34,7 +34,7 @@ class SessionService {
 
       return true;
     } catch (e) {
-      ToastHelper.error("Error", "Session check failed.");
+      SnackbarHelper.error("Error", "Session check failed.");
       return false;
     }
   }
@@ -43,7 +43,7 @@ class SessionService {
     try {
       await _supabase.from('user_sessions').delete().eq('firebase_uid', uid);
     } catch (e) {
-      ToastHelper.error("Error", "Failed to remove session");
+      SnackbarHelper.error("Error", "Failed to remove session");
     }
   }
 }

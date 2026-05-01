@@ -7,7 +7,7 @@ import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -34,19 +34,13 @@ class SignupController extends GetxController {
     try {
       if (!signupFormKey.currentState!.validate()) return;
       if (selectedStream.value.isEmpty) {
-        ToastHelper.warning(
-          "Warning",
-          "Please select stream, you can edit later!",
-        );
+        ToastHelper.warning("Please select stream, you can edit later!");
         return;
       }
 
       final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
-        ToastHelper.warning(
-          "No Internet!",
-          "Please turn on mobile data or connect to WIFI!",
-        );
+        ToastHelper.warning("No Internet!");
         return;
       }
       isSigning.value = true;
@@ -85,11 +79,7 @@ class SignupController extends GetxController {
         arguments: {'email': email.text.trim()},
       );
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isSigning.value = false;
     }

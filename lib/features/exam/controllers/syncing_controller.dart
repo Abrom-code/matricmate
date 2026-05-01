@@ -24,10 +24,7 @@ class SyncingController extends GetxController {
     try {
       final isConnected = await NetworkManager.instance.hasRealInternet();
       if (!isConnected) {
-        ToastHelper.warning(
-          "No Internet!",
-          "Please turn on mobile data or connect to WIFI!",
-        );
+        ToastHelper.warning("No Internet!");
         return;
       }
 

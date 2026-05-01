@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
-import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_failure_model.dart';
@@ -16,9 +16,9 @@ class AppExceptionHandler {
   AppExceptionHandler._();
   static void handleResponse(dynamic e) {
     if (e is AppFailure) {
-      ToastHelper.error(e.title, e.message);
+      SnackbarHelper.error(e.title, e.message);
     } else {
-      ToastHelper.error("Unexpected Error", e.toString());
+      SnackbarHelper.error("Unexpected Error", e.toString());
     }
   }
 

@@ -4,7 +4,6 @@ import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:developer' as console;
 
 class QuestionRepository {
   final supabase = Supabase.instance.client;
@@ -44,13 +43,6 @@ class QuestionRepository {
 
   Future<PassageModel> getLocalPassage(int pId) async {
     try {
-      final db = await _dbService.database;
-      final psg = await db.query('passages');
-      for (final p in psg) {
-        final ps = PassageModel.fromMap(p).content;
-        console.log(ps);
-      }
-
       final dt = await _dbService.getPassage(pId);
       return dt;
     } catch (e) {

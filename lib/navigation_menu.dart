@@ -24,11 +24,11 @@ class NavigationMenu extends StatelessWidget {
             ),
             NavigationDestination(
               icon: Icon(Iconsax.book_1_copy),
-              label: "Euee",
+              label: "EUEE",
             ),
             NavigationDestination(
               icon: Icon(Iconsax.archive_tick_copy),
-              label: "Bookmarks",
+              label: "Bookmark",
             ),
             NavigationDestination(
               icon: Icon(Iconsax.user_copy),

@@ -14,6 +14,16 @@ class TestRepository {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getLocalEntranceTests(
+    int subjectId,
+  ) async {
+    try {
+      return _dbService.getSubjectEntranceTests(subjectId);
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
   Future<void> addTest(TestModel test) async {
     try {
       await _dbService.insetData('tests', test.toMap());

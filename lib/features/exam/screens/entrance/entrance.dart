@@ -65,7 +65,7 @@ class EntranceScreen extends StatelessWidget {
                     onTap: () {
                       if (examNums != 0) {
                         Get.toNamed(
-                          Routes.testLists,
+                          Routes.entranceExams,
                           arguments: {
                             'subject_id': subject.id,
                             'subject': subject.name,

@@ -6,6 +6,7 @@ class Routes {
   static const tests = '/tests';
   static const gradeTests = '/gradeTests';
   static const entrance = '/entrance';
+  static const entranceExams = '/entrance-exams';
   static const testLists = '/test_lists';
   static const questions = '/questions';
   static const questionsSections = '/questions-section';

@@ -58,7 +58,7 @@ class QuestionScreen extends GetView<QuestionController> {
                 ? PassageLayoutCtrl(controller: controller)
                 : Text(
                     hasData
-                        ? "${controller.currentIndex.value + 1} of ${controller.testQuestions.length} ${controller.isTimed ? '(${controller.formattedTime})' : ''}"
+                        ? "${controller.currentIndex.value + 1} of ${controller.testQuestions.length} ${controller.isTimed ? '(${controller.formattedTime(controller.remainingSeconds.value)})' : ''}"
                         : "Loading...",
                     style: Theme.of(context).textTheme.titleMedium,
                   ),

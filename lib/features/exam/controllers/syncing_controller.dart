@@ -1,8 +1,8 @@
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -42,6 +42,10 @@ class SyncingController extends GetxController {
           .where((s) => s['is_downloaded'] == 1)
           .map((s) => s['id'].toString())
           .toList();
+
+      // download entrance test
+      final subjects = localSubjects.map((s) => s['id'] as int).toList();
+      await _syncRepository.downloadEntranceTests(subjects);
 
       if (downloadedIds.isNotEmpty) {
         await syncChapters(downloadedIds);
@@ -132,7 +136,7 @@ class SyncingController extends GetxController {
         .map((e) => QuestionModel.fromJson(e))
         .toList();
 
-    final List<String> imageUrls = [];
+    final Set<String> imageUrls = {};
     final Set<int> passageIds = {};
 
     for (final q in remote) {
@@ -154,19 +158,7 @@ class SyncingController extends GetxController {
     }
 
     if (imageUrls.isNotEmpty) {
-      await _downloadImages(imageUrls);
-    }
-  }
-
-  Future<void> _downloadImages(List<String> urls) async {
-    final cache = DefaultCacheManager();
-
-    for (final url in urls) {
-      try {
-        await cache.downloadFile(url);
-      } catch (e) {
-        throw e;
-      }
+      await AppHelperFuntions.downloadImages(imageUrls);
     }
   }
 

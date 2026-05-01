@@ -10,6 +10,7 @@ import 'package:matricmate/features/personalization/controller/user_controller.d
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class EntranceScreen extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
@@ -61,13 +62,23 @@ class EntranceScreen extends StatelessWidget {
                     subTitle: Text(
                       "${examNums != 0 ? examNums : 'No'} entrance exams",
                     ),
-                    onTap: () => Get.toNamed(
-                      Routes.testLists,
-                      arguments: {
-                        'subject_id': subject.id,
-                        'subject': subject.name,
-                      },
-                    ),
+                    onTap: () {
+                      if (examNums != 0) {
+                        Get.toNamed(
+                          Routes.testLists,
+                          arguments: {
+                            'subject_id': subject.id,
+                            'subject': subject.name,
+                          },
+                        );
+                      } else {
+                        ToastHelper.info(
+                          "No Exams Added",
+                          "Exams will be added soon!",
+                        );
+                      }
+                      ;
+                    },
                   ),
                 );
               }),

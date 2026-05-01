@@ -2,6 +2,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -39,10 +40,15 @@ class SubjectRepository {
           .select()
           .eq('subject_id', subjectId);
       final Set<int> passageIds = {};
+      final Set<String> imgUrls = {};
 
       for (var q in questionsData) {
         final question = QuestionModel.fromMap(q);
         if (question.passageId != null) passageIds.add(question.passageId!);
+        if (question.imageUrl != null) {
+          imgUrls.add(question.imageUrl!);
+        }
+
         batch.insert(
           'questions',
           question.toMap(),
@@ -63,6 +69,9 @@ class SubjectRepository {
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
         }
+      }
+      if (imgUrls.isNotEmpty) {
+        await AppHelperFuntions.downloadImages(imgUrls);
       }
 
       await batch.commit(noResult: true);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
@@ -12,6 +13,18 @@ class AppHelperFuntions {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
       debugPrint("$url open failed: $e");
+    }
+  }
+
+  static Future<void> downloadImages(Set<String> urls) async {
+    final cache = DefaultCacheManager();
+
+    for (final url in urls) {
+      try {
+        await cache.downloadFile(url);
+      } catch (e) {
+        throw e;
+      }
     }
   }
 

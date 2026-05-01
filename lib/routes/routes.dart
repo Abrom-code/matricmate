@@ -112,10 +112,6 @@ class AppRoutes {
       page: () => const SuccessScreen(),
       binding: SuccessBinding(),
     ),
-    GetPage(
-      name: Routes.entrance,
-      page: () => EntranceScreen(),
-      // binding: SuccessBinding(),
-    ),
+    GetPage(name: Routes.entrance, page: () => EntranceScreen()),
   ];
 }

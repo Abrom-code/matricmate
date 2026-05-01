@@ -4,8 +4,8 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 
-class EntranceExamsController extends GetxController {
-  static EntranceExamsController get instance => Get.find();
+class ExamsController extends GetxController {
+  static ExamsController get instance => Get.find();
   final TestRepository _testRepository = TestRepository();
   final RxList<TestModel> entranceTests = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;

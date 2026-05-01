@@ -11,7 +11,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class EntranceExams extends GetView<EntranceExamsController> {
+class EntranceExams extends GetView<ExamsController> {
   const EntranceExams({super.key});
 
   @override

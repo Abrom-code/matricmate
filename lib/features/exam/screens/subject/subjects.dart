@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/appbar/status_title.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
@@ -40,7 +41,7 @@ class SubjectsScreen extends StatelessWidget {
             child: IconButton(
               onPressed: () => subjectController.syncAll(),
               icon: Icon(
-                Icons.refresh,
+                Iconsax.refresh_circle_copy,
                 size: AppSizes.iconMd * 1.2,
                 color: AppColors.white,
               ),

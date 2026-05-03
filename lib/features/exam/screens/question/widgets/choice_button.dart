@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -110,9 +111,9 @@ class ChoiceButton extends StatelessWidget {
             ///  show correct/wrong
             if (isChecked)
               isCorrect
-                  ? const Icon(Icons.check_circle, color: Colors.green)
+                  ? const Icon(Iconsax.tick_circle_copy, color: Colors.green)
                   : isSelected
-                  ? const Icon(Icons.cancel, color: Colors.red)
+                  ? const Icon(Iconsax.close_circle_copy, color: Colors.red)
                   : const SizedBox(),
           ],
         ),

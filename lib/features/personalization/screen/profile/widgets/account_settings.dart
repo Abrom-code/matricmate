@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -26,14 +27,14 @@ class AccountSettings extends StatelessWidget {
       child: Column(
         children: [
           AppListTile(
-            icon: Icon(Icons.person),
+            icon: Icon(Iconsax.user_edit_copy),
             title: "Edit Profile",
             trailing: Icon(Icons.keyboard_arrow_right),
 
             onTap: () => Get.to(() => EditProfileScreen()),
           ),
           AppListTile(
-            icon: Icon(Icons.lock),
+            icon: Icon(Iconsax.lock_circle_copy),
             title: "Change Password",
             trailing: Icon(Icons.keyboard_arrow_right),
             onTap: () => Get.toNamed(Routes.changePassword),

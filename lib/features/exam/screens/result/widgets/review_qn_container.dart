@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:get/get_state_manager/src/simple/get_view.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
@@ -46,14 +47,14 @@ class ReviewContainer extends GetView<ReviewController> {
               result.selectedAnswers[qn.id] == null
                   ? CorrectCheckButton(
                       color: dark ? AppColors.darkGrey : AppColors.darkerGrey,
-                      icon: Icons.timer_outlined,
+                      icon: Iconsax.timer_1_copy,
                       text: "Not Answered",
                     )
                   : result.selectedAnswers[qn.id] == qn.correctOptionIndex
                   ? CorrectCheckButton()
                   : CorrectCheckButton(
                       color: Colors.red,
-                      icon: Icons.cancel_rounded,
+                      icon: Iconsax.close_circle_copy,
                       text: "incorrect",
                     ),
             ],

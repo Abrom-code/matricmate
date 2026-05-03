@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
@@ -69,7 +70,9 @@ class ChapterTestScreen extends GetView<ChapterTestController> {
                       isActive || ((isInactive || isPending) && index < 1);
                   return TestTile(
                     testName: test.title,
-                    icon: canAccess ? Icons.quiz : Icons.lock,
+                    icon: canAccess
+                        ? Iconsax.message_question_copy
+                        : Icons.lock,
                     iconColor: canAccess ? Colors.teal : Colors.amber,
                     currentStep: controller.getCurrentStep(test.id),
                     maxStep: controller.getMaxStep(test.id),

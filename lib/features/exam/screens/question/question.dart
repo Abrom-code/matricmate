@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
@@ -73,7 +74,9 @@ class QuestionScreen extends GetView<QuestionController> {
                               bookmarkController.removeFromBookmark(currentQ.id)
                         : () => bookmarkController.addToBookmark(currentQ.id),
                     icon: Icon(
-                      isSaved ? Icons.bookmark : Icons.bookmark_outline,
+                      isSaved
+                          ? Iconsax.archive_minus
+                          : Iconsax.archive_add_copy,
                       color: isSaved ? AppColors.primary : null,
                     ),
                   );

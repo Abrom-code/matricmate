@@ -8,6 +8,7 @@ import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -70,7 +71,10 @@ class LoginController extends GetxController {
 
       if (!isAllowed) {
         await FirebaseAuth.instance.signOut();
-
+        SnackbarHelper.warning(
+          "Login Blocked!",
+          'The account is used on another device!',
+        );
         return;
       }
 

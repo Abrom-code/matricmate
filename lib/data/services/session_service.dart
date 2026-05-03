@@ -12,7 +12,7 @@ class SessionService {
           .eq('firebase_uid', uid)
           .maybeSingle();
 
-      //  register device
+      // First login → register device
       if (existing == null) {
         await _supabase.from('user_sessions').insert({
           'firebase_uid': uid,
@@ -26,13 +26,8 @@ class SessionService {
         return true;
       }
 
-      // Different device
-      await _supabase
-          .from('user_sessions')
-          .update({'device_id': deviceId})
-          .eq('firebase_uid', uid);
-
-      return true;
+      //  Different device → BLOCK
+      return false;
     } catch (e) {
       SnackbarHelper.error("Error", "Session check failed.");
       return false;

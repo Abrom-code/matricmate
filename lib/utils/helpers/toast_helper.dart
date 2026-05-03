@@ -31,7 +31,7 @@ class ToastHelper {
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
+      gravity: ToastGravity.TOP_RIGHT,
       backgroundColor: backgroundColor,
       textColor: Colors.white,
       fontSize: 14.0,

@@ -6,6 +6,8 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
+import 'package:matricmate/data/services/device_service.dart';
+import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
@@ -81,19 +83,19 @@ class UserController extends GetxController {
 
       if (freshUser == null) return;
 
-      // final uid = _authRepo.currentUser!.uid;
+      final uid = _authRepo.currentUser!.uid;
 
-      // //  Get device ID
-      // final deviceId = await DeviceService.getDeviceId();
+      //  Get device ID
+      final deviceId = await DeviceService.getDeviceId();
 
-      // //  Validate session
-      // final isAllowed = await SessionService().validateSession(uid, deviceId);
+      //  Validate session
+      final isAllowed = await SessionService().validateSession(uid, deviceId);
 
-      // if (!isAllowed) {
-      //   await this.logOut();
+      if (!isAllowed) {
+        await this.logOut();
 
-      //   return;
-      // }
+        return;
+      }
       user.value = freshUser;
 
       await _userRepository.updateLocalUser(freshUser);

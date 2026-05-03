@@ -52,15 +52,20 @@ class AuthenticationController extends GetxController {
     await SubjectsController.instance.loadLocalSubjects();
 
     Get.offAllNamed(Routes.navigationMenu);
-
     final hasInternet = await NetworkManager.instance.hasRealInternet();
 
-    if (hasInternet) {
-      Future(() async {
-        try {
-          await SyncingController.instance.syncAll();
-        } catch (_) {}
-      });
+    try {
+      if (hasInternet) {
+        //  Online
+        await UserController.instance.fetchUserRecord();
+        await SyncingController.instance.syncAll();
+      } else {
+        //  Offline
+        await UserController.instance.loadLocalUser();
+      }
+    } catch (e) {
+      // fallback safety (very important)
+      await UserController.instance.loadLocalUser();
     }
     FlutterNativeSplash.remove();
   }

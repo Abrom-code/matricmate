@@ -10,6 +10,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
@@ -57,7 +58,7 @@ class AuthenticationController extends GetxController {
     if (hasInternet) {
       Future(() async {
         try {
-          await UserController.instance.fetchUserRecord();
+          await SyncingController.instance.syncAll();
         } catch (_) {}
       });
     }

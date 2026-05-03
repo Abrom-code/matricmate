@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
-import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
-import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
@@ -21,7 +19,6 @@ class VerifyEmailController extends GetxController {
 
   Timer? _timer;
 
-  bool _hasSynced = false;
   final email = ''.obs;
 
   @override
@@ -51,19 +48,9 @@ class VerifyEmailController extends GetxController {
       final user = _authRepo.currentUser;
 
       if (user != null && user.emailVerified) {
-        if (!_hasSynced) {
-          _hasSynced = true;
-          await SyncingController.instance.syncAll();
-        }
+        ToastHelper.success("Email Verified");
 
-        Get.offAllNamed(
-          Routes.success,
-          arguments: {
-            'title': "Account Created",
-            'sub_title': "Account created successfully",
-            'on_pressed': () => _authController.screenRedirect(),
-          },
-        );
+        _authController.screenRedirect();
       } else {
         ToastHelper.warning("Not verified, please verify your email first");
       }

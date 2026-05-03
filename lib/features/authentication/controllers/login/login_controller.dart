@@ -6,7 +6,6 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
-import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -78,7 +77,6 @@ class LoginController extends GetxController {
         return;
       }
 
-      await SyncingController.instance.syncAll();
       authController.screenRedirect();
     } catch (e) {
       AppExceptionHandler.handleResponse(e);

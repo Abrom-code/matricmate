@@ -40,7 +40,7 @@ class AccountSettings extends StatelessWidget {
             onTap: () => Get.toNamed(Routes.changePassword),
           ),
           AppListTile(
-            icon: Icon(Icons.help),
+            icon: Icon(Icons.help_outlined),
             title: "Help & Support",
             trailing: Icon(Icons.keyboard_arrow_right),
             onTap: () {},

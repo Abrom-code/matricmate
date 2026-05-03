@@ -41,4 +41,15 @@ class SessionService {
       SnackbarHelper.error("Error", "Failed to remove session");
     }
   }
+
+  Future<void> updateDevice(String uid, String deviceId) async {
+    try {
+      await _supabase
+          .from('user_sessions')
+          .update({'device_id': deviceId})
+          .eq('firebase_uid', uid);
+    } catch (e) {
+      SnackbarHelper.error("Error", "Failed to update device");
+    }
+  }
 }

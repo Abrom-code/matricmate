@@ -45,7 +45,7 @@ class PassageLayoutCtrl extends StatelessWidget {
         if (controller.isTimed)
           Obx(
             () => Text(
-              '(${controller.formattedTime})',
+              '(${controller.formattedTime(controller.remainingSeconds.value)})',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),

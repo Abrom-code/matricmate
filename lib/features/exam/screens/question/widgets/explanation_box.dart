@@ -35,7 +35,7 @@ class ExplanationBox extends StatelessWidget {
         () => Stack(
           children: [
             // Language Toggle (Top Right)
-            Positioned(top: 5, right: 5, child: LanguageToggle()),
+            Positioned(top: 5, right: 10, child: LanguageToggle()),
             Positioned(
               top: 10,
               left: 15,

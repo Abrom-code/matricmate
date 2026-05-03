@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
@@ -11,7 +12,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class EntranceExams extends GetView<EntranceExamsController> {
+class EntranceExams extends GetView<ExamsController> {
   const EntranceExams({super.key});
 
   @override
@@ -56,7 +57,7 @@ class EntranceExams extends GetView<EntranceExamsController> {
                   final isActive = UserController.instance.user.value.isActive;
 
                   return TestTile(
-                    icon: isActive ? Icons.quiz : Icons.lock,
+                    icon: isActive ? Iconsax.message_question_copy : Icons.lock,
                     iconColor: isActive ? Colors.teal : Colors.amber,
                     currentStep: controller.getCurrentStep(test.id),
                     maxStep: controller.getMaxStep(test.id),
@@ -74,10 +75,7 @@ class EntranceExams extends GetView<EntranceExamsController> {
                           Get.to(() => const PaymentVerificationScreen());
                           return;
                         }
-                        ToastHelper.info(
-                          "No Quesions!",
-                          "Quesions will be added soon!",
-                        );
+                        ToastHelper.info("No quesions added!");
                         return;
                       }
 
@@ -86,6 +84,7 @@ class EntranceExams extends GetView<EntranceExamsController> {
                           qnCount: qnCount,
                           time: time,
                           testId: test.id,
+                          id: 2,
                         ),
                       );
                     },

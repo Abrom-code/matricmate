@@ -9,9 +9,9 @@ import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class QuestionController extends GetxController {
@@ -44,12 +44,14 @@ class QuestionController extends GetxController {
   late int testId;
   late bool isTimed;
   late int time;
+  late int ctrlId;
 
   @override
   void onInit() {
     testId = Get.arguments['test_id'];
     isTimed = Get.arguments['is_timed'];
     time = Get.arguments['time'];
+    ctrlId = Get.arguments['id'];
     loadTestQuestions(testId);
     if (isTimed) startTimer(time);
     super.onInit();
@@ -152,14 +154,7 @@ class QuestionController extends GetxController {
     try {
       await _repo.saveResult(result);
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(
-          "Sync Failed",
-          "Result saved locally only. ${e.message}",
-        );
-      } else {
-        ToastHelper.error("Unexpected Error", "Could not sync result.");
-      }
+      ToastHelper.error("Could not sync result.");
     }
   }
 
@@ -224,7 +219,7 @@ class QuestionController extends GetxController {
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (remainingSeconds.value == 2)
-        ToastHelper.warning("Time's up!", "Submitting ...");
+        SnackbarHelper.warning("Time's up!", "Submitting ...");
 
       if (remainingSeconds.value <= 1) {
         remainingSeconds.value = 0;

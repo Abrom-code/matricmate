@@ -6,6 +6,8 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
+import 'package:matricmate/data/services/device_service.dart';
+import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
@@ -13,6 +15,7 @@ import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class UserController extends GetxController {
@@ -56,7 +59,6 @@ class UserController extends GetxController {
 
   Future<void> logOut() async {
     try {
-      Get.back();
       AppFullScreenLoader.openLoadingDialog("Logging out...");
 
       await _authRepo.logout();
@@ -81,6 +83,19 @@ class UserController extends GetxController {
 
       if (freshUser == null) return;
 
+      final uid = _authRepo.currentUser!.uid;
+
+      //  Get device ID
+      final deviceId = await DeviceService.getDeviceId();
+
+      //  Validate session
+      final isAllowed = await SessionService().validateSession(uid, deviceId);
+
+      if (!isAllowed) {
+        await this.logOut();
+
+        return;
+      }
       user.value = freshUser;
 
       await _userRepository.updateLocalUser(freshUser);
@@ -95,12 +110,12 @@ class UserController extends GetxController {
 
     if (current.isActive) {
       Get.offAll(() => NavigationMenu());
-      ToastHelper.success("Success", "Your account is activated!");
+      ToastHelper.success("Your account is activated!");
       return;
     }
 
     if (current.isPending) {
-      ToastHelper.warning("Progress", "Your payment is still processing!");
+      SnackbarHelper.warning("Progress", "Your payment is still processing!");
     }
   }
 
@@ -122,7 +137,7 @@ class UserController extends GetxController {
 
       await _userRepository.saveUserRecord(newUser);
     } catch (e) {
-      ToastHelper.warning("Data not saved", "Something went wrong");
+      SnackbarHelper.warning("Data not saved", "Something went wrong");
     }
   }
 
@@ -216,7 +231,7 @@ class UserController extends GetxController {
 
                         Get.back();
 
-                        ToastHelper.success(
+                        SnackbarHelper.success(
                           "Account Deleted",
                           "Your data has been permanently removed.",
                         );

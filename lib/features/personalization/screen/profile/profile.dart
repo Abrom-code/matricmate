@@ -68,7 +68,10 @@ class ProfileScreen extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => AppDialogBoxes.showOkCancelDialog(
                       context: context,
-                      onPressed: () => _userController.logOut(),
+                      onPressed: () {
+                        Get.back();
+                        _userController.logOut();
+                      },
                     ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: Colors.red),

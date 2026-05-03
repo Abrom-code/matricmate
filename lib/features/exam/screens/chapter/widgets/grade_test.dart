@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
@@ -59,7 +60,9 @@ class GradeTestsPage extends GetView<GradeTestController> {
                   final canAccess =
                       isActive || ((isInactive || isPending) && index < 1);
                   return TestTile(
-                    icon: canAccess ? Icons.quiz : Icons.lock,
+                    icon: canAccess
+                        ? Iconsax.message_question_copy
+                        : Icons.lock,
                     iconColor: canAccess ? Colors.teal : Colors.amber,
                     currentStep: controller.getCurrentStep(test.id),
                     maxStep: controller.getMaxStep(test.id),
@@ -77,10 +80,7 @@ class GradeTestsPage extends GetView<GradeTestController> {
                           Get.to(() => const PaymentVerificationScreen());
                           return;
                         }
-                        ToastHelper.info(
-                          "No Quesions!",
-                          "Quesions will be added soon!",
-                        );
+                        ToastHelper.info("No quesions added!");
                         return;
                       }
 
@@ -89,6 +89,7 @@ class GradeTestsPage extends GetView<GradeTestController> {
                           qnCount: qnCount,
                           time: time,
                           testId: test.id,
+                          id: 0,
                         ),
                       );
                     },

@@ -7,6 +7,7 @@ import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -41,7 +42,7 @@ class PremiumController extends GetxController {
         receipt.value = file;
       }
     } catch (_) {
-      ToastHelper.error("Error", "Failed to pick image");
+      ToastHelper.error("Failed to pick image");
     }
   }
 
@@ -50,14 +51,14 @@ class PremiumController extends GetxController {
       if (!paymentFormKey.currentState!.validate()) return;
 
       if (receipt.value == null) {
-        ToastHelper.warning("Warning", "Please upload receipt!");
+        ToastHelper.warning("Please upload receipt!");
         return;
       }
 
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet!", "Connect to internet!");
+        ToastHelper.warning("No Internet!");
         return;
       }
 
@@ -66,7 +67,7 @@ class PremiumController extends GetxController {
       final userId = _userController.user.value.id;
 
       if (userId.isEmpty) {
-        ToastHelper.error("Error", "No user found!");
+        SnackbarHelper.error("Error", "No user found!");
         return;
       }
 
@@ -86,9 +87,9 @@ class PremiumController extends GetxController {
 
       Get.off(() => PaymentVerificationScreen());
 
-      ToastHelper.success("Success", "Payment submitted!");
+      ToastHelper.success("Payment submitted!");
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isUploading.value = false;
     }
@@ -99,14 +100,14 @@ class PremiumController extends GetxController {
       final userId = _userController.user.value.id;
 
       if (userId.isEmpty) {
-        ToastHelper.warning("Error", "Unexpected error!");
+        ToastHelper.warning("Unexpected error!");
         return;
       }
 
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet!", "Connect to internet!");
+        ToastHelper.warning("No Internet!");
         return;
       }
 
@@ -121,7 +122,7 @@ class PremiumController extends GetxController {
 
       Get.back();
 
-      ToastHelper.success("Cancelled", "Payment cancelled");
+      ToastHelper.success("Payment cancelled");
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

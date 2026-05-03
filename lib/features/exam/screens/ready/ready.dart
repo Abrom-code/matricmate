@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/screens/ready/widgets/attribute_box.dart';
 import 'package:matricmate/features/exam/screens/ready/widgets/timer_container.dart';
@@ -14,8 +15,9 @@ class ReadyDialog extends StatelessWidget {
     required this.qnCount,
     required this.time,
     required this.testId,
+    required this.id,
   });
-  final int qnCount, time, testId;
+  final int qnCount, time, testId, id;
 
   @override
   Widget build(BuildContext context) {
@@ -53,12 +55,12 @@ class ReadyDialog extends StatelessWidget {
                       runAlignment: WrapAlignment.center,
                       children: [
                         AttributeBox(
-                          icon: Icons.quiz,
+                          icon: Iconsax.message_question_copy,
                           value: qnCount,
                           label: 'questions',
                         ),
                         AttributeBox(
-                          icon: Icons.timer,
+                          icon: Iconsax.timer_1_copy,
                           value: time,
                           label: 'minutes',
                         ),
@@ -89,6 +91,7 @@ class ReadyDialog extends StatelessWidget {
                             'test_id': testId,
                             'is_timed': controller.isTimed.value,
                             "time": time,
+                            'id': id,
                           },
                         );
                         Get.delete<QuestionController>();
@@ -125,7 +128,7 @@ class ReadyDialog extends StatelessWidget {
 
             child: IconButton(
               onPressed: () => Get.back(),
-              icon: Icon(Icons.close, color: AppColors.error),
+              icon: Icon(Iconsax.close_circle_copy, color: AppColors.error),
             ),
           ),
         ],

@@ -13,9 +13,7 @@ import 'package:matricmate/bindings/auth/reset_password_binding.dart';
 import 'package:matricmate/bindings/exam/result_binding.dart';
 import 'package:matricmate/bindings/exam/review_binding.dart';
 import 'package:matricmate/bindings/auth/signup_binding.dart';
-import 'package:matricmate/bindings/auth/success_binding.dart';
 import 'package:matricmate/bindings/exam/test_binding.dart';
-import 'package:matricmate/common/widgets/success_screen/success_screen.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/authentication/screens/password_configration/forget_password.dart';
 import 'package:matricmate/features/authentication/screens/password_configration/reset_password.dart';
@@ -111,11 +109,7 @@ class AppRoutes {
       page: () => const ChangePassword(),
       binding: ChangePasswordBinding(),
     ),
-    GetPage(
-      name: Routes.success,
-      page: () => const SuccessScreen(),
-      binding: SuccessBinding(),
-    ),
+
     GetPage(
       name: Routes.entrance,
       page: () => EntranceScreen(),

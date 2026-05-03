@@ -1,58 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ToastHelper {
   ToastHelper._();
 
-  static void success(String title, String message) {
-    _showToast(
-      title,
-      message,
-      backgroundColor: Colors.green,
-      icon: Icons.check_circle,
-    );
+  static void success(String message) {
+    Fluttertoast.cancel();
+
+    _show(message, Colors.green.withValues(alpha: .8));
   }
 
-  static void error(String title, String message) {
-    _showToast(title, message, backgroundColor: Colors.red, icon: Icons.error);
+  static void error(String message) {
+    Fluttertoast.cancel();
+
+    _show(message, Colors.red.withValues(alpha: .8));
   }
 
-  static void warning(String title, String message) {
-    _showToast(
-      title,
-      message,
-      backgroundColor: Colors.orange,
-      icon: Icons.warning,
-    );
+  static void warning(String message) {
+    Fluttertoast.cancel();
+
+    _show(message, Colors.orange.withValues(alpha: .8));
   }
 
-  static void info(String title, String message) {
-    _showToast(title, message, backgroundColor: Colors.blue, icon: Icons.info);
+  static void info(String message) {
+    Fluttertoast.cancel();
+    _show(message, Colors.blue.withValues(alpha: .8));
   }
 
-  static void _showToast(
-    String title,
-    String message, {
-    required Color backgroundColor,
-    required IconData icon,
-  }) {
-    Get.snackbar(
-      title,
-      message,
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: backgroundColor.withValues(alpha: 0.9),
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(12),
-      borderRadius: 12,
-      icon: Icon(icon, color: Colors.white),
-      duration: const Duration(seconds: 2),
-      isDismissible: true,
-      forwardAnimationCurve: Curves.easeOutBack,
-      animationDuration: const Duration(milliseconds: 300),
-      mainButton: TextButton(
-        onPressed: () => Get.back(),
-        child: const Icon(Icons.close, color: Colors.white, size: 20),
-      ),
+  static void _show(String message, Color backgroundColor) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP_RIGHT,
+      backgroundColor: backgroundColor,
+      textColor: Colors.white,
+      fontSize: 14.0,
     );
   }
 }

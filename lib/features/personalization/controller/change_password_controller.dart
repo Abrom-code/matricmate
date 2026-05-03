@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -26,7 +28,7 @@ class ChangePasswordController extends GetxController {
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet", "Please check your connection.");
+        ToastHelper.warning("No Internet");
         return;
       }
 
@@ -35,7 +37,7 @@ class ChangePasswordController extends GetxController {
       final user = _authRepo.currentUser;
 
       if (user == null || user.email == null) {
-        ToastHelper.error("Error", "No authenticated user found.");
+        SnackbarHelper.error("Error", "No authenticated user found.");
         return;
       }
 
@@ -51,9 +53,9 @@ class ChangePasswordController extends GetxController {
       Get.back();
       Get.back();
 
-      ToastHelper.success("Success", "Your password has been updated.");
+      ToastHelper.success("Your password has been updated.");
     } catch (e) {
-      ToastHelper.error("Error", e.toString());
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isUpdating.value = false;
     }

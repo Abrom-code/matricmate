@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -74,7 +75,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
                         FocusManager.instance.primaryFocus?.unfocus();
                       },
                     ),
-                    icon: Icon(Icons.bookmark, color: AppColors.primary),
+                    icon: Icon(Iconsax.archive_tick, color: AppColors.primary),
                   ),
                 ],
               ),

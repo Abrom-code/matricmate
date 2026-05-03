@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
-import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ResetPasswordController extends GetxController {
@@ -21,13 +21,9 @@ class ResetPasswordController extends GetxController {
     try {
       isSending.value = true;
       await _authenticationRepository.sendResetPasswordEmail(email);
-      ToastHelper.success("Email sent", "Please check your inbox!");
+      ToastHelper.success("Email sent, please check your inbox!");
     } catch (e) {
-      if (e is AppFailure) {
-        ToastHelper.error(e.title, e.message);
-      } else {
-        ToastHelper.error("Unexpected Error", e.toString());
-      }
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isSending.value = false;
     }

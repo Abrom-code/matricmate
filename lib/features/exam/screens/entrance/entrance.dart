@@ -21,6 +21,7 @@ class EntranceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<SubjectsController>();
     final tabController = Get.find<ExamSelectionController>();
+
     return Scaffold(
       key: scaffoldKey,
       drawer: AppDrawer(),
@@ -30,7 +31,7 @@ class EntranceScreen extends StatelessWidget {
           scaffoldKey.currentState?.openDrawer();
         },
         title: Text(
-          "Entrance Exams",
+          "Exams",
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
@@ -107,10 +108,7 @@ class EntranceScreen extends StatelessWidget {
                                     },
                                   );
                                 } else {
-                                  ToastHelper.info(
-                                    "No Exams Added",
-                                    "Exams will be added soon!",
-                                  );
+                                  ToastHelper.info("No Exams Added");
                                 }
                                 ;
                               },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/helpers/badges.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
@@ -106,7 +107,10 @@ class ResultScreen extends GetView<ResultController> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     spacing: 10,
                     children: [
-                      Icon(Icons.receipt, color: AppColors.white),
+                      Icon(
+                        Iconsax.search_status_1_copy,
+                        color: AppColors.white,
+                      ),
                       Text(
                         "Review Answers",
                         style: Theme.of(

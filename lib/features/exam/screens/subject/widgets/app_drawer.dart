@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/status_title.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
@@ -77,19 +78,27 @@ class AppDrawer extends StatelessWidget {
                 padding: EdgeInsets.only(bottom: AppSizes.defaultSpace / 2),
                 children: [
                   AppListTile(
-                    icon: Icon(Icons.home_outlined),
-                    title: 'Home',
+                    icon: Icon(Iconsax.message_question_copy),
+                    title: 'Test',
                     onTap: () {
                       Navigator.of(context).pop();
                       Get.find<NavigationController>().changePage(0);
                     },
                   ),
                   AppListTile(
-                    icon: Icon(Icons.bookmark_outline),
-                    title: 'Bookmarks',
+                    icon: Icon(Iconsax.book_1_copy),
+                    title: 'Exams',
                     onTap: () {
                       Navigator.of(context).pop();
                       Get.find<NavigationController>().changePage(1);
+                    },
+                  ),
+                  AppListTile(
+                    icon: Icon(Iconsax.archive_tick_copy),
+                    title: 'Bookmarks',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Get.find<NavigationController>().changePage(2);
                     },
                   ),
                   AppListTile(
@@ -97,13 +106,13 @@ class AppDrawer extends StatelessWidget {
                     title: 'Profile',
                     onTap: () {
                       Navigator.of(context).pop();
-                      Get.find<NavigationController>().changePage(2);
+                      Get.find<NavigationController>().changePage(4);
                     },
                   ),
 
                   if (isInactive)
                     AppListTile(
-                      icon: Icon(Icons.workspace_premium, color: Colors.amber),
+                      icon: Icon(Iconsax.medal_star, color: Colors.amber),
                       title: 'Premium',
                       onTap: () {
                         Navigator.of(context).pop();
@@ -137,7 +146,7 @@ class AppDrawer extends StatelessWidget {
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
                   AppListTile(
-                    icon: Icon(Icons.send_outlined),
+                    icon: Icon(Iconsax.send_1_copy),
                     title: 'Join Telegram',
                     onTap: () {
                       Navigator.of(context).pop();
@@ -146,14 +155,14 @@ class AppDrawer extends StatelessWidget {
                   ),
 
                   AppListTile(
-                    icon: Icon(Icons.star_outline),
+                    icon: Icon(Iconsax.star_1_copy),
                     title: 'Rate App',
                     onTap: () {
                       Navigator.of(context).pop();
                     },
                   ),
                   AppListTile(
-                    icon: Icon(Icons.share),
+                    icon: Icon(Iconsax.share_copy),
                     title: 'Share with Friend',
                     onTap: () {
                       Navigator.of(context).pop();

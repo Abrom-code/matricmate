@@ -17,7 +17,6 @@ class QuestionScreen extends GetView<QuestionController> {
   @override
   Widget build(BuildContext context) {
     final bookmarkController = Get.find<BookmarkController>();
-    final dark = AppHelperFuntions.isDark(context);
     final ScrollController pageScrollController = ScrollController();
 
     return PopScope(
@@ -44,7 +43,7 @@ class QuestionScreen extends GetView<QuestionController> {
         return Scaffold(
           appBar: Appbar(
             leadingIcon: Icons.close,
-            leadingIconColor: !dark ? AppColors.dark : AppColors.light,
+            leadingIconColor: AppColors.error,
             leadingOnPressed: () => AppHelperFuntions.showAppDialog(
               context,
               "Want to Exit?",
@@ -61,7 +60,9 @@ class QuestionScreen extends GetView<QuestionController> {
                     hasData
                         ? "${controller.currentIndex.value + 1} of ${controller.testQuestions.length} ${controller.isTimed ? '(${controller.formattedTime(controller.remainingSeconds.value)})' : ''}"
                         : "Loading...",
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium!.copyWith(color: AppColors.primary),
                   ),
             centerTitle: true,
             actions: [
@@ -77,7 +78,7 @@ class QuestionScreen extends GetView<QuestionController> {
                       isSaved
                           ? Iconsax.archive_minus
                           : Iconsax.archive_add_copy,
-                      color: isSaved ? AppColors.primary : null,
+                      color: AppColors.primary,
                     ),
                   );
                 }),

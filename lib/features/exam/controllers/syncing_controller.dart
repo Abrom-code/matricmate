@@ -20,18 +20,25 @@ class SyncingController extends GetxController {
 
   final refreshing = false.obs;
 
-  Future<void> syncAll() async {
+  Future<bool> syncAll() async {
     try {
       final isConnected = await NetworkManager.instance.hasRealInternet();
+
       if (!isConnected) {
         ToastHelper.warning("No Internet!");
-        return;
+        return false;
       }
 
       refreshing.value = true;
 
       await syncSubjects();
-      await UserController.instance.fetchUserRecord();
+
+      final isValidUser = await UserController.instance.fetchUserRecord();
+
+      //  STOP everything if user is invalid
+      if (!isValidUser) {
+        return false;
+      }
 
       final localSubjects = await _subjectRepo.getLocalSubjects();
 
@@ -40,8 +47,8 @@ class SyncingController extends GetxController {
           .map((s) => s['id'].toString())
           .toList();
 
-      // download entrance test
       final subjects = localSubjects.map((s) => s['id'] as int).toList();
+
       await _syncRepository.downloadEntranceTests(subjects);
 
       if (downloadedIds.isNotEmpty) {
@@ -51,6 +58,7 @@ class SyncingController extends GetxController {
       }
 
       await SubjectsController.instance.syncSubjects();
+      return true;
     } catch (e) {
       rethrow;
     } finally {

@@ -75,30 +75,33 @@ class UserController extends GetxController {
     }
   }
 
-  Future<void> fetchUserRecord() async {
+  Future<bool> fetchUserRecord() async {
     try {
       userFetching.value = true;
 
       final freshUser = await _userRepository.fetchCurrentUserDetails();
 
-      if (freshUser == null) return;
+      if (freshUser == null) return false;
 
       final uid = _authRepo.currentUser!.uid;
 
-      //  Get device ID
       final deviceId = await DeviceService.getDeviceId();
 
-      //  Validate session
       final isAllowed = await SessionService().validateSession(uid, deviceId);
 
       if (!isAllowed) {
-        await this.logOut();
-
-        return;
+        SnackbarHelper.warning(
+          "Device Blocked!",
+          "Another device is using this account!",
+        );
+        await logOut();
+        return false;
       }
-      user.value = freshUser;
 
+      user.value = freshUser;
       await _userRepository.updateLocalUser(freshUser);
+
+      return true;
     } finally {
       userFetching.value = false;
     }

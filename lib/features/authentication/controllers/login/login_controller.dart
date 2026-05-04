@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
@@ -20,6 +21,8 @@ class LoginController extends GetxController {
 
   final rememberMe = false.obs;
   final hidePassword = true.obs;
+  final isUpdating = false.obs;
+
   final email = TextEditingController();
   final password = TextEditingController();
   final RxBool isLogging = false.obs;
@@ -74,10 +77,22 @@ class LoginController extends GetxController {
           "Login Blocked!",
           'The account is used on another device!',
         );
-        return;
-      }
+        AppDialogBoxes.changeDevice(email.value.text.trim(),this, () async {
+          isUpdating.value = true;
+          await SessionService().updateDevice(uid, deviceId);
+          await authRepo.loginUsingEmailAndPassword(
+            email.value.text.trim(),
+            password.value.text.trim(),
+          );
+          Get.back();
 
-      authController.screenRedirect();
+          authController.screenRedirect();
+          isUpdating.value = false;
+        });
+        return;
+      } else {
+        authController.screenRedirect();
+      }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

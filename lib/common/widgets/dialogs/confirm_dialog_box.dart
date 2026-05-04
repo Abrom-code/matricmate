@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 
 class AppDialogBoxes {
   static void showOkCancelDialog({
@@ -38,6 +39,7 @@ class AppDialogBoxes {
 
   static Future<bool?> changeDevice(
     String email,
+    LoginController ctrl,
     Future<void> Function() onConfirm,
   ) {
     return Get.dialog<bool>(
@@ -48,7 +50,7 @@ class AppDialogBoxes {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "It looks like you're using a new device.",
+                "It looks like you're using a new device.\n If this is your device you can update it.",
                 textAlign: TextAlign.center,
               ),
 
@@ -61,7 +63,7 @@ class AppDialogBoxes {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  "⚠️ Warning: Confirming will log out your previous device and block it from accessing this account.",
+                  "⚠️ Warning: Updating will log out your previous device and block it from accessing this account.",
                   style: TextStyle(fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
@@ -79,19 +81,29 @@ class AppDialogBoxes {
         ),
 
         actions: [
-          TextButton(
-            onPressed: () {
-              Get.back(result: false);
-            },
-            child: const Text("Cancel"),
+          Obx(
+            () => TextButton(
+              onPressed: ctrl.isUpdating.value
+                  ? null
+                  : () {
+                      Get.back(result: false);
+                    },
+              child: const Text("Cancel"),
+            ),
           ),
 
-          ElevatedButton(
-            onPressed: () async {
-              await onConfirm();
-              Get.back(result: true);
-            },
-            child: const Text("Update"),
+          Obx(
+            () => ElevatedButton(
+              onPressed: ctrl.isUpdating.value
+                  ? null
+                  : () async {
+                      await onConfirm();
+                      Get.back(result: true);
+                    },
+              child: ctrl.isUpdating.value
+                  ? AppCircularBottonLoading()
+                  : Text("Update"),
+            ),
           ),
         ],
       ),

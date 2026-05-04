@@ -57,6 +57,7 @@ class SignupForm extends GetView<SignupController> {
           // Email
           TextFormField(
             controller: controller.email,
+            enableSuggestions: true,
             validator: (val) => AppValidator.validateEmail(val),
             onTapOutside: (e) => FocusScope.of(context).unfocus(),
             decoration: const InputDecoration(

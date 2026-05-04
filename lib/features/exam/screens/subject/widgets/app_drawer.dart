@@ -106,7 +106,7 @@ class AppDrawer extends StatelessWidget {
                     title: 'Profile',
                     onTap: () {
                       Navigator.of(context).pop();
-                      Get.find<NavigationController>().changePage(4);
+                      Get.find<NavigationController>().changePage(3);
                     },
                   ),
 

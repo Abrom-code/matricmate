@@ -26,6 +26,7 @@ class LoginController extends GetxController {
   final email = TextEditingController();
   final password = TextEditingController();
   final RxBool isLogging = false.obs;
+  final RxInt trials = 3.obs;
 
   GlobalKey<FormState> loginFormkey = GlobalKey<FormState>();
 
@@ -38,11 +39,13 @@ class LoginController extends GetxController {
   Future<void> emailAndPasswordLogin() async {
     try {
       if (!loginFormkey.currentState!.validate()) return;
+      final emailText = email.text.trim();
+      final passwordText = password.text.trim();
 
       if (rememberMe.value) {
         _localStroage.writeIfNull("userLoginCredentials", [
-          email.value.text.trim(),
-          password.value.text.trim(),
+          emailText,
+          passwordText,
         ]);
       } else {
         _localStroage.remove("userLoginCredentials");
@@ -56,43 +59,46 @@ class LoginController extends GetxController {
       }
       // loading
       isLogging.value = true;
+      ;
 
-      await authRepo.loginUsingEmailAndPassword(
-        email.value.text.trim(),
-        password.value.text.trim(),
-      );
+      await authRepo.loginUsingEmailAndPassword(emailText, passwordText);
 
-      //  Get UID
       final uid = authRepo.currentUser!.uid;
-
-      //  Get device ID
       final deviceId = await DeviceService.getDeviceId();
 
-      //  Validate session
       final isAllowed = await SessionService().validateSession(uid, deviceId);
 
       if (!isAllowed) {
         await FirebaseAuth.instance.signOut();
-        SnackbarHelper.warning(
-          "Login Blocked!",
-          'The account is used on another device!',
-        );
-        AppDialogBoxes.changeDevice(email.value.text.trim(),this, () async {
-          isUpdating.value = true;
-          await SessionService().updateDevice(uid, deviceId);
-          await authRepo.loginUsingEmailAndPassword(
-            email.value.text.trim(),
-            password.value.text.trim(),
-          );
-          Get.back();
 
+        trials.value = await SessionService().getTrial(uid);
+
+        AppDialogBoxes.changeDevice(emailText, this, () async {
+          isUpdating.value = true;
+
+          if (trials.value <= 0) {
+            SnackbarHelper.error(
+              "Limit reached",
+              "You cannot change device anymore.",
+            );
+            isUpdating.value = false;
+            return;
+          }
+
+          await SessionService().updateDevice(uid, deviceId, trials.value - 1);
+
+          await authRepo.loginUsingEmailAndPassword(emailText, passwordText);
+
+          Get.back();
           authController.screenRedirect();
+
           isUpdating.value = false;
         });
+
         return;
-      } else {
-        authController.screenRedirect();
       }
+
+      authController.screenRedirect();
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

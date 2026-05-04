@@ -13,7 +13,7 @@ class TelegramChatButton extends StatelessWidget {
     return Column(
       children: [
         Text(
-          "Need help with your Payment?",
+          "Need help?",
           style: TextStyle(
             color: dark ? AppColors.darkGrey : AppColors.darkerGrey,
           ),
@@ -37,7 +37,7 @@ class TelegramChatButton extends StatelessWidget {
               children: const [
                 Icon(Icons.telegram, size: 25, color: Colors.blue),
                 SizedBox(width: 10),
-                Text("Chat on Telegram", style: TextStyle(color: Colors.blue)),
+                Text("Chat on Telegram", style: TextStyle(color: Colors.teal)),
               ],
             ),
           ),

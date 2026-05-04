@@ -12,11 +12,12 @@ class SessionService {
           .eq('firebase_uid', uid)
           .maybeSingle();
 
-      // First login → register device
+      // First login → create session
       if (existing == null) {
         await _supabase.from('user_sessions').insert({
           'firebase_uid': uid,
           'device_id': deviceId,
+          'trial': 0,
         });
         return true;
       }
@@ -26,11 +27,39 @@ class SessionService {
         return true;
       }
 
-      //  Different device → BLOCK
+      // Different device → block
       return false;
     } catch (e) {
       SnackbarHelper.error("Error", "Session check failed.");
       return false;
+    }
+  }
+
+  Future<int> getTrial(String uid) async {
+    try {
+      final response = await _supabase
+          .from('user_sessions')
+          .select('trial')
+          .eq('firebase_uid', uid)
+          .maybeSingle();
+
+      if (response == null) return 0;
+
+      return (response['trial'] as int?) ?? 0;
+    } catch (e) {
+      SnackbarHelper.error("Error", e.toString());
+      return 0;
+    }
+  }
+
+  Future<void> updateDevice(String uid, String deviceId, int trial) async {
+    try {
+      await _supabase
+          .from('user_sessions')
+          .update({'device_id': deviceId, 'trial': trial})
+          .eq('firebase_uid', uid);
+    } catch (e) {
+      SnackbarHelper.error("Error", "Failed to update device");
     }
   }
 
@@ -39,17 +68,6 @@ class SessionService {
       await _supabase.from('user_sessions').delete().eq('firebase_uid', uid);
     } catch (e) {
       SnackbarHelper.error("Error", "Failed to remove session");
-    }
-  }
-
-  Future<void> updateDevice(String uid, String deviceId) async {
-    try {
-      await _supabase
-          .from('user_sessions')
-          .update({'device_id': deviceId})
-          .eq('firebase_uid', uid);
-    } catch (e) {
-      SnackbarHelper.error("Error", "Failed to update device");
     }
   }
 }

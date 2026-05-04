@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 
 class AppDialogBoxes {
   static void showOkCancelDialog({
@@ -45,34 +45,39 @@ class AppDialogBoxes {
     return Get.dialog<bool>(
       AlertDialog(
         title: const Text("Changed Phone?"),
-        content: SingleChildScrollView(
-          child: Column(
+        content: Obx(
+          () => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                "It looks like you're using a new device.\n If this is your device you can update it.",
+              Text(
+                ctrl.trials.value <= 0
+                    ? "You are out of device change trials!"
+                    : "If this is your new device you can update it.\n"
+                          "You have: ${ctrl.trials.value} trials",
                 textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 14),
 
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
+              if (ctrl.trials.value <= 0) TelegramChatButton(),
+
+              if (ctrl.trials.value > 0)
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    "⚠️ Warning: Updating will log out previous device.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
-                child: const Text(
-                  "⚠️ Warning: Updating will log out your previous device and block it from accessing this account.",
-                  style: TextStyle(fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
-              ),
 
               const SizedBox(height: 10),
 
               const Text(
-                "If this isn't yours, cancel and enter your credentials.",
+                "If this isn't yours, cancel.",
                 style: TextStyle(fontSize: 11, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
@@ -85,24 +90,34 @@ class AppDialogBoxes {
             () => TextButton(
               onPressed: ctrl.isUpdating.value
                   ? null
-                  : () {
-                      Get.back(result: false);
-                    },
+                  : () => Get.back(result: false),
               child: const Text("Cancel"),
             ),
           ),
 
           Obx(
             () => ElevatedButton(
-              onPressed: ctrl.isUpdating.value
+              onPressed: ctrl.isUpdating.value || ctrl.trials.value <= 0
                   ? null
                   : () async {
-                      await onConfirm();
-                      Get.back(result: true);
+                      ctrl.isUpdating.value = true;
+
+                      try {
+                        await onConfirm();
+
+                        Get.back(result: true);
+                      } catch (e) {
+                        ctrl.isUpdating.value = false;
+                        Get.snackbar("Error", e.toString());
+                      }
                     },
               child: ctrl.isUpdating.value
-                  ? AppCircularBottonLoading()
-                  : Text("Update"),
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text("Update"),
             ),
           ),
         ],

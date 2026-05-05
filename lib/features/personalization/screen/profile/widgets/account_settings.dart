@@ -39,12 +39,7 @@ class AccountSettings extends StatelessWidget {
             trailing: Icon(Icons.keyboard_arrow_right),
             onTap: () => Get.toNamed(Routes.changePassword),
           ),
-          AppListTile(
-            icon: Icon(Icons.help_outlined),
-            title: "Help & Support",
-            trailing: Icon(Icons.keyboard_arrow_right),
-            onTap: () {},
-          ),
+
           if (isInactive)
             AppListTile(
               icon: Icon(Icons.workspace_premium, color: Colors.amber),
@@ -66,6 +61,12 @@ class AccountSettings extends StatelessWidget {
                 await UserController.instance.checkPaymentStatus();
               },
             ),
+          AppListTile(
+            icon: Icon(Icons.help_outlined),
+            title: "Help & Support",
+            trailing: Icon(Icons.keyboard_arrow_right),
+            onTap: () {},
+          ),
           AppListTile(
             icon: Icon(Icons.sunny),
             title: "Change Theme",

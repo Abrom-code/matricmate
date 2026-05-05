@@ -125,7 +125,7 @@ class AppDrawer extends StatelessWidget {
 
                   if (isPending)
                     AppListTile(
-                      icon: Icon(Icons.loop, color: Colors.amber),
+                      icon: Icon(Icons.loop),
                       title: 'Refresh Payment',
                       onTap: () async {
                         Navigator.of(context).pop();

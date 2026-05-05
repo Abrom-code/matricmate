@@ -75,7 +75,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
                         FocusManager.instance.primaryFocus?.unfocus();
                       },
                     ),
-                    icon: Icon(Iconsax.archive_tick, color: AppColors.primary),
+                    icon: Icon(Iconsax.archive_minus, color: AppColors.primary),
                   ),
                 ],
               ),

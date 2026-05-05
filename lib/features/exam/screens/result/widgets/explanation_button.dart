@@ -33,7 +33,7 @@ class ExplanationButton extends StatelessWidget {
           : EdgeInsets.symmetric(horizontal: AppSizes.md),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSizes.sm),
-        color: dark ? const Color.fromARGB(255, 10, 10, 10) : AppColors.white,
+        color: dark ? const Color.fromARGB(255, 10, 10, 10) : AppColors.light,
       ),
       child: Column(
         children: [

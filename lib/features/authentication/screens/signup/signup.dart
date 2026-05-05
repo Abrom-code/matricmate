@@ -36,13 +36,13 @@ class SignupScreen extends StatelessWidget {
                     "Already have an account? ",
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
-                  InkWell(
-                    onTap: () => Get.offNamed(Routes.signIn),
+                  TextButton(
+                    onPressed: () => Get.offNamed(Routes.signIn),
                     child: Text(
                       "LOGIN",
                       style: Theme.of(
                         context,
-                      ).textTheme.labelLarge!.apply(color: AppColors.primary),
+                      ).textTheme.titleMedium!.apply(color: AppColors.primary),
                     ),
                   ),
                 ],

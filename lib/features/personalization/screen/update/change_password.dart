@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/personalization/controller/change_password_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -36,7 +37,7 @@ class ChangePassword extends GetView<ChangePasswordController> {
                         AppValidator.validateEmptyText("Current Password", val),
                     decoration: InputDecoration(
                       labelText: "Current Password",
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Iconsax.lock_circle_copy),
                       suffixIcon: IconButton(
                         onPressed: () => controller.hideOldPassword.value =
                             !controller.hideOldPassword.value,
@@ -59,7 +60,7 @@ class ChangePassword extends GetView<ChangePasswordController> {
                     validator: (val) => AppValidator.validatePassword(val),
                     decoration: InputDecoration(
                       labelText: "New Password",
-                      prefixIcon: const Icon(Icons.lock),
+                      prefixIcon: const Icon(Iconsax.lock_circle),
                       suffixIcon: IconButton(
                         onPressed: () => controller.hideNewPassword.value =
                             !controller.hideNewPassword.value,

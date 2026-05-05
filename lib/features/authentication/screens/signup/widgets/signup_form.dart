@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/signup/signup_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
@@ -62,7 +63,7 @@ class SignupForm extends GetView<SignupController> {
             onTapOutside: (e) => FocusScope.of(context).unfocus(),
             decoration: const InputDecoration(
               labelText: AppTextStrings.email,
-              prefixIcon: Icon(Icons.email),
+              prefixIcon: Icon(Icons.email_outlined),
             ),
           ),
 
@@ -77,7 +78,7 @@ class SignupForm extends GetView<SignupController> {
               obscureText: controller.hidePassword.value,
               decoration: InputDecoration(
                 labelText: AppTextStrings.password,
-                prefixIcon: Icon(Icons.lock),
+                prefixIcon: Icon(Iconsax.lock_circle_copy),
                 suffixIcon: IconButton(
                   onPressed: () => controller.hidePassword.value =
                       !controller.hidePassword.value,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -22,7 +23,7 @@ class LoginForm extends GetView<LoginController> {
             validator: (value) => AppValidator.validateEmail(value),
             decoration: InputDecoration(
               labelText: AppTextStrings.email,
-              prefixIcon: Icon(Icons.email),
+              prefixIcon: Icon(Icons.email_outlined),
             ),
           ),
           const SizedBox(height: AppSizes.defaultSpace),
@@ -33,7 +34,7 @@ class LoginForm extends GetView<LoginController> {
               controller: controller.password,
               decoration: InputDecoration(
                 labelText: AppTextStrings.password,
-                prefixIcon: Icon(Icons.lock),
+                prefixIcon: Icon(Iconsax.lock_circle_copy),
                 suffixIcon: IconButton(
                   onPressed: () => controller.hidePassword.value =
                       !controller.hidePassword.value,

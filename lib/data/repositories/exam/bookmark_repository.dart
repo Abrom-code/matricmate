@@ -24,9 +24,9 @@ class BookmarkRepository {
     }
   }
 
-  Future<List<BookmarkModel>> loadBookmarks() async {
+  Future<List<BookmarkModel>> loadBookmarks(String userId) async {
     try {
-      return await _dbService.loadBookmarkedQuestions();
+      return await _dbService.loadBookmarkedQuestions(userId);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

@@ -66,6 +66,10 @@ class UserRepository {
       await ensureSupabaseAuth();
       await _supabase.from('users').delete().eq('id', userId);
       await SessionService().removeSession(userId);
+
+      // clear local user table so no stale data remains
+      final db = await databaseService.database;
+      await db.delete('user');
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

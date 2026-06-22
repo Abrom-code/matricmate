@@ -20,7 +20,7 @@ class PaymentRepository {
 
       final url = _supabase.storage.from('receipts').getPublicUrl(fileName);
 
-      return {"filePath": fileName, "url": url};
+      return {'filePath': fileName, 'url': url};
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -76,7 +76,7 @@ class PaymentRepository {
             .remove(filesToDelete);
 
         if (deletedFiles.isEmpty) {
-          throw Exception("Failed to delete any receipt files");
+          throw Exception('Failed to delete any receipt files');
         }
       }
 

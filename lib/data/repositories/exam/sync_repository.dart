@@ -26,7 +26,7 @@ class SyncRepository {
     batch.insert(table, value, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> updateBatch(SubjectMoModel s, int localDownloadStatus) async {
+  Future<void> updateBatch(SubjectModel s, int localDownloadStatus) async {
     try {
       final batch = await _getBatch();
 
@@ -121,7 +121,7 @@ class SyncRepository {
       }
       // cache images
       if (imgUrls.isNotEmpty) {
-        await AppHelperFuntions.downloadImages(imgUrls);
+        await AppHelperFunctions.downloadImages(imgUrls);
       }
 
       // Commit everything

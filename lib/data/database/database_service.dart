@@ -19,12 +19,30 @@ class DatabaseService extends GetxController {
 
   Future<Database> _initDB() async {
     final databaseDirPath = await getDatabasesPath();
-    final databasePath = join(databaseDirPath, "matricmate.db");
+    final databasePath = join(databaseDirPath, 'matricmate.db');
 
     return await openDatabase(
       databasePath,
       version: 1,
       onCreate: (db, version) async {
+        await DBschema.create(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        // Drop and recreate all tables on schema changes.
+        // Increment version number above whenever the schema is modified.
+        final tables = [
+          'bookmarks',
+          'results',
+          'questions',
+          'passages',
+          'tests',
+          'chapters',
+          'subjects',
+          'user',
+        ];
+        for (final table in tables) {
+          await db.execute('DROP TABLE IF EXISTS $table');
+        }
         await DBschema.create(db);
       },
     );
@@ -93,12 +111,13 @@ class DatabaseService extends GetxController {
     required int subjectId,
     int? grade,
     String? type,
+    int? chapterId,
   }) async {
     try {
       final db = await database;
 
       String query = 'SELECT * FROM tests WHERE subject_id = ?';
-      List<dynamic> args = [subjectId];
+      final List<dynamic> args = [subjectId];
 
       if (type != null) {
         query += ' AND type = ?';
@@ -108,6 +127,11 @@ class DatabaseService extends GetxController {
       if (grade != null) {
         query += ' AND grade = ?';
         args.add(grade);
+      }
+
+      if (chapterId != null) {
+        query += ' AND chapter_id = ?';
+        args.add(chapterId);
       }
 
       return db.rawQuery(query, args);
@@ -207,10 +231,15 @@ class DatabaseService extends GetxController {
     }
   }
 
-  Future<List<BookmarkModel>> loadBookmarkedQuestions() async {
+  Future<List<BookmarkModel>> loadBookmarkedQuestions(String userId) async {
     try {
       final db = await database;
-      final result = await db.query('bookmarks', orderBy: 'saved_at DESC');
+      final result = await db.query(
+        'bookmarks',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+        orderBy: 'saved_at DESC',
+      );
 
       return result.map((res) => BookmarkModel.fromMap(res)).toList();
     } catch (e) {
@@ -221,11 +250,13 @@ class DatabaseService extends GetxController {
   Future<int> getCompletedTests() async {
     try {
       final db = await database;
-      final result = await db.query('results');
-
-      return result
-          .where((r) => r['user_id'] == UserController.instance.user.value.id)
-          .length;
+      final userId = UserController.instance.user.value.id;
+      final result = await db.query(
+        'results',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+      return result.length;
     } catch (e) {
       throw e;
     }
@@ -250,7 +281,7 @@ class DatabaseService extends GetxController {
       final db = await database;
 
       if (pId == null) {
-        return PassageModel(id: -1, content: "", title: "");
+        return PassageModel(id: -1, content: '', title: '');
       }
 
       final result = await db.query(
@@ -263,8 +294,8 @@ class DatabaseService extends GetxController {
       if (result.isEmpty) {
         return PassageModel(
           id: -1,
-          content: "No passage found",
-          title: "Missing",
+          content: 'No passage found',
+          title: 'Missing',
         );
       }
 

@@ -10,12 +10,14 @@ class TestRepository {
     required int subjectId,
     int? grade,
     String? type,
+    int? chapterId,
   }) async {
     try {
       return await _dbService.getTests(
         subjectId: subjectId,
         grade: grade,
         type: type,
+        chapterId: chapterId,
       );
     } catch (e) {
       throw AppExceptionHandler.handle(e);

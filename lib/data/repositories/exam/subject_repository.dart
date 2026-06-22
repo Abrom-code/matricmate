@@ -71,7 +71,7 @@ class SubjectRepository {
         }
       }
       if (imgUrls.isNotEmpty) {
-        await AppHelperFuntions.downloadImages(imgUrls);
+        await AppHelperFunctions.downloadImages(imgUrls);
       }
 
       await batch.commit(noResult: true);
@@ -83,7 +83,7 @@ class SubjectRepository {
   //get supabase subject
   Future<List<Map<String, dynamic>>> getSupabaseSubjects() async {
     try {
-      return await supabase.from("subjects").select();
+      return await supabase.from('subjects').select();
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -97,7 +97,7 @@ class SubjectRepository {
     }
   }
 
-  Future<void> addSubject(SubjectMoModel subject) async {
+  Future<void> addSubject(SubjectModel subject) async {
     try {
       final db = await _dbService.database;
 

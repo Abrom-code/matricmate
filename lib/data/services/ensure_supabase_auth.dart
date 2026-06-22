@@ -10,6 +10,6 @@ Future<void> ensureSupabaseAuth() async {
     await client.auth.signInAnonymously();
   } catch (e) {
     // Wrap and re-throw so the calling repository gets a clean AppFailure
-    throw AppExceptionHandler.handle(e is Object ? e : Exception(e.toString()));
+    throw AppExceptionHandler.handle(e);
   }
 }

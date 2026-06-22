@@ -64,6 +64,8 @@ class PremiumController extends GetxController {
 
       isUploading.value = true;
 
+      final userId = _userController.user.value.id;
+
       if (userId.isEmpty) {
         SnackbarHelper.error('Error', 'No user found!');
         return;

@@ -8,14 +8,12 @@ import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
-import 'package:matricmate/utils/themes/theme_controller.dart';
 
 class GeneralBinding extends Bindings {
   @override
   void dependencies() {
     Get.put(NetworkManager(), permanent: true);
     Get.put(DatabaseService(), permanent: true);
-    Get.put(ThemeController(), permanent: true);
     Get.put(NavigationController(), permanent: true);
 
     Get.put(SyncingController(), permanent: true);

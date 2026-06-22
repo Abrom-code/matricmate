@@ -7,6 +7,7 @@ import 'package:matricmate/app.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/firebase_options.dart';
 import 'package:matricmate/utils/constants/api_constants.dart';
+import 'package:matricmate/utils/themes/theme_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
@@ -16,6 +17,10 @@ Future<void> main() async {
   await GetStorage.init();
 
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Register ThemeController before any widget builds so that the
+  // Obx in App.build can safely call ThemeController.instance.
+  Get.put(ThemeController(), permanent: true);
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

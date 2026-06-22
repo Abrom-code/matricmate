@@ -73,9 +73,9 @@ class UserModel {
 
   /// EMPTY USER
   static UserModel empty() => UserModel(
-    id: "",
-    firstName: "",
-    lastName: "",
+    id: '',
+    firstName: '',
+    lastName: '',
     email: '',
     stream: '',
     status: 'inactive',
@@ -84,7 +84,7 @@ class UserModel {
   /// FULL NAME
   String get fullName => '$firstName $lastName';
 
-  static List<String> nameParts(String fullName) => fullName.split(" ");
+  static List<String> nameParts(String fullName) => fullName.split(' ');
 
   bool get isActive => status == 'active';
   bool get isPending => status == 'pending';

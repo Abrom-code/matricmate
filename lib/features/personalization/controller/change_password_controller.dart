@@ -28,7 +28,7 @@ class ChangePasswordController extends GetxController {
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet");
+        ToastHelper.warning('No Internet');
         return;
       }
 
@@ -37,7 +37,7 @@ class ChangePasswordController extends GetxController {
       final user = _authRepo.currentUser;
 
       if (user == null || user.email == null) {
-        SnackbarHelper.error("Error", "No authenticated user found.");
+        SnackbarHelper.error('Error', 'No authenticated user found.');
         return;
       }
 
@@ -51,9 +51,8 @@ class ChangePasswordController extends GetxController {
       newPassword.clear();
 
       Get.back();
-      Get.back();
 
-      ToastHelper.success("Your password has been updated.");
+      ToastHelper.success('Your password has been updated.');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

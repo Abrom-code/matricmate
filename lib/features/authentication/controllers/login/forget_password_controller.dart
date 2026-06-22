@@ -24,7 +24,7 @@ class ForgetPasswordController extends GetxController {
       // Network check
       final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
-        ToastHelper.warning("Please turn on mobile data or connect to WIFI!");
+        ToastHelper.warning('Please turn on mobile data or connect to WIFI!');
         return;
       }
 
@@ -32,12 +32,12 @@ class ForgetPasswordController extends GetxController {
         email.value.text.trim(),
       );
       SnackbarHelper.success(
-        "Email sent",
-        "If an you already resgistered, please check your inbox!",
+        'Email sent',
+        'If an you already resgistered, please check your inbox!',
       );
 
       Get.toNamed(
-        Routes.resetPassowrd,
+        Routes.resetPassword,
         arguments: {'email': email.text.trim()},
       );
     } catch (e) {

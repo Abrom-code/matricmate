@@ -38,7 +38,7 @@ class UpdateProfileController extends GetxController {
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet");
+        ToastHelper.warning('No Internet');
         return;
       }
 
@@ -55,12 +55,12 @@ class UpdateProfileController extends GetxController {
       //  update remote + local DB
       await _userRepository.updateFullUserRecord(updatedUser);
 
-      //  single source refresh
-      await _userController.fetchUserRecord();
+      //  refresh local state only — no need to re-validate session
+      await _userController.loadLocalUser();
 
       Get.back();
 
-      ToastHelper.success("Profile updated successfully");
+      ToastHelper.success('Profile updated successfully');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

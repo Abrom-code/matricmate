@@ -10,7 +10,7 @@ class ResetPasswordController extends GetxController {
 
   final isSending = false.obs;
 
-  final email = "".obs;
+  final email = ''.obs;
   @override
   void onInit() {
     email.value = Get.arguments['email'];
@@ -21,7 +21,7 @@ class ResetPasswordController extends GetxController {
     try {
       isSending.value = true;
       await _authenticationRepository.sendResetPasswordEmail(email);
-      ToastHelper.success("Email sent, please check your inbox!");
+      ToastHelper.success('Email sent, please check your inbox!');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

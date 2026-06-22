@@ -59,7 +59,7 @@ class UserController extends GetxController {
 
   Future<void> logOut() async {
     try {
-      AppFullScreenLoader.openLoadingDialog("Logging out...");
+      AppFullScreenLoader.openLoadingDialog('Logging out...');
 
       await _authRepo.logout();
 
@@ -91,8 +91,8 @@ class UserController extends GetxController {
 
       if (!isAllowed) {
         SnackbarHelper.warning(
-          "Device Blocked!",
-          "Another device is using this account!",
+          'Device Blocked!',
+          'Another device is using this account!',
         );
         await logOut();
         return false;
@@ -112,13 +112,13 @@ class UserController extends GetxController {
     final current = user.value;
 
     if (current.isActive) {
-      Get.offAll(() => NavigationMenu());
-      ToastHelper.success("Your account is activated!");
+      Get.offAll(() => const NavigationMenu());
+      ToastHelper.success('Your account is activated!');
       return;
     }
 
     if (current.isPending) {
-      SnackbarHelper.warning("Progress", "Your payment is still processing!");
+      SnackbarHelper.warning('Progress', 'Your payment is still processing!');
     }
   }
 
@@ -127,20 +127,20 @@ class UserController extends GetxController {
       if (userCredentials == null) return;
 
       final nameParts = UserModel.nameParts(
-        userCredentials.user?.displayName ?? "",
+        userCredentials.user?.displayName ?? '',
       );
 
       final newUser = UserModel(
         id: userCredentials.user!.uid,
         firstName: nameParts.first,
         lastName: nameParts.last,
-        email: userCredentials.user?.email ?? "",
+        email: userCredentials.user?.email ?? '',
         stream: 'natural',
       );
 
       await _userRepository.saveUserRecord(newUser);
     } catch (e) {
-      SnackbarHelper.warning("Data not saved", "Something went wrong");
+      SnackbarHelper.warning('Data not saved', 'Something went wrong');
     }
   }
 
@@ -149,7 +149,7 @@ class UserController extends GetxController {
       context: context,
       onPressed: () async {
         try {
-          AppFullScreenLoader.openLoadingDialog("Deleting account...");
+          AppFullScreenLoader.openLoadingDialog('Deleting account...');
 
           final authUser = _authRepo.currentUser;
 
@@ -166,33 +166,23 @@ class UserController extends GetxController {
           Get.offAll(() => const LoginScreen());
         } catch (e) {
           AppFullScreenLoader.stopLoading();
-          AppFullScreenLoader.stopLoading();
           AppExceptionHandler.handleResponse(e);
         }
       },
     );
   }
 
-  Future<void> deleteUserAccount() async {
-    try {
-      showDeleteDialog();
-    } catch (e) {
-      AppFullScreenLoader.stopLoading();
-      AppExceptionHandler.handleResponse(e);
-    }
-  }
-
   void showDeleteDialog() {
     final passwordController = TextEditingController();
 
     Get.defaultDialog(
-      titlePadding: EdgeInsets.only(top: 18.0),
-      title: "Delete Account",
+      titlePadding: const EdgeInsets.only(top: 18.0),
+      title: 'Delete Account',
       content: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            const Text("Enter your password to confirm"),
+            const Text('Enter your password to confirm'),
             const SizedBox(height: 10),
             Obx(
               () => TextField(
@@ -221,7 +211,7 @@ class UserController extends GetxController {
           child: Obx(
             () => OutlinedButton(
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.error),
+                side: const BorderSide(color: AppColors.error),
               ),
               onPressed: isDeleting.value
                   ? null
@@ -235,8 +225,8 @@ class UserController extends GetxController {
                         Get.back();
 
                         SnackbarHelper.success(
-                          "Account Deleted",
-                          "Your data has been permanently removed.",
+                          'Account Deleted',
+                          'Your data has been permanently removed.',
                         );
                       } catch (e) {
                         AppExceptionHandler.handleResponse(e);
@@ -245,9 +235,9 @@ class UserController extends GetxController {
                       }
                     },
               child: isDeleting.value
-                  ? const AppCircularBottonLoading(color: AppColors.error)
+                  ? const AppCircularButtonLoading(color: AppColors.error)
                   : const Text(
-                      "Delete",
+                      'Delete',
                       style: TextStyle(color: AppColors.error),
                     ),
             ),

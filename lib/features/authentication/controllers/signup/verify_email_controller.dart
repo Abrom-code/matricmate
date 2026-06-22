@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
@@ -17,8 +16,6 @@ class VerifyEmailController extends GetxController {
   final isChecking = false.obs;
   final isResending = false.obs;
 
-  Timer? _timer;
-
   final email = ''.obs;
 
   @override
@@ -32,7 +29,7 @@ class VerifyEmailController extends GetxController {
     try {
       isResending.value = true;
       await _authRepo.sendEmailVerification();
-      ToastHelper.success("Email sent");
+      ToastHelper.success('Email sent');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -48,11 +45,11 @@ class VerifyEmailController extends GetxController {
       final user = _authRepo.currentUser;
 
       if (user != null && user.emailVerified) {
-        ToastHelper.success("Email Verified");
+        ToastHelper.success('Email Verified');
 
         _authController.screenRedirect();
       } else {
-        ToastHelper.warning("Not verified, please verify your email first");
+        ToastHelper.warning('Not verified, please verify your email first');
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -63,7 +60,6 @@ class VerifyEmailController extends GetxController {
 
   @override
   void onClose() {
-    _timer?.cancel();
     super.onClose();
   }
 }

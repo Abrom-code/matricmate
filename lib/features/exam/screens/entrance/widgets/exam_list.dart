@@ -35,7 +35,7 @@ class EntranceExams extends GetView<ExamsController> {
           final tests = controller.entranceTests;
 
           if (tests.isEmpty) {
-            return const Center(child: Text("No Tests Found"));
+            return const Center(child: Text('No Tests Found'));
           }
 
           return ListView.builder(
@@ -75,7 +75,7 @@ class EntranceExams extends GetView<ExamsController> {
                           Get.to(() => const PaymentVerificationScreen());
                           return;
                         }
-                        ToastHelper.info("No quesions added!");
+                        ToastHelper.info('No quesions added!');
                         return;
                       }
 

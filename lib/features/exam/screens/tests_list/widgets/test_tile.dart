@@ -23,13 +23,13 @@ class TestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return AppTile(
       icon: icon,
       iconBgColor: iconColor,
       subTitle: LinearProgressIndicator(
         borderRadius: BorderRadius.circular(10),
-        value: currentStep / maxStep,
+        value: maxStep > 0 ? (currentStep / maxStep).clamp(0.0, 1.0) : null,
         backgroundColor: dark ? AppColors.darkGrey : AppColors.grey,
         color: AppColors.primary,
         minHeight: 8,

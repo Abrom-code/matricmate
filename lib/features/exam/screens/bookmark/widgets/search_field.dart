@@ -8,7 +8,7 @@ class SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
 
     return TextFormField(
       onTapOutside: (e) => FocusScope.of(context).unfocus(),
@@ -17,14 +17,14 @@ class SearchField extends StatelessWidget {
         BookmarkController.instance.searchQuery.value = value;
       },
       decoration: InputDecoration(
-        prefixIcon: Icon(Icons.search),
+        prefixIcon: const Icon(Icons.search),
         border: buildBorder(Colors.grey),
         enabledBorder: buildBorder(
           dark ? Colors.grey.shade700 : Colors.grey.shade400,
         ),
         focusedBorder: buildBorder(AppColors.primary),
-        hintText: "Search Bookmarked topics...",
-        hintStyle: TextStyle(color: Colors.grey),
+        hintText: 'Search Bookmarked topics...',
+        hintStyle: const TextStyle(color: Colors.grey),
       ),
     );
   }

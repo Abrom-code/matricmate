@@ -21,7 +21,7 @@ class PremiumScreen extends StatelessWidget {
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          "Upgrade Premium",
+          'Upgrade Premium',
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
@@ -41,16 +41,16 @@ class PremiumScreen extends StatelessWidget {
                     color: Colors.teal.shade700,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
-                        "Total Amount Due",
+                        'Total Amount Due',
                         style: TextStyle(color: Colors.white70),
                       ),
                       SizedBox(height: 8),
                       Text(
-                        "250 ETB",
+                        '250 ETB',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 28,
@@ -81,10 +81,9 @@ class PremiumScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: Obx(() {
-        final isPending = UserController.instance.user.value.isPending;
-        print(isPending.toString());
+      final isPending = UserController.instance.user.value.isPending;
         return Container(
-          padding: EdgeInsets.all(AppSizes.md),
+          padding: const EdgeInsets.all(AppSizes.md),
           child: SizedBox(
             width: double.infinity,
 
@@ -97,15 +96,15 @@ class PremiumScreen extends StatelessWidget {
                 ),
               ),
               onPressed: isPending
-                  ? () => Get.to(() => PaymentVerificationScreen())
+                  ? () => Get.to(() => const PaymentVerificationScreen())
                   : () => Get.to(
                       () => PayementScreen(
                         method: controller.selectedMethod.value,
                       ),
                     ),
               child: Text(
-                isPending ? "Check Status" : "Continue to Payment",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                isPending ? 'Check Status' : 'Continue to Payment',
+                style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
           ),

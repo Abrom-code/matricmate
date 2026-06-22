@@ -36,7 +36,7 @@ class GradeTestsPage extends GetView<GradeTestController> {
           final tests = controller.chapterTests;
 
           if (tests.isEmpty) {
-            return const Center(child: Text("No Tests Found"));
+            return const Center(child: Text('No Tests Found'));
           }
 
           return ListView.builder(
@@ -68,19 +68,19 @@ class GradeTestsPage extends GetView<GradeTestController> {
                     maxStep: controller.getMaxStep(test.id),
                     testName: test.title,
                     onTap: () {
+                      if (isInactive && index > 0) {
+                        Get.bottomSheet(
+                          const PremiumBottomSheet(),
+                          isScrollControlled: true,
+                        );
+                        return;
+                      }
+                      if (isPending && index > 0) {
+                        Get.to(() => const PaymentVerificationScreen());
+                        return;
+                      }
                       if (!hasQn) {
-                        if (isInactive && index > 0) {
-                          Get.bottomSheet(
-                            const PremiumBottomSheet(),
-                            isScrollControlled: true,
-                          );
-                          return;
-                        }
-                        if (isPending) {
-                          Get.to(() => const PaymentVerificationScreen());
-                          return;
-                        }
-                        ToastHelper.info("No quesions added!");
+                        ToastHelper.info('No questions added!');
                         return;
                       }
 

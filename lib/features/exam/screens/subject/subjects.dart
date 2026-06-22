@@ -27,9 +27,9 @@ class SubjectsScreen extends StatelessWidget {
 
     return Scaffold(
       key: scaffoldKey,
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       appBar: Appbar(
-        title: AppbarStatusTitle(title: "MatricMate"),
+        title: const AppbarStatusTitle(title: 'MatricMate'),
         leadingIcon: Icons.menu,
         leadingOnPressed: () {
           scaffoldKey.currentState?.openDrawer();
@@ -39,7 +39,7 @@ class SubjectsScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: AppSizes.defaultSpace / 2),
             child: IconButton(
               onPressed: () => subjectController.syncAll(),
-              icon: Icon(
+              icon: const Icon(
                 Icons.loop,
                 size: AppSizes.iconMd * 1.2,
                 color: AppColors.white,
@@ -52,16 +52,13 @@ class SubjectsScreen extends StatelessWidget {
         if (UserController.instance.userFetching.value ||
             subjectController.isLoading.value ||
             syncController.refreshing.value) {
-          return AppCircularLoading(title: 'Loading...');
+          return const AppCircularLoading(title: 'Loading...');
         }
 
-        final isNaturalStream =
-            subjectController.selectedStream.value == "natural";
-        final filteredSubjects = subjectController.subjects.where((subject) {
-          return subject.isCommon || subject.isNatural == isNaturalStream;
-        }).toList();
         final isInactive = UserController.instance.user.value.isInactive;
         final isPending = UserController.instance.user.value.isPending;
+
+        final filteredSubjects = subjectController.filteredSubjects;
 
         return SingleChildScrollView(
           child: Padding(
@@ -84,13 +81,13 @@ class SubjectsScreen extends StatelessWidget {
                     onPressed: () {
                       Get.to(() => const PaymentVerificationScreen());
                     },
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.loop),
-                        const SizedBox(width: AppSizes.sm),
+                        SizedBox(width: AppSizes.sm),
                         Text(
-                          "Check Payment Status",
+                          'Check Payment Status',
                           style: TextStyle(
                             color: Colors.teal,
                             fontWeight: FontWeight.w600,
@@ -108,7 +105,7 @@ class SubjectsScreen extends StatelessWidget {
 
                     return SubjectContainer(
                       title: subject.name,
-                      image: AppHelperFuntions.getSubjectImage(subject.name),
+                      image: AppHelperFunctions.getSubjectImage(subject.name),
                       isDownloaded: subject.isDownloaded,
                       onPressed: () => subjectController.downloadSubject(
                         subject.name,

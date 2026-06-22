@@ -16,7 +16,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     controller.clearSearch();
 
     return Obx(() {
@@ -25,17 +25,17 @@ class BookmarkScreen extends GetView<BookmarkController> {
         length: tabs.length,
         child: Scaffold(
           key: scaffoldKey,
-          drawer: AppDrawer(),
+          drawer: const AppDrawer(),
           appBar: Appbar(
             leadingIcon: Icons.menu,
             leadingOnPressed: () {
               scaffoldKey.currentState!.openDrawer();
             },
-            title: Text("Bookmarks", style: TextStyle(color: AppColors.white)),
+            title: const Text('Bookmarks', style: TextStyle(color: AppColors.white)),
           ),
           body: Obx(() {
             if (UserController.instance.userFetching.value) {
-              return AppCircularLoading(title: 'Loading...');
+              return const AppCircularLoading(title: 'Loading...');
             }
 
             return NestedScrollView(
@@ -47,12 +47,12 @@ class BookmarkScreen extends GetView<BookmarkController> {
                     floating: true,
                     backgroundColor: dark ? AppColors.black : AppColors.white,
                     expandedHeight: 130,
-                    flexibleSpace: Padding(
+                    flexibleSpace: const Padding(
                       padding: EdgeInsets.all(AppSizes.defaultSpace),
                       child: SearchField(),
                     ),
                     bottom: TabBar(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: AppSizes.defaultSpace / 2,
                       ),
                       isScrollable: true,
@@ -69,18 +69,18 @@ class BookmarkScreen extends GetView<BookmarkController> {
                 children: controller.subjects.map((subject) {
                   return Obx(() {
                     final filtered = controller.getBySubject(subject);
-                    if (controller.isLodaing.value)
-                      return AppCircularLoading(title: "Loading...");
+                    if (controller.isLoading.value)
+                      return const AppCircularLoading(title: 'Loading...');
                     if (filtered.isEmpty) {
-                      return Center(child: Text("No bookmark found"));
+                      return const Center(child: Text('No bookmark found'));
                     }
 
                     return Container(
-                      margin: EdgeInsets.all(AppSizes.defaultSpace / 2),
+                      margin: const EdgeInsets.all(AppSizes.defaultSpace / 2),
                       child: ListView.separated(
                         itemCount: filtered.length,
                         separatorBuilder: (_, _) =>
-                            SizedBox(height: AppSizes.spaceBtwItems),
+                            const SizedBox(height: AppSizes.spaceBtwItems),
                         itemBuilder: (_, index) {
                           final qn = filtered[index];
                           return BookmarkContainer(qn: qn);

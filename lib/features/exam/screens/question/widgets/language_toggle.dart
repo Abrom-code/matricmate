@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -10,7 +9,7 @@ class LanguageToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<QuestionController>();
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -23,14 +22,14 @@ class LanguageToggle extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildItem(
-            "English",
-            controller.languageSelected.value == "EN",
+            'English',
+            controller.languageSelected.value == 'EN',
             context = context,
             () => controller.languageSelected.value = 'EN',
           ),
           _buildItem(
-            "አማርኛ",
-            controller.languageSelected.value == "AM",
+            'አማርኛ',
+            controller.languageSelected.value == 'AM',
             context = context,
             () => controller.languageSelected.value = 'AM',
           ),
@@ -45,7 +44,7 @@ class LanguageToggle extends StatelessWidget {
     BuildContext context,
     VoidCallback onTap,
   ) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(

@@ -18,7 +18,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     final isGrater = qn.questionText.length > 150;
     final bookmark = controller.bookmarkedQuestionIds.firstWhere(
       (b) => b.questionId == qn.id,
@@ -34,14 +34,14 @@ class BookmarkContainer extends GetView<BookmarkController> {
       return GestureDetector(
         onTap: () => Get.to(BookmarkedQnContainer(qn: qn)),
         child: Container(
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: AppSizes.defaultSpace / 1.3,
             vertical: AppSizes.defaultSpace / 3,
           ),
           decoration: BoxDecoration(
             color: dark
                 ? AppColors.darkerGrey.withValues(alpha: 0.5)
-                : Color(0xFFe7eae7),
+                : const Color(0xFFe7eae7),
             borderRadius: BorderRadius.circular(AppSizes.md),
           ),
           child: Column(
@@ -51,23 +51,23 @@ class BookmarkContainer extends GetView<BookmarkController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: EdgeInsets.all(AppSizes.sm),
+                    padding: const EdgeInsets.all(AppSizes.sm),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppSizes.lg),
                     ),
                     child: Text(
                       controller.subject(qn.subjectId).toUpperCase(),
-                      style: TextStyle(color: AppColors.primary),
+                      style: const TextStyle(color: AppColors.primary),
                     ),
                   ),
 
                   IconButton(
-                    padding: EdgeInsets.all(0),
-                    onPressed: () => AppHelperFuntions.showAppDialog(
+                    padding: const EdgeInsets.all(0),
+                    onPressed: () => AppHelperFunctions.showAppDialog(
                       context,
-                      "Do you want to remove?",
-                      "It will be deleted from your bookmark!",
+                      'Do you want to remove?',
+                      'It will be deleted from your bookmark!',
                       () async {
                         Get.back();
 
@@ -75,7 +75,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
                         FocusManager.instance.primaryFocus?.unfocus();
                       },
                     ),
-                    icon: Icon(Iconsax.archive_minus, color: AppColors.primary),
+                    icon: const Icon(Iconsax.archive_minus, color: AppColors.primary),
                   ),
                 ],
               ),
@@ -92,21 +92,21 @@ class BookmarkContainer extends GetView<BookmarkController> {
                 ),
               ),
               const SizedBox(height: AppSizes.spaceBtwItems / 2),
-              Divider(),
+              const Divider(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.date_range, color: Colors.grey, size: 17),
+                      const Icon(Icons.date_range, color: Colors.grey, size: 17),
                       const SizedBox(width: AppSizes.xs),
                       Text(
                         'Saved ${AppFormatter.formatDate(savedAt)}',
-                        style: TextStyle(color: Colors.grey),
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
-                  Icon(Icons.keyboard_arrow_right),
+                  const Icon(Icons.keyboard_arrow_right),
                 ],
               ),
               const SizedBox(height: AppSizes.spaceBtwItems / 2),

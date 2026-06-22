@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:get/get_state_manager/src/simple/get_view.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -17,26 +16,26 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          "Review Answers",
+          'Review Answers',
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(AppSizes.defaultSpace / 2),
+        padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(AppSizes.defaultSpace / 1.3),
+          padding: const EdgeInsets.all(AppSizes.defaultSpace / 1.3),
           decoration: BoxDecoration(
             color: dark
                 ? AppColors.darkerGrey.withValues(alpha: 0.5)
-                : Color(0xFFe7eae7),
+                : const Color(0xFFe7eae7),
             borderRadius: BorderRadius.circular(AppSizes.md),
           ),
           child: Column(
@@ -75,13 +74,13 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
                 return Container(
                   width: double.infinity,
                   padding: expanded
-                      ? EdgeInsets.only(
+                      ? const EdgeInsets.only(
                           bottom: AppSizes.md,
                           right: AppSizes.md,
                           left: AppSizes.md,
                           top: 0,
                         )
-                      : EdgeInsets.symmetric(horizontal: AppSizes.md),
+                      : const EdgeInsets.symmetric(horizontal: AppSizes.md),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(AppSizes.sm),
                     color: dark
@@ -96,7 +95,7 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
                           Expanded(
                             child: TextButton(
                               style: TextButton.styleFrom(
-                                padding: EdgeInsets.all(5),
+                                padding: const EdgeInsets.all(5),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(5),
                                 ),
@@ -109,7 +108,7 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
                                     : MainAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Why this is correct?",
+                                    'Why this is correct?',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyLarge!
@@ -128,16 +127,16 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
 
                           if (expanded)
                             DropdownButton<String>(
-                              padding: EdgeInsets.all(0),
+                              padding: const EdgeInsets.all(0),
                               isDense: true,
                               iconEnabledColor: AppColors.primary,
-                              underline: SizedBox(),
+                              underline: const SizedBox(),
                               value: controller.languageSelected.value,
                               items: [
                                 DropdownMenuItem(
                                   value: 'EN',
                                   child: Text(
-                                    "EN",
+                                    'EN',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium!
@@ -147,7 +146,7 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
                                 DropdownMenuItem(
                                   value: 'AM',
                                   child: Text(
-                                    "AM",
+                                    'AM',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium!
@@ -166,10 +165,10 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
                       if (expanded)
                         Column(
                           children: [
-                            Divider(),
+                            const Divider(),
                             Text(
                               textAlign: TextAlign.justify,
-                              controller.languageSelected.value == "EN"
+                              controller.languageSelected.value == 'EN'
                                   ? qn.explanationEn
                                   : qn.explanationAm,
                               style: Theme.of(context).textTheme.bodyLarge!

@@ -20,8 +20,6 @@ class ChapterTestScreen extends GetView<ChapterTestController> {
   Widget build(BuildContext context) {
     final subject = controller.title;
     final chapter = controller.chapter;
-    final chapterId = controller.chapterId;
-    final grade = controller.grade;
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
@@ -36,15 +34,12 @@ class ChapterTestScreen extends GetView<ChapterTestController> {
         padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Obx(() {
           if (controller.isLoading.value)
-            return AppCircularLoading(title: 'Loading');
+            return const AppCircularLoading(title: 'Loading');
 
-          final tests = controller.getTestsByGradeAndChapter(
-            grade.value,
-            chapterId.value,
-          );
+          final tests = controller.chapterTest;
 
           if (tests.isEmpty) {
-            return const Center(child: Text("No Tests Found"));
+            return const Center(child: Text('No Tests Found'));
           }
 
           return ListView.builder(
@@ -89,7 +84,7 @@ class ChapterTestScreen extends GetView<ChapterTestController> {
                         return;
                       }
                       if (!hasQn) {
-                        ToastHelper.info("Has no questions");
+                        ToastHelper.info('Has no questions');
                         return;
                       }
                       Get.dialog(

@@ -24,14 +24,14 @@ class EntranceScreen extends StatelessWidget {
 
     return Scaffold(
       key: scaffoldKey,
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       appBar: Appbar(
         leadingIcon: Icons.menu,
         leadingOnPressed: () {
           scaffoldKey.currentState?.openDrawer();
         },
         title: Text(
-          "Exams",
+          'Exams',
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
@@ -53,7 +53,7 @@ class EntranceScreen extends StatelessWidget {
                 fontSize: 13,
               ),
               tabs: tabController.tabs
-                  .map((t) => Tab(text: t["label"]))
+                  .map((t) => Tab(text: t['label']))
                   .toList(),
             ),
           ),
@@ -69,17 +69,10 @@ class EntranceScreen extends StatelessWidget {
                   child: Obx(() {
                     if (UserController.instance.userFetching.value ||
                         controller.isLoading.value) {
-                      return AppCircularLoading(title: 'Loading...');
+                      return const AppCircularLoading(title: 'Loading...');
                     }
 
-                    final isNaturalStream =
-                        controller.selectedStream.value == "natural";
-                    final filteredSubjects = controller.subjects.where((
-                      subject,
-                    ) {
-                      return subject.isCommon ||
-                          subject.isNatural == isNaturalStream;
-                    }).toList();
+                    final filteredSubjects = controller.filteredSubjects;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -108,9 +101,8 @@ class EntranceScreen extends StatelessWidget {
                                     },
                                   );
                                 } else {
-                                  ToastHelper.info("No Exams Added");
+                                  ToastHelper.info('No Exams Added');
                                 }
-                                ;
                               },
                             ),
                           );

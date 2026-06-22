@@ -7,10 +7,6 @@ enum SessionValidationResult { allowed, blocked, error }
 class SessionService {
   final _supabase = Supabase.instance.client;
 
-  /// Returns [SessionValidationResult.allowed] if the device matches or a
-  /// new session was created, [SessionValidationResult.blocked] if a
-  /// different device is already registered, and [SessionValidationResult.error]
-  /// on any network/database failure so callers don't mistakenly block the user.
   Future<SessionValidationResult> validateSessionDetailed(
     String uid,
     String deviceId,
@@ -40,14 +36,22 @@ class SessionService {
       // Different device → block
       return SessionValidationResult.blocked;
     } catch (e) {
-      SnackbarHelper.error('Error', 'Session check failed. Please try again.');
+      if (_isNetworkError(e)) {
+        SnackbarHelper.warning(
+          'No Internet',
+          'Could not verify your session. Check your connection.',
+        );
+      } else {
+        SnackbarHelper.error(
+          'Session Error',
+          'Could not verify your session. Please try again.',
+        );
+      }
       return SessionValidationResult.error;
     }
   }
 
-  /// Convenience wrapper — returns true only when explicitly allowed.
-  /// A network error returns false but callers that need to distinguish
-  /// should use [validateSessionDetailed] instead.
+  /// Convenience wrapper — true only when explicitly allowed.
   Future<bool> validateSession(String uid, String deviceId) async {
     final result = await validateSessionDetailed(uid, deviceId);
     return result == SessionValidationResult.allowed;
@@ -65,7 +69,10 @@ class SessionService {
 
       return (response['trial'] as int?) ?? 0;
     } catch (e) {
-      SnackbarHelper.error('Error', e.toString());
+      SnackbarHelper.error(
+        'Session Error',
+        'Could not retrieve device change limit. Please try again.',
+      );
       return 0;
     }
   }
@@ -77,7 +84,10 @@ class SessionService {
           .update({'device_id': deviceId, 'trial': trial})
           .eq('firebase_uid', uid);
     } catch (e) {
-      SnackbarHelper.error('Error', 'Failed to update device');
+      SnackbarHelper.error(
+        'Device Update Failed',
+        'Could not update your device. Please try again.',
+      );
     }
   }
 
@@ -85,7 +95,19 @@ class SessionService {
     try {
       await _supabase.from('user_sessions').delete().eq('firebase_uid', uid);
     } catch (e) {
-      SnackbarHelper.error('Error', 'Failed to remove session');
+      // Non-critical — session cleanup failure should not block logout
     }
+  }
+
+  static bool _isNetworkError(Object e) {
+    final s = e.toString().toLowerCase();
+    return s.contains('socketexception') ||
+        s.contains('failed host lookup') ||
+        s.contains('network is unreachable') ||
+        s.contains('connection refused') ||
+        s.contains('connection reset') ||
+        s.contains('connection timed out') ||
+        s.contains('clientexception') ||
+        s.contains('no address associated');
   }
 }

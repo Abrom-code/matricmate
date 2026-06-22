@@ -36,17 +36,6 @@ class SessionService {
       // Different device → block
       return SessionValidationResult.blocked;
     } catch (e) {
-      if (_isNetworkError(e)) {
-        SnackbarHelper.warning(
-          'No Internet',
-          'Could not verify your session. Check your connection.',
-        );
-      } else {
-        SnackbarHelper.error(
-          'Session Error',
-          'Could not verify your session. Please try again.',
-        );
-      }
       return SessionValidationResult.error;
     }
   }
@@ -65,7 +54,7 @@ class SessionService {
           .eq('firebase_uid', uid)
           .maybeSingle();
 
-      if (response == null) return 0;
+      if (response == null) return -1;
 
       return (response['trial'] as int?) ?? 0;
     } catch (e) {
@@ -73,7 +62,7 @@ class SessionService {
         'Session Error',
         'Could not retrieve device change limit. Please try again.',
       );
-      return 0;
+      return -1;
     }
   }
 
@@ -97,17 +86,5 @@ class SessionService {
     } catch (e) {
       // Non-critical — session cleanup failure should not block logout
     }
-  }
-
-  static bool _isNetworkError(Object e) {
-    final s = e.toString().toLowerCase();
-    return s.contains('socketexception') ||
-        s.contains('failed host lookup') ||
-        s.contains('network is unreachable') ||
-        s.contains('connection refused') ||
-        s.contains('connection reset') ||
-        s.contains('connection timed out') ||
-        s.contains('clientexception') ||
-        s.contains('no address associated');
   }
 }

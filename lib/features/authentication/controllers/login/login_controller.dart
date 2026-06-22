@@ -70,6 +70,7 @@ class LoginController extends GetxController {
         await FirebaseAuth.instance.signOut();
 
         trials.value = await SessionService().getTrial(uid);
+        if (trials.value == -1) return;
 
         AppDialogBoxes.changeDevice(emailText, this, () async {
           isUpdating.value = true;

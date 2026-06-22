@@ -51,7 +51,7 @@ class LoginController extends GetxController {
       }
 
       // Network check
-      final isConnected = await NetworkManager.instance.hasRealInternet();
+      final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         ToastHelper.warning('No Internet!');
         return;

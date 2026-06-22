@@ -34,7 +34,7 @@ class _ImageSectionState extends State<ImageSection> {
   }
 
   Future<void> retry() async {
-    final isConnected = await NetworkManager.instance.hasRealInternet();
+    final isConnected = await NetworkManager.instance.isConnected();
 
     if (!isConnected) {
       ToastHelper.warning('No Internet!');
@@ -42,7 +42,7 @@ class _ImageSectionState extends State<ImageSection> {
     }
 
     setState(() {
-      _imageFuture = _loadImage(); // reload only when retry is pressed
+      _imageFuture = _loadImage();
     });
   }
 
@@ -50,7 +50,7 @@ class _ImageSectionState extends State<ImageSection> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        final isConnected = await NetworkManager.instance.hasRealInternet();
+        final isConnected = await NetworkManager.instance.isConnected();
 
         if (!isConnected) {
           ToastHelper.warning('No Internet!');

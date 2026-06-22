@@ -38,7 +38,7 @@ class SignupController extends GetxController {
         return;
       }
 
-      final isConnectd = await NetworkManager.instance.hasRealInternet();
+      final isConnectd = await NetworkManager.instance.isConnected();
       if (!isConnectd) {
         ToastHelper.warning('No Internet!');
         return;

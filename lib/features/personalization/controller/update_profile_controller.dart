@@ -35,7 +35,7 @@ class UpdateProfileController extends GetxController {
     try {
       if (!updateFormKey.currentState!.validate()) return;
 
-      final isConnected = await NetworkManager.instance.hasRealInternet();
+      final isConnected = await NetworkManager.instance.isConnected();
 
       if (!isConnected) {
         ToastHelper.warning('No Internet');

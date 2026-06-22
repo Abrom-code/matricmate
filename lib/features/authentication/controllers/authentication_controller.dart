@@ -48,10 +48,10 @@ class AuthenticationController extends GetxController {
     await SubjectsController.instance.loadLocalSubjects();
 
     Get.offAllNamed(Routes.navigationMenu);
-    final hasInternet = await NetworkManager.instance.hasRealInternet();
+    final isConnected = await NetworkManager.instance.isConnected();
 
     try {
-      if (hasInternet) {
+      if (isConnected) {
         //  Online
         await UserController.instance.fetchUserRecord();
         await SyncingController.instance.syncAll();

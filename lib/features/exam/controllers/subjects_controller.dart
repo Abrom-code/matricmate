@@ -61,7 +61,7 @@ class SubjectsController extends GetxController {
 
   Future<void> syncSubjects() async {
     try {
-      final isConnected = await NetworkManager.instance.hasRealInternet();
+      final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) return;
 
       // 1. Fetch from Supabase
@@ -83,7 +83,7 @@ class SubjectsController extends GetxController {
   /// DOWNLOAD SUBJECT
   Future<void> downloadSubject(String subject, int subjectId) async {
     try {
-      final isConnected = await NetworkManager.instance.hasRealInternet();
+      final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         ToastHelper.warning('No Internet!');
         return;

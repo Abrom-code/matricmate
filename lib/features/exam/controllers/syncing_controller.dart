@@ -22,7 +22,7 @@ class SyncingController extends GetxController {
 
   Future<bool> syncAll() async {
     try {
-      final isConnected = await NetworkManager.instance.hasRealInternet();
+      final isConnected = await NetworkManager.instance.isConnected();
 
       if (!isConnected) {
         ToastHelper.warning('No Internet!');

@@ -55,7 +55,7 @@ class PremiumController extends GetxController {
         return;
       }
 
-      final isConnected = await NetworkManager.instance.hasRealInternet();
+      final isConnected = await NetworkManager.instance.isConnected();
 
       if (!isConnected) {
         ToastHelper.warning('No Internet!');
@@ -63,8 +63,6 @@ class PremiumController extends GetxController {
       }
 
       isUploading.value = true;
-
-      final userId = _userController.user.value.id;
 
       if (userId.isEmpty) {
         SnackbarHelper.error('Error', 'No user found!');
@@ -104,7 +102,7 @@ class PremiumController extends GetxController {
         return;
       }
 
-      final isConnected = await NetworkManager.instance.hasRealInternet();
+      final isConnected = await NetworkManager.instance.isConnected();
 
       if (!isConnected) {
         ToastHelper.warning('No Internet!');

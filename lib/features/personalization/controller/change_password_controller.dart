@@ -25,7 +25,7 @@ class ChangePasswordController extends GetxController {
     try {
       isUpdating.value = true;
 
-      final isConnected = await NetworkManager.instance.hasRealInternet();
+      final isConnected = await NetworkManager.instance.isConnected();
 
       if (!isConnected) {
         ToastHelper.warning('No Internet');

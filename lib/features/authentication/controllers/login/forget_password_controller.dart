@@ -22,7 +22,7 @@ class ForgetPasswordController extends GetxController {
       isLoading.value = true;
 
       // Network check
-      final isConnectd = await NetworkManager.instance.hasRealInternet();
+      final isConnectd = await NetworkManager.instance.isConnected();
       if (!isConnectd) {
         ToastHelper.warning('Please turn on mobile data or connect to WIFI!');
         return;

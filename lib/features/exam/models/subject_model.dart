@@ -1,18 +1,18 @@
-class SubjectMoModel {
+class SubjectModel {
   int id;
   String name;
   bool isNatural, isCommon, isDownloaded;
 
-  SubjectMoModel({
+  SubjectModel({
     required this.id,
     required this.name,
     required this.isNatural,
     this.isCommon = false,
     this.isDownloaded = false,
   });
-  // Convert Json to SubjectMoModel object
-  factory SubjectMoModel.fromJson(Map<String, dynamic> json) {
-    return SubjectMoModel(
+  // Convert Json to SubjectModel object
+  factory SubjectModel.fromJson(Map<String, dynamic> json) {
+    return SubjectModel(
       id: json['id'],
       name: json['name'],
       isNatural: json['is_natural'],
@@ -20,9 +20,9 @@ class SubjectMoModel {
     );
   }
 
-  // Convert DB Map to SubjectMoModel object
-  factory SubjectMoModel.fromMap(Map<String, dynamic> map) {
-    return SubjectMoModel(
+  // Convert DB Map to SubjectModel object
+  factory SubjectModel.fromMap(Map<String, dynamic> map) {
+    return SubjectModel(
       id: map['id'],
       name: map['name'],
       isNatural: map['is_natural'] == 1,
@@ -31,7 +31,7 @@ class SubjectMoModel {
     );
   }
 
-  // Convert SubjectMoModel object to Map for DB insertion
+  // Convert SubjectModel object to Map for DB insertion
   Map<String, dynamic> toMap() {
     return {
       'id': id,

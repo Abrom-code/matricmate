@@ -11,8 +11,8 @@ class AppCircularLoading extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: AppSizes.spaceBtwItems),
+          const CircularProgressIndicator(),
+          const SizedBox(height: AppSizes.spaceBtwItems),
           Text(title),
         ],
       ),
@@ -20,8 +20,8 @@ class AppCircularLoading extends StatelessWidget {
   }
 }
 
-class AppCircularBottonLoading extends StatelessWidget {
-  const AppCircularBottonLoading({
+class AppCircularButtonLoading extends StatelessWidget {
+  const AppCircularButtonLoading({
     super.key,
     this.color = Colors.white,
     this.title = 'Loading...',

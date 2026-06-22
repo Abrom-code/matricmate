@@ -1,4 +1,4 @@
-import 'package:get/get_navigation/src/routes/get_route.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/bindings/exam/bookmark_binding.dart';
 import 'package:matricmate/bindings/auth/change_password_binding.dart';
 import 'package:matricmate/bindings/exam/chapter_binding.dart';
@@ -46,32 +46,32 @@ class AppRoutes {
     ),
     GetPage(
       name: Routes.chapter,
-      page: () => ChapterScreen(),
+      page: () => const ChapterScreen(),
       binding: ChapterBinding(),
     ),
     GetPage(
       name: Routes.gradeTests,
-      page: () => GradeTestsPage(),
+      page: () => const GradeTestsPage(),
       binding: GradeTestBinding(),
     ),
     GetPage(
       name: Routes.testLists,
-      page: () => ChapterTestScreen(),
+      page: () => const ChapterTestScreen(),
       binding: TestBinding(),
     ),
     GetPage(
       name: Routes.questions,
-      page: () => QuestionScreen(),
+      page: () => const QuestionScreen(),
       binding: QuestionBinding(),
     ),
     GetPage(
       name: Routes.result,
-      page: () => ResultScreen(),
+      page: () => const ResultScreen(),
       binding: ResultBinding(),
     ),
     GetPage(
       name: Routes.review,
-      page: () => TestReviewScreen(),
+      page: () => const TestReviewScreen(),
       binding: ReviewBinding(),
     ),
 
@@ -100,7 +100,7 @@ class AppRoutes {
       binding: ForgotPasswordBinding(),
     ),
     GetPage(
-      name: Routes.resetPassowrd,
+      name: Routes.resetPassword,
       page: () => const ResetPassword(),
       binding: ResetPasswordBinding(),
     ),
@@ -117,7 +117,7 @@ class AppRoutes {
     ),
     GetPage(
       name: Routes.entranceExams,
-      page: () => EntranceExams(),
+      page: () => const EntranceExams(),
       binding: EntranceExamsBinding(),
     ),
   ];

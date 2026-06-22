@@ -28,7 +28,7 @@ class Routes {
   static const signIn = '/sign-in';
   static const changePassword = '/change-password';
   static const forgetPassword = '/forget-password';
-  static const resetPassowrd = '/reset-password';
+  static const resetPassword = '/reset-password';
 
   // success screen
   static const success = '/success';

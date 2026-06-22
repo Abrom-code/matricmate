@@ -5,7 +5,7 @@ class ThemeController extends GetxController {
   static ThemeController get instance => Get.find();
   final themeMode = ThemeMode.system.obs;
 
-  void toogleTheme(bool value) {
+  void toggleTheme(bool value) {
     if (value) {
       themeMode.value = ThemeMode.dark;
     } else {

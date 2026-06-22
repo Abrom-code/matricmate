@@ -5,14 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AppHelperFuntions {
+class AppHelperFunctions {
   static Future<void> openUrl(String url) async {
     final Uri uri = Uri.parse(url);
 
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
-      debugPrint("$url open failed: $e");
+      debugPrint('$url open failed: $e');
     }
   }
 
@@ -110,7 +110,7 @@ class AppHelperFuntions {
     if (text.length <= maxLen) {
       return text;
     } else {
-      return "${text.substring(0, maxLen)}...";
+      return '${text.substring(0, maxLen)}...';
     }
   }
 
@@ -139,23 +139,23 @@ class AppHelperFuntions {
 
   static String getSubjectImage(String subject) {
     switch (subject) {
-      case "Biology":
+      case 'Biology':
         return AppImages.biology;
-      case "Chemistry":
+      case 'Chemistry':
         return AppImages.chemistry;
-      case "Physics":
+      case 'Physics':
         return AppImages.physics;
-      case "Natural Maths" || "Social Maths":
+      case 'Natural Maths' || 'Social Maths':
         return AppImages.maths;
-      case "History":
+      case 'History':
         return AppImages.history;
-      case "Geography":
+      case 'Geography':
         return AppImages.geography;
-      case "Economics":
+      case 'Economics':
         return AppImages.economics;
-      case "English":
+      case 'English':
         return AppImages.english;
-      case "SAT":
+      case 'SAT':
         return AppImages.sat;
       default:
         return AppImages.unknownBook;
@@ -165,29 +165,29 @@ class AppHelperFuntions {
   static String getChapterName(int n) {
     switch (n) {
       case 1:
-        return "Unit One";
+        return 'Unit One';
       case 2:
-        return "Unit Two";
+        return 'Unit Two';
       case 3:
-        return "Unit Three";
+        return 'Unit Three';
       case 4:
-        return "Unit Four";
+        return 'Unit Four';
       case 5:
-        return "Unit Five";
+        return 'Unit Five';
       case 6:
-        return "Unit Six";
+        return 'Unit Six';
       case 7:
-        return "Unit Seven";
+        return 'Unit Seven';
       case 8:
-        return "Unit Eight";
+        return 'Unit Eight';
       case 9:
-        return "Unit Nine";
+        return 'Unit Nine';
       case 10:
-        return "Unit Ten";
+        return 'Unit Ten';
       case 11:
-        return "Unit Eleven";
+        return 'Unit Eleven';
       default:
-        return "Opps..!";
+        return 'Opps..!';
     }
   }
 }

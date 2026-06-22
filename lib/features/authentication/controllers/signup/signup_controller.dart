@@ -34,13 +34,13 @@ class SignupController extends GetxController {
     try {
       if (!signupFormKey.currentState!.validate()) return;
       if (selectedStream.value.isEmpty) {
-        ToastHelper.warning("Please select stream, you can edit later!");
+        ToastHelper.warning('Please select stream, you can edit later!');
         return;
       }
 
       final isConnectd = await NetworkManager.instance.hasRealInternet();
       if (!isConnectd) {
-        ToastHelper.warning("No Internet!");
+        ToastHelper.warning('No Internet!');
         return;
       }
       isSigning.value = true;
@@ -72,6 +72,7 @@ class SignupController extends GetxController {
 
       if (!isAllowed) {
         await FirebaseAuth.instance.signOut();
+        ToastHelper.error('Failed to register device. Please try again.');
         return;
       }
       Get.offAllNamed(

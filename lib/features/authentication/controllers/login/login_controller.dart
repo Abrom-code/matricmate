@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
@@ -17,7 +17,7 @@ class LoginController extends GetxController {
   final authRepo = Get.find<AuthenticationRepository>();
   final authController = Get.find<AuthenticationController>();
 
-  final _localStroage = GetStorage();
+  final _secureStorage = const FlutterSecureStorage();
 
   final rememberMe = false.obs;
   final hidePassword = true.obs;
@@ -43,23 +43,21 @@ class LoginController extends GetxController {
       final passwordText = password.text.trim();
 
       if (rememberMe.value) {
-        _localStroage.writeIfNull("userLoginCredentials", [
-          emailText,
-          passwordText,
-        ]);
+        await _secureStorage.write(key: 'saved_email', value: emailText);
+        await _secureStorage.write(key: 'saved_password', value: passwordText);
       } else {
-        _localStroage.remove("userLoginCredentials");
+        await _secureStorage.delete(key: 'saved_email');
+        await _secureStorage.delete(key: 'saved_password');
       }
 
       // Network check
-      final isConnectd = await NetworkManager.instance.hasRealInternet();
-      if (!isConnectd) {
-        ToastHelper.warning("No Internet!");
+      final isConnected = await NetworkManager.instance.hasRealInternet();
+      if (!isConnected) {
+        ToastHelper.warning('No Internet!');
         return;
       }
-      // loading
+
       isLogging.value = true;
-      ;
 
       await authRepo.loginUsingEmailAndPassword(emailText, passwordText);
 
@@ -78,8 +76,8 @@ class LoginController extends GetxController {
 
           if (trials.value <= 0) {
             SnackbarHelper.error(
-              "Limit reached",
-              "You cannot change device anymore.",
+              'Limit reached',
+              'You cannot change device anymore.',
             );
             isUpdating.value = false;
             return;
@@ -106,11 +104,12 @@ class LoginController extends GetxController {
     }
   }
 
-  void loadCredentials() {
-    final savedCredentials = _localStroage.read("userLoginCredentials");
-    if (savedCredentials != null) {
-      email.text = savedCredentials[0];
-      password.text = savedCredentials[1];
+  Future<void> loadCredentials() async {
+    final savedEmail = await _secureStorage.read(key: 'saved_email');
+    final savedPassword = await _secureStorage.read(key: 'saved_password');
+    if (savedEmail != null && savedPassword != null) {
+      email.text = savedEmail;
+      password.text = savedPassword;
       rememberMe.value = true;
     }
   }

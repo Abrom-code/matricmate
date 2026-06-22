@@ -21,8 +21,7 @@ class NetworkManager extends GetxController {
   Future<bool> isConnected() async {
     try {
       final result = await _connectivity.checkConnectivity();
-      // ignore: unrelated_type_equality_checks
-      return result != ConnectivityResult.none;
+      return !result.contains(ConnectivityResult.none);
     } catch (e) {
       return false;
     }

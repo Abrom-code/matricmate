@@ -1,10 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:get/get_core/src/get_main.dart' show Get;
-import 'package:get/get_instance/src/extension_instance.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
@@ -59,21 +55,16 @@ class AuthenticationController extends GetxController {
         //  Online
         await UserController.instance.fetchUserRecord();
         await SyncingController.instance.syncAll();
-      } else {
-        //  Offline
         await UserController.instance.loadLocalUser();
       }
     } catch (e) {
-      // fallback safety (very important)
-      await UserController.instance.loadLocalUser();
+      AppExceptionHandler.handleResponse(e);
     }
     FlutterNativeSplash.remove();
   }
 
   Future<void> logout() async {
     try {
-      await userRepo.deleteUserRecord(authRepo.currentUser!.uid);
-
       await authRepo.logout();
 
       Get.offAllNamed(Routes.signIn);

@@ -13,7 +13,7 @@ Widget paymentTile({
   Widget? detail,
   showIcon = true,
 }) {
-  final dark = AppHelperFuntions.isDark(context);
+  final dark = AppHelperFunctions.isDark(context);
   return GestureDetector(
     onTap: onTap,
     child: Stack(
@@ -81,7 +81,7 @@ Widget paymentTile({
             top: 5,
             right: 30,
             child: Text(
-              "RECOMMENDED",
+              'RECOMMENDED',
               style: Theme.of(context).textTheme.labelMedium,
             ),
           ),

@@ -17,14 +17,14 @@ class TestReviewScreen extends GetView<ReviewController> {
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          "Review Answers",
+          'Review Answers',
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(AppSizes.defaultSpace / 2),
+        padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
         child: Column(
           spacing: AppSizes.spaceBtwItems,
           children: [
@@ -43,9 +43,9 @@ class TestReviewScreen extends GetView<ReviewController> {
             spacing: 10,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.arrow_left, color: AppColors.grey),
+              const Icon(Icons.arrow_left, color: AppColors.grey),
               Text(
-                "Back to Tests",
+                'Back to Tests',
                 style: Theme.of(
                   context,
                 ).textTheme.titleSmall!.apply(color: AppColors.grey),

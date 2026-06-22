@@ -28,7 +28,7 @@ class AppTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Material(
       clipBehavior: Clip.hardEdge,
       borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
@@ -41,7 +41,7 @@ class AppTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
         ),
         child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
           leading: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(

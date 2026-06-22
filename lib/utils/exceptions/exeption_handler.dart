@@ -18,7 +18,7 @@ class AppExceptionHandler {
     if (e is AppFailure) {
       SnackbarHelper.error(e.title, e.message);
     } else {
-      SnackbarHelper.error("Unexpected Error", e.toString());
+      SnackbarHelper.error('Unexpected Error', e.toString());
     }
   }
 
@@ -29,7 +29,7 @@ class AppExceptionHandler {
     // Firebase Auth
     if (e is FirebaseAuthException) {
       return AppFailure(
-        title: "Authentication Error",
+        title: 'Authentication Error',
         message: FirebaseAuthExceptions.fromException(e).message,
         code: e.code,
       );
@@ -38,7 +38,7 @@ class AppExceptionHandler {
     // Firebase general
     if (e is FirebaseException) {
       return AppFailure(
-        title: "Firebase Error",
+        title: 'Firebase Error',
         message: FirebaseExceptions(e.code).message,
         code: e.code,
       );
@@ -48,7 +48,7 @@ class AppExceptionHandler {
     if (e is PostgrestException) {
       final supa = SupabaseDbExceptions.fromException(e);
       return AppFailure(
-        title: "Database Error",
+        title: 'Database Error',
         message: supa.message,
         code: e.code,
       );
@@ -57,13 +57,13 @@ class AppExceptionHandler {
     // SQLite
     if (e.toString().contains('DatabaseException')) {
       final sqf = SqfliteDbExceptions.fromException(e);
-      return AppFailure(title: "Local Database Error", message: sqf.message);
+      return AppFailure(title: 'Local Database Error', message: sqf.message);
     }
 
     // Format errors
     if (e is FormatException) {
       return AppFailure(
-        title: "Format Error",
+        title: 'Format Error',
         message: const FormatExceptions().formattedMessage,
       );
     }
@@ -71,7 +71,7 @@ class AppExceptionHandler {
     // Platform exceptions
     if (e is PlatformException) {
       return AppFailure(
-        title: "Platform Error",
+        title: 'Platform Error',
         message: PlatformExceptions(e.code).message,
         code: e.code,
       );
@@ -80,15 +80,15 @@ class AppExceptionHandler {
     // Network errors
     if (e is SocketException) {
       return AppFailure(
-        title: "Connection Error",
-        message: "No internet connection or connection was interrupted",
+        title: 'Connection Error',
+        message: 'No internet connection or connection was interrupted',
       );
     }
 
     // Fallback
     return AppFailure(
-      title: "Unexpected Error",
-      message: "Something went wrong. Please try again.",
+      title: 'Unexpected Error',
+      message: 'Something went wrong. Please try again.',
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -12,7 +11,7 @@ class LinkInputFiled extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<PremiumController>();
-    final isDark = AppHelperFuntions.isDark(context);
+    final isDark = AppHelperFunctions.isDark(context);
 
     return TextFormField(
       controller: controller.urlFiledController,
@@ -20,7 +19,7 @@ class LinkInputFiled extends StatelessWidget {
       style: const TextStyle(fontSize: 14),
       validator: (value) => AppValidator.isValidUrl(value!),
       decoration: InputDecoration(
-        hintText: "https://transaction...",
+        hintText: 'https://transaction...',
         hintStyle: Theme.of(context).textTheme.labelMedium,
         // Prefix icon
         prefixIcon: const Icon(Icons.link, color: Colors.teal),
@@ -63,7 +62,7 @@ class LinkInputFiled extends StatelessWidget {
         ),
 
         // Optional label
-        labelText: "Transaction Link",
+        labelText: 'Transaction Link',
         labelStyle: const TextStyle(color: Colors.teal),
       ),
     );

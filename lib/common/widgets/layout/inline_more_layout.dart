@@ -32,7 +32,7 @@ class _InlineReadMoreTextState extends State<InlineReadMoreText> {
               child: GestureDetector(
                 onTap: () => setState(() => expanded = !expanded),
                 child: Text(
-                  expanded ? " show less" : "... read more",
+                  expanded ? ' show less' : '... read more',
                   style: TextStyle(
                     color: Theme.of(context).primaryColor,
                     fontWeight: FontWeight.bold,

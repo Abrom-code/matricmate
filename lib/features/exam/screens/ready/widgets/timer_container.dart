@@ -18,14 +18,14 @@ class TimerContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return RoundedContainer(
       radius: AppSizes.sm,
-      padding: EdgeInsets.all(10),
+      padding: const EdgeInsets.all(10),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Timed Mode",
+                'Timed Mode',
                 style: Theme.of(
                   context,
                 ).textTheme.headlineSmall!.copyWith(color: AppColors.primary),
@@ -36,7 +36,7 @@ class TimerContainer extends StatelessWidget {
           const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
           Text(
-            "When enabled, a $time-minute timer will apply, The test will be closed when time expires.",
+            'When enabled, a $time-minute timer will apply, The test will be closed when time expires.',
             style: Theme.of(
               context,
             ).textTheme.labelSmall!.copyWith(fontSize: 14),

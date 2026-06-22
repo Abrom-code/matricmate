@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
@@ -18,7 +18,7 @@ class PassageLayoutCtrl extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.text_decrease,
                 size: 20,
                 color: AppColors.primary,
@@ -29,7 +29,7 @@ class PassageLayoutCtrl extends StatelessWidget {
             ),
 
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.text_increase,
                 size: 20,
                 color: AppColors.primary,

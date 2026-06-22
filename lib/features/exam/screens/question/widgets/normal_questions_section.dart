@@ -22,10 +22,10 @@ class QuesitonSection extends GetView<QuestionController> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         AppSizes.defaultSpace,
         AppSizes.defaultSpace / 2,
         AppSizes.defaultSpace,
@@ -94,7 +94,7 @@ class QuesitonSection extends GetView<QuestionController> {
                           color: AppColors.primary,
                         ),
                         Text(
-                          "Explanation",
+                          'Explanation',
                           style: Theme.of(context).textTheme.titleMedium!.apply(
                             color: AppColors.primary,
                           ),
@@ -120,7 +120,7 @@ class QuesitonSection extends GetView<QuestionController> {
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.all(13),
+                      padding: const EdgeInsets.all(13),
                     ),
                     onPressed: controller.currentIndex.value > 0
                         ? controller.previousQuestion
@@ -128,9 +128,9 @@ class QuesitonSection extends GetView<QuestionController> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.arrow_left),
+                        const Icon(Icons.arrow_left),
                         Text(
-                          "Previous",
+                          'Previous',
                           style: TextStyle(
                             color: dark
                                 ? controller.currentIndex.value <= 0
@@ -150,7 +150,7 @@ class QuesitonSection extends GetView<QuestionController> {
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.all(13),
+                      padding: const EdgeInsets.all(13),
                     ),
                     onPressed: selectedIndex == null
                         ? null
@@ -197,8 +197,8 @@ class QuesitonSection extends GetView<QuestionController> {
                           },
                     child: Text(
                       !isChecked
-                          ? "Check Answer"
-                          : (isLast ? "Finished" : "Next"),
+                          ? 'Check Answer'
+                          : (isLast ? 'Finished' : 'Next'),
                       style: TextStyle(
                         color: dark
                             ? selectedIndex == null

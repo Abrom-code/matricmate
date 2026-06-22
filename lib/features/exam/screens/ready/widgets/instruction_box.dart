@@ -11,14 +11,14 @@ class InstructionBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Container(
-      padding: EdgeInsets.all(AppSizes.defaultSpace / 1.5),
+      padding: const EdgeInsets.all(AppSizes.defaultSpace / 1.5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSizes.md),
         color: dark
             ? AppColors.darkerGrey.withValues(alpha: 0.5)
-            : Color(0xFFe7eae7),
+            : const Color(0xFFe7eae7),
       ),
       child: Row(
         children: [

@@ -13,7 +13,7 @@ class ForgetPassword extends GetView<ForgetPasswordController> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(
@@ -21,7 +21,7 @@ class ForgetPassword extends GetView<ForgetPasswordController> {
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.all(AppSizes.defaultSpace),
+        padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Form(
           key: controller.forgetPasswordFormkey,
           child: Column(
@@ -42,7 +42,7 @@ class ForgetPassword extends GetView<ForgetPasswordController> {
                 controller: controller.email,
                 validator: (value) => AppValidator.validateEmail(value),
                 onTapOutside: (e) => FocusScope.of(context).unfocus(),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: AppTextStrings.email,
                   prefixIcon: Icon(Icons.email),
                 ),
@@ -59,8 +59,8 @@ class ForgetPassword extends GetView<ForgetPasswordController> {
                         ? null
                         : () => controller.resetPassword(),
                     child: controller.isLoading.value
-                        ? AppCircularBottonLoading()
-                        : Text("Submit"),
+                        ? const AppCircularButtonLoading()
+                        : const Text('Submit'),
                   ),
                 ),
               ),

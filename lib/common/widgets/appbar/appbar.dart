@@ -30,7 +30,7 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool dark = AppHelperFuntions.isDark(context);
+    final bool dark = AppHelperFunctions.isDark(context);
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -71,7 +71,7 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
       actions: actions,
 
       /// Icon Theme (affects actions icons too)
-      iconTheme: IconThemeData(color: AppColors.white),
+      iconTheme: const IconThemeData(color: AppColors.white),
     );
   }
 

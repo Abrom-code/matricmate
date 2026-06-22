@@ -12,18 +12,18 @@ class PayementDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = AppHelperFuntions.isDark(context);
+    final isDark = AppHelperFunctions.isDark(context);
     return Padding(
       padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
       child: Column(
         children: [
-          Divider(),
+          const Divider(),
           const SizedBox(height: AppSizes.spaceBtwItems / 2),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Account Name:",
+                'Account Name:',
                 style: TextStyle(
                   color: isDark ? AppColors.grey : AppColors.darkGrey,
                 ),
@@ -36,7 +36,7 @@ class PayementDetail extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Account Number:",
+                'Account Number:',
                 style: TextStyle(
                   color: isDark ? AppColors.grey : AppColors.darkGrey,
                 ),
@@ -47,16 +47,16 @@ class PayementDetail extends StatelessWidget {
                     method.accountNumber.length < 15
                         ? method.accountNumber
                         : '${method.accountNumber.substring(0, 12)} ...',
-                    style: TextStyle(fontStyle: FontStyle.italic),
+                    style: const TextStyle(fontStyle: FontStyle.italic),
                   ),
-                  SizedBox(width: 5),
+                  const SizedBox(width: 5),
                   InkWell(
                     onTap: () {
                       Clipboard.setData(
                         ClipboardData(text: method.accountNumber),
                       );
                     },
-                    child: CircleAvatar(
+                    child: const CircleAvatar(
                       radius: 13,
 
                       backgroundColor: Colors.transparent,

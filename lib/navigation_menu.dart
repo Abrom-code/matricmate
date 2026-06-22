@@ -20,19 +20,19 @@ class NavigationMenu extends StatelessWidget {
           destinations: const [
             NavigationDestination(
               icon: Icon(Iconsax.message_question_copy),
-              label: "Test",
+              label: 'Test',
             ),
             NavigationDestination(
               icon: Icon(Iconsax.book_1_copy),
-              label: "Exam",
+              label: 'Exam',
             ),
             NavigationDestination(
               icon: Icon(Iconsax.archive_tick_copy),
-              label: "Bookmark",
+              label: 'Bookmark',
             ),
             NavigationDestination(
               icon: Icon(Iconsax.user_copy),
-              label: "Profile",
+              label: 'Profile',
             ),
           ],
         ),

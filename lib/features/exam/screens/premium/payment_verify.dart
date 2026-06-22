@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_instance/get_instance.dart';
-import 'package:get/route_manager.dart';
-import 'package:get/state_manager.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
@@ -19,7 +17,7 @@ class PaymentVerificationScreen extends StatelessWidget {
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          "Verify Payment",
+          'Verify Payment',
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
@@ -38,7 +36,7 @@ class PaymentVerificationScreen extends StatelessWidget {
 
                 // Title
                 const Text(
-                  "Payment Verification in Progress",
+                  'Payment Verification in Progress',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
@@ -47,7 +45,7 @@ class PaymentVerificationScreen extends StatelessWidget {
 
                 // Subtitle
                 const Text(
-                  "We are verifying your receipt. This usually takes a few hours. "
+                  'We are verifying your receipt. This usually takes a few hours. '
                   "Please click the refresh status button after around 30 minutes. If this couldn't work, please contact the our support on Telegram.",
                   textAlign: TextAlign.justify,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
@@ -62,7 +60,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                     onPressed: () async {
                       await UserController.instance.checkPaymentStatus();
                     },
-                    icon: isFetching ? null : Icon(Icons.refresh),
+                    icon: isFetching ? null : const Icon(Icons.refresh),
                     label: isFetching && !isLoading
                         ? SizedBox(
                             width: 18,
@@ -71,8 +69,8 @@ class PaymentVerificationScreen extends StatelessWidget {
                               color: AppColors.white.withValues(alpha: .5),
                             ),
                           )
-                        : Text(
-                            "Refresh Payment",
+                        : const Text(
+                            'Refresh Payment',
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                     style: ElevatedButton.styleFrom(
@@ -92,9 +90,9 @@ class PaymentVerificationScreen extends StatelessWidget {
                       : () {
                           AppDialogBoxes.showOkCancelDialog(
                             context: context,
-                            title: "Cancel Payment",
+                            title: 'Cancel Payment',
                             subtitle:
-                                "Are you sure you want to cancel this payment?",
+                                'Are you sure you want to cancel this payment?',
                             onPressed: () {
                               Get.back();
                               controller.cancelPayment();
@@ -109,16 +107,16 @@ class PaymentVerificationScreen extends StatelessWidget {
                             color: AppColors.error.withValues(alpha: .5),
                           ),
                         )
-                      : Text(
-                          "Cancel Payment",
+                      : const Text(
+                          'Cancel Payment',
                           style: TextStyle(fontSize: 16, color: Colors.red),
                         ),
                 ),
                 const SizedBox(height: 15),
-                Divider(),
+                const Divider(),
                 const SizedBox(height: 15),
 
-                TelegramChatButton(),
+                const TelegramChatButton(),
               ],
             );
           }),

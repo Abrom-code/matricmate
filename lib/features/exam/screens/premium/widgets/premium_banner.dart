@@ -36,12 +36,12 @@ class PremiumBanner extends StatelessWidget {
           const SizedBox(width: 14),
 
           /// TEXT
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  "Go Premium",
+                  'Go Premium',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -50,7 +50,7 @@ class PremiumBanner extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  "Unlock all tests & features",
+                  'Unlock all tests & features',
                   style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],
@@ -69,7 +69,7 @@ class PremiumBanner extends StatelessWidget {
             ),
             onPressed: onTap,
             child: const Text(
-              "Upgrade",
+              'Upgrade',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),

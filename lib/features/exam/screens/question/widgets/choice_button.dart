@@ -25,7 +25,7 @@ class ChoiceButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     final isSelected = selectedIndex == index;
     final isCorrect = index == correctIndex;
 
@@ -45,8 +45,8 @@ class ChoiceButton extends StatelessWidget {
                     : Colors.grey[300])
               : (isSelected
                     ? dark
-                          ? Color.fromARGB(255, 73, 78, 80)
-                          : Color.fromARGB(255, 179, 195, 203)
+                          ? const Color.fromARGB(255, 73, 78, 80)
+                          : const Color.fromARGB(255, 179, 195, 203)
                     : dark
                     ? AppColors.darkerGrey.withValues(alpha: 0.3)
                     : Colors.grey[300]),

@@ -6,26 +6,26 @@ extension PaymentMethodExtension on PaymentMethod {
   String get title {
     switch (this) {
       case PaymentMethod.telebirr:
-        return "Telebirr";
+        return 'Telebirr';
       case PaymentMethod.cbe:
-        return "CBE";
+        return 'CBE';
       case PaymentMethod.abyssinia:
-        return "Abyssinia";
+        return 'Abyssinia';
       case PaymentMethod.mpesa:
-        return "M-PESA";
+        return 'M-PESA';
     }
   }
 
   String get subtitle {
     switch (this) {
       case PaymentMethod.telebirr:
-        return "Fast mobile payment";
+        return 'Fast mobile payment';
       case PaymentMethod.cbe:
-        return "Direct from Commercial Bank";
+        return 'Direct from Commercial Bank';
       case PaymentMethod.abyssinia:
-        return "Direct from Abyssinia Bank";
+        return 'Direct from Abyssinia Bank';
       case PaymentMethod.mpesa:
-        return "M-Pesa Safaricom wallet";
+        return 'M-Pesa Safaricom wallet';
     }
   }
 
@@ -35,20 +35,20 @@ extension PaymentMethodExtension on PaymentMethod {
       case PaymentMethod.cbe:
       case PaymentMethod.abyssinia:
       case PaymentMethod.mpesa:
-        return "Beshasha Desmon";
+        return 'Beshasha Desmon';
     }
   }
 
   String get accountNumber {
     switch (this) {
       case PaymentMethod.telebirr:
-        return "0983878287";
+        return '0983878287';
       case PaymentMethod.cbe:
-        return "1000786878626";
+        return '1000786878626';
       case PaymentMethod.abyssinia:
-        return "187978686";
+        return '187978686';
       case PaymentMethod.mpesa:
-        return "0783738782";
+        return '0783738782';
     }
   }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:get/get_state_manager/src/simple/get_view.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -21,14 +20,14 @@ class ReviewContainer extends GetView<ReviewController> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppSizes.defaultSpace / 1.3),
+      padding: const EdgeInsets.all(AppSizes.defaultSpace / 1.3),
       decoration: BoxDecoration(
         color: dark
             ? AppColors.darkerGrey.withValues(alpha: 0.5)
-            : Color(0xFFe7eae7),
+            : const Color(0xFFe7eae7),
         borderRadius: BorderRadius.circular(AppSizes.md),
       ),
       child: Column(
@@ -39,7 +38,7 @@ class ReviewContainer extends GetView<ReviewController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${qn.questionOrder} of ${result.testQuestions.length}",
+                '${qn.questionOrder} of ${result.testQuestions.length}',
                 style: Theme.of(
                   context,
                 ).textTheme.labelMedium!.apply(fontSizeDelta: 3),
@@ -48,18 +47,18 @@ class ReviewContainer extends GetView<ReviewController> {
                   ? CorrectCheckButton(
                       color: dark ? AppColors.darkGrey : AppColors.darkerGrey,
                       icon: Iconsax.timer_1_copy,
-                      text: "Not Answered",
+                      text: 'Not Answered',
                     )
                   : result.selectedAnswers[qn.id] == qn.correctOptionIndex
-                  ? CorrectCheckButton()
-                  : CorrectCheckButton(
+                  ? const CorrectCheckButton()
+                  : const CorrectCheckButton(
                       color: Colors.red,
                       icon: Iconsax.close_circle_copy,
-                      text: "incorrect",
+                      text: 'incorrect',
                     ),
             ],
           ),
-          Divider(height: AppSizes.lg),
+          const Divider(height: AppSizes.lg),
           // qn txt
           QuestionSection(qnNumber: qn.questionOrder, examQn: qn.questionText),
           const SizedBox(height: AppSizes.spaceBtwItems),

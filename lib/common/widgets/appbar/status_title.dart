@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
@@ -16,15 +16,15 @@ class AppbarStatusTitle extends StatelessWidget {
       String statusText;
 
       switch (status) {
-        case "active":
+        case 'active':
           statusColor = const Color(0xFF1DE9B6);
           statusText = 'PREMIUM';
           break;
-        case "pending":
+        case 'pending':
           statusColor = const Color(0xFFFFD54F);
           statusText = 'PENDING';
           break;
-        case "inactive":
+        case 'inactive':
         default:
           statusColor = const Color(0xFFB2DFDB);
           statusText = 'FREE';

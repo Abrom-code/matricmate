@@ -14,20 +14,20 @@ class AppDialogBoxes {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(title ?? "Confirm Action"),
-          content: Text(subtitle ?? "Are you sure you want to proceed?"),
+          title: Text(title ?? 'Confirm Action'),
+          content: Text(subtitle ?? 'Are you sure you want to proceed?'),
           actions: <Widget>[
             // Cancel Button
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: const Text('Cancel'),
             ),
 
             // OK Button
             TextButton(
               onPressed: () => onPressed(),
               child: const Text(
-                "OK",
+                'OK',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -44,21 +44,21 @@ class AppDialogBoxes {
   ) {
     return Get.dialog<bool>(
       AlertDialog(
-        title: const Text("Changed Phone?"),
+        title: const Text('Changed Phone?'),
         content: Obx(
           () => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 ctrl.trials.value <= 0
-                    ? "You are out of device change trials!"
-                    : "If this is your new device you can update it.\n"
-                          "You have: ${ctrl.trials.value} trials",
+                    ? 'You are out of device change trials!'
+                    : 'If this is your new device you can update it.\n'
+                          'You have: ${ctrl.trials.value} trials',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 14),
 
-              if (ctrl.trials.value <= 0) TelegramChatButton(),
+              if (ctrl.trials.value <= 0) const TelegramChatButton(),
 
               if (ctrl.trials.value > 0)
                 Container(
@@ -68,7 +68,7 @@ class AppDialogBoxes {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
-                    "⚠️ Warning: Updating will log out previous device.",
+                    '⚠️ Warning: Updating will log out previous device.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12),
                   ),
@@ -91,7 +91,7 @@ class AppDialogBoxes {
               onPressed: ctrl.isUpdating.value
                   ? null
                   : () => Get.back(result: false),
-              child: const Text("Cancel"),
+              child: const Text('Cancel'),
             ),
           ),
 
@@ -108,7 +108,7 @@ class AppDialogBoxes {
                         Get.back(result: true);
                       } catch (e) {
                         ctrl.isUpdating.value = false;
-                        Get.snackbar("Error", e.toString());
+                        Get.snackbar('Error', e.toString());
                       }
                     },
               child: ctrl.isUpdating.value
@@ -117,7 +117,7 @@ class AppDialogBoxes {
                       width: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text("Update"),
+                  : const Text('Update'),
             ),
           ),
         ],

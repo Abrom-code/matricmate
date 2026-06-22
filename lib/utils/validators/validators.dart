@@ -1,7 +1,7 @@
 class AppValidator {
   static String? validateEmptyText(String? fileName, String? value) {
     if (value == null || value.isEmpty) {
-      return "$fileName is required!";
+      return '$fileName is required!';
     }
     return null;
   }
@@ -22,7 +22,7 @@ class AppValidator {
   }
 
   static String? isValidUrl(String value) {
-    if (value.isEmpty) return "Enter valid url";
+    if (value.isEmpty) return 'Enter valid url';
     final uri = Uri.tryParse(value);
 
     final valid =
@@ -31,7 +31,7 @@ class AppValidator {
         (uri.scheme == 'http' || uri.scheme == 'https') &&
         uri.host.isNotEmpty;
     if (!valid) {
-      return "Invalid url!";
+      return 'Invalid url!';
     } else
       return null;
   }

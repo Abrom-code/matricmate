@@ -4,42 +4,42 @@ class AppTextTheme {
   AppTextTheme._();
 
   static TextTheme lightTextTheme = TextTheme(
-    headlineLarge: TextStyle(
+    headlineLarge: const TextStyle(
       fontSize: 32,
       fontWeight: FontWeight.bold,
       color: Colors.black,
     ),
-    headlineMedium: TextStyle(
+    headlineMedium: const TextStyle(
       fontSize: 24,
       fontWeight: FontWeight.w600,
       color: Colors.black,
     ),
-    headlineSmall: TextStyle(
+    headlineSmall: const TextStyle(
       fontSize: 18,
       fontWeight: FontWeight.w400,
       color: Colors.black,
     ),
-    titleLarge: TextStyle(
+    titleLarge: const TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w500,
       color: Colors.black,
     ),
-    titleMedium: TextStyle(
+    titleMedium: const TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w500,
       color: Colors.black,
     ),
-    titleSmall: TextStyle(
+    titleSmall: const TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w400,
       color: Colors.black,
     ),
-    bodyLarge: TextStyle(
+    bodyLarge: const TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w500,
       color: Colors.black,
     ),
-    bodyMedium: TextStyle(
+    bodyMedium: const TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.normal,
       color: Colors.black,
@@ -49,7 +49,7 @@ class AppTextTheme {
       fontWeight: FontWeight.w400,
       color: Colors.black.withValues(alpha: 0.5),
     ),
-    labelLarge: TextStyle(
+    labelLarge: const TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.normal,
       color: Colors.black,
@@ -62,42 +62,42 @@ class AppTextTheme {
   );
 
   static TextTheme darkTextTheme = TextTheme(
-    headlineLarge: TextStyle(
+    headlineLarge: const TextStyle(
       fontSize: 32,
       fontWeight: FontWeight.bold,
       color: Colors.white,
     ),
-    headlineMedium: TextStyle(
+    headlineMedium: const TextStyle(
       fontSize: 24,
       fontWeight: FontWeight.w600,
       color: Colors.white,
     ),
-    headlineSmall: TextStyle(
+    headlineSmall: const TextStyle(
       fontSize: 18,
       fontWeight: FontWeight.w400,
       color: Colors.white,
     ),
-    titleLarge: TextStyle(
+    titleLarge: const TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w500,
       color: Colors.white,
     ),
-    titleMedium: TextStyle(
+    titleMedium: const TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w500,
       color: Colors.white,
     ),
-    titleSmall: TextStyle(
+    titleSmall: const TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w400,
       color: Colors.white,
     ),
-    bodyLarge: TextStyle(
+    bodyLarge: const TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w500,
       color: Colors.white,
     ),
-    bodyMedium: TextStyle(
+    bodyMedium: const TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.normal,
       color: Colors.white,
@@ -107,7 +107,7 @@ class AppTextTheme {
       fontWeight: FontWeight.w400,
       color: Colors.white.withValues(alpha: 0.5),
     ),
-    labelLarge: TextStyle(
+    labelLarge: const TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.normal,
       color: Colors.white,

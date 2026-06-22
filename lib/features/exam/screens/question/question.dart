@@ -24,10 +24,10 @@ class QuestionScreen extends GetView<QuestionController> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        AppHelperFuntions.showAppDialog(
+        AppHelperFunctions.showAppDialog(
           context,
-          "Want to Exit?",
-          "Your progress will be saved.",
+          'Want to Exit?',
+          'Your progress will be saved.',
           () {
             Navigator.pop(context);
             Navigator.pop(context);
@@ -44,10 +44,10 @@ class QuestionScreen extends GetView<QuestionController> {
           appBar: Appbar(
             leadingIcon: Icons.close,
             leadingIconColor: AppColors.error,
-            leadingOnPressed: () => AppHelperFuntions.showAppDialog(
+            leadingOnPressed: () => AppHelperFunctions.showAppDialog(
               context,
-              "Want to Exit?",
-              "Your progress will not be saved.",
+              'Want to Exit?',
+              'Your progress will not be saved.',
               () {
                 Navigator.pop(context);
                 Navigator.pop(context);
@@ -59,7 +59,7 @@ class QuestionScreen extends GetView<QuestionController> {
                 : Text(
                     hasData
                         ? "${controller.currentIndex.value + 1} of ${controller.testQuestions.length} ${controller.isTimed ? '(${controller.formattedTime(controller.remainingSeconds.value)})' : ''}"
-                        : "Loading...",
+                        : 'Loading...',
                     style: Theme.of(
                       context,
                     ).textTheme.titleMedium!.copyWith(color: AppColors.primary),

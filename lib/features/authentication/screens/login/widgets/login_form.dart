@@ -21,7 +21,7 @@ class LoginForm extends GetView<LoginController> {
             controller: controller.email,
             onTapOutside: (e) => FocusScope.of(context).unfocus(),
             validator: (value) => AppValidator.validateEmail(value),
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: AppTextStrings.email,
               prefixIcon: Icon(Icons.email_outlined),
             ),
@@ -34,13 +34,13 @@ class LoginForm extends GetView<LoginController> {
               controller: controller.password,
               decoration: InputDecoration(
                 labelText: AppTextStrings.password,
-                prefixIcon: Icon(Iconsax.lock_circle_copy),
+                prefixIcon: const Icon(Iconsax.lock_circle_copy),
                 suffixIcon: IconButton(
                   onPressed: () => controller.hidePassword.value =
                       !controller.hidePassword.value,
                   icon: controller.hidePassword.value
-                      ? Icon(Icons.visibility_off)
-                      : Icon(Icons.visibility),
+                      ? const Icon(Icons.visibility_off)
+                      : const Icon(Icons.visibility),
                 ),
               ),
             ),
@@ -71,8 +71,8 @@ class LoginForm extends GetView<LoginController> {
                     ? null
                     : () => controller.emailAndPasswordLogin(),
                 child: controller.isLogging.value
-                    ? AppCircularBottonLoading()
-                    : Text(AppTextStrings.signIn),
+                    ? const AppCircularButtonLoading()
+                    : const Text(AppTextStrings.signIn),
               ),
             ),
           ),
@@ -83,7 +83,7 @@ class LoginForm extends GetView<LoginController> {
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () => Get.offNamed(Routes.signup),
-              child: Text(AppTextStrings.createAccount),
+              child: const Text(AppTextStrings.createAccount),
             ),
           ),
 

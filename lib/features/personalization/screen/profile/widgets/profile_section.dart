@@ -21,7 +21,7 @@ class ProfileSection extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(100),
-            child: Image(
+            child: const Image(
               image: AssetImage(AppImages.unknownUser),
               fit: BoxFit.fill,
             ),
@@ -40,7 +40,7 @@ class ProfileSection extends StatelessWidget {
 
           if (user.id.isEmpty) {
             return const Text(
-              "No user data",
+              'No user data',
               style: TextStyle(color: Colors.grey),
             );
           }
@@ -48,12 +48,12 @@ class ProfileSection extends StatelessWidget {
           return Column(
             children: [
               Text(
-                "${UserController.instance.user.value.firstName} ${UserController.instance.user.value.lastName}",
+                '${UserController.instance.user.value.firstName} ${UserController.instance.user.value.lastName}',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               Text(
                 UserController.instance.user.value.email,
-                style: TextStyle(color: Colors.grey),
+                style: const TextStyle(color: Colors.grey),
               ),
             ],
           );

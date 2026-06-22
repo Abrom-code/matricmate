@@ -11,13 +11,11 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeController = Get.put(ThemeController());
-
     return Obx(
       () => GetMaterialApp(
         initialBinding: GeneralBinding(),
         debugShowCheckedModeBanner: false,
-        themeMode: themeController.themeMode.value,
+        themeMode: ThemeController.instance.themeMode.value,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         getPages: AppRoutes.pages,

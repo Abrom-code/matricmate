@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -11,7 +11,7 @@ class PassageContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
 
     return Obx(() {
       final block = controller.blocks[controller.currentBlockIndex.value];
@@ -60,7 +60,7 @@ class PassageContainer extends StatelessWidget {
 
                     if (block.passage?.title != null)
                       Text(
-                        block.passage?.title ?? "",
+                        block.passage?.title ?? '',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 17 * controller.textScale.value,
@@ -71,7 +71,7 @@ class PassageContainer extends StatelessWidget {
 
                     Center(
                       child: SelectableText(
-                        block.passage?.content ?? "Loading...",
+                        block.passage?.content ?? 'Loading...',
                         textAlign: TextAlign.justify,
                         style: TextStyle(
                           fontSize: 15 * controller.textScale.value,

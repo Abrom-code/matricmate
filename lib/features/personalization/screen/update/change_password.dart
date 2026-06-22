@@ -13,9 +13,9 @@ class ChangePassword extends GetView<ChangePasswordController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Appbar(
-        title: const Text(
-          "Change Password",
+      appBar: const Appbar(
+        title: Text(
+          'Change Password',
           style: TextStyle(color: AppColors.white),
         ),
         showBackArrow: true,
@@ -34,9 +34,9 @@ class ChangePassword extends GetView<ChangePasswordController> {
                     controller: controller.oldPassword,
                     obscureText: controller.hideOldPassword.value,
                     validator: (val) =>
-                        AppValidator.validateEmptyText("Current Password", val),
+                        AppValidator.validateEmptyText('Current Password', val),
                     decoration: InputDecoration(
-                      labelText: "Current Password",
+                      labelText: 'Current Password',
                       prefixIcon: const Icon(Iconsax.lock_circle_copy),
                       suffixIcon: IconButton(
                         onPressed: () => controller.hideOldPassword.value =
@@ -59,7 +59,7 @@ class ChangePassword extends GetView<ChangePasswordController> {
                     obscureText: controller.hideNewPassword.value,
                     validator: (val) => AppValidator.validatePassword(val),
                     decoration: InputDecoration(
-                      labelText: "New Password",
+                      labelText: 'New Password',
                       prefixIcon: const Icon(Iconsax.lock_circle),
                       suffixIcon: IconButton(
                         onPressed: () => controller.hideNewPassword.value =
@@ -89,7 +89,7 @@ class ChangePassword extends GetView<ChangePasswordController> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text("Update Password"),
+                          : const Text('Update Password'),
                     ),
                   ),
                 ),

@@ -20,13 +20,13 @@ class EditProfileScreen extends StatelessWidget {
       appBar: Appbar(
         showBackArrow: true,
         title: const Text(
-          "Edit Profile",
+          'Edit Profile',
           style: TextStyle(color: AppColors.white),
         ),
         actions: [
           TextButton(
             onPressed: () => controller.updateProfile(),
-            child: const Text("SAVE", style: TextStyle(color: AppColors.white)),
+            child: const Text('SAVE', style: TextStyle(color: AppColors.white)),
           ),
         ],
       ),
@@ -43,7 +43,7 @@ class EditProfileScreen extends StatelessWidget {
                       controller: controller.firstName,
                       textCapitalization: TextCapitalization.sentences,
                       validator: (val) =>
-                          AppValidator.validateEmptyText("First Name", val),
+                          AppValidator.validateEmptyText('First Name', val),
                       onTapOutside: (e) => FocusScope.of(context).unfocus(),
                       decoration: const InputDecoration(
                         labelText: AppTextStrings.firstName,
@@ -55,7 +55,7 @@ class EditProfileScreen extends StatelessWidget {
                       controller: controller.lastName,
                       textCapitalization: TextCapitalization.sentences,
                       validator: (val) =>
-                          AppValidator.validateEmptyText("Last Name", val),
+                          AppValidator.validateEmptyText('Last Name', val),
                       onTapOutside: (e) => FocusScope.of(context).unfocus(),
                       decoration: const InputDecoration(
                         labelText: AppTextStrings.lastName,
@@ -65,22 +65,22 @@ class EditProfileScreen extends StatelessWidget {
                     const SizedBox(height: AppSizes.spaceBtwInputFields),
                     DropdownButtonFormField(
                       initialValue: controller.selectedStream.value.isEmpty
-                          ? "natural"
+                          ? 'natural'
                           : controller.selectedStream.value,
                       items: const [
                         DropdownMenuItem(
-                          value: "natural",
-                          child: Text("Natural"),
+                          value: 'natural',
+                          child: Text('Natural'),
                         ),
                         DropdownMenuItem(
-                          value: "social",
-                          child: Text("Social"),
+                          value: 'social',
+                          child: Text('Social'),
                         ),
                       ],
                       onChanged: (stream) =>
                           controller.selectedStream.value = stream!,
                       decoration: const InputDecoration(
-                        labelText: "Stream",
+                        labelText: 'Stream',
                         prefixIcon: Icon(Icons.school),
                       ),
                     ),
@@ -100,7 +100,7 @@ class EditProfileScreen extends StatelessWidget {
                                   child: CircularProgressIndicator(),
                                 ),
                                 SizedBox(height: 8),
-                                Text("Deleting..."),
+                                Text('Deleting...'),
                               ],
                             ),
                           );
@@ -109,7 +109,7 @@ class EditProfileScreen extends StatelessWidget {
                         return TextButton(
                           onPressed: () => userController.showDeleteDialog(),
                           child: const Text(
-                            "Delete Account",
+                            'Delete Account',
                             style: TextStyle(
                               color: Colors.red,
                               fontWeight: FontWeight.bold,

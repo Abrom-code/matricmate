@@ -13,7 +13,7 @@ class ResetPassword extends GetView<ResetPasswordController> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(
@@ -28,7 +28,7 @@ class ResetPassword extends GetView<ResetPasswordController> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.all(AppSizes.defaultSpace),
+          padding: const EdgeInsets.all(AppSizes.defaultSpace),
           child: Column(
             children: [
               const SizedBox(height: AppSizes.spaceBtwItems * 3),
@@ -51,7 +51,7 @@ class ResetPassword extends GetView<ResetPasswordController> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => Get.offAllNamed(Routes.signIn),
-                  child: Text("Done"),
+                  child: const Text('Done'),
                 ),
               ),
 
@@ -64,7 +64,7 @@ class ResetPassword extends GetView<ResetPasswordController> {
                   child: Obx(
                     () => Text(
                       controller.isSending.value
-                          ? "Sending..."
+                          ? 'Sending...'
                           : AppTextStrings.resendEmail,
                     ),
                   ),

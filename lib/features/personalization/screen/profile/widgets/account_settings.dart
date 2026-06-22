@@ -16,7 +16,7 @@ class AccountSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     final isInactive = UserController.instance.user.value.isInactive;
     final isPending = UserController.instance.user.value.isPending;
     return Container(
@@ -27,24 +27,24 @@ class AccountSettings extends StatelessWidget {
       child: Column(
         children: [
           AppListTile(
-            icon: Icon(Iconsax.user_edit_copy),
-            title: "Edit Profile",
-            trailing: Icon(Icons.keyboard_arrow_right),
+            icon: const Icon(Iconsax.user_edit_copy),
+            title: 'Edit Profile',
+            trailing: const Icon(Icons.keyboard_arrow_right),
 
-            onTap: () => Get.to(() => EditProfileScreen()),
+            onTap: () => Get.to(() => const EditProfileScreen()),
           ),
           AppListTile(
-            icon: Icon(Iconsax.lock_circle_copy),
-            title: "Change Password",
-            trailing: Icon(Icons.keyboard_arrow_right),
+            icon: const Icon(Iconsax.lock_circle_copy),
+            title: 'Change Password',
+            trailing: const Icon(Icons.keyboard_arrow_right),
             onTap: () => Get.toNamed(Routes.changePassword),
           ),
 
           if (isInactive)
             AppListTile(
-              icon: Icon(Icons.workspace_premium, color: Colors.amber),
-              title: "Upgrade Premium",
-              trailing: Icon(Icons.keyboard_arrow_right),
+              icon: const Icon(Icons.workspace_premium, color: Colors.amber),
+              title: 'Upgrade Premium',
+              trailing: const Icon(Icons.keyboard_arrow_right),
               onTap: () {
                 Get.bottomSheet(
                   const PremiumBottomSheet(),
@@ -54,25 +54,25 @@ class AccountSettings extends StatelessWidget {
             ),
           if (isPending)
             AppListTile(
-              icon: Icon(Icons.loop),
-              title: "Refresh Payment",
-              trailing: Icon(Icons.keyboard_arrow_right),
+              icon: const Icon(Icons.loop),
+              title: 'Refresh Payment',
+              trailing: const Icon(Icons.keyboard_arrow_right),
               onTap: () async {
                 await UserController.instance.checkPaymentStatus();
               },
             ),
           AppListTile(
-            icon: Icon(Icons.help_outlined),
-            title: "Help & Support",
-            trailing: Icon(Icons.keyboard_arrow_right),
+            icon: const Icon(Icons.help_outlined),
+            title: 'Help & Support',
+            trailing: const Icon(Icons.keyboard_arrow_right),
             onTap: () {},
           ),
           AppListTile(
-            icon: Icon(Icons.sunny),
-            title: "Change Theme",
+            icon: const Icon(Icons.sunny),
+            title: 'Change Theme',
             trailing: Switch(
               value: dark,
-              onChanged: (value) => ThemeController.instance.toogleTheme(value),
+              onChanged: (value) => ThemeController.instance.toggleTheme(value),
             ),
           ),
         ],

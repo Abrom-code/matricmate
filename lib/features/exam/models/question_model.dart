@@ -36,8 +36,8 @@ class QuestionModel {
     this.passageId,
     this.questionOrder,
     this.imageUrl,
-    this.explanationEn = "No English Explanation!",
-    this.explanationAm = "No Amharic Explanation!",
+    this.explanationEn = 'No English Explanation!',
+    this.explanationAm = 'No Amharic Explanation!',
   });
 
   factory QuestionModel.fromMap(Map<String, dynamic> map) {
@@ -49,7 +49,7 @@ class QuestionModel {
       testId: map['test_id'],
 
       correctOptionIndex: map['correct_option_index'],
-      questionText: map['question_text'] ?? "",
+      questionText: map['question_text'] ?? '',
 
       chapterId: map['chapter_id'],
       passageId: map['passage_id'],
@@ -58,9 +58,9 @@ class QuestionModel {
       imageUrl: map['image_url']?.toString(),
 
       explanationEn:
-          map['explanation_en']?.toString() ?? "No English Explanation!",
+          map['explanation_en']?.toString() ?? 'No English Explanation!',
       explanationAm:
-          map['explanation_am']?.toString() ?? "No Amharic Explanation!",
+          map['explanation_am']?.toString() ?? 'No Amharic Explanation!',
 
       options: map['options'] == null
           ? []
@@ -103,14 +103,14 @@ class QuestionModel {
       grade: null,
       testId: 0,
       correctOptionIndex: 0,
-      questionText: "",
+      questionText: '',
       options: [],
       chapterId: null,
       passageId: null,
       questionOrder: null,
       imageUrl: null,
-      explanationEn: "No English Explanation!",
-      explanationAm: "No Amharic Explanation!",
+      explanationEn: 'No English Explanation!',
+      explanationAm: 'No Amharic Explanation!',
     );
   }
 }

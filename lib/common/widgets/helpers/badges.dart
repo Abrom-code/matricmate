@@ -15,29 +15,29 @@ class ExamBadgeHelper {
     if (s >= 0.9) {
       return ExamBadge(
         icon: Icons.emoji_events,
-        label: "Top Scorer",
+        label: 'Top Scorer',
         color: Colors.amber,
       );
     } else if (s >= 0.8) {
       return ExamBadge(
         icon: Icons.military_tech,
-        label: "Distinction",
+        label: 'Distinction',
         color: Colors.orange,
       );
     } else if (s >= 0.7) {
       return ExamBadge(
         icon: Icons.workspace_premium,
-        label: "Excellent",
+        label: 'Excellent',
         color: Colors.blue,
       );
     } else if (s >= 0.6) {
       return ExamBadge(
         icon: Icons.stars,
-        label: "Very Good",
+        label: 'Very Good',
         color: Colors.green,
       );
     } else {
-      return ExamBadge(icon: Icons.grade, label: "Good", color: Colors.grey);
+      return ExamBadge(icon: Icons.grade, label: 'Good', color: Colors.grey);
     }
   }
 }

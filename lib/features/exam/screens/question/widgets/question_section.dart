@@ -10,13 +10,13 @@ class QuestionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Text.rich(
       textAlign: TextAlign.justify,
       TextSpan(
         children: [
           TextSpan(
-            text: "$qnNumber. ",
+            text: '$qnNumber. ',
             style: Theme.of(context).textTheme.bodyLarge!.copyWith(
               fontSize: 17,
               color: dark ? AppColors.grey : AppColors.darkerGrey,

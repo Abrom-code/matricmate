@@ -30,7 +30,7 @@ class CircularIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool dark = AppHelperFuntions.isDark(context);
+    final bool dark = AppHelperFunctions.isDark(context);
 
     return Container(
       height: size,

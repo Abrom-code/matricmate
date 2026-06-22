@@ -18,20 +18,20 @@ class PayementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = AppHelperFuntions.isDark(context);
+    final isDark = AppHelperFunctions.isDark(context);
     final controller = Get.find<PremiumController>();
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          "${method.title} - Payment",
+          '${method.title} - Payment',
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(AppSizes.defaultSpace),
+        padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -39,15 +39,15 @@ class PayementScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "SELECTED METHOD",
+                  'SELECTED METHOD',
                   style: TextStyle(
                     color: isDark ? AppColors.grey : AppColors.darkerGrey,
                   ),
                 ),
                 TextButton(
                   onPressed: () => Get.back(),
-                  child: Text(
-                    "Change",
+                  child: const Text(
+                    'Change',
                     style: TextStyle(color: AppColors.primary),
                   ),
                 ),
@@ -65,7 +65,7 @@ class PayementScreen extends StatelessWidget {
             const SizedBox(height: AppSizes.spaceBtwItems),
 
             Text(
-              "VERIFY TRANSACTION",
+              'VERIFY TRANSACTION',
               style: TextStyle(
                 color: isDark ? AppColors.grey : AppColors.darkerGrey,
               ),
@@ -76,7 +76,7 @@ class PayementScreen extends StatelessWidget {
               key: controller.paymentFormKey,
               child: Column(
                 children: [
-                  LinkInputFiled(),
+                  const LinkInputFiled(),
                   const SizedBox(height: AppSizes.spaceBtwSections),
 
                   Obx(() {
@@ -92,14 +92,14 @@ class PayementScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: AppSizes.spaceBtwItems * 2),
-            Divider(),
-            TelegramChatButton(),
+            const Divider(),
+            const TelegramChatButton(),
           ],
         ),
       ),
       bottomNavigationBar: Obx(() {
         return Container(
-          padding: EdgeInsets.all(AppSizes.md),
+          padding: const EdgeInsets.all(AppSizes.md),
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -121,8 +121,8 @@ class PayementScreen extends StatelessWidget {
                         color: AppColors.white.withValues(alpha: .5),
                       ),
                     )
-                  : Text(
-                      "Complete Payment",
+                  : const Text(
+                      'Complete Payment',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
             ),

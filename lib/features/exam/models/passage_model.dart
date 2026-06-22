@@ -13,7 +13,7 @@ class PassageModel {
   factory PassageModel.fromJson(Map<String, dynamic> json) {
     return PassageModel(
       id: (json['id'] as num).toInt(),
-      content: json['content'] ?? "",
+      content: json['content'] ?? '',
       imageUrl: json['image_url'],
       title: json['title'],
     );

@@ -37,7 +37,7 @@ class _ImageSectionState extends State<ImageSection> {
     final isConnected = await NetworkManager.instance.hasRealInternet();
 
     if (!isConnected) {
-      ToastHelper.warning("No Internet!");
+      ToastHelper.warning('No Internet!');
       return;
     }
 
@@ -53,13 +53,13 @@ class _ImageSectionState extends State<ImageSection> {
         final isConnected = await NetworkManager.instance.hasRealInternet();
 
         if (!isConnected) {
-          ToastHelper.warning("No Internet!");
+          ToastHelper.warning('No Internet!');
           return;
         }
 
-        AppHelperFuntions.showImageZoom(
+        AppHelperFunctions.showImageZoom(
           context,
-          widget.imgUrl ?? "",
+          widget.imgUrl ?? '',
           isAssetImage: false,
         );
       },
@@ -99,13 +99,13 @@ class _ImageSectionState extends State<ImageSection> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        "Failed to load image",
+                        'Failed to load image',
                         style: TextStyle(color: Colors.grey),
                       ),
                       const SizedBox(height: 8),
                       ElevatedButton(
                         onPressed: retry,
-                        child: const Text("Retry"),
+                        child: const Text('Retry'),
                       ),
                     ],
                   ),

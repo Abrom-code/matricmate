@@ -5,7 +5,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 class CorrectCheckButton extends StatelessWidget {
   const CorrectCheckButton({
     super.key,
-    this.text = "Correct",
+    this.text = 'Correct',
     this.color = AppColors.primary,
     this.icon = Iconsax.tick_circle_copy,
   });

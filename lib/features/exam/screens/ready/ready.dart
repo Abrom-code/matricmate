@@ -21,7 +21,7 @@ class ReadyDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     final controller = Get.put(ReadyController());
     return Dialog(
       backgroundColor: dark ? AppColors.dark : AppColors.light,
@@ -31,7 +31,7 @@ class ReadyDialog extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 600),
             child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.defaultSpace,
                 vertical: AppSizes.defaultSpace / 2,
               ),
@@ -42,7 +42,7 @@ class ReadyDialog extends StatelessWidget {
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
                   Text(
-                    "Ready To Start?",
+                    'Ready To Start?',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: AppSizes.spaceBtwItems),
@@ -90,24 +90,24 @@ class ReadyDialog extends StatelessWidget {
                           arguments: {
                             'test_id': testId,
                             'is_timed': controller.isTimed.value,
-                            "time": time,
+                            'time': time,
                             'id': id,
                           },
                         );
                         Get.delete<QuestionController>();
                       },
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Start Exam",
+                            'Start Exam',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: AppColors.white,
                               fontSize: 19,
                             ),
                           ),
-                          const SizedBox(width: AppSizes.sm),
+                          SizedBox(width: AppSizes.sm),
                           Icon(
                             Icons.start_rounded,
                             size: 20,
@@ -128,7 +128,7 @@ class ReadyDialog extends StatelessWidget {
 
             child: IconButton(
               onPressed: () => Get.back(),
-              icon: Icon(Iconsax.close_circle_copy, color: AppColors.error),
+              icon: const Icon(Iconsax.close_circle_copy, color: AppColors.error),
             ),
           ),
         ],

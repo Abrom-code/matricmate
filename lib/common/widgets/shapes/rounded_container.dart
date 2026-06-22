@@ -21,14 +21,14 @@ class RoundedContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
 
     return Container(
       width: width,
       height: height,
       padding:
           padding ??
-          EdgeInsets.symmetric(
+          const EdgeInsets.symmetric(
             vertical: AppSizes.defaultSpace / 1.5,
             horizontal: AppSizes.sm * 1.5,
           ),

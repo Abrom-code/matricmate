@@ -19,9 +19,9 @@ class AppTheme {
       seedColor: Colors.teal,
       brightness: Brightness.light,
     ),
-    fontFamily: "Poppins",
+    fontFamily: 'Poppins',
     textTheme: AppTextTheme.lightTextTheme.apply(
-      fontFamilyFallback: ["Roboto", "Sans-serif"],
+      fontFamilyFallback: ['Roboto', 'Sans-serif'],
     ),
     scaffoldBackgroundColor: AppColors.light,
     appBarTheme: AppAppBarTheme.lightAppBarTheme,
@@ -41,10 +41,10 @@ class AppTheme {
       seedColor: Colors.teal,
       brightness: Brightness.dark,
     ),
-    fontFamily: "Poppins",
+    fontFamily: 'Poppins',
     textTheme: AppTextTheme.darkTextTheme.apply(
       // FIXED: Using darkTextTheme
-      fontFamilyFallback: ["Roboto", "Sans-serif"],
+      fontFamilyFallback: ['Roboto', 'Sans-serif'],
     ),
     scaffoldBackgroundColor: Colors.black,
     appBarTheme: AppAppBarTheme.darkAppBarTheme,

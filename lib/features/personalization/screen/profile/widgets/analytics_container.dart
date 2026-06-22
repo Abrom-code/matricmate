@@ -14,13 +14,13 @@ class AnalyticsContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Container(
       decoration: BoxDecoration(
         color: !dark ? AppColors.light : AppColors.black,
         borderRadius: BorderRadius.circular(AppSizes.md),
         border: BoxBorder.fromLTRB(
-          left: BorderSide(color: AppColors.primary, width: 4),
+          left: const BorderSide(color: AppColors.primary, width: 4),
         ),
         boxShadow: [
           BoxShadow(
@@ -40,8 +40,8 @@ class AnalyticsContainer extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.task_alt_outlined, color: Colors.green, size: 28),
-                  SizedBox(height: 8),
+                  const Icon(Icons.task_alt_outlined, color: Colors.green, size: 28),
+                  const SizedBox(height: 8),
                   Text(
                     '$value',
                     style: TextStyle(
@@ -50,10 +50,10 @@ class AnalyticsContainer extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     title.toUpperCase(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       letterSpacing: 1,
                       color: Colors.grey,

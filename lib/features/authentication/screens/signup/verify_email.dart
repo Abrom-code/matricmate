@@ -55,18 +55,18 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
               RichText(
                 text: TextSpan(
                   text:
-                      "If you don’t see the verification email in your inbox, kindly check your ",
+                      'If you don’t see the verification email in your inbox, kindly check your ',
                   style: Theme.of(context).textTheme.labelMedium,
                   children: [
                     TextSpan(
-                      text: "Spam folder".toUpperCase(),
-                      style: TextStyle(
+                      text: 'Spam folder'.toUpperCase(),
+                      style: const TextStyle(
                         fontStyle: FontStyle.italic,
                         fontWeight: FontWeight.bold,
                         color: Colors.amber,
                       ),
                     ),
-                    TextSpan(text: " as well."),
+                    const TextSpan(text: ' as well.'),
                   ],
                 ),
               ),
@@ -81,8 +81,8 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
                         ? controller.checkEmailVerification
                         : null,
                     child: controller.isChecking.value
-                        ? AppCircularBottonLoading()
-                        : Text(
+                        ? const AppCircularButtonLoading()
+                        : const Text(
                             "I've Verified",
                             style: TextStyle(color: AppColors.white),
                           ),
@@ -101,8 +101,8 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
                         ? null
                         : controller.sendEmailVerification,
                     child: isResending
-                        ? AppCircularBottonLoading(color: AppColors.primary)
-                        : Text(AppTextStrings.resendEmail),
+                        ? const AppCircularButtonLoading(color: AppColors.primary)
+                        : const Text(AppTextStrings.resendEmail),
                   );
                 }),
               ),

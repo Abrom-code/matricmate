@@ -23,7 +23,7 @@ class SignupForm extends GetView<SignupController> {
                   controller: controller.firstName,
                   textCapitalization: TextCapitalization.sentences,
                   validator: (val) =>
-                      AppValidator.validateEmptyText("First Name", val),
+                      AppValidator.validateEmptyText('First Name', val),
                   onTapOutside: (e) => FocusScope.of(context).unfocus(),
                   expands: false,
                   decoration: const InputDecoration(
@@ -40,7 +40,7 @@ class SignupForm extends GetView<SignupController> {
                   controller: controller.lastName,
                   textCapitalization: TextCapitalization.sentences,
                   validator: (val) =>
-                      AppValidator.validateEmptyText("Last Name", val),
+                      AppValidator.validateEmptyText('Last Name', val),
                   onTapOutside: (e) => FocusScope.of(context).unfocus(),
                   expands: false,
                   decoration: const InputDecoration(
@@ -78,7 +78,7 @@ class SignupForm extends GetView<SignupController> {
               obscureText: controller.hidePassword.value,
               decoration: InputDecoration(
                 labelText: AppTextStrings.password,
-                prefixIcon: Icon(Iconsax.lock_circle_copy),
+                prefixIcon: const Icon(Iconsax.lock_circle_copy),
                 suffixIcon: IconButton(
                   onPressed: () => controller.hidePassword.value =
                       !controller.hidePassword.value,
@@ -97,10 +97,10 @@ class SignupForm extends GetView<SignupController> {
           // stream
           DropdownButtonFormField<String>(
             validator: (value) => AppValidator.validateStream(value),
-            hint: Text("Select Stream"),
+            hint: const Text('Select Stream'),
             items: const [
-              DropdownMenuItem(value: "natural", child: Text("Natural")),
-              DropdownMenuItem(value: "social", child: Text("Social")),
+              DropdownMenuItem(value: 'natural', child: Text('Natural')),
+              DropdownMenuItem(value: 'social', child: Text('Social')),
             ],
             onChanged: (stream) {
               if (stream != null) {
@@ -119,8 +119,8 @@ class SignupForm extends GetView<SignupController> {
                     ? null
                     : () => controller.signup(),
                 child: controller.isSigning.value
-                    ? AppCircularBottonLoading()
-                    : Text(AppTextStrings.createAccount),
+                    ? const AppCircularButtonLoading()
+                    : const Text(AppTextStrings.createAccount),
               ),
             ),
           ),

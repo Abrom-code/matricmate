@@ -15,14 +15,14 @@ class ResultScreen extends GetView<ResultController> {
   @override
   Widget build(BuildContext context) {
     final result = controller.result;
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     final examBadge = ExamBadgeHelper.getBadge(
       result.correctAnswers / result.testQuestions.length,
     );
     return Scaffold(
       appBar: Appbar(
         title: Text(
-          "Your Result",
+          'Your Result',
           style: Theme.of(
             context,
           ).textTheme.headlineMedium!.apply(color: AppColors.white),
@@ -41,7 +41,7 @@ class ResultScreen extends GetView<ResultController> {
                   borderRadius: BorderRadius.circular(150),
                   color: dark
                       ? const Color.fromARGB(119, 79, 79, 79)
-                      : Color(0xFFe7eae7),
+                      : const Color(0xFFe7eae7),
                 ),
 
                 child: Stack(
@@ -83,14 +83,14 @@ class ResultScreen extends GetView<ResultController> {
               const SizedBox(height: AppSizes.spaceBtwSections),
 
               Text(
-                "TEST RESULT",
+                'TEST RESULT',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
               Text(
-                "${result.correctAnswers}/${result.testQuestions.length}",
-                style: TextStyle(
+                '${result.correctAnswers}/${result.testQuestions.length}',
+                style: const TextStyle(
                   color: AppColors.primary,
                   fontSize: 44,
                   fontWeight: FontWeight.w900,
@@ -107,12 +107,12 @@ class ResultScreen extends GetView<ResultController> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     spacing: 10,
                     children: [
-                      Icon(
+                      const Icon(
                         Iconsax.search_status_1_copy,
                         color: AppColors.white,
                       ),
                       Text(
-                        "Review Answers",
+                        'Review Answers',
                         style: Theme.of(
                           context,
                         ).textTheme.titleSmall!.apply(color: AppColors.white),
@@ -131,9 +131,9 @@ class ResultScreen extends GetView<ResultController> {
                     spacing: 10,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.arrow_left, color: AppColors.primary),
+                      const Icon(Icons.arrow_left, color: AppColors.primary),
                       Text(
-                        "Back to Tests",
+                        'Back to Tests',
                         style: Theme.of(
                           context,
                         ).textTheme.titleSmall!.apply(color: AppColors.primary),

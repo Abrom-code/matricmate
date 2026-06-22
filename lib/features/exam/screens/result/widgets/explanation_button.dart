@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -24,13 +24,13 @@ class ExplanationButton extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: expanded
-          ? EdgeInsets.only(
+          ? const EdgeInsets.only(
               bottom: AppSizes.md,
               right: AppSizes.md,
               left: AppSizes.md,
               top: 0,
             )
-          : EdgeInsets.symmetric(horizontal: AppSizes.md),
+          : const EdgeInsets.symmetric(horizontal: AppSizes.md),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSizes.sm),
         color: dark ? const Color.fromARGB(255, 10, 10, 10) : AppColors.light,
@@ -43,7 +43,7 @@ class ExplanationButton extends StatelessWidget {
               Expanded(
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    padding: EdgeInsets.all(5),
+                    padding: const EdgeInsets.all(5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),
@@ -55,7 +55,7 @@ class ExplanationButton extends StatelessWidget {
                         : MainAxisAlignment.start,
                     children: [
                       Text(
-                        "Why this is correct?",
+                        'Why this is correct?',
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                           color: AppColors.primary,
                         ),
@@ -72,16 +72,16 @@ class ExplanationButton extends StatelessWidget {
               if (expanded)
                 Obx(
                   () => DropdownButton<String>(
-                    padding: EdgeInsets.all(0),
+                    padding: const EdgeInsets.all(0),
                     isDense: true,
                     iconEnabledColor: AppColors.primary,
-                    underline: SizedBox(),
+                    underline: const SizedBox(),
                     value: controller.languageSelected.value,
                     items: [
                       DropdownMenuItem(
                         value: 'EN',
                         child: Text(
-                          "EN",
+                          'EN',
                           style: Theme.of(context).textTheme.bodyMedium!
                               .copyWith(color: AppColors.primary),
                         ),
@@ -89,7 +89,7 @@ class ExplanationButton extends StatelessWidget {
                       DropdownMenuItem(
                         value: 'AM',
                         child: Text(
-                          "AM",
+                          'AM',
                           style: Theme.of(context).textTheme.bodyMedium!
                               .copyWith(color: AppColors.primary),
                         ),
@@ -108,10 +108,10 @@ class ExplanationButton extends StatelessWidget {
             Obx(
               () => Column(
                 children: [
-                  Divider(),
+                  const Divider(),
                   Text(
                     textAlign: TextAlign.justify,
-                    controller.languageSelected.value == "EN"
+                    controller.languageSelected.value == 'EN'
                         ? qn.explanationEn
                         : qn.explanationAm,
                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(

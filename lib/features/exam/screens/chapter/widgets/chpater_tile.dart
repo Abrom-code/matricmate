@@ -22,7 +22,7 @@ class ChapterTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return AppTile(
       icon: icon,
       title: chapter,

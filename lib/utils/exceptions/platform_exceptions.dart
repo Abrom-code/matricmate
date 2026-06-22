@@ -31,9 +31,9 @@ class PlatformExceptions implements Exception {
       case 'invalid-verification-code':
         return 'Invalid verification code. Please enter a valid code.';
       case 'invalid-verification-id':
-        return "Invalid verification Id";
+        return 'Invalid verification Id';
       default:
-        return "Something wrong happened";
+        return 'Something wrong happened';
     }
   }
 }

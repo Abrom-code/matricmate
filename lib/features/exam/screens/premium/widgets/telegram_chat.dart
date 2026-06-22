@@ -9,11 +9,11 @@ class TelegramChatButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Column(
       children: [
         Text(
-          "Need help?",
+          'Need help?',
           style: TextStyle(
             color: dark ? AppColors.darkGrey : AppColors.darkerGrey,
           ),
@@ -32,12 +32,12 @@ class TelegramChatButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(50),
               ),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Icon(Icons.telegram, size: 25, color: Colors.blue),
                 SizedBox(width: 10),
-                Text("Chat on Telegram", style: TextStyle(color: Colors.teal)),
+                Text('Chat on Telegram', style: TextStyle(color: Colors.teal)),
               ],
             ),
           ),
@@ -52,7 +52,7 @@ class TelegramChatButton extends StatelessWidget {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
-      debugPrint("Telegram open failed: $e");
+      debugPrint('Telegram open failed: $e');
     }
   }
 }

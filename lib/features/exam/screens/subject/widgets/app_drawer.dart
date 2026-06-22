@@ -20,7 +20,7 @@ class AppDrawer extends StatelessWidget {
     final userName = UserController.instance.user.value.firstName;
     final stream = UserController.instance.user.value.stream.toUpperCase();
 
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Drawer(
       child: Column(
         children: [
@@ -38,7 +38,7 @@ class AppDrawer extends StatelessWidget {
                       AppbarStatusTitle(title: userName),
 
                       Text(
-                        "Stream: $stream",
+                        'Stream: $stream',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 14,
@@ -46,10 +46,10 @@ class AppDrawer extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Spacer(),
+                  const Spacer(),
                   IconButton(
                     onPressed: () {
-                      ThemeController.instance.toogleTheme(!dark);
+                      ThemeController.instance.toggleTheme(!dark);
                       Get.back();
                     },
                     icon: Container(
@@ -75,10 +75,10 @@ class AppDrawer extends StatelessWidget {
               final isPending = UserController.instance.user.value.isPending;
               final isInactive = UserController.instance.user.value.isInactive;
               return ListView(
-                padding: EdgeInsets.only(bottom: AppSizes.defaultSpace / 2),
+                padding: const EdgeInsets.only(bottom: AppSizes.defaultSpace / 2),
                 children: [
                   AppListTile(
-                    icon: Icon(Iconsax.message_question_copy),
+                    icon: const Icon(Iconsax.message_question_copy),
                     title: 'Test',
                     onTap: () {
                       Navigator.of(context).pop();
@@ -86,7 +86,7 @@ class AppDrawer extends StatelessWidget {
                     },
                   ),
                   AppListTile(
-                    icon: Icon(Iconsax.book_1_copy),
+                    icon: const Icon(Iconsax.book_1_copy),
                     title: 'Exams',
                     onTap: () {
                       Navigator.of(context).pop();
@@ -94,7 +94,7 @@ class AppDrawer extends StatelessWidget {
                     },
                   ),
                   AppListTile(
-                    icon: Icon(Iconsax.archive_tick_copy),
+                    icon: const Icon(Iconsax.archive_tick_copy),
                     title: 'Bookmarks',
                     onTap: () {
                       Navigator.of(context).pop();
@@ -102,7 +102,7 @@ class AppDrawer extends StatelessWidget {
                     },
                   ),
                   AppListTile(
-                    icon: Icon(Icons.person_outline),
+                    icon: const Icon(Icons.person_outline),
                     title: 'Profile',
                     onTap: () {
                       Navigator.of(context).pop();
@@ -112,7 +112,7 @@ class AppDrawer extends StatelessWidget {
 
                   if (isInactive)
                     AppListTile(
-                      icon: Icon(Iconsax.medal_star, color: Colors.amber),
+                      icon: const Icon(Iconsax.medal_star, color: Colors.amber),
                       title: 'Premium',
                       onTap: () {
                         Navigator.of(context).pop();
@@ -125,7 +125,7 @@ class AppDrawer extends StatelessWidget {
 
                   if (isPending)
                     AppListTile(
-                      icon: Icon(Icons.loop),
+                      icon: const Icon(Icons.loop),
                       title: 'Refresh Payment',
                       onTap: () async {
                         Navigator.of(context).pop();
@@ -135,9 +135,9 @@ class AppDrawer extends StatelessWidget {
 
                   const SizedBox(height: AppSizes.spaceBtwItems),
                   Container(
-                    padding: EdgeInsets.only(left: AppSizes.defaultSpace),
+                    padding: const EdgeInsets.only(left: AppSizes.defaultSpace),
                     child: Text(
-                      "CONNECT & SUPPORT",
+                      'CONNECT & SUPPORT',
                       style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         color: dark ? AppColors.darkGrey : AppColors.darkerGrey,
                       ),
@@ -146,23 +146,23 @@ class AppDrawer extends StatelessWidget {
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
                   AppListTile(
-                    icon: Icon(Iconsax.send_1_copy),
+                    icon: const Icon(Iconsax.send_1_copy),
                     title: 'Join Telegram',
                     onTap: () {
                       Navigator.of(context).pop();
-                      AppHelperFuntions.openUrl(AppTextStrings.telegramChannel);
+                      AppHelperFunctions.openUrl(AppTextStrings.telegramChannel);
                     },
                   ),
 
                   AppListTile(
-                    icon: Icon(Iconsax.star_1_copy),
+                    icon: const Icon(Iconsax.star_1_copy),
                     title: 'Rate App',
                     onTap: () {
                       Navigator.of(context).pop();
                     },
                   ),
                   AppListTile(
-                    icon: Icon(Iconsax.share_copy),
+                    icon: const Icon(Iconsax.share_copy),
                     title: 'Share with Friend',
                     onTap: () {
                       Navigator.of(context).pop();
@@ -175,9 +175,9 @@ class AppDrawer extends StatelessWidget {
 
           const Divider(height: 1),
 
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text("Version 1.0.0"),
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Version 1.0.0'),
           ),
         ],
       ),

@@ -46,7 +46,7 @@ class ChapterScreen extends GetView<ChapterController> {
                 fontSize: 13,
               ),
               tabs: tabController.tabs
-                  .map((t) => Tab(text: t["label"]))
+                  .map((t) => Tab(text: t['label']))
                   .toList(),
             ),
           ),
@@ -56,19 +56,19 @@ class ChapterScreen extends GetView<ChapterController> {
               controller: tabController.tabController,
               children: List.generate(tabController.tabs.length, (index) {
                 final tab = tabController.tabs[index];
-                final grade = tab["grade"];
+                final grade = tab['grade'];
 
                 return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Obx(() {
                     if (controller.isChapterLoading.value) {
-                      return AppCircularLoading(title: 'Loading');
+                      return const AppCircularLoading(title: 'Loading');
                     }
 
                     final chapters = controller.getChaptersByGrade(grade);
 
                     if (chapters.isEmpty) {
-                      return const Center(child: Text("No Chapters Found"));
+                      return const Center(child: Text('No Chapters Found'));
                     }
 
                     return Column(
@@ -97,7 +97,7 @@ class ChapterScreen extends GetView<ChapterController> {
                               bottom: AppSizes.spaceBtwItems,
                             ),
                             child: ChapterTile(
-                              chapter: AppHelperFuntions.getChapterName(
+                              chapter: AppHelperFunctions.getChapterName(
                                 chapter.chapterNumber,
                               ),
                               chapterTitle: chapter.title,
@@ -115,7 +115,7 @@ class ChapterScreen extends GetView<ChapterController> {
                                     },
                                   );
                                 } else {
-                                  ToastHelper.info("No tests added!");
+                                  ToastHelper.info('No tests added!');
                                 }
                               },
                             ),

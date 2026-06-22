@@ -12,7 +12,7 @@ class AppDetail extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSizes.spaceBtwSections * 2),
-        SizedBox(
+        const SizedBox(
           width: 70,
           child: ClipRRect(
             clipBehavior: Clip.hardEdge,

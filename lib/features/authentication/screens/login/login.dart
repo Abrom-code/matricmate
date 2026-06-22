@@ -10,14 +10,14 @@ class LoginScreen extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(AppSizes.defaultSpace),
           child: Column(
             children: [
               AppDetail(),
-              const SizedBox(height: AppSizes.spaceBtwSections),
+              SizedBox(height: AppSizes.spaceBtwSections),
               LoginForm(),
             ],
           ),

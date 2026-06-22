@@ -13,7 +13,7 @@ class AppFullScreenLoader {
       builder: (_) => PopScope(
         canPop: false,
         child: Container(
-          color: AppHelperFuntions.isDark(Get.context!)
+          color: AppHelperFunctions.isDark(Get.context!)
               ? AppColors.dark
               : AppColors.white,
           width: double.infinity,
@@ -32,7 +32,7 @@ class AppFullScreenLoader {
               // Loading Text
               DefaultTextStyle(
                 style: Theme.of(Get.context!).textTheme.bodyMedium!.copyWith(
-                  color: AppHelperFuntions.isDark(Get.context!)
+                  color: AppHelperFunctions.isDark(Get.context!)
                       ? Colors.white
                       : Colors.black,
                   decoration: TextDecoration.none, // Removes yellow underlines

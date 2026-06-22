@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
-import 'package:get/instance_manager.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/tiles/tile.dart';
 import 'package:matricmate/features/exam/screens/premium/premium.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -11,11 +10,11 @@ class PremiumBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         color: dark ? AppColors.dark : Colors.grey.shade300,
       ),
       child: Column(
@@ -23,14 +22,14 @@ class PremiumBottomSheet extends StatelessWidget {
         children: [
           /// TITLE
           const Text(
-            "Unlock Your Full Potential",
+            'Unlock Your Full Potential',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 6),
 
           const Text(
-            "Precision tools designed for the modern students.",
+            'Precision tools designed for the modern students.',
             style: TextStyle(fontSize: 13, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
@@ -40,31 +39,31 @@ class PremiumBottomSheet extends StatelessWidget {
           /// FEATURES
           _featureTile(
             Icons.emoji_events,
-            "All Entrance Exams",
-            "Get access to past and model entrance exam papers.",
+            'All Entrance Exams',
+            'Get access to past and model entrance exam papers.',
             Colors.orange,
             dark,
           ),
 
           _featureTile(
             Icons.menu_book,
-            "All Chapter Tests",
-            "Access every chapter-based test across all subjects.",
+            'All Chapter Tests',
+            'Access every chapter-based test across all subjects.',
             Colors.blue,
             dark,
           ),
 
           _featureTile(
             Icons.school,
-            "All Grade Tests",
-            "Practice full syllabus tests for your grade level.",
+            'All Grade Tests',
+            'Practice full syllabus tests for your grade level.',
             Colors.green,
             dark,
           ),
 
           _featureTile(
             Icons.psychology_alt_outlined,
-            "Amharic Explanations",
+            'Amharic Explanations',
             'Get detail explanation for each questions in "Amharic" and English',
             Colors.teal,
             dark,
@@ -77,7 +76,7 @@ class PremiumBottomSheet extends StatelessWidget {
             width: double.infinity,
             height: 55,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [Colors.green, AppColors.primary, Colors.green],
               ),
               borderRadius: BorderRadius.circular(16),
@@ -90,9 +89,9 @@ class PremiumBottomSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              onPressed: () => Get.off(() => PremiumScreen()),
+              onPressed: () => Get.off(() => const PremiumScreen()),
               child: const Text(
-                "Premium (250 birr)",
+                'Premium (250 birr)',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
@@ -129,7 +128,7 @@ class PremiumBottomSheet extends StatelessWidget {
         iconColor: color,
         title: title,
         iconBgColor: color,
-        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         subTitle: Text(
           subtitle,
           style: const TextStyle(fontSize: 12, color: Colors.grey),

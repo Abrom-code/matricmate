@@ -21,12 +21,12 @@ class AllChaptersButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "From All Chapters",
+              'From All Chapters',
               style: Theme.of(context).textTheme.titleMedium!.apply(
                 color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
-            Icon(Icons.chevron_right, color: AppColors.white, size: 30),
+            const Icon(Icons.chevron_right, color: AppColors.white, size: 30),
           ],
         ),
       ),

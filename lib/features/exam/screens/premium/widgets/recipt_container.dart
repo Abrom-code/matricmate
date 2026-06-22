@@ -11,7 +11,7 @@ class ReciptContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = AppHelperFuntions.isDark(context);
+    final isDark = AppHelperFunctions.isDark(context);
 
     return Container(
       width: double.infinity,
@@ -46,12 +46,12 @@ class ReciptContainer extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  "Upload Receipt Screenshot",
+                  'Upload Receipt Screenshot',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  "PNG, JPG OR PDF UP TO 5MB",
+                  'PNG, JPG OR PDF UP TO 5MB',
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey.shade600,

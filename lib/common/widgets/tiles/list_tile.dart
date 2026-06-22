@@ -20,14 +20,14 @@ class AppListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Material(
       color: Colors.transparent,
       clipBehavior: Clip.hardEdge,
       child: ListTile(
         dense: isDense,
         leading: Container(
-          padding: EdgeInsets.all(AppSizes.xs),
+          padding: const EdgeInsets.all(AppSizes.xs),
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),

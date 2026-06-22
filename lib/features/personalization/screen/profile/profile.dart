@@ -20,48 +20,48 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final _userController = Get.find<UserController>();
     final controller = Get.put(ProfileController());
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
     return Scaffold(
       key: scaffoldKey,
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       appBar: Appbar(
         leadingIcon: Icons.menu,
         leadingOnPressed: () {
           scaffoldKey.currentState?.openDrawer();
         },
-        title: Text("Profile", style: TextStyle(color: AppColors.white)),
+        title: const Text('Profile', style: TextStyle(color: AppColors.white)),
       ),
       body: Obx(() {
         if (UserController.instance.userFetching.value) {
-          return AppCircularLoading(title: 'Loading...');
+          return const AppCircularLoading(title: 'Loading...');
         }
         return SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(AppSizes.defaultSpace),
+            padding: const EdgeInsets.all(AppSizes.defaultSpace),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: ProfileSection()),
+                const Center(child: ProfileSection()),
                 const SizedBox(height: AppSizes.spaceBtwSections),
 
                 Obx(
                   () => AnalyticsContainer(
-                    title: "Tests completed",
+                    title: 'Tests completed',
                     value: controller.completedTest.value,
                   ),
                 ),
                 const SizedBox(height: AppSizes.spaceBtwSections),
 
                 Text(
-                  "ACCOUNT SETTINGS",
+                  'ACCOUNT SETTINGS',
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(
                     color: dark ? AppColors.grey : AppColors.darkerGrey,
                   ),
                 ),
-                SizedBox(height: AppSizes.spaceBtwItems),
+                const SizedBox(height: AppSizes.spaceBtwItems),
 
-                AccountSettings(),
-                SizedBox(height: AppSizes.spaceBtwSections),
+                const AccountSettings(),
+                const SizedBox(height: AppSizes.spaceBtwSections),
 
                 SizedBox(
                   width: double.infinity,
@@ -74,9 +74,9 @@ class ProfileScreen extends StatelessWidget {
                       },
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.red),
+                      side: const BorderSide(color: Colors.red),
                     ),
-                    child: Text('Log Out', style: TextStyle(color: Colors.red)),
+                    child: const Text('Log Out', style: TextStyle(color: Colors.red)),
                   ),
                 ),
               ],

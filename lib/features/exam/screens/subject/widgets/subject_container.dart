@@ -20,12 +20,12 @@ class SubjectContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFuntions.isDark(context);
+    final dark = AppHelperFunctions.isDark(context);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(AppSizes.sm),
+        padding: const EdgeInsets.all(AppSizes.sm),
         width: 150,
         height: 150,
         decoration: BoxDecoration(
@@ -38,7 +38,7 @@ class SubjectContainer extends StatelessWidget {
           return Stack(
             children: [
               if (isDownloaded)
-                Positioned(
+                const Positioned(
                   top: 0,
                   right: 0,
                   child: Icon(
@@ -59,7 +59,7 @@ class SubjectContainer extends StatelessWidget {
                             color: dark
                                 ? AppColors.darkerGrey.withValues(alpha: 0.4)
                                 : Colors.transparent,
-                            borderRadius: BorderRadius.only(
+                            borderRadius: const BorderRadius.only(
                               bottomLeft: Radius.circular(
                                 AppSizes.defaultSpace,
                               ),
@@ -93,8 +93,8 @@ class SubjectContainer extends StatelessWidget {
                                   ),
                                 ),
                                 child: isDownloading
-                                    ? CircularProgressIndicator()
-                                    : Icon(
+                                    ? const CircularProgressIndicator()
+                                    : const Icon(
                                         Icons.cloud_download_rounded,
                                         color: AppColors.white,
                                         size: 40,

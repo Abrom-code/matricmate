@@ -8,8 +8,8 @@ class ExamSelectionController extends GetxController
   late TabController tabController;
 
   final List<Map<String, dynamic>> tabs = const [
-    {"label": "Entrance Exams", "type": 'entrance'},
-    {"label": "Model Exams", "type": 'model'},
+    {'label': 'Entrance Exams', 'type': 'entrance'},
+    {'label': 'Model Exams', 'type': 'model'},
   ];
 
   @override

@@ -8,10 +8,10 @@ class GradeSelectionController extends GetxController
   late TabController tabController;
 
   final List<Map<String, dynamic>> tabs = const [
-    {"label": "Grade 9", "grade": 9},
-    {"label": "Grade 10", "grade": 10},
-    {"label": "Grade 11", "grade": 11},
-    {"label": "Grade 12", "grade": 12},
+    {'label': 'Grade 9', 'grade': 9},
+    {'label': 'Grade 10', 'grade': 10},
+    {'label': 'Grade 11', 'grade': 11},
+    {'label': 'Grade 12', 'grade': 12},
   ];
 
   @override

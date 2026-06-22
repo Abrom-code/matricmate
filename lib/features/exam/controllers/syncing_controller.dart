@@ -25,7 +25,7 @@ class SyncingController extends GetxController {
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet!");
+        ToastHelper.warning('No Internet!');
         return false;
       }
 
@@ -71,7 +71,7 @@ class SyncingController extends GetxController {
     final remoteData = await _subjectRepo.getSupabaseSubjects();
 
     final remote = (remoteData as List)
-        .map((e) => SubjectMoModel.fromJson(e))
+        .map((e) => SubjectModel.fromJson(e))
         .toList();
 
     for (final s in remote) {
@@ -163,7 +163,7 @@ class SyncingController extends GetxController {
     }
 
     if (imageUrls.isNotEmpty) {
-      await AppHelperFuntions.downloadImages(imageUrls);
+      await AppHelperFunctions.downloadImages(imageUrls);
     }
   }
 

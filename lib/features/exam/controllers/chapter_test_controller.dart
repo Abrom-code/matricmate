@@ -46,6 +46,7 @@ class ChapterTestController extends GetxController {
       final dbChapterTests = await _testRepository.getLocalTests(
         subjectId: subjectId,
         grade: grade,
+        chapterId: chapterId.value,
       );
 
       late List<TestModel> data;
@@ -113,6 +114,7 @@ class ChapterTestController extends GetxController {
       return result.testQuestions.length;
     }
 
-    return 20;
+    final test = chapterTest.firstWhereOrNull((t) => t.id == testId);
+    return test?.questionCount ?? 0;
   }
 }

@@ -16,9 +16,9 @@ class BookmarkController extends GetxController {
   final RxSet<int> bookmarkedIds = <int>{}.obs;
   final RxString searchQuery = ''.obs;
 
-  final RxString languageSelected = "EN".obs;
+  final RxString languageSelected = 'EN'.obs;
   final RxBool isQnExpanded = false.obs;
-  final RxBool isLodaing = false.obs;
+  final RxBool isLoading = false.obs;
 
   @override
   void onInit() {
@@ -36,7 +36,7 @@ class BookmarkController extends GetxController {
       await _repo.addBookmark(bookmarkQn);
 
       await loadBookmarks();
-      ToastHelper.success("Added to bookmark!");
+      ToastHelper.success('Added to bookmark!');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
@@ -47,7 +47,7 @@ class BookmarkController extends GetxController {
       await _repo.deleteBookmark(qnId);
 
       await loadBookmarks();
-      ToastHelper.success("Bookmark is removed!");
+      ToastHelper.success('Bookmark is removed!');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
@@ -55,13 +55,12 @@ class BookmarkController extends GetxController {
 
   Future<void> loadBookmarks() async {
     try {
-      isLodaing.value = true;
+      isLoading.value = true;
 
-      final data = await _repo.loadBookmarks();
+      final userId = UserController.instance.user.value.id;
+      final data = await _repo.loadBookmarks(userId);
 
-      bookmarkedQuestionIds.value = data
-          .where((dt) => dt.userId == UserController.instance.user.value.id)
-          .toList();
+      bookmarkedQuestionIds.value = data;
       // ignore: invalid_use_of_protected_member
       bookmarkedIds.value = data.map((b) => b.questionId).toSet();
 
@@ -82,7 +81,7 @@ class BookmarkController extends GetxController {
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
-      isLodaing.value = false;
+      isLoading.value = false;
     }
   }
 
@@ -92,7 +91,7 @@ class BookmarkController extends GetxController {
 
     final subjectsList = SubjectsController.instance.subjects;
 
-    if (subjectsList.isEmpty) return ["All"];
+    if (subjectsList.isEmpty) return ['All'];
 
     for (var q in bookmarkedQuestions) {
       final subjectMatch = subjectsList.where((s) => s.id == q.subjectId);
@@ -102,7 +101,7 @@ class BookmarkController extends GetxController {
       }
     }
 
-    return ["All", ...set];
+    return ['All', ...set];
   }
 
   ///  SAFE SUBJECT NAME
@@ -111,7 +110,7 @@ class BookmarkController extends GetxController {
 
     final match = subjectsList.where((s) => s.id == subjectId);
 
-    return match.isNotEmpty ? match.first.name : "Unknown";
+    return match.isNotEmpty ? match.first.name : 'Unknown';
   }
 
   ///  FILTER BY SUBJECT + SEARCH
@@ -123,7 +122,7 @@ class BookmarkController extends GetxController {
       final subjectMatch = subjectsList.where((s) => s.id == q.subjectId);
 
       final matchesSubject =
-          subject == "All" ||
+          subject == 'All' ||
           (subjectMatch.isNotEmpty && subjectMatch.first.name == subject);
 
       final matchesSearch = q.questionText.toLowerCase().contains(query);

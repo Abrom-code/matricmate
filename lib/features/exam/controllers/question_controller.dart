@@ -37,7 +37,7 @@ class QuestionController extends GetxController {
   final RxInt currentIndex = 0.obs;
   final RxInt currentBlockIndex = 0.obs;
   final RxBool isExplanationExpanaded = false.obs;
-  final RxString languageSelected = "EN".obs;
+  final RxString languageSelected = 'EN'.obs;
   var isFullScreenPassage = false.obs;
   var isPassageHidden = false.obs;
   var textScale = 1.0.obs;
@@ -127,7 +127,7 @@ class QuestionController extends GetxController {
   }
 
   Future<PassageModel> getPassage(int? pId) async {
-    if (pId == null) return PassageModel(id: -1, content: "", title: "");
+    if (pId == null) return PassageModel(id: -1, content: '', title: '');
     if (_passageCache.containsKey(pId)) return _passageCache[pId]!;
     final passage = await _repo.getLocalPassage(pId);
     _passageCache[pId] = passage;
@@ -154,7 +154,7 @@ class QuestionController extends GetxController {
     try {
       await _repo.saveResult(result);
     } catch (e) {
-      ToastHelper.error("Could not sync result.");
+      ToastHelper.error('Could not sync result.');
     }
   }
 
@@ -219,7 +219,7 @@ class QuestionController extends GetxController {
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (remainingSeconds.value == 2)
-        SnackbarHelper.warning("Time's up!", "Submitting ...");
+        SnackbarHelper.warning("Time's up!", 'Submitting ...');
 
       if (remainingSeconds.value <= 1) {
         remainingSeconds.value = 0;
@@ -247,8 +247,7 @@ class QuestionController extends GetxController {
     Get.offNamed(Routes.result, arguments: {'result': result});
   }
 
-  String formattedTime(int second) =>
-      AppFormatter.formattedTime(remainingSeconds.value);
+  String formattedTime(int second) => AppFormatter.formattedTime(second);
 
   @override
   void onClose() {

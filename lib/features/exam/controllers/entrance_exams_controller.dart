@@ -20,9 +20,9 @@ class ExamsController extends GetxController {
   void onInit() {
     final args = Get.arguments ?? {};
 
-    subjectName = args['subject'];
-    subjectId = args['subject_id'];
-    type = args['type'];
+    subjectName = args['subject'] ?? '';
+    subjectId = args['subject_id'] ?? 0;
+    type = args['type'] ?? 'entrance';
     loadExams(subjectId, type);
 
     super.onInit();
@@ -96,6 +96,7 @@ class ExamsController extends GetxController {
       return result.testQuestions.length;
     }
 
-    return 20;
+    final test = entranceTests.firstWhereOrNull((t) => t.id == testId);
+    return test?.questionCount ?? 0;
   }
 }

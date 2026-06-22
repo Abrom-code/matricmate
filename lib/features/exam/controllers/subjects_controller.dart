@@ -15,7 +15,7 @@ class SubjectsController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxMap<String, bool> downloadingMap = <String, bool>{}.obs;
 
-  final RxList<SubjectMoModel> subjects = <SubjectMoModel>[].obs;
+  final RxList<SubjectModel> subjects = <SubjectModel>[].obs;
   final RxMap<int, int> entranceTestNumbers = <int, int>{}.obs;
   final RxMap<int, int> modelTestNumbers = <int, int>{}.obs;
 
@@ -40,7 +40,7 @@ class SubjectsController extends GetxController {
       final dbSubjects = await _repo.getLocalSubjects();
 
       subjects.assignAll(
-        dbSubjects.map((e) => SubjectMoModel.fromMap(e)).toList(),
+        dbSubjects.map((e) => SubjectModel.fromMap(e)).toList(),
       );
       await loadTestNumbers(subjects);
     } finally {
@@ -52,7 +52,7 @@ class SubjectsController extends GetxController {
     try {
       final finished = await SyncingController.instance.syncAll();
       if (finished) {
-        ToastHelper.success("All subjects synced successfully!");
+        ToastHelper.success('All subjects synced successfully!');
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -67,7 +67,7 @@ class SubjectsController extends GetxController {
       // 1. Fetch from Supabase
       final response = await _repo.getSupabaseSubjects();
       final remoteData = (response as List)
-          .map((e) => SubjectMoModel.fromJson(e))
+          .map((e) => SubjectModel.fromJson(e))
           .toList();
 
       for (final subject in remoteData) {
@@ -85,7 +85,7 @@ class SubjectsController extends GetxController {
     try {
       final isConnected = await NetworkManager.instance.hasRealInternet();
       if (!isConnected) {
-        ToastHelper.warning("No Internet!");
+        ToastHelper.warning('No Internet!');
         return;
       }
 
@@ -95,7 +95,7 @@ class SubjectsController extends GetxController {
       await _repo.updateIsDownloaded(subject);
 
       await loadLocalSubjects();
-      ToastHelper.success("Subject downloaded successfully");
+      ToastHelper.success('Subject downloaded successfully');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -103,7 +103,7 @@ class SubjectsController extends GetxController {
     }
   }
 
-  Future<void> loadTestNumbers(List<SubjectMoModel> subjects) async {
+  Future<void> loadTestNumbers(List<SubjectModel> subjects) async {
     try {
       await Future.wait(
         subjects.map((s) async {
@@ -119,11 +119,11 @@ class SubjectsController extends GetxController {
     }
   }
 
-  List<SubjectMoModel> get filteredSubjects {
-    final isNatural = selectedStream.value == "natural";
+  List<SubjectModel> get filteredSubjects {
+    final isNatural = selectedStream.value == 'natural';
 
     return subjects.where((subject) {
-      return subject.isCommon || subject.isNatural == (isNatural ? 1 : 0);
+      return subject.isCommon || subject.isNatural == isNatural;
     }).toList();
   }
 }

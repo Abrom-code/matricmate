@@ -6,12 +6,16 @@ class ReviewController extends GetxController {
   static ReviewController get instance => Get.find();
 
   final RxMap<int, bool> isExpanded = <int, bool>{}.obs;
-  final RxString languageSelected = "EN".obs;
+  final RxString languageSelected = 'EN'.obs;
   late ResultModel result;
 
   @override
   void onInit() {
-    final res = Get.arguments as ResultModel;
+    final res = Get.arguments;
+    if (res == null || res is! ResultModel) {
+      Get.back();
+      return;
+    }
     result = res;
     initExpansion(res.testQuestions);
     super.onInit();

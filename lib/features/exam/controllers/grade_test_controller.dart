@@ -19,9 +19,9 @@ class GradeTestController extends GetxController {
   void onInit() {
     final args = Get.arguments ?? {};
 
-    subjectName = args['subject'];
-    subjectId = args['subject_id'];
-    grade = args['grade'];
+    subjectName = args['subject'] ?? '';
+    subjectId = args['subject_id'] ?? 0;
+    grade = args['grade'] ?? 9;
     loadTests(subjectId, grade);
     super.onInit();
   }
@@ -95,6 +95,8 @@ class GradeTestController extends GetxController {
       return result.testQuestions.length;
     }
 
-    return 20;
+    // Fall back to the test's own question count if available
+    final test = chapterTests.firstWhereOrNull((t) => t.id == testId);
+    return test?.questionCount ?? 0;
   }
 }

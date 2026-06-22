@@ -42,7 +42,7 @@ class PremiumController extends GetxController {
         receipt.value = file;
       }
     } catch (_) {
-      ToastHelper.error("Failed to pick image");
+      ToastHelper.error('Failed to pick image');
     }
   }
 
@@ -51,14 +51,14 @@ class PremiumController extends GetxController {
       if (!paymentFormKey.currentState!.validate()) return;
 
       if (receipt.value == null) {
-        ToastHelper.warning("Please upload receipt!");
+        ToastHelper.warning('Please upload receipt!');
         return;
       }
 
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet!");
+        ToastHelper.warning('No Internet!');
         return;
       }
 
@@ -67,7 +67,7 @@ class PremiumController extends GetxController {
       final userId = _userController.user.value.id;
 
       if (userId.isEmpty) {
-        SnackbarHelper.error("Error", "No user found!");
+        SnackbarHelper.error('Error', 'No user found!');
         return;
       }
 
@@ -75,8 +75,8 @@ class PremiumController extends GetxController {
 
       await _repo.savePaymentReceipt(
         userId: userId,
-        receiptPath: result["filePath"]!,
-        receiptUrl: result["url"]!,
+        receiptPath: result['filePath']!,
+        receiptUrl: result['url']!,
         paymentMethod: selectedMethod.value.name,
         verificationUrl: urlFiledController.text.trim(),
       );
@@ -85,9 +85,9 @@ class PremiumController extends GetxController {
 
       await _userController.fetchUserRecord();
 
-      Get.off(() => PaymentVerificationScreen());
+      Get.off(() => const PaymentVerificationScreen());
 
-      ToastHelper.success("Payment submitted!");
+      ToastHelper.success('Payment submitted!');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -100,14 +100,14 @@ class PremiumController extends GetxController {
       final userId = _userController.user.value.id;
 
       if (userId.isEmpty) {
-        ToastHelper.warning("Unexpected error!");
+        ToastHelper.warning('Unexpected error!');
         return;
       }
 
       final isConnected = await NetworkManager.instance.hasRealInternet();
 
       if (!isConnected) {
-        ToastHelper.warning("No Internet!");
+        ToastHelper.warning('No Internet!');
         return;
       }
 
@@ -122,7 +122,7 @@ class PremiumController extends GetxController {
 
       Get.back();
 
-      ToastHelper.success("Payment cancelled");
+      ToastHelper.success('Payment cancelled');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

@@ -65,7 +65,7 @@ class DBschema {
       CREATE TABLE questions (
         id INTEGER PRIMARY KEY,
         subject_id INTEGER NOT NULL,
-        grade INTEGER NOT NULL,
+        grade INTEGER,
         chapter_id INTEGER,
         test_id INTEGER NOT NULL,
         passage_id INTEGER,

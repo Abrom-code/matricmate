@@ -23,13 +23,12 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         // Drop and recreate all tables on schema changes.
-        // Increment version number above whenever the schema is modified.
         final tables = [
           'bookmarks',
           'results',

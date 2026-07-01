@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
@@ -22,7 +24,7 @@ class SubjectRepository {
       for (var ch in chapters) {
         batch.insert(
           'chapters',
-          _sanitize(ch),
+          _sanitizeFor('chapters', ch),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
@@ -35,7 +37,7 @@ class SubjectRepository {
       for (var t in tests) {
         batch.insert(
           'tests',
-          _sanitize(t),
+          _sanitizeFor('tests', t),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
@@ -69,7 +71,7 @@ class SubjectRepository {
         for (var p in passages) {
           batch.insert(
             'passages',
-            _sanitize(p),
+            _sanitizeFor('passages', p),
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
         }
@@ -85,21 +87,41 @@ class SubjectRepository {
     }
   }
 
-  /// Converts Supabase response maps to SQLite-safe maps:
-  /// - bool → int (SQLite has no boolean type)
-  /// - DateTime/Timestamp → ISO8601 string
-  /// - Lists/Maps (JSONB) → JSON string
-  /// - null values kept as null (SQLite handles them fine)
+  /// Converts a Supabase response map to a SQLite-safe map:
+  /// - bool  → 0/1  (SQLite has no boolean type)
+  /// - DateTime → ISO string
+  /// - List/Map (JSONB) → jsonEncoded string
+  /// - Everything else passed through unchanged
+  static const _knownColumns = <String, Set<String>>{
+    'chapters': {'id', 'subject_id', 'grade', 'chapter_number', 'title'},
+    'tests': {
+      'id', 'subject_id', 'grade', 'chapter_id',
+      'title', 'type', 'question_count', 'time', 'created_at',
+    },
+    'passages': {'id', 'content', 'title', 'image_url'},
+  };
+
+  static dynamic _convert(dynamic value) {
+    if (value is bool) return value ? 1 : 0;
+    if (value is DateTime) return value.toIso8601String();
+    if (value is List || value is Map) return jsonEncode(value);
+    return value;
+  }
+
   static Map<String, dynamic> _sanitize(Map<String, dynamic> row) {
-    return row.map((key, value) {
-      if (value is bool) return MapEntry(key, value ? 1 : 0);
-      if (value is DateTime) return MapEntry(key, value.toIso8601String());
-      if (value is List || value is Map) {
-        // JSONB columns (e.g. options) — encode to string
-        return MapEntry(key, value.toString());
-      }
-      return MapEntry(key, value);
-    });
+    return row.map((key, value) => MapEntry(key, _convert(value)));
+  }
+
+  static Map<String, dynamic> _sanitizeFor(
+    String table,
+    Map<String, dynamic> row,
+  ) {
+    final allowed = _knownColumns[table];
+    return Map.fromEntries(
+      row.entries
+          .where((e) => allowed == null || allowed.contains(e.key))
+          .map((e) => MapEntry(e.key, _convert(e.value))),
+    );
   }
 
   //get supabase subject

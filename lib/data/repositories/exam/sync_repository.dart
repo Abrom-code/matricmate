@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
@@ -25,7 +27,7 @@ class SyncRepository {
     final batch = await _getBatch();
     batch.insert(
       table,
-      _sanitize(value),
+      _sanitizeFor(table, value),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -33,11 +35,8 @@ class SyncRepository {
   Future<void> updateBatch(SubjectModel s, int localDownloadStatus) async {
     try {
       final batch = await _getBatch();
-
       final data = s.toMap();
-
       data['is_downloaded'] = localDownloadStatus;
-
       batch.update('subjects', data, where: 'id = ?', whereArgs: [s.id]);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
@@ -56,13 +55,13 @@ class SyncRepository {
     }
   }
 
-  // download entrance tests
+  // ── Download entrance + model tests (used during sync) ─────────────────────
+
   Future<void> downloadEntranceTests(List<int> subjectIds) async {
     try {
       final db = await _dbService.database;
       final batch = db.batch();
 
-      //  Fetch entrance tests for all given subjects
       final tests = await supabase
           .from('tests')
           .select()
@@ -70,23 +69,20 @@ class SyncRepository {
           .inFilter('type', ['entrance', 'model']);
 
       final List<int> testIds = [];
-
       for (var t in tests) {
         testIds.add(t['id']);
         batch.insert(
           'tests',
-          _sanitize(t),
+          _sanitizeFor('tests', t),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
 
-      //  Stop early if no tests
       if (testIds.isEmpty) {
         await batch.commit(noResult: true);
         return;
       }
 
-      //  Fetch ONLY questions linked to those tests
       final questionsData = await supabase
           .from('questions')
           .select()
@@ -97,14 +93,8 @@ class SyncRepository {
 
       for (var q in questionsData) {
         final question = QuestionModel.fromMap(q);
-
-        if (question.passageId != null) {
-          passageIds.add(question.passageId!);
-        }
-        if (question.imageUrl != null) {
-          imgUrls.add(question.imageUrl!);
-        }
-
+        if (question.passageId != null) passageIds.add(question.passageId!);
+        if (question.imageUrl != null) imgUrls.add(question.imageUrl!);
         batch.insert(
           'questions',
           question.toMap(),
@@ -112,46 +102,32 @@ class SyncRepository {
         );
       }
 
-      //  Fetch passages used by those questions
       if (passageIds.isNotEmpty) {
         final passages = await supabase
             .from('passages')
             .select()
             .inFilter('id', passageIds.toList());
-
         for (var p in passages) {
           batch.insert(
             'passages',
-            _sanitize(p),
+            _sanitizeFor('passages', p),
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
         }
       }
-      // cache images
+
       if (imgUrls.isNotEmpty) {
         await AppHelperFunctions.downloadImages(imgUrls);
       }
 
-      // Commit everything
       await batch.commit(noResult: true);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
   }
 
-  /// Sanitizes a Supabase response map for SQLite insertion.
-  /// SQLite has no boolean type — converts bool→int.
-  /// Converts DateTime to ISO string. JSONB lists/maps to JSON string.
-  static Map<String, dynamic> _sanitize(Map<String, dynamic> row) {
-    return row.map((key, value) {
-      if (value is bool) return MapEntry(key, value ? 1 : 0);
-      if (value is DateTime) return MapEntry(key, value.toIso8601String());
-      if (value is List || value is Map) return MapEntry(key, value.toString());
-      return MapEntry(key, value);
-    });
-  }
+  // ── API helpers ─────────────────────────────────────────────────────────────
 
-  // API Methods
   Future<List<Map<String, dynamic>>> getBySubjectId(
     String table,
     List<String> ids,
@@ -161,5 +137,45 @@ class SyncRepository {
 
   Future<List<Map<String, dynamic>>> getPassages(List<int> passageIds) async {
     return await supabase.from('passages').select().inFilter('id', passageIds);
+  }
+
+  // ── Sanitization ────────────────────────────────────────────────────────────
+
+  /// Columns that exist in the local SQLite schema per table.
+  /// Any Supabase column NOT in this set is stripped before insert
+  /// (e.g. created_at on questions, which Supabase has but SQLite doesn't).
+  static const _knownColumns = <String, Set<String>>{
+    'subjects': {'id', 'name', 'is_natural', 'is_common', 'is_downloaded'},
+    'chapters': {'id', 'subject_id', 'grade', 'chapter_number', 'title'},
+    'tests': {
+      'id', 'subject_id', 'grade', 'chapter_id',
+      'title', 'type', 'question_count', 'time', 'created_at',
+    },
+    'passages': {'id', 'content', 'title', 'image_url'},
+    // questions go through QuestionModel.toMap() — not sanitized here
+  };
+
+  /// Sanitizes a raw Supabase map for a specific SQLite table:
+  /// 1. Strips columns not in the local schema
+  /// 2. bool  → 0/1
+  /// 3. DateTime → ISO string
+  /// 4. List/Map (JSONB) → JSON-encoded string
+  static Map<String, dynamic> _sanitizeFor(
+    String table,
+    Map<String, dynamic> row,
+  ) {
+    final allowed = _knownColumns[table];
+    return Map.fromEntries(
+      row.entries
+          .where((e) => allowed == null || allowed.contains(e.key))
+          .map((e) => MapEntry(e.key, _convert(e.value))),
+    );
+  }
+
+  static dynamic _convert(dynamic value) {
+    if (value is bool) return value ? 1 : 0;
+    if (value is DateTime) return value.toIso8601String();
+    if (value is List || value is Map) return jsonEncode(value);
+    return value;
   }
 }

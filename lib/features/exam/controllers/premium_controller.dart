@@ -129,4 +129,10 @@ class PremiumController extends GetxController {
       isUploading.value = false;
     }
   }
+
+  @override
+  void onClose() {
+    urlFiledController.dispose();
+    super.onClose();
+  }
 }

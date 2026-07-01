@@ -30,7 +30,16 @@ class SignupController extends GetxController {
     selectedStream.value = stream;
   }
 
-  void signup() async {
+  @override
+  void onClose() {
+    firstName.dispose();
+    lastName.dispose();
+    email.dispose();
+    password.dispose();
+    super.onClose();
+  }
+
+  Future<void> signup() async {
     try {
       if (!signupFormKey.currentState!.validate()) return;
       if (selectedStream.value.isEmpty) {

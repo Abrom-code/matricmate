@@ -11,13 +11,26 @@ import 'package:matricmate/features/exam/screens/question/widgets/passage_layout
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class QuestionScreen extends GetView<QuestionController> {
+class QuestionScreen extends StatefulWidget {
   const QuestionScreen({super.key});
 
   @override
+  State<QuestionScreen> createState() => _QuestionScreenState();
+}
+
+class _QuestionScreenState extends State<QuestionScreen> {
+  final ScrollController _pageScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _pageScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final controller = Get.find<QuestionController>();
     final bookmarkController = Get.find<BookmarkController>();
-    final ScrollController pageScrollController = ScrollController();
 
     return PopScope(
       canPop: false,
@@ -71,8 +84,8 @@ class QuestionScreen extends GetView<QuestionController> {
                   final isSaved = controller.isBookmarked(currentQ.id);
                   return IconButton(
                     onPressed: isSaved
-                        ? () =>
-                              bookmarkController.removeFromBookmark(currentQ.id)
+                        ? () => bookmarkController.removeFromBookmark(
+                            currentQ.id)
                         : () => bookmarkController.addToBookmark(currentQ.id),
                     icon: Icon(
                       isSaved
@@ -90,16 +103,13 @@ class QuestionScreen extends GetView<QuestionController> {
               (controller.isLoading.value || controller.isPassageLoading.value)
               ? const AppCircularLoading()
               : SingleChildScrollView(
-                  controller: pageScrollController,
+                  controller: _pageScrollController,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// PASSAGE SECTION
                       if (currentQ?.passageId != null) ...[
                         PassageContainer(controller: controller),
                       ],
-
-                      /// QUESTION SECTION
                       if (currentQ != null) ...[
                         QuesitonSection(question: currentQ),
                       ],

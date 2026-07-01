@@ -114,4 +114,11 @@ class LoginController extends GetxController {
       rememberMe.value = true;
     }
   }
+
+  @override
+  void onClose() {
+    email.dispose();
+    password.dispose();
+    super.onClose();
+  }
 }

@@ -222,6 +222,7 @@ class UserController extends GetxController {
                         await Get.find<AuthenticationController>()
                             .deleteAccount(passwordController.text.trim());
 
+                        passwordController.dispose();
                         Get.back();
 
                         SnackbarHelper.success(
@@ -244,6 +245,6 @@ class UserController extends GetxController {
           ),
         ),
       ),
-    );
+    ).then((_) => passwordController.dispose());
   }
 }

@@ -33,7 +33,7 @@ class ForgetPasswordController extends GetxController {
       );
       SnackbarHelper.success(
         'Email sent',
-        'If an you already resgistered, please check your inbox!',
+        'If you are already registered, please check your inbox!',
       );
 
       Get.toNamed(
@@ -45,5 +45,11 @@ class ForgetPasswordController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  @override
+  void onClose() {
+    email.dispose();
+    super.onClose();
   }
 }

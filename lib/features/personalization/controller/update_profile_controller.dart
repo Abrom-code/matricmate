@@ -67,4 +67,11 @@ class UpdateProfileController extends GetxController {
       isUpdating.value = false;
     }
   }
+
+  @override
+  void onClose() {
+    firstName.dispose();
+    lastName.dispose();
+    super.onClose();
+  }
 }

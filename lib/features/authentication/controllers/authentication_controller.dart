@@ -27,6 +27,20 @@ class AuthenticationController extends GetxController {
     // screenRedirect is called by SplashScreen after animation completes
   }
 
+  /// Runs pre-work in parallel with the splash animation.
+  /// Loads local data so it is ready before [screenRedirect] navigates.
+  Future<void> prepareRedirect() async {
+    try {
+      final user = authRepo.currentUser;
+      if (user == null || !user.emailVerified) return;
+      // Pre-load local data while the splash animates
+      await UserController.instance.loadLocalUser();
+      await SubjectsController.instance.loadLocalSubjects();
+    } catch (_) {
+      // Non-fatal — screenRedirect will handle missing data gracefully
+    }
+  }
+
   Future<void> screenRedirect() async {
     final user = authRepo.currentUser;
 
@@ -40,10 +54,9 @@ class AuthenticationController extends GetxController {
       return;
     }
 
-    await UserController.instance.loadLocalUser();
-    await SubjectsController.instance.loadLocalSubjects();
-
+    // Local data already loaded by prepareRedirect — go straight to home
     Get.offAllNamed(Routes.navigationMenu);
+
     final isConnected = await NetworkManager.instance.isConnected();
 
     try {

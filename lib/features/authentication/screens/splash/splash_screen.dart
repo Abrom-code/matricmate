@@ -89,16 +89,21 @@ class _SplashScreenState extends State<SplashScreen>
 
     _particles = List.generate(50, (_) => _Particle.random());
 
-    // Start logo fade-in
+    // Start logo fade-in immediately
     _fadeScaleCtrl.forward();
 
-    // Start loader slightly after logo appears
+    // Start loader bar slightly after logo appears
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) _loaderCtrl.forward();
     });
 
-    // After 3.2 s remove native splash (if still showing) and redirect
-    Future.delayed(const Duration(milliseconds: 3200), () {
+    // Run minimum display time and auth check in parallel.
+    // Navigation happens only when BOTH complete — animation never
+    // cuts short, and a fast auth check doesn't make the user wait extra.
+    Future.wait([
+      Future.delayed(const Duration(milliseconds: 3200)),
+      AuthenticationController.instance.prepareRedirect(),
+    ]).then((_) {
       if (!mounted) return;
       FlutterNativeSplash.remove();
       AuthenticationController.instance.screenRedirect();

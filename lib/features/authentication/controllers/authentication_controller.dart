@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/data/database/database_service.dart';
@@ -25,8 +24,7 @@ class AuthenticationController extends GetxController {
   void onReady() {
     firebaseUser = Rx<User?>(authRepo.currentUser);
     firebaseUser.bindStream(authRepo.userChanges);
-
-    screenRedirect();
+    // screenRedirect is called by SplashScreen after animation completes
   }
 
   Future<void> screenRedirect() async {
@@ -34,13 +32,11 @@ class AuthenticationController extends GetxController {
 
     if (user == null) {
       Get.offAllNamed(Routes.signIn);
-      FlutterNativeSplash.remove();
       return;
     }
 
     if (!user.emailVerified) {
       Get.offAllNamed(Routes.verifyEmail, arguments: {'email': user.email});
-      FlutterNativeSplash.remove();
       return;
     }
 
@@ -52,7 +48,6 @@ class AuthenticationController extends GetxController {
 
     try {
       if (isConnected) {
-        //  Online
         await UserController.instance.fetchUserRecord();
         await SyncingController.instance.syncAll();
         await UserController.instance.loadLocalUser();
@@ -60,7 +55,6 @@ class AuthenticationController extends GetxController {
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
-    FlutterNativeSplash.remove();
   }
 
   Future<void> logout() async {

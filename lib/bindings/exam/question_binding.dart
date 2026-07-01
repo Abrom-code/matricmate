@@ -5,7 +5,7 @@ import 'package:matricmate/features/exam/controllers/question_controller.dart';
 class QuestionBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<QuestionController>(() => QuestionController());
-    Get.lazyPut<BookmarkController>(() => BookmarkController());
+    Get.lazyPut<QuestionController>(() => QuestionController(), fenix: true);
+    Get.lazyPut<BookmarkController>(() => BookmarkController(), fenix: true);
   }
 }

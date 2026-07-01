@@ -4,6 +4,9 @@ import 'package:matricmate/features/authentication/controllers/login/reset_passw
 class ResetPasswordBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ResetPasswordController>(() => ResetPasswordController());
+    Get.lazyPut<ResetPasswordController>(
+      () => ResetPasswordController(),
+      fenix: true,
+    );
   }
 }

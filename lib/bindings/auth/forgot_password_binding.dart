@@ -4,6 +4,9 @@ import 'package:matricmate/features/authentication/controllers/login/forget_pass
 class ForgotPasswordBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ForgetPasswordController>(() => ForgetPasswordController());
+    Get.lazyPut<ForgetPasswordController>(
+      () => ForgetPasswordController(),
+      fenix: true,
+    );
   }
 }

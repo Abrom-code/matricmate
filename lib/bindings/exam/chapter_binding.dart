@@ -5,7 +5,10 @@ import 'package:matricmate/features/exam/controllers/grade_selection_controller.
 class ChapterBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ChapterController>(() => ChapterController());
-    Get.lazyPut<GradeSelectionController>(() => GradeSelectionController());
+    Get.lazyPut<ChapterController>(() => ChapterController(), fenix: true);
+    Get.lazyPut<GradeSelectionController>(
+      () => GradeSelectionController(),
+      fenix: true,
+    );
   }
 }

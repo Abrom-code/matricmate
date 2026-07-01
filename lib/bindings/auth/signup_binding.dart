@@ -4,6 +4,6 @@ import 'package:matricmate/features/authentication/controllers/signup/signup_con
 class SignupBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<SignupController>(() => SignupController());
+    Get.lazyPut<SignupController>(() => SignupController(), fenix: true);
   }
 }

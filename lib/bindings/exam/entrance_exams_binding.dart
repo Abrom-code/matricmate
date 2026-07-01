@@ -4,6 +4,6 @@ import 'package:matricmate/features/exam/controllers/entrance_exams_controller.d
 class EntranceExamsBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ExamsController>(() => ExamsController());
+    Get.lazyPut<ExamsController>(() => ExamsController(), fenix: true);
   }
 }

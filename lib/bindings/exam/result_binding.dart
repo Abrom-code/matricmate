@@ -4,6 +4,6 @@ import 'package:matricmate/features/exam/screens/result/result.dart';
 class ResultBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ResultController>(() => ResultController());
+    Get.lazyPut<ResultController>(() => ResultController(), fenix: true);
   }
 }

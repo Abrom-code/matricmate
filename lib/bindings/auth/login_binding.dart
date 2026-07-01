@@ -4,6 +4,8 @@ import 'package:matricmate/features/authentication/controllers/login/login_contr
 class LoginBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<LoginController>(() => LoginController());
+    // fenix: true — recreates the controller fresh each time the route
+    // is visited, so TextEditingControllers are never reused after dispose.
+    Get.lazyPut<LoginController>(() => LoginController(), fenix: true);
   }
 }

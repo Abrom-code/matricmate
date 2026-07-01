@@ -4,6 +4,9 @@ import 'package:matricmate/features/authentication/controllers/signup/verify_ema
 class EmailVerifyBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<VerifyEmailController>(() => VerifyEmailController());
+    Get.lazyPut<VerifyEmailController>(
+      () => VerifyEmailController(),
+      fenix: true,
+    );
   }
 }

@@ -4,6 +4,9 @@ import 'package:matricmate/features/exam/controllers/chapter_test_controller.dar
 class TestBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ChapterTestController>(() => ChapterTestController());
+    Get.lazyPut<ChapterTestController>(
+      () => ChapterTestController(),
+      fenix: true,
+    );
   }
 }

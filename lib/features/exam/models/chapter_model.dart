@@ -12,11 +12,11 @@ class ChapterModel {
   // Convert Json to ChapterModel object
   factory ChapterModel.fromJson(Map<String, dynamic> json) {
     return ChapterModel(
-      id: json['id'],
-      title: json['title'],
-      subjectId: json['subject_id'],
-      grade: json['grade'],
-      chapterNumber: json['chapter_number'],
+      id: (json['id'] as num).toInt(),
+      title: json['title']?.toString() ?? '',
+      subjectId: (json['subject_id'] as num).toInt(),
+      grade: (json['grade'] as num).toInt(),
+      chapterNumber: (json['chapter_number'] as num).toInt(),
     );
   }
 

@@ -53,7 +53,7 @@ class DatabaseService extends GetxController {
       final db = await database;
       return db.query('user');
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -63,7 +63,7 @@ class DatabaseService extends GetxController {
       final db = await database;
       return db.query('subjects');
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -72,7 +72,7 @@ class DatabaseService extends GetxController {
       final db = await database;
       return db.query('chapters');
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -81,7 +81,7 @@ class DatabaseService extends GetxController {
       final db = await database;
       return db.query('questions');
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -90,7 +90,7 @@ class DatabaseService extends GetxController {
       final db = await database;
       return db.rawQuery('SELECT * FROM subjects WHERE is_downloaded = 1');
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -102,7 +102,7 @@ class DatabaseService extends GetxController {
         subjectId,
       ]);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -151,7 +151,7 @@ class DatabaseService extends GetxController {
         [subject],
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -162,7 +162,7 @@ class DatabaseService extends GetxController {
 
       return db.query('tests', where: 'subject_id = ?', whereArgs: [subjectId]);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -178,7 +178,7 @@ class DatabaseService extends GetxController {
         orderBy: 'question_order ASC',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -194,7 +194,7 @@ class DatabaseService extends GetxController {
       );
       return result.isNotEmpty;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -210,7 +210,7 @@ class DatabaseService extends GetxController {
       );
       return result.isNotEmpty;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -227,7 +227,7 @@ class DatabaseService extends GetxController {
 
       return ResultModel.fromMap(result.first);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -243,7 +243,7 @@ class DatabaseService extends GetxController {
 
       return result.map((res) => BookmarkModel.fromMap(res)).toList();
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -258,7 +258,7 @@ class DatabaseService extends GetxController {
       );
       return result.length;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -301,7 +301,7 @@ class DatabaseService extends GetxController {
 
       return PassageModel.fromMap(result.first);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -312,15 +312,17 @@ class DatabaseService extends GetxController {
       final db = await instance.database;
 
       await db.transaction((txn) async {
-        await txn.delete('subjects');
-
-        await txn.delete('passages');
-        await txn.delete('results');
         await txn.delete('bookmarks');
+        await txn.delete('results');
+        await txn.delete('questions');
+        await txn.delete('passages');
+        await txn.delete('tests');
+        await txn.delete('chapters');
+        await txn.delete('subjects');
         await txn.delete('user');
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -333,7 +335,7 @@ class DatabaseService extends GetxController {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 }

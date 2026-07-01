@@ -34,14 +34,18 @@ class PaymentRepository {
     required String paymentMethod,
     required String verificationUrl,
   }) async {
-    await ensureSupabaseAuth();
-    await _supabase.from('payment_receipts').insert({
-      'user_id': userId,
-      'receipt_path': receiptPath,
-      'receipt_url': receiptUrl,
-      'payment_method': paymentMethod,
-      'verification_url': verificationUrl,
-    });
+    try {
+      await ensureSupabaseAuth();
+      await _supabase.from('payment_receipts').insert({
+        'user_id': userId,
+        'receipt_path': receiptPath,
+        'receipt_url': receiptUrl,
+        'payment_method': paymentMethod,
+        'verification_url': verificationUrl,
+      });
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
   }
 
   /// Set pending
@@ -75,8 +79,9 @@ class PaymentRepository {
             .from('receipts')
             .remove(filesToDelete);
 
-        if (deletedFiles.isEmpty) {
-          throw Exception('Failed to delete any receipt files');
+        // Only treat it as an error if we tried to delete files but none succeeded
+        if (filesToDelete.isNotEmpty && deletedFiles.isEmpty) {
+          throw Exception('Failed to delete receipt files from storage');
         }
       }
 

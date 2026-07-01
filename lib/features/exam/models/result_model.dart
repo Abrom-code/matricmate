@@ -44,7 +44,7 @@ class ResultModel {
           ? {}
           : Map<String, dynamic>.from(
               jsonDecode(map['selectedAnswers']),
-            ).map((key, value) => MapEntry(int.parse(key), value)),
+            ).map((key, value) => MapEntry(int.parse(key), (value as num).toInt())),
 
       correctAnswers: map['correctAnswers'] ?? 0,
       testId: map['test_id'],

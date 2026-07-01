@@ -12,9 +12,16 @@ class ForgetPasswordController extends GetxController {
   final AuthenticationRepository _authenticationRepository =
       AuthenticationRepository();
 
-  final email = TextEditingController();
+  late final TextEditingController email;
   final isLoading = false.obs;
-  GlobalKey<FormState> forgetPasswordFormkey = GlobalKey<FormState>();
+  late GlobalKey<FormState> forgetPasswordFormkey;
+
+  @override
+  void onInit() {
+    email = TextEditingController();
+    forgetPasswordFormkey = GlobalKey<FormState>();
+    super.onInit();
+  }
 
   Future<void> resetPassword() async {
     try {

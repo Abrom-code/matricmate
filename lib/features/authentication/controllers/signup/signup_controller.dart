@@ -17,10 +17,10 @@ class SignupController extends GetxController {
       AuthenticationRepository();
 
   final hidePassword = true.obs;
-  final firstName = TextEditingController();
-  final lastName = TextEditingController();
-  final email = TextEditingController();
-  final password = TextEditingController();
+  late final TextEditingController firstName;
+  late final TextEditingController lastName;
+  late final TextEditingController email;
+  late final TextEditingController password;
   final RxString selectedStream = ''.obs;
   final RxBool isSigning = false.obs;
 
@@ -28,6 +28,16 @@ class SignupController extends GetxController {
 
   void setStream(String stream) {
     selectedStream.value = stream;
+  }
+
+  @override
+  void onInit() {
+    firstName = TextEditingController();
+    lastName = TextEditingController();
+    email = TextEditingController();
+    password = TextEditingController();
+    signupFormKey = GlobalKey<FormState>();
+    super.onInit();
   }
 
   @override

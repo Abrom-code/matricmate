@@ -21,9 +21,15 @@ class PremiumController extends GetxController {
   final receipt = Rxn<XFile>();
   final isUploading = false.obs;
 
-  final TextEditingController urlFiledController = TextEditingController();
+  late final TextEditingController urlFiledController;
+  late GlobalKey<FormState> paymentFormKey;
 
-  GlobalKey<FormState> paymentFormKey = GlobalKey<FormState>();
+  @override
+  void onInit() {
+    urlFiledController = TextEditingController();
+    paymentFormKey = GlobalKey<FormState>();
+    super.onInit();
+  }
 
   Future<void> pasteFromClipboard() async {
     final data = await Clipboard.getData('text/plain');

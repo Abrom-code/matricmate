@@ -16,10 +16,17 @@ class ChangePasswordController extends GetxController {
   final hideNewPassword = true.obs;
   final isUpdating = false.obs;
 
-  final GlobalKey<FormState> changePasswordKey = GlobalKey<FormState>();
+  late GlobalKey<FormState> changePasswordKey;
+  late final TextEditingController oldPassword;
+  late final TextEditingController newPassword;
 
-  final oldPassword = TextEditingController();
-  final newPassword = TextEditingController();
+  @override
+  void onInit() {
+    changePasswordKey = GlobalKey<FormState>();
+    oldPassword = TextEditingController();
+    newPassword = TextEditingController();
+    super.onInit();
+  }
 
   Future<void> changePassword() async {
     try {

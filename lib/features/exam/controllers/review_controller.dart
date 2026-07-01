@@ -11,6 +11,7 @@ class ReviewController extends GetxController {
 
   @override
   void onInit() {
+    super.onInit();
     final res = Get.arguments;
     if (res == null || res is! ResultModel) {
       Get.back();
@@ -18,7 +19,6 @@ class ReviewController extends GetxController {
     }
     result = res;
     initExpansion(res.testQuestions);
-    super.onInit();
   }
 
   void initExpansion(List<QuestionModel> questions) {

@@ -16,9 +16,10 @@ class ResultScreen extends GetView<ResultController> {
   Widget build(BuildContext context) {
     final result = controller.result;
     final dark = AppHelperFunctions.isDark(context);
-    final examBadge = ExamBadgeHelper.getBadge(
-      result.correctAnswers / result.testQuestions.length,
-    );
+    final ratio = result.testQuestions.isEmpty
+        ? 0.0
+        : result.correctAnswers / result.testQuestions.length;
+    final examBadge = ExamBadgeHelper.getBadge(ratio);
     return Scaffold(
       appBar: Appbar(
         title: Text(
@@ -157,7 +158,12 @@ class ResultController extends GetxController {
 
   @override
   void onInit() {
-    result = Get.arguments['result'];
     super.onInit();
+    final args = Get.arguments;
+    if (args == null || args is! Map || args['result'] is! ResultModel) {
+      Get.back();
+      return;
+    }
+    result = args['result'] as ResultModel;
   }
 }

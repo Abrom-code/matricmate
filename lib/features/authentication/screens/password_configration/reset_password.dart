@@ -59,8 +59,7 @@ class ResetPassword extends GetView<ResetPasswordController> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () =>
-                      controller.sendResetEmail(controller.email.value),
+                  onPressed: () => controller.sendResetEmail(),
                   child: Obx(
                     () => Text(
                       controller.isSending.value

@@ -123,6 +123,16 @@ class SubjectsScreen extends StatelessWidget {
                     );
                   },
                 ),
+                if (filteredSubjects.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: AppSizes.spaceBtwSections),
+                    child: Center(
+                      child: Text(
+                        'No subjects yet.\nTap the sync button to load your content.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

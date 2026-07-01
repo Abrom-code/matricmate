@@ -63,19 +63,21 @@ class EntranceExams extends GetView<ExamsController> {
                     maxStep: controller.getMaxStep(test.id),
                     testName: test.title,
                     onTap: () {
+                      // Premium gate — check access before anything else
+                      if (isInactive) {
+                        Get.bottomSheet(
+                          const PremiumBottomSheet(),
+                          isScrollControlled: true,
+                        );
+                        return;
+                      }
+                      if (isPending) {
+                        Get.to(() => const PaymentVerificationScreen());
+                        return;
+                      }
+
                       if (!hasQn) {
-                        if (isInactive) {
-                          Get.bottomSheet(
-                            const PremiumBottomSheet(),
-                            isScrollControlled: true,
-                          );
-                          return;
-                        }
-                        if (isPending) {
-                          Get.to(() => const PaymentVerificationScreen());
-                          return;
-                        }
-                        ToastHelper.info('No quesions added!');
+                        ToastHelper.info('No questions added!');
                         return;
                       }
 

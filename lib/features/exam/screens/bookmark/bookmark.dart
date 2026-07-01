@@ -19,81 +19,85 @@ class BookmarkScreen extends GetView<BookmarkController> {
     final dark = AppHelperFunctions.isDark(context);
     controller.clearSearch();
 
-    return Obx(() {
-      final tabs = controller.subjects;
-      return DefaultTabController(
-        length: tabs.length,
-        child: Scaffold(
-          key: scaffoldKey,
-          drawer: const AppDrawer(),
-          appBar: Appbar(
-            leadingIcon: Icons.menu,
-            leadingOnPressed: () {
-              scaffoldKey.currentState!.openDrawer();
-            },
-            title: const Text('Bookmarks', style: TextStyle(color: AppColors.white)),
+    // subjects list is computed once here; tabs won't reset mid-session
+    final tabs = controller.subjects;
+
+    return DefaultTabController(
+      length: tabs.length,
+      child: Scaffold(
+        key: scaffoldKey,
+        drawer: const AppDrawer(),
+        appBar: Appbar(
+          leadingIcon: Icons.menu,
+          leadingOnPressed: () {
+            scaffoldKey.currentState!.openDrawer();
+          },
+          title: const Text(
+            'Bookmarks',
+            style: TextStyle(color: AppColors.white),
           ),
-          body: Obx(() {
-            if (UserController.instance.userFetching.value) {
-              return const AppCircularLoading(title: 'Loading...');
-            }
-
-            return NestedScrollView(
-              headerSliverBuilder: (_, innerBoxScrolled) {
-                return [
-                  SliverAppBar(
-                    automaticallyImplyLeading: false,
-                    pinned: true,
-                    floating: true,
-                    backgroundColor: dark ? AppColors.black : AppColors.white,
-                    expandedHeight: 130,
-                    flexibleSpace: const Padding(
-                      padding: EdgeInsets.all(AppSizes.defaultSpace),
-                      child: SearchField(),
-                    ),
-                    bottom: TabBar(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.defaultSpace / 2,
-                      ),
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      dividerHeight: 50,
-                      dividerColor: dark ? AppColors.black : Colors.white,
-                      tabs: tabs.map((t) => Tab(text: t)).toList(),
-                    ),
-                  ),
-                ];
-              },
-
-              body: TabBarView(
-                children: controller.subjects.map((subject) {
-                  return Obx(() {
-                    final filtered = controller.getBySubject(subject);
-                    if (controller.isLoading.value)
-                      return const AppCircularLoading(title: 'Loading...');
-                    if (filtered.isEmpty) {
-                      return const Center(child: Text('No bookmark found'));
-                    }
-
-                    return Container(
-                      margin: const EdgeInsets.all(AppSizes.defaultSpace / 2),
-                      child: ListView.separated(
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSizes.spaceBtwItems),
-                        itemBuilder: (_, index) {
-                          final qn = filtered[index];
-                          return BookmarkContainer(qn: qn);
-                        },
-                      ),
-                    );
-                  });
-                }).toList(),
-              ),
-            );
-          }),
         ),
-      );
-    });
+        body: Obx(() {
+          if (UserController.instance.userFetching.value) {
+            return const AppCircularLoading(title: 'Loading...');
+          }
+
+          return NestedScrollView(
+            headerSliverBuilder: (_, innerBoxScrolled) {
+              return [
+                SliverAppBar(
+                  automaticallyImplyLeading: false,
+                  pinned: true,
+                  floating: true,
+                  backgroundColor: dark ? AppColors.black : AppColors.white,
+                  expandedHeight: 130,
+                  flexibleSpace: const Padding(
+                    padding: EdgeInsets.all(AppSizes.defaultSpace),
+                    child: SearchField(),
+                  ),
+                  bottom: TabBar(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.defaultSpace / 2,
+                    ),
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    dividerHeight: 50,
+                    dividerColor: dark ? AppColors.black : Colors.white,
+                    tabs: tabs.map((t) => Tab(text: t)).toList(),
+                  ),
+                ),
+              ];
+            },
+
+            body: TabBarView(
+              children: tabs.map((subject) {
+                return Obx(() {
+                  final filtered = controller.getBySubject(subject);
+                  if (controller.isLoading.value) {
+                    return const AppCircularLoading(title: 'Loading...');
+                  }
+                  if (filtered.isEmpty) {
+                    return const Center(child: Text('No bookmark found'));
+                  }
+
+                  return Container(
+                    margin: const EdgeInsets.all(AppSizes.defaultSpace / 2),
+                    child: ListView.separated(
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSizes.spaceBtwItems),
+                      itemBuilder: (_, index) {
+                        final qn = filtered[index];
+                        return BookmarkContainer(qn: qn);
+                      },
+                    ),
+                  );
+                });
+              }).toList(),
+            ),
+          );
+        }),
+      ),
+    );
   }
 }

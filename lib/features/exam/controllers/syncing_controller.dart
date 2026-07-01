@@ -80,9 +80,9 @@ class SyncingController extends GetxController {
       if (local == null) {
         final map = s.toMap();
         map['is_downloaded'] = 0;
-        _syncRepository.insertBatch('subjects', map);
+        await _syncRepository.insertBatch('subjects', map);
       } else {
-        _syncRepository.updateBatch(s, local['is_downloaded'] ?? 0);
+        await _syncRepository.updateBatch(s, local['is_downloaded'] ?? 0);
       }
     }
 
@@ -90,7 +90,7 @@ class SyncingController extends GetxController {
 
     for (final local in localSubjects) {
       if (!remoteIds.contains(local['id'])) {
-        _syncRepository.deleteBatch(local);
+        await _syncRepository.deleteBatch(local);
       }
     }
     await _syncRepository.commitBatch();
@@ -109,7 +109,7 @@ class SyncingController extends GetxController {
         .toList();
 
     for (final c in remote) {
-      _syncRepository.insertBatch('chapters', c.toMap());
+      await _syncRepository.insertBatch('chapters', c.toMap());
     }
 
     await _syncRepository.commitBatch();
@@ -126,7 +126,7 @@ class SyncingController extends GetxController {
         .toList();
 
     for (final t in remote) {
-      _syncRepository.insertBatch('tests', t.toMap());
+      await _syncRepository.insertBatch('tests', t.toMap());
     }
 
     await _syncRepository.commitBatch();
@@ -145,7 +145,7 @@ class SyncingController extends GetxController {
     final Set<int> passageIds = {};
 
     for (final q in remote) {
-      _syncRepository.insertBatch('questions', q.toMap());
+      await _syncRepository.insertBatch('questions', q.toMap());
 
       if (q.passageId != null) {
         passageIds.add(q.passageId!);
@@ -168,20 +168,16 @@ class SyncingController extends GetxController {
   }
 
   Future<void> syncPassages(List<int> passageIds) async {
-    try {
-      final remoteData = await _syncRepository.getPassages(passageIds);
+    final remoteData = await _syncRepository.getPassages(passageIds);
 
-      final remote = (remoteData as List)
-          .map((e) => PassageModel.fromMap(e))
-          .toList();
+    final remote = (remoteData as List)
+        .map((e) => PassageModel.fromMap(e))
+        .toList();
 
-      for (final p in remote) {
-        _syncRepository.insertBatch('passages', p.toMap());
-      }
-
-      await _syncRepository.commitBatch();
-    } catch (e) {
-      rethrow;
+    for (final p in remote) {
+      await _syncRepository.insertBatch('passages', p.toMap());
     }
+
+    await _syncRepository.commitBatch();
   }
 }

@@ -39,7 +39,9 @@ class NavigationMenu extends StatelessWidget {
       ),
 
       body: Navigator(
-        key: Get.nestedKey(NavigationController.navigatorId),
+        // Key is owned by the controller — created once, never recreated
+        // on widget rebuilds, which prevents the duplicate GlobalKey error.
+        key: controller.navigatorKey,
         initialRoute: Routes.home,
         onGenerateRoute: (settings) {
           final routePage = AppRoutes.pages.firstWhere(
@@ -60,8 +62,16 @@ class NavigationMenu extends StatelessWidget {
 }
 
 class NavigationController extends GetxController {
+  static NavigationController get instance => Get.find();
+
   final Rx<int> selectedIdx = 0.obs;
   static const int navigatorId = 1;
+
+  /// Single stable key for the nested Navigator.
+  /// Owned by the controller so it survives widget rebuilds without
+  /// being recreated — prevents the duplicate GlobalKey assertion.
+  final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'bottom_nav');
 
   final List<String> routes = [
     Routes.home,
@@ -70,20 +80,17 @@ class NavigationController extends GetxController {
     Routes.userProfile,
   ];
 
-  // Add this specific method
   void backToHome() {
     selectedIdx.value = 0;
-
-    final nestedNavigator = Get.nestedKey(navigatorId)!.currentState;
-
-    if (nestedNavigator != null) {
-      nestedNavigator.popUntil((route) => route.isFirst);
-    }
+    navigatorKey.currentState?.popUntil((route) => route.isFirst);
   }
 
   void changePage(int index) {
     if (selectedIdx.value == index) return;
     selectedIdx.value = index;
-    Get.offNamed(routes[index], id: navigatorId);
+    navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      routes[index],
+      (route) => false,
+    );
   }
 }

@@ -23,7 +23,11 @@ class SyncRepository {
 
   Future<void> insertBatch(String table, Map<String, dynamic> value) async {
     final batch = await _getBatch();
-    batch.insert(table, value, conflictAlgorithm: ConflictAlgorithm.replace);
+    batch.insert(
+      table,
+      _sanitize(value),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> updateBatch(SubjectModel s, int localDownloadStatus) async {
@@ -69,7 +73,11 @@ class SyncRepository {
 
       for (var t in tests) {
         testIds.add(t['id']);
-        batch.insert('tests', t, conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'tests',
+          _sanitize(t),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
 
       //  Stop early if no tests
@@ -114,7 +122,7 @@ class SyncRepository {
         for (var p in passages) {
           batch.insert(
             'passages',
-            p,
+            _sanitize(p),
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
         }
@@ -129,6 +137,18 @@ class SyncRepository {
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
+  }
+
+  /// Sanitizes a Supabase response map for SQLite insertion.
+  /// SQLite has no boolean type — converts bool→int.
+  /// Converts DateTime to ISO string. JSONB lists/maps to JSON string.
+  static Map<String, dynamic> _sanitize(Map<String, dynamic> row) {
+    return row.map((key, value) {
+      if (value is bool) return MapEntry(key, value ? 1 : 0);
+      if (value is DateTime) return MapEntry(key, value.toIso8601String());
+      if (value is List || value is Map) return MapEntry(key, value.toString());
+      return MapEntry(key, value);
+    });
   }
 
   // API Methods

@@ -19,20 +19,26 @@ class SubjectRepository {
           .from('chapters')
           .select()
           .eq('subject_id', subjectId);
-      for (var ch in chapters)
+      for (var ch in chapters) {
         batch.insert(
           'chapters',
-          ch,
+          _sanitize(ch),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
+      }
 
       // 2. Tests
       final tests = await supabase
           .from('tests')
           .select()
           .eq('subject_id', subjectId);
-      for (var t in tests)
-        batch.insert('tests', t, conflictAlgorithm: ConflictAlgorithm.replace);
+      for (var t in tests) {
+        batch.insert(
+          'tests',
+          _sanitize(t),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
 
       // 3. Questions & Collect Passage IDs
       final questionsData = await supabase
@@ -45,9 +51,7 @@ class SubjectRepository {
       for (var q in questionsData) {
         final question = QuestionModel.fromMap(q);
         if (question.passageId != null) passageIds.add(question.passageId!);
-        if (question.imageUrl != null) {
-          imgUrls.add(question.imageUrl!);
-        }
+        if (question.imageUrl != null) imgUrls.add(question.imageUrl!);
 
         batch.insert(
           'questions',
@@ -56,7 +60,7 @@ class SubjectRepository {
         );
       }
 
-      // 4. Passages (The missing piece)
+      // 4. Passages
       if (passageIds.isNotEmpty) {
         final passages = await supabase
             .from('passages')
@@ -65,11 +69,12 @@ class SubjectRepository {
         for (var p in passages) {
           batch.insert(
             'passages',
-            p,
+            _sanitize(p),
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
         }
       }
+
       if (imgUrls.isNotEmpty) {
         await AppHelperFunctions.downloadImages(imgUrls);
       }
@@ -78,6 +83,23 @@ class SubjectRepository {
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
+  }
+
+  /// Converts Supabase response maps to SQLite-safe maps:
+  /// - bool → int (SQLite has no boolean type)
+  /// - DateTime/Timestamp → ISO8601 string
+  /// - Lists/Maps (JSONB) → JSON string
+  /// - null values kept as null (SQLite handles them fine)
+  static Map<String, dynamic> _sanitize(Map<String, dynamic> row) {
+    return row.map((key, value) {
+      if (value is bool) return MapEntry(key, value ? 1 : 0);
+      if (value is DateTime) return MapEntry(key, value.toIso8601String());
+      if (value is List || value is Map) {
+        // JSONB columns (e.g. options) — encode to string
+        return MapEntry(key, value.toString());
+      }
+      return MapEntry(key, value);
+    });
   }
 
   //get supabase subject

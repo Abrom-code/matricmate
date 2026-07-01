@@ -1,12 +1,8 @@
 import 'package:get/get.dart';
-import 'package:matricmate/features/personalization/controller/change_password_controller.dart';
 
+/// ChangePasswordController is registered permanently in GeneralBinding.
+/// This binding is intentionally empty.
 class ChangePasswordBinding extends Bindings {
   @override
-  void dependencies() {
-    Get.lazyPut<ChangePasswordController>(
-      () => ChangePasswordController(),
-      fenix: true,
-    );
-  }
+  void dependencies() {}
 }

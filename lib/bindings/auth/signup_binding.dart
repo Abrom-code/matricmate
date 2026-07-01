@@ -1,9 +1,8 @@
 import 'package:get/get.dart';
-import 'package:matricmate/features/authentication/controllers/signup/signup_controller.dart';
 
+/// SignupController is registered permanently in GeneralBinding.
+/// This binding is intentionally empty.
 class SignupBinding extends Bindings {
   @override
-  void dependencies() {
-    Get.lazyPut<SignupController>(() => SignupController(), fenix: true);
-  }
+  void dependencies() {}
 }

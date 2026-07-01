@@ -6,47 +6,53 @@ import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 
 class ExamsController extends GetxController {
   static ExamsController get instance => Get.find();
+
   final TestRepository _testRepository = TestRepository();
+
+  // Separate lists for each tab
   final RxList<TestModel> entranceTests = <TestModel>[].obs;
+  final RxList<TestModel> modelTests = <TestModel>[].obs;
+
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
   final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
 
   final RxBool isLoading = false.obs;
+
   late String subjectName;
   late int subjectId;
-  late String type;
 
   @override
   void onInit() {
+    super.onInit();
     final args = Get.arguments ?? {};
-
     subjectName = args['subject'] ?? '';
     subjectId = args['subject_id'] ?? 0;
-    type = args['type'] ?? 'entrance';
-    loadExams(subjectId, type);
-
-    super.onInit();
+    loadAllExams(subjectId);
   }
 
-  Future<void> loadExams(int subjectId, String type) async {
+  Future<void> loadAllExams(int subjectId) async {
     try {
       isLoading.value = true;
       testHasQuestions.clear();
       testResults.clear();
+      entranceTests.clear();
+      modelTests.clear();
 
-      final dbExams = await _testRepository.getLocalTests(
-        subjectId: subjectId,
-        type: type,
-      );
+      // Load both types in parallel
+      final results = await Future.wait([
+        _testRepository.getLocalTests(subjectId: subjectId, type: 'entrance'),
+        _testRepository.getLocalTests(subjectId: subjectId, type: 'model'),
+      ]);
 
-      late List<TestModel> data;
+      final entrance = results[0].map((e) => TestModel.fromMap(e)).toList();
+      final model = results[1].map((e) => TestModel.fromMap(e)).toList();
 
-      data = dbExams.map((e) => TestModel.fromMap(e)).toList();
+      entranceTests.assignAll(entrance);
+      modelTests.assignAll(model);
 
-      entranceTests.assignAll(data);
-
-      await loadTestQuestionFlags(data);
-      await loadTestResults(data);
+      final all = [...entrance, ...model];
+      await loadTestQuestionFlags(all);
+      await loadTestResults(all);
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -65,7 +71,6 @@ class ExamsController extends GetxController {
     }
   }
 
-  // load saved test
   Future<void> loadTestResults(List<TestModel> tests) async {
     try {
       for (final test in tests) {
@@ -79,24 +84,13 @@ class ExamsController extends GetxController {
     }
   }
 
-  int getCurrentStep(int testId) {
-    final result = testResults[testId];
-
-    if (result != null) {
-      return result.correctAnswers;
-    }
-
-    return 0;
-  }
+  int getCurrentStep(int testId) =>
+      testResults[testId]?.correctAnswers ?? 0;
 
   int getMaxStep(int testId) {
     final result = testResults[testId];
-
-    if (result != null) {
-      return result.testQuestions.length;
-    }
-
-    final test = entranceTests.firstWhereOrNull((t) => t.id == testId);
-    return test?.questionCount ?? 0;
+    if (result != null) return result.testQuestions.length;
+    final all = [...entranceTests, ...modelTests];
+    return all.firstWhereOrNull((t) => t.id == testId)?.questionCount ?? 0;
   }
 }

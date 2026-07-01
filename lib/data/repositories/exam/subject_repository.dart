@@ -150,7 +150,10 @@ class SubjectRepository {
         'name': subject.name,
         'is_natural': subject.isNatural ? 1 : 0,
         'is_common': subject.isCommon ? 1 : 0,
+        'is_downloaded': 0,
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      // ConflictAlgorithm.ignore preserves is_downloaded flag for
+      // existing subjects — replace would reset it to 0.
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

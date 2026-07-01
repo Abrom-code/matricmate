@@ -31,14 +31,12 @@ class SyncingController extends GetxController {
 
       refreshing.value = true;
 
+      // Always sync subjects first — they should load for any user,
+      // including free/inactive users and new signups.
       await syncSubjects();
 
+      // Validate user session — but don't stop subject sync if this fails.
       final isValidUser = await UserController.instance.fetchUserRecord();
-
-      //  STOP everything if user is invalid
-      if (!isValidUser) {
-        return false;
-      }
 
       final localSubjects = await _subjectRepo.getLocalSubjects();
 
@@ -49,9 +47,11 @@ class SyncingController extends GetxController {
 
       final subjects = localSubjects.map((s) => s['id'] as int).toList();
 
+      // Always download entrance/model tests (visible to all users).
       await _syncRepository.downloadEntranceTests(subjects);
 
-      if (downloadedIds.isNotEmpty) {
+      // Only sync downloaded chapter content if user is valid.
+      if (isValidUser && downloadedIds.isNotEmpty) {
         await syncChapters(downloadedIds);
         await syncTests(downloadedIds);
         await syncQuestions(downloadedIds);

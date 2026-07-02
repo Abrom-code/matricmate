@@ -116,6 +116,28 @@ class PaymentVerificationScreen extends StatelessWidget {
                 const Divider(),
                 const SizedBox(height: 15),
 
+                // Back to home button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => Get.until((route) => route.isFirst),
+                    icon: const Icon(Icons.home_outlined),
+                    label: const Text(
+                      'Back to Home',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+                const Divider(),
+                const SizedBox(height: 15),
+
                 const TelegramChatButton(),
               ],
             );

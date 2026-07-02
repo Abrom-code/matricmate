@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/bookmark_container.dart';
@@ -23,11 +23,18 @@ class BookmarkScreen extends GetView<BookmarkController> {
     return DefaultTabController(
       length: tabs.length,
       child: Scaffold(
-        appBar: Appbar(
-          title: const Text(
-            'Bookmarks',
-            style: TextStyle(color: AppColors.white),
-          ),
+        appBar: ModernAppbarWithBuilder(
+          title: 'Bookmarks',
+          subtitleBuilder: (_) => Obx(() {
+            final count = controller.bookmarkedQuestions.length;
+            return Text(
+              '$count ${count == 1 ? 'item' : 'items'} saved',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            );
+          }),
         ),
         body: Obx(() {
           if (UserController.instance.userFetching.value) {

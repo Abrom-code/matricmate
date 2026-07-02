@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/appbar/appbar.dart';
-import 'package:matricmate/common/widgets/appbar/status_title.dart';
+import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -25,20 +24,70 @@ class SubjectsScreen extends StatelessWidget {
     final syncController = Get.find<SyncingController>();
 
     return Scaffold(
-      appBar: Appbar(
-        title: const AppbarStatusTitle(title: 'MatricMate'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppSizes.defaultSpace / 2),
-            child: IconButton(
-              onPressed: () => subjectController.syncAll(),
-              icon: const Icon(
-                Icons.loop,
-                size: AppSizes.iconMd * 1.2,
-                color: AppColors.white,
+      appBar: ModernAppbarWithBuilder(
+        title: 'MatricMate',
+        subtitleBuilder: (_) => Obx(() {
+          final user = UserController.instance.user.value;
+          final stream = user.stream.isNotEmpty
+              ? '${user.stream[0].toUpperCase()}${user.stream.substring(1)} stream'
+              : '';
+
+          Color statusColor;
+          String statusText;
+          switch (user.status) {
+            case 'active':
+              statusColor = const Color(0xFF1DE9B6);
+              statusText = 'PREMIUM';
+              break;
+            case 'pending':
+              statusColor = const Color(0xFFFFD54F);
+              statusText = 'PENDING';
+              break;
+            default:
+              statusColor = const Color(0xFFB2DFDB);
+              statusText = 'FREE';
+          }
+
+          return Row(
+            children: [
+              if (stream.isNotEmpty)
+                Text(
+                  stream,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              if (stream.isNotEmpty) const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: statusColor),
+                ),
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
+            ],
+          );
+        }),
+        actions: [
+          IconButton(
+            onPressed: () => subjectController.syncAll(),
+            icon: const Icon(
+              Icons.loop,
+              size: AppSizes.iconMd * 1.2,
+              color: AppColors.white,
             ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: Obx(() {

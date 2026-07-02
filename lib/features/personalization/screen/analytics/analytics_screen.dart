@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/features/personalization/controller/analytics_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/features/personalization/screen/analytics/widgets/analytics_filter_sheet.dart';
@@ -19,27 +19,20 @@ class AnalyticsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(AnalyticsController());
-    final user = UserController.instance.user.value;
 
     return Scaffold(
-      appBar: Appbar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Analytics',
-              style: TextStyle(
-                color: AppColors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              '${user.stream.isNotEmpty ? user.stream[0].toUpperCase() + user.stream.substring(1) : ''} science stream',
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ],
-        ),
+      appBar: ModernAppbarWithBuilder(
+        title: 'Analytics',
+        subtitleBuilder: (_) => Obx(() {
+          final stream = UserController.instance.user.value.stream;
+          final label = stream.isNotEmpty
+              ? '${stream[0].toUpperCase()}${stream.substring(1)} science stream'
+              : '';
+          return Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          );
+        }),
         actions: [
           Obx(() {
             final count = controller.activeFilterCount;
@@ -79,6 +72,7 @@ class AnalyticsScreen extends StatelessWidget {
               ],
             );
           }),
+          const SizedBox(width: 4),
         ],
       ),
       body: Obx(() {

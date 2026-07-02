@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/personalization/controller/profile_controller.dart';
@@ -22,8 +22,15 @@ class ProfileScreen extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
 
     return Scaffold(
-      appBar: Appbar(
-        title: const Text('Profile', style: TextStyle(color: AppColors.white)),
+      appBar: ModernAppbarWithBuilder(
+        title: 'My Profile',
+        subtitleBuilder: (_) => Obx(() {
+          final fullName = UserController.instance.user.value.fullName.trim();
+          return Text(
+            fullName,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          );
+        }),
       ),
       body: Obx(() {
         if (UserController.instance.userFetching.value) {

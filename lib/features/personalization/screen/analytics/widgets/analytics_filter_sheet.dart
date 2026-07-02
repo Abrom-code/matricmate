@@ -18,14 +18,6 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
   late String _testType;
   late TimeFilter _timeFilter;
 
-  @override
-  void initState() {
-    super.initState();
-    _subject = widget.controller.selectedSubject.value ?? 'All Subjects';
-    _testType = widget.controller.selectedTestType.value ?? 'All Types';
-    _timeFilter = widget.controller.selectedTimeFilter.value;
-  }
-
   static const _timeLabels = {
     TimeFilter.all: 'All time',
     TimeFilter.lastWeek: 'Last 7 days',
@@ -34,132 +26,179 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    // Snapshot current selections when the sheet opens
+    _subject    = widget.controller.selectedSubject.value ?? 'All Subjects';
+    _testType   = widget.controller.selectedTestType.value ?? 'All Types';
+    _timeFilter = widget.controller.selectedTimeFilter.value;
+  }
+
+  void _reset() => setState(() {
+        _subject    = 'All Subjects';
+        _testType   = 'All Types';
+        _timeFilter = TimeFilter.all;
+      });
+
+  void _apply() {
+    widget.controller.applyFilters(
+      subject:    _subject,
+      testType:   _testType,
+      timeFilter: _timeFilter,
+    );
+    Get.back();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final subjects = widget.controller.availableSubjects;
-    final types = widget.controller.availableTestTypes;
 
-    return Container(
-      padding: EdgeInsets.only(
-        left: AppSizes.defaultSpace,
-        right: AppSizes.defaultSpace,
-        top: AppSizes.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSizes.defaultSpace,
-      ),
-      decoration: BoxDecoration(
-        color: dark ? AppColors.dark : AppColors.white,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppSizes.lg),
+    return SafeArea(
+      // Keep content above nav bar / keyboard
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.grey,
-                borderRadius: BorderRadius.circular(2),
-              ),
+        child: Container(
+          // Let the sheet be at most 85% of screen height and scroll if needed
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          decoration: BoxDecoration(
+            color: dark ? AppColors.dark : AppColors.white,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppSizes.lg),
             ),
           ),
-          const SizedBox(height: AppSizes.spaceBtwItems),
-
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Filter Analytics',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+              // ── Drag handle ─────────────────────────────────────
+              const SizedBox(height: AppSizes.sm),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _subject = 'All Subjects';
-                    _testType = 'All Types';
-                    _timeFilter = TimeFilter.all;
-                  });
-                },
-                child: const Text(
-                  'Reset',
-                  style: TextStyle(color: AppColors.primary),
+              const SizedBox(height: AppSizes.sm),
+
+              // ── Header row ──────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.defaultSpace,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Filter Analytics',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    TextButton(
+                      onPressed: _reset,
+                      child: const Text(
+                        'Reset',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Scrollable filter content ────────────────────────
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.defaultSpace,
+                    AppSizes.sm,
+                    AppSizes.defaultSpace,
+                    AppSizes.defaultSpace,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Subject chips — read RxList inside setState callback,
+                      // no Obx needed; list is already populated before sheet opens
+                      const _SectionLabel(label: 'Subject'),
+                      const SizedBox(height: AppSizes.sm),
+                      _ChipGroup<String>(
+                        items: widget.controller.availableSubjects.toList(),
+                        selected: _subject,
+                        labelOf: (s) => s,
+                        onSelect: (s) => setState(() => _subject = s),
+                      ),
+                      const SizedBox(height: AppSizes.spaceBtwItems),
+
+                      // Test type chips
+                      const _SectionLabel(label: 'Test type'),
+                      const SizedBox(height: AppSizes.sm),
+                      _ChipGroup<String>(
+                        items: widget.controller.availableTestTypes.toList(),
+                        selected: _testType,
+                        labelOf: (s) => s,
+                        onSelect: (s) => setState(() => _testType = s),
+                      ),
+                      const SizedBox(height: AppSizes.spaceBtwItems),
+
+                      // Time period chips
+                      const _SectionLabel(label: 'Time period'),
+                      const SizedBox(height: AppSizes.sm),
+                      _ChipGroup<TimeFilter>(
+                        items: TimeFilter.values,
+                        selected: _timeFilter,
+                        labelOf: (f) => _timeLabels[f]!,
+                        onSelect: (f) => setState(() => _timeFilter = f),
+                      ),
+                      const SizedBox(height: AppSizes.spaceBtwSections),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── Apply button — pinned at the bottom ──────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.defaultSpace,
+                  0,
+                  AppSizes.defaultSpace,
+                  AppSizes.defaultSpace,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.borderRadiusLg),
+                      ),
+                    ),
+                    onPressed: _apply,
+                    child: const Text(
+                      'Apply Filters',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.spaceBtwItems),
-
-          // Subject filter
-          const _SectionLabel(label: 'Subject'),
-          const SizedBox(height: AppSizes.sm),
-          Obx(() => _ChipGroup<String>(
-                items: subjects,
-                selected: _subject,
-                labelOf: (s) => s,
-                onSelect: (s) => setState(() => _subject = s),
-              )),
-          const SizedBox(height: AppSizes.spaceBtwItems),
-
-          // Test type filter
-          const _SectionLabel(label: 'Test type'),
-          const SizedBox(height: AppSizes.sm),
-          Obx(() => _ChipGroup<String>(
-                items: types,
-                selected: _testType,
-                labelOf: (s) => s,
-                onSelect: (s) => setState(() => _testType = s),
-              )),
-          const SizedBox(height: AppSizes.spaceBtwItems),
-
-          // Time filter
-          const _SectionLabel(label: 'Time period'),
-          const SizedBox(height: AppSizes.sm),
-          _ChipGroup<TimeFilter>(
-            items: TimeFilter.values,
-            selected: _timeFilter,
-            labelOf: (f) => _timeLabels[f]!,
-            onSelect: (f) => setState(() => _timeFilter = f),
-          ),
-          const SizedBox(height: AppSizes.spaceBtwSections),
-
-          // Apply button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
-                ),
-              ),
-              onPressed: () {
-                widget.controller.applyFilters(
-                  subject: _subject,
-                  testType: _testType,
-                  timeFilter: _timeFilter,
-                );
-                Get.back();
-              },
-              child: const Text(
-                'Apply Filters',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
+
+// ── Section label ────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.label});
@@ -179,6 +218,8 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
+// ── Chip group ───────────────────────────────────────────────────────────────
+
 class _ChipGroup<T> extends StatelessWidget {
   const _ChipGroup({
     required this.items,
@@ -194,6 +235,13 @@ class _ChipGroup<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const Text(
+        'No options available',
+        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+      );
+    }
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -203,7 +251,8 @@ class _ChipGroup<T> extends StatelessWidget {
           onTap: () => onSelect(item),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: isSelected
                   ? AppColors.primary

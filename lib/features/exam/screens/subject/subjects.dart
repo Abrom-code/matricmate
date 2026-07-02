@@ -79,15 +79,30 @@ class SubjectsScreen extends StatelessWidget {
           );
         }),
         actions: [
-          IconButton(
-            onPressed: () => subjectController.syncAll(),
-            icon: const Icon(
-              Icons.loop,
-              size: AppSizes.iconMd * 1.2,
-              color: AppColors.white,
-            ),
-          ),
-          const SizedBox(width: 4),
+          Obx(() {
+            final syncing = syncController.refreshing.value;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                tooltip: 'Sync content',
+                onPressed: syncing ? null : () => subjectController.syncAll(),
+                icon: syncing
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          color: AppColors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.cloud_sync_outlined,
+                        size: AppSizes.iconMd * 1.2,
+                        color: AppColors.white,
+                      ),
+              ),
+            );
+          }),
         ],
       ),
       body: Obx(() {

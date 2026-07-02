@@ -102,11 +102,19 @@ class AppDrawer extends StatelessWidget {
                     },
                   ),
                   AppListTile(
+                    icon: const Icon(Iconsax.chart_copy),
+                    title: 'Analytics',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Get.find<NavigationController>().changePage(3);
+                    },
+                  ),
+                  AppListTile(
                     icon: const Icon(Icons.person_outline),
                     title: 'Profile',
                     onTap: () {
                       Navigator.of(context).pop();
-                      Get.find<NavigationController>().changePage(3);
+                      Get.find<NavigationController>().changePage(4);
                     },
                   ),
 

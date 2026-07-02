@@ -14,6 +14,9 @@ class Routes {
   static const review = '/review';
   static const ready = '/ready';
 
+  // analytics
+  static const analytics = '/analytics';
+
   // nav
   static const navigationMenu = '/navigation-menu';
 

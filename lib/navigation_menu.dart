@@ -31,6 +31,10 @@ class NavigationMenu extends StatelessWidget {
               label: 'Bookmark',
             ),
             NavigationDestination(
+              icon: Icon(Iconsax.chart_copy),
+              label: 'Analytics',
+            ),
+            NavigationDestination(
               icon: Icon(Iconsax.user_copy),
               label: 'Profile',
             ),
@@ -77,6 +81,7 @@ class NavigationController extends GetxController {
     Routes.home,
     Routes.entrance,
     Routes.bookmark,
+    Routes.analytics,
     Routes.userProfile,
   ];
 

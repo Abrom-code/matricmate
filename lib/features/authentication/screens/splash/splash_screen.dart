@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
@@ -32,8 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   // ── Brand colours (teal palette to match the app) ────────────────
   static const _bgDark = Color(0xFF00302B);
-  static const _bgMid = Color(0xFF004D45);
-  static const _accent = AppColors.primary; // teal
+  // teal
   static const _gold = Color(0xFFFFB649);
   static const _goldDim = Color(0xFFFFB954);
   static const _muted = Color(0xFF87BEB6);
@@ -60,9 +58,10 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(seconds: 6),
     )..repeat(reverse: true);
-    _floatAnim = Tween<double>(begin: 0, end: -10).animate(
-      CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut),
-    );
+    _floatAnim = Tween<double>(
+      begin: 0,
+      end: -10,
+    ).animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
 
     // 3. Shimmer (3 s loop)
     _shimmerCtrl = AnimationController(
@@ -75,10 +74,7 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     );
-    _loaderAnim = CurvedAnimation(
-      parent: _loaderCtrl,
-      curve: Curves.easeOut,
-    );
+    _loaderAnim = CurvedAnimation(parent: _loaderCtrl, curve: Curves.easeOut);
 
     // 5. Particle tick (continuous)
     _particleCtrl = AnimationController(
@@ -127,9 +123,9 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         children: [
           // ── Radial gradient background ──────────────────────────
-          Positioned.fill(
+          const Positioned.fill(
             child: DecoratedBox(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: RadialGradient(
                   center: Alignment.center,
                   radius: 1.2,
@@ -148,9 +144,7 @@ class _SplashScreenState extends State<SplashScreen>
                 for (final p in _particles) {
                   p.update(size);
                 }
-                return CustomPaint(
-                  painter: _ParticlePainter(_particles),
-                );
+                return CustomPaint(painter: _ParticlePainter(_particles));
               },
             ),
           ),
@@ -191,7 +185,7 @@ class _SplashScreenState extends State<SplashScreen>
                     // Tagline
                     RichText(
                       textAlign: TextAlign.center,
-                      text: TextSpan(
+                      text: const TextSpan(
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

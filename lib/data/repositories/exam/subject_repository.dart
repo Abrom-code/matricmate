@@ -108,9 +108,6 @@ class SubjectRepository {
     return value;
   }
 
-  static Map<String, dynamic> _sanitize(Map<String, dynamic> row) {
-    return row.map((key, value) => MapEntry(key, _convert(value)));
-  }
 
   static Map<String, dynamic> _sanitizeFor(
     String table,

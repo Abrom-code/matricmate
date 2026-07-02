@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-/// A modern gradient app bar that replaces the flat teal [Appbar] for the
-/// five main navigation screens.
-///
-/// Renders a teal gradient [Container] with rounded bottom corners instead of
-/// the standard [AppBar] widget so that height and layout are fully
-/// customisable without fighting AppBar's internal constraints.
+/// Wraps the standard [Appbar] and adds an optional static [subtitle] line
+/// below the title. Shape, colour, and height are identical to [Appbar].
 class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
   const ModernAppbar({
     super.key,
@@ -18,100 +14,31 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   final String title;
-
-  /// Optional subtitle displayed below the title in smaller white text.
   final String? subtitle;
-
-  /// Optional action widgets shown on the right side of the header.
   final List<Widget>? actions;
-
-  /// When true, a back-arrow icon button is prepended on the left.
   final bool showBackArrow;
 
-  // ── preferred height ──────────────────────────────────────────────────────
   @override
-  Size get preferredSize => const Size.fromHeight(90);
+  Size get preferredSize => const _AppbarSize();
 
   @override
   Widget build(BuildContext context) {
-    // Keep status-bar icons white while this bar is visible.
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
-
-    return Container(
-      height: preferredSize.height,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF009688), Color(0xFF00BFA5)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ── leading ────────────────────────────────────────────────
-              if (showBackArrow)
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: AppColors.white,
-                  ),
-                  onPressed: () => Navigator.of(context).maybePop(),
-                )
-              else
-                const SizedBox(width: 16),
-
-              // ── title + subtitle ───────────────────────────────────────
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                    ),
-                    if (subtitle != null && subtitle!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              // ── actions ────────────────────────────────────────────────
-              if (actions != null)
-                ...actions!
-              else
-                const SizedBox(width: 8),
-            ],
-          ),
-        ),
+    return Appbar(
+      showBackArrow: showBackArrow,
+      actions: actions,
+      title: _TitleColumn(
+        title: title,
+        subtitle: subtitle != null && subtitle!.isNotEmpty
+            ? Text(subtitle!, style: _subtitleStyle)
+            : null,
       ),
     );
   }
 }
 
-/// A variant of [ModernAppbar] whose subtitle is built lazily via a [builder]
-/// callback.  Use this when the subtitle text is reactive (e.g. wrapped in
-/// [Obx]) so that only the subtitle rebuilds on state changes.
+/// Same as [ModernAppbar] but accepts a [WidgetBuilder] for the subtitle so
+/// reactive widgets (e.g. [Obx]) can be placed there without rebuilding the
+/// whole bar.
 class ModernAppbarWithBuilder extends StatelessWidget
     implements PreferredSizeWidget {
   const ModernAppbarWithBuilder({
@@ -128,73 +55,63 @@ class ModernAppbarWithBuilder extends StatelessWidget
   final bool showBackArrow;
 
   @override
-  Size get preferredSize => const Size.fromHeight(90);
+  Size get preferredSize => const _AppbarSize();
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
-
-    return Container(
-      height: preferredSize.height,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF009688), Color(0xFF00BFA5)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ── leading ────────────────────────────────────────────────
-              if (showBackArrow)
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: AppColors.white,
-                  ),
-                  onPressed: () => Navigator.of(context).maybePop(),
-                )
-              else
-                const SizedBox(width: 16),
-
-              // ── title + reactive subtitle ──────────────────────────────
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                    ),
-                    if (subtitleBuilder != null) ...[
-                      const SizedBox(height: 2),
-                      Builder(builder: subtitleBuilder!),
-                    ],
-                  ],
-                ),
-              ),
-
-              // ── actions ────────────────────────────────────────────────
-              if (actions != null)
-                ...actions!
-              else
-                const SizedBox(width: 8),
-            ],
-          ),
-        ),
+    return Appbar(
+      showBackArrow: showBackArrow,
+      actions: actions,
+      title: _TitleColumn(
+        title: title,
+        subtitle: subtitleBuilder != null
+            ? Builder(builder: subtitleBuilder!)
+            : null,
       ),
     );
   }
+}
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+
+const _subtitleStyle = TextStyle(
+  color: Colors.white70,
+  fontSize: 12,
+  fontWeight: FontWeight.w400,
+);
+
+/// Title + optional subtitle stacked in a left-aligned column.
+class _TitleColumn extends StatelessWidget {
+  const _TitleColumn({required this.title, this.subtitle});
+
+  final String title;
+  final Widget? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 1),
+          subtitle!,
+        ],
+      ],
+    );
+  }
+}
+
+/// Delegates preferred height to [Appbar.preferredSize] without
+/// instantiating an [Appbar] at const-evaluation time.
+class _AppbarSize extends Size {
+  const _AppbarSize() : super.fromHeight(56);
 }

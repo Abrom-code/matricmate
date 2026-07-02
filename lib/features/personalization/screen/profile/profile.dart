@@ -7,7 +7,6 @@ import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart
 import 'package:matricmate/features/personalization/controller/profile_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/account_settings.dart';
-import 'package:matricmate/features/personalization/screen/profile/widgets/analytics_container.dart';
 import 'package:matricmate/features/personalization/screen/profile/widgets/profile_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -19,7 +18,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final _userController = Get.find<UserController>();
-    final controller = Get.put(ProfileController());
+    Get.put(ProfileController());
     final dark = AppHelperFunctions.isDark(context);
     return Scaffold(
       key: scaffoldKey,
@@ -41,15 +40,7 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Center(child: ProfileSection()),
-                const SizedBox(height: AppSizes.spaceBtwSections),
-
-                Obx(
-                  () => AnalyticsContainer(
-                    title: 'Tests completed',
-                    value: controller.completedTest.value,
-                  ),
-                ),
+                const ProfileSection(),
                 const SizedBox(height: AppSizes.spaceBtwSections),
 
                 Text(

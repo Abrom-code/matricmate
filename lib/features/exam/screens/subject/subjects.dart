@@ -5,7 +5,7 @@ import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
@@ -119,26 +119,7 @@ class SubjectsScreen extends StatelessWidget {
                 if (isInactive) const SizedBox(height: AppSizes.spaceBtwItems),
 
                 if (isPending)
-                  TextButton(
-                    onPressed: () {
-                      Get.to(() => const PaymentVerificationScreen());
-                    },
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.loop),
-                        SizedBox(width: AppSizes.sm),
-                        Text(
-                          'Check Payment Status',
-                          style: TextStyle(
-                            color: Colors.teal,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const PendingPaymentBanner(),
                 if (isPending) const SizedBox(height: AppSizes.spaceBtwItems),
                 GridLayout(
                   itemCount: filteredSubjects.length,

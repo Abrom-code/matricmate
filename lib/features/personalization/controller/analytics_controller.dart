@@ -21,12 +21,22 @@ class TrendPoint {
   TrendPoint({required this.index, required this.score});
 }
 
+enum TimeFilter { all, lastWeek, lastMonth, last3Months }
+
 class AnalyticsController extends GetxController {
   static AnalyticsController get instance => Get.find();
 
   final _db = DatabaseService.instance;
 
   final isLoading = true.obs;
+  
+  // Filter options
+  final selectedSubject = Rx<String?>('All Subjects');
+  final selectedTestType = Rx<String?>('All Types');
+  final selectedTimeFilter = TimeFilter.all.obs;
+  
+  final availableSubjects = <String>[].obs;
+  final availableTestTypes = <String>[].obs;
 
   // Summary
   final testsCompleted = 0.obs;
@@ -44,8 +54,117 @@ class AnalyticsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _initFilterOptions();
     loadAll();
   }
+
+  // ── Filter option init ────────────────────────────────────────────────────
+
+  Future<void> _initFilterOptions() async {
+    final userId = UserController.instance.user.value.id;
+    if (userId.isEmpty) return;
+    final db = await _db.database;
+
+    final subjectRows = await db.rawQuery(
+      '''
+      SELECT DISTINCT s.name FROM subjects s
+      JOIN tests t ON t.subject_id = s.id
+      JOIN results r ON r.test_id = t.id
+      WHERE r.user_id = ?
+      ORDER BY s.name
+      ''',
+      [userId],
+    );
+
+    final typeRows = await db.rawQuery(
+      '''
+      SELECT DISTINCT t.type FROM tests t
+      JOIN results r ON r.test_id = t.id
+      WHERE r.user_id = ?
+      ORDER BY t.type
+      ''',
+      [userId],
+    );
+
+    availableSubjects.value = [
+      'All Subjects',
+      ...subjectRows.map((r) => r['name'] as String),
+    ];
+
+    availableTestTypes.value = [
+      'All Types',
+      ...typeRows.map((r) => _capitalizeType(r['type'] as String)),
+    ];
+  }
+
+  String _capitalizeType(String type) =>
+      type[0].toUpperCase() + type.substring(1);
+
+  // ── Build WHERE clause from active filters ────────────────────────────────
+
+  String _buildWhere(String userId) {
+    final parts = <String>['r.user_id = ?'];
+
+    if (selectedSubject.value != null &&
+        selectedSubject.value != 'All Subjects') {
+      parts.add("s.name = '${selectedSubject.value}'");
+    }
+
+    if (selectedTestType.value != null &&
+        selectedTestType.value != 'All Types') {
+      parts.add(
+        "t.type = '${selectedTestType.value!.toLowerCase()}'",
+      );
+    }
+
+    if (selectedTimeFilter.value != TimeFilter.all) {
+      final cutoff = _cutoffDate(selectedTimeFilter.value);
+      parts.add("t.created_at >= '${cutoff.toIso8601String()}'");
+    }
+
+    return parts.join(' AND ');
+  }
+
+  DateTime _cutoffDate(TimeFilter f) {
+    final now = DateTime.now();
+    switch (f) {
+      case TimeFilter.lastWeek:
+        return now.subtract(const Duration(days: 7));
+      case TimeFilter.lastMonth:
+        return now.subtract(const Duration(days: 30));
+      case TimeFilter.last3Months:
+        return now.subtract(const Duration(days: 90));
+      case TimeFilter.all:
+        return DateTime(2000);
+    }
+  }
+
+  // ── Apply filters ─────────────────────────────────────────────────────────
+
+  void applyFilters({
+    String? subject,
+    String? testType,
+    TimeFilter? timeFilter,
+  }) {
+    if (subject != null) selectedSubject.value = subject;
+    if (testType != null) selectedTestType.value = testType;
+    if (timeFilter != null) selectedTimeFilter.value = timeFilter;
+    loadAll();
+  }
+
+  void resetFilters() {
+    selectedSubject.value = 'All Subjects';
+    selectedTestType.value = 'All Types';
+    selectedTimeFilter.value = TimeFilter.all;
+    loadAll();
+  }
+
+  bool get hasActiveFilters =>
+      selectedSubject.value != 'All Subjects' ||
+      selectedTestType.value != 'All Types' ||
+      selectedTimeFilter.value != TimeFilter.all;
+
+  // ── Load all ──────────────────────────────────────────────────────────────
 
   Future<void> loadAll() async {
     isLoading.value = true;
@@ -72,9 +191,16 @@ class AnalyticsController extends GetxController {
 
   Future<void> _loadSummary(String userId) async {
     final db = await _db.database;
+    final where = _buildWhere(userId);
 
     final rows = await db.rawQuery(
-      'SELECT correctAnswers, testQuestions FROM results WHERE user_id = ?',
+      '''
+      SELECT r.correctAnswers, r.testQuestions
+      FROM results r
+      JOIN tests t ON r.test_id = t.id
+      JOIN subjects s ON t.subject_id = s.id
+      WHERE $where
+      ''',
       [userId],
     );
 
@@ -102,20 +228,21 @@ class AnalyticsController extends GetxController {
 
   Future<void> _loadTrend(String userId) async {
     final db = await _db.database;
+    final where = _buildWhere(userId);
 
     final rows = await db.rawQuery(
       '''
       SELECT r.correctAnswers, r.testQuestions
       FROM results r
       JOIN tests t ON r.test_id = t.id
-      WHERE r.user_id = ?
+      JOIN subjects s ON t.subject_id = s.id
+      WHERE $where
       ORDER BY t.created_at DESC
       LIMIT 10
       ''',
       [userId],
     );
 
-    // Reverse so oldest is first (left → right on chart)
     final reversed = rows.reversed.toList();
 
     final points = <TrendPoint>[];
@@ -137,9 +264,7 @@ class AnalyticsController extends GetxController {
 
   Future<void> _loadSubjectPerformance(String userId) async {
     final db = await _db.database;
-
-    // For each subject, compute avg score properly
-    final Map<String, List<int>> bySubject = {};
+    final where = _buildWhere(userId);
 
     final detailedRows = await db.rawQuery(
       '''
@@ -147,10 +272,12 @@ class AnalyticsController extends GetxController {
       FROM results r
       JOIN tests t ON r.test_id = t.id
       JOIN subjects s ON t.subject_id = s.id
-      WHERE r.user_id = ?
+      WHERE $where
       ''',
       [userId],
     );
+
+    final Map<String, List<int>> bySubject = {};
 
     for (final row in detailedRows) {
       final name = row['name'] as String;
@@ -179,13 +306,15 @@ class AnalyticsController extends GetxController {
 
   Future<void> _loadTypeDistribution(String userId) async {
     final db = await _db.database;
+    final where = _buildWhere(userId);
 
     final rows = await db.rawQuery(
       '''
       SELECT t.type, COUNT(r.id) as cnt
       FROM results r
       JOIN tests t ON r.test_id = t.id
-      WHERE r.user_id = ?
+      JOIN subjects s ON t.subject_id = s.id
+      WHERE $where
       GROUP BY t.type
       ''',
       [userId],
@@ -209,6 +338,13 @@ class AnalyticsController extends GetxController {
   Future<void> _loadChapterProgress(String userId) async {
     final db = await _db.database;
 
+    // Chapter progress uses a separate filter — only subject filter applies
+    String chapterWhere = 'r.user_id = ?';
+    if (selectedSubject.value != null &&
+        selectedSubject.value != 'All Subjects') {
+      chapterWhere += " AND s.name = '${selectedSubject.value}'";
+    }
+
     final rows = await db.rawQuery(
       '''
       SELECT c.title,
@@ -216,13 +352,15 @@ class AnalyticsController extends GetxController {
              r.testQuestions
       FROM chapters c
       LEFT JOIN tests t ON t.chapter_id = c.id
+      LEFT JOIN subjects s ON t.subject_id = s.id
       LEFT JOIN results r ON r.test_id = t.id AND r.user_id = ?
       WHERE c.id IN (SELECT DISTINCT chapter_id FROM tests WHERE chapter_id IS NOT NULL)
+        AND ($chapterWhere)
       GROUP BY c.id
       ORDER BY r.correctAnswers DESC NULLS LAST
       LIMIT 10
       ''',
-      [userId],
+      [userId, userId],
     );
 
     final stats = rows.map((row) {

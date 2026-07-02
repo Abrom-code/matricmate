@@ -87,7 +87,7 @@ class AppRoutes {
     GetPage(name: Routes.analytics, page: () => AnalyticsScreen()),
 
     // profile
-    GetPage(name: Routes.userProfile, page: () => ProfileScreen()),
+    GetPage(name: Routes.userProfile, page: () => const ProfileScreen()),
 
     // auth
     GetPage(

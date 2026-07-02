@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
-import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/personalization/controller/analytics_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/features/personalization/screen/analytics/widgets/analytics_filter_sheet.dart';
@@ -15,9 +14,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
 class AnalyticsScreen extends StatelessWidget {
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-
-  AnalyticsScreen({super.key});
+  const AnalyticsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +22,7 @@ class AnalyticsScreen extends StatelessWidget {
     final user = UserController.instance.user.value;
 
     return Scaffold(
-      key: scaffoldKey,
-      drawer: const AppDrawer(),
       appBar: Appbar(
-        leadingIcon: Icons.menu,
-        leadingOnPressed: () => scaffoldKey.currentState?.openDrawer(),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

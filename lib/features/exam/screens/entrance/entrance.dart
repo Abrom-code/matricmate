@@ -5,15 +5,12 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/tiles/tile.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
-import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
 class EntranceScreen extends StatelessWidget {
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-
   EntranceScreen({super.key});
 
   @override
@@ -21,16 +18,10 @@ class EntranceScreen extends StatelessWidget {
     final controller = SubjectsController.instance;
 
     return Scaffold(
-      key: scaffoldKey,
-      drawer: const AppDrawer(),
       appBar: Appbar(
-        leadingIcon: Icons.menu,
-        leadingOnPressed: () => scaffoldKey.currentState?.openDrawer(),
         title: Text(
           'Exams',
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall!.apply(color: AppColors.white),
+          style: Theme.of(context).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
       body: Obx(() {

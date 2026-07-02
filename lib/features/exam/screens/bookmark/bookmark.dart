@@ -5,33 +5,25 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/bookmark_container.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/search_field.dart';
-import 'package:matricmate/features/exam/screens/subject/widgets/app_drawer.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class BookmarkScreen extends GetView<BookmarkController> {
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  BookmarkScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     controller.clearSearch();
 
-    // subjects list is computed once here; tabs won't reset mid-session
     final tabs = controller.subjects;
 
     return DefaultTabController(
       length: tabs.length,
       child: Scaffold(
-        key: scaffoldKey,
-        drawer: const AppDrawer(),
         appBar: Appbar(
-          leadingIcon: Icons.menu,
-          leadingOnPressed: () {
-            scaffoldKey.currentState!.openDrawer();
-          },
           title: const Text(
             'Bookmarks',
             style: TextStyle(color: AppColors.white),

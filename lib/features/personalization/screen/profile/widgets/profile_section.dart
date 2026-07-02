@@ -16,14 +16,16 @@ class ProfileSection extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
 
     return Obx(() {
-      final user       = UserController.instance.user.value;
+      final user = UserController.instance.user.value;
       final controller = Get.find<ProfileController>();
       final isFetching = UserController.instance.userFetching.value;
 
       if (isFetching) {
         return const SizedBox(
           height: 180,
-          child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
         );
       }
 
@@ -119,35 +121,40 @@ class ProfileSection extends StatelessWidget {
             const SizedBox(height: AppSizes.spaceBtwItems),
             Divider(
               height: 1,
-              color: dark ? AppColors.darkerGrey.withValues(alpha: 0.5) : AppColors.grey,
+              color: dark
+                  ? AppColors.darkerGrey.withValues(alpha: 0.5)
+                  : AppColors.grey,
             ),
             const SizedBox(height: AppSizes.spaceBtwItems),
 
             // ── Stats row ──────────────────────────────────────────
-            Obx(() => Row(
-              children: [
-                _StatItem(
-                  value: '${controller.completedTest.value}',
-                  label: 'TESTS',
-                  icon: Iconsax.task_square_copy,
-                  iconColor: AppColors.primary,
-                ),
-                _VerticalDivider(dark: dark),
-                _StatItem(
-                  value: '${controller.avgScorePct.value.toStringAsFixed(0)}%',
-                  label: 'AVG SCORE',
-                  icon: Iconsax.chart_copy,
-                  iconColor: AppColors.info,
-                ),
-                _VerticalDivider(dark: dark),
-                _StatItem(
-                  value: '${controller.bookmarkCount.value}',
-                  label: 'BOOKMARKS',
-                  icon: Iconsax.archive_tick_copy,
-                  iconColor: AppColors.warning,
-                ),
-              ],
-            )),
+            Obx(
+              () => Row(
+                children: [
+                  _StatItem(
+                    value: '${controller.completedTest.value}',
+                    label: 'TESTS',
+                    icon: Iconsax.task_square_copy,
+                    iconColor: AppColors.primary,
+                  ),
+                  _VerticalDivider(dark: dark),
+                  _StatItem(
+                    value:
+                        '${controller.avgScorePct.value.toStringAsFixed(0)}%',
+                    label: 'AVG SCORE',
+                    icon: Iconsax.chart_copy,
+                    iconColor: AppColors.info,
+                  ),
+                  _VerticalDivider(dark: dark),
+                  _StatItem(
+                    value: '${controller.bookmarkCount.value}',
+                    label: 'BOOKMARKS',
+                    icon: Iconsax.archive_tick_copy,
+                    iconColor: AppColors.warning,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       );
@@ -175,9 +182,9 @@ class _StatusAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double avatarSize = 78;
-    const double ringWidth  = 3.5;
-    const double gapWidth   = 2.5;
-    const double totalSize  = avatarSize + (ringWidth + gapWidth) * 2;
+    const double ringWidth = 3.5;
+    const double gapWidth = 2.5;
+    const double totalSize = avatarSize + (ringWidth + gapWidth) * 2;
 
     return SizedBox(
       width: totalSize,
@@ -191,7 +198,7 @@ class _StatusAvatar extends StatelessWidget {
               ringWidth: ringWidth,
             ),
           ),
-          Positioned(
+          const Positioned(
             top: ringWidth + gapWidth,
             left: ringWidth + gapWidth,
             child: const ClipOval(
@@ -217,25 +224,34 @@ class _StatusBadge extends StatelessWidget {
 
   String get _label {
     switch (status) {
-      case 'active':  return 'PREMIUM';
-      case 'pending': return 'PENDING';
-      default:        return 'FREE';
+      case 'active':
+        return 'PREMIUM';
+      case 'pending':
+        return 'PENDING';
+      default:
+        return 'FREE';
     }
   }
 
   Color get _bg {
     switch (status) {
-      case 'active':  return const Color(0xFFD4F542);
-      case 'pending': return const Color(0xFFFFD54F);
-      default:        return AppColors.grey;
+      case 'active':
+        return const Color(0xFFD4F542);
+      case 'pending':
+        return const Color(0xFFFFD54F);
+      default:
+        return AppColors.grey;
     }
   }
 
   Color get _fg {
     switch (status) {
-      case 'active':  return const Color(0xFF2E5A00);
-      case 'pending': return const Color(0xFF6B3A00);
-      default:        return AppColors.darkerGrey;
+      case 'active':
+        return const Color(0xFF2E5A00);
+      case 'pending':
+        return const Color(0xFF6B3A00);
+      default:
+        return AppColors.darkerGrey;
     }
   }
 
@@ -282,10 +298,7 @@ class _StatItem extends StatelessWidget {
         children: [
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 2),
           Text(
@@ -329,12 +342,12 @@ class _GradientRingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - ringWidth / 2;
-    final rect   = Rect.fromCircle(center: center, radius: radius);
+    final rect = Rect.fromCircle(center: center, radius: radius);
 
     final paint = Paint()
-      ..style    = PaintingStyle.stroke
+      ..style = PaintingStyle.stroke
       ..strokeWidth = ringWidth
-      ..shader   = SweepGradient(
+      ..shader = SweepGradient(
         colors: [...colors, colors.first],
       ).createShader(rect);
 

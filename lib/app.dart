@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/bindings/general_binding.dart';
-import 'package:matricmate/features/authentication/screens/splash/splash_screen.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/routes/routes.dart';
 import 'package:matricmate/utils/themes/app_theme.dart';
@@ -21,7 +20,6 @@ class App extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         initialRoute: Routes.splash,
         getPages: AppRoutes.pages,
-        home: const SplashScreen(),
       ),
     );
   }

@@ -12,7 +12,7 @@ class PendingPaymentBanner extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
-          colors: [Color(0xFF6B3A00), Color(0xFFF57C00)],
+          colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -61,7 +61,7 @@ class PendingPaymentBanner extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFFF57C00),
+              foregroundColor: const Color(0xFF1565C0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

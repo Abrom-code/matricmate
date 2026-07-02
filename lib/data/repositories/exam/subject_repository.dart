@@ -142,15 +142,30 @@ class SubjectRepository {
     try {
       final db = await _dbService.database;
 
-      await db.insert('subjects', {
-        'id': subject.id,
-        'name': subject.name,
-        'is_natural': subject.isNatural ? 1 : 0,
-        'is_common': subject.isCommon ? 1 : 0,
-        'is_downloaded': 0,
-      }, conflictAlgorithm: ConflictAlgorithm.ignore);
-      // ConflictAlgorithm.ignore preserves is_downloaded flag for
-      // existing subjects — replace would reset it to 0.
+      // Read the current is_downloaded flag so we don't clobber it on update.
+      final existing = await db.query(
+        'subjects',
+        columns: ['is_downloaded'],
+        where: 'id = ?',
+        whereArgs: [subject.id],
+        limit: 1,
+      );
+      final isDownloaded =
+          existing.isNotEmpty ? (existing.first['is_downloaded'] as int? ?? 0) : 0;
+
+      // INSERT OR REPLACE preserves is_downloaded while updating every
+      // other field (name, is_natural, is_common) from the remote value.
+      await db.insert(
+        'subjects',
+        {
+          'id': subject.id,
+          'name': subject.name,
+          'is_natural': subject.isNatural ? 1 : 0,
+          'is_common': subject.isCommon ? 1 : 0,
+          'is_downloaded': isDownloaded,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

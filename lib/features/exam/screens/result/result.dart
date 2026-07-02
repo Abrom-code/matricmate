@@ -4,6 +4,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/helpers/badges.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
+import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -20,13 +21,15 @@ class ResultScreen extends GetView<ResultController> {
         ? 0.0
         : result.correctAnswers / result.testQuestions.length;
     final examBadge = ExamBadgeHelper.getBadge(ratio);
+
     return Scaffold(
       appBar: Appbar(
         title: Text(
           'Your Result',
-          style: Theme.of(
-            context,
-          ).textTheme.headlineMedium!.apply(color: AppColors.white),
+          style: Theme.of(context)
+              .textTheme
+              .headlineMedium!
+              .apply(color: AppColors.white),
         ),
         centerTitle: true,
       ),
@@ -35,6 +38,7 @@ class ResultScreen extends GetView<ResultController> {
           padding: const EdgeInsets.all(AppSizes.defaultSpace),
           child: Column(
             children: [
+              // ── Badge circle ────────────────────────────────────────
               Container(
                 width: 200,
                 height: 200,
@@ -44,7 +48,6 @@ class ResultScreen extends GetView<ResultController> {
                       ? const Color.fromARGB(119, 79, 79, 79)
                       : const Color(0xFFe7eae7),
                 ),
-
                 child: Stack(
                   children: [
                     Positioned(
@@ -83,10 +86,8 @@ class ResultScreen extends GetView<ResultController> {
               ),
               const SizedBox(height: AppSizes.spaceBtwSections),
 
-              Text(
-                'TEST RESULT',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('TEST RESULT',
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
               Text(
@@ -99,49 +100,94 @@ class ResultScreen extends GetView<ResultController> {
               ),
               const SizedBox(height: AppSizes.spaceBtwSections),
 
+              // ── Review Answers — primary filled ─────────────────────
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () =>
                       Get.toNamed(Routes.review, arguments: result),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    spacing: 10,
-                    children: [
-                      const Icon(
-                        Iconsax.search_status_1_copy,
-                        color: AppColors.white,
-                      ),
-                      Text(
-                        'Review Answers',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleSmall!.apply(color: AppColors.white),
-                      ),
-                    ],
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.borderRadiusLg),
+                    ),
+                  ),
+                  icon: const Icon(Iconsax.search_status_1_copy, size: 20),
+                  label: const Text(
+                    'Review Answers',
+                    style: TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
               const SizedBox(height: AppSizes.spaceBtwItems),
 
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Get.back(),
-                  child: Row(
-                    spacing: 10,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.arrow_left, color: AppColors.primary),
-                      Text(
-                        'Back to Tests',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleSmall!.apply(color: AppColors.primary),
+              // ── Back to Tests + Back to Home — side by side ──────────
+              Row(
+                children: [
+                  // Back to Tests — outlined
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side:
+                            const BorderSide(color: AppColors.primary),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              AppSizes.borderRadiusLg),
+                        ),
                       ),
-                    ],
+                      icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 16),
+                      label: const Text(
+                        'Back',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: AppSizes.spaceBtwItems),
+
+                  // Back to Home — filled teal
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        NavigationController.instance.backToHome();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.12),
+                        foregroundColor: AppColors.primary,
+                        elevation: 0,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              AppSizes.borderRadiusLg),
+                          side: BorderSide(
+                            color: AppColors.primary
+                                .withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.home_outlined, size: 18),
+                      label: const Text(
+                        'Home',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

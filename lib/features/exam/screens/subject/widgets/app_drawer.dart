@@ -183,9 +183,14 @@ class AppDrawer extends StatelessWidget {
 
           const Divider(height: 1),
 
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('Version 1.0.0'),
+          // Extra bottom padding so the version text clears the floating nav bar
+          // (60 px pill + 10 px gap + system bottom inset handled by SafeArea)
+          const SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text('Version 1.0.0'),
+            ),
           ),
         ],
       ),

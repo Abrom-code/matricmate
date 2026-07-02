@@ -12,7 +12,7 @@ class QuestionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     return Text.rich(
-      textAlign: TextAlign.justify,
+      textAlign: TextAlign.start,
       TextSpan(
         children: [
           TextSpan(

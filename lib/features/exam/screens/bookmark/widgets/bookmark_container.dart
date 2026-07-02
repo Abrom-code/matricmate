@@ -84,7 +84,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
 
               Text(
                 " ${qn.questionText.substring(0, isGrater ? 150 : qn.questionText.length)} ${isGrater ? '...' : ''}",
-                textAlign: TextAlign.justify,
+                textAlign: TextAlign.start,
 
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                   fontSize: 17,

@@ -167,7 +167,7 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
                           children: [
                             const Divider(),
                             Text(
-                              textAlign: TextAlign.justify,
+                              textAlign: TextAlign.start,
                               controller.languageSelected.value == 'EN'
                                   ? qn.explanationEn
                                   : qn.explanationAm,

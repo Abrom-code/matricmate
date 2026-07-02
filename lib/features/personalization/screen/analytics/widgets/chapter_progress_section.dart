@@ -4,14 +4,26 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ChapterProgressSection extends StatelessWidget {
+class ChapterProgressSection extends StatefulWidget {
   const ChapterProgressSection({super.key, required this.controller});
   final AnalyticsController controller;
 
   @override
+  State<ChapterProgressSection> createState() =>
+      _ChapterProgressSectionState();
+}
+
+class _ChapterProgressSectionState extends State<ChapterProgressSection> {
+  static const int _previewCount = 3;
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final chapters = controller.chapterStats;
+    final chapters = widget.controller.chapterStats;
+    final hasMore = chapters.length > _previewCount;
+    final visibleChapters =
+        _expanded ? chapters : chapters.take(_previewCount).toList();
 
     return Container(
       padding: const EdgeInsets.all(AppSizes.md),
@@ -30,33 +42,96 @@ class ChapterProgressSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Chapter progress',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          // ── Header ────────────────────────────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Chapter progress',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              if (hasMore)
+                Text(
+                  '${chapters.length} chapters',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: AppSizes.spaceBtwItems),
+
+          // ── Chapter rows ─────────────────────────────────────────
           if (chapters.isEmpty)
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
-                child: Text('No data yet', style: TextStyle(color: AppColors.textSecondary)),
+                child: Text(
+                  'No data yet',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
               ),
             )
           else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: chapters.length,
-              separatorBuilder: (_, __) => const Divider(height: 24, thickness: 0.5),
-              itemBuilder: (_, i) => _ChapterRow(stat: chapters[i]),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeInOut,
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: visibleChapters.length,
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 24, thickness: 0.5),
+                itemBuilder: (_, i) =>
+                    _ChapterRow(stat: visibleChapters[i]),
+              ),
             ),
+
+          // ── See all / Show less button ────────────────────────────
+          if (hasMore) ...[
+            const SizedBox(height: AppSizes.sm),
+            const Divider(height: 1, thickness: 0.5),
+            InkWell(
+              onTap: () => setState(() => _expanded = !_expanded),
+              borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _expanded
+                          ? 'Show less'
+                          : 'See all ${chapters.length} chapters',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      _expanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
+
+// ── Chapter row ───────────────────────────────────────────────────────────────
 
 class _ChapterRow extends StatelessWidget {
   const _ChapterRow({required this.stat});
@@ -80,7 +155,8 @@ class _ChapterRow extends StatelessWidget {
             Expanded(
               child: Text(
                 stat.title,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w500),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -96,7 +172,8 @@ class _ChapterRow extends StatelessWidget {
                   )
                 : const Text(
                     '—',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(
+                        color: AppColors.textSecondary, fontSize: 13),
                   ),
           ],
         ),

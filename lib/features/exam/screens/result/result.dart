@@ -162,8 +162,11 @@ class ResultScreen extends GetView<ResultController> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
+                        // Navigate back to NavigationMenu so the bottom nav
+                        // bar is preserved, then let NavigationController
+                        // reset to the home tab.
                         NavigationController.instance.selectedIdx.value = 0;
-                        Get.offAllNamed(Routes.home);
+                        Get.offAllNamed(Routes.navigationMenu);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary.withValues(

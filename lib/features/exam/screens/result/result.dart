@@ -160,7 +160,16 @@ class ResultScreen extends GetView<ResultController> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        NavigationController.instance.backToHome();
+                        // Result was pushed via Get.offNamed inside the nested
+                        // navigator, so the stack is: [result]. We need to
+                        // replace it with home and reset the tab index.
+                        final navCtrl = NavigationController.instance;
+                        navCtrl.selectedIdx.value = 0;
+                        navCtrl.navigatorKey.currentState
+                            ?.pushNamedAndRemoveUntil(
+                          Routes.home,
+                          (route) => false,
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:

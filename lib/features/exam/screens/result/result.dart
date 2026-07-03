@@ -26,10 +26,9 @@ class ResultScreen extends GetView<ResultController> {
       appBar: Appbar(
         title: Text(
           'Your Result',
-          style: Theme.of(context)
-              .textTheme
-              .headlineMedium!
-              .apply(color: AppColors.white),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineMedium!.apply(color: AppColors.white),
         ),
         centerTitle: true,
       ),
@@ -86,8 +85,10 @@ class ResultScreen extends GetView<ResultController> {
               ),
               const SizedBox(height: AppSizes.spaceBtwSections),
 
-              Text('TEST RESULT',
-                  style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'TEST RESULT',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
               Text(
@@ -111,15 +112,15 @@ class ResultScreen extends GetView<ResultController> {
                     foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.borderRadiusLg),
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.borderRadiusLg,
+                      ),
                     ),
                   ),
                   icon: const Icon(Iconsax.search_status_1_copy, size: 20),
                   label: const Text(
                     'Review Answers',
-                    style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -134,23 +135,24 @@ class ResultScreen extends GetView<ResultController> {
                       onPressed: () => Get.back(),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
-                        side:
-                            const BorderSide(color: AppColors.primary),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 13),
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
-                              AppSizes.borderRadiusLg),
+                            AppSizes.borderRadiusLg,
+                          ),
                         ),
                       ),
                       icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 16),
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 16,
+                      ),
                       label: const Text(
                         'Back',
                         style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -160,30 +162,22 @@ class ResultScreen extends GetView<ResultController> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Result was pushed via Get.offNamed inside the nested
-                        // navigator, so the stack is: [result]. We need to
-                        // replace it with home and reset the tab index.
-                        final navCtrl = NavigationController.instance;
-                        navCtrl.selectedIdx.value = 0;
-                        navCtrl.navigatorKey.currentState
-                            ?.pushNamedAndRemoveUntil(
-                          Routes.home,
-                          (route) => false,
-                        );
+                        NavigationController.instance.selectedIdx.value = 0;
+                        Get.offAllNamed(Routes.home);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            AppColors.primary.withValues(alpha: 0.12),
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         foregroundColor: AppColors.primary,
                         elevation: 0,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 13),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
-                              AppSizes.borderRadiusLg),
+                            AppSizes.borderRadiusLg,
+                          ),
                           side: BorderSide(
-                            color: AppColors.primary
-                                .withValues(alpha: 0.4),
+                            color: AppColors.primary.withValues(alpha: 0.4),
                           ),
                         ),
                       ),
@@ -191,8 +185,9 @@ class ResultScreen extends GetView<ResultController> {
                       label: const Text(
                         'Home',
                         style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),

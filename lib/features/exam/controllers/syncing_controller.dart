@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -11,6 +12,7 @@ import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
+import 'package:sqflite/sqflite.dart';
 
 class SyncingController extends GetxController {
   static SyncingController get instance => Get.find();
@@ -108,11 +110,18 @@ class SyncingController extends GetxController {
         .map((e) => ChapterModel.fromJson(e))
         .toList();
 
-    for (final c in remote) {
-      await _syncRepository.insertBatch('chapters', c.toMap());
-    }
+    if (remote.isEmpty) return;
 
-    await _syncRepository.commitBatch();
+    final db = await DatabaseService.instance.database;
+    final batch = db.batch();
+    for (final c in remote) {
+      batch.insert(
+        'chapters',
+        c.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<void> syncTests(List<String> subjectIds) async {
@@ -125,11 +134,18 @@ class SyncingController extends GetxController {
         .map((e) => TestModel.fromJson(e))
         .toList();
 
-    for (final t in remote) {
-      await _syncRepository.insertBatch('tests', t.toMap());
-    }
+    if (remote.isEmpty) return;
 
-    await _syncRepository.commitBatch();
+    final db = await DatabaseService.instance.database;
+    final batch = db.batch();
+    for (final t in remote) {
+      batch.insert(
+        'tests',
+        SyncRepository.sanitizeTest(t.toMap()),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<void> syncQuestions(List<String> subjectIds) async {
@@ -137,31 +153,35 @@ class SyncingController extends GetxController {
       'questions',
       subjectIds,
     );
+
     final remote = (remoteData as List)
         .map((e) => QuestionModel.fromJson(e))
         .toList();
+
+    if (remote.isEmpty) return;
+
+    final db = await DatabaseService.instance.database;
+    final batch = db.batch();
 
     final Set<String> imageUrls = {};
     final Set<int> passageIds = {};
 
     for (final q in remote) {
-      await _syncRepository.insertBatch('questions', q.toMap());
+      batch.insert(
+        'questions',
+        q.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
 
-      if (q.passageId != null) {
-        passageIds.add(q.passageId!);
-      }
-
+      if (q.passageId != null) passageIds.add(q.passageId!);
       if (q.imageUrl != null && q.imageUrl!.isNotEmpty) {
         imageUrls.add(q.imageUrl!);
       }
     }
 
-    await _syncRepository.commitBatch();
+    await batch.commit(noResult: true);
 
-    if (passageIds.isNotEmpty) {
-      await syncPassages(passageIds.toList());
-    }
-
+    if (passageIds.isNotEmpty) await syncPassages(passageIds.toList());
     if (imageUrls.isNotEmpty) {
       await AppHelperFunctions.downloadImages(imageUrls);
     }
@@ -174,10 +194,17 @@ class SyncingController extends GetxController {
         .map((e) => PassageModel.fromMap(e))
         .toList();
 
-    for (final p in remote) {
-      await _syncRepository.insertBatch('passages', p.toMap());
-    }
+    if (remote.isEmpty) return;
 
-    await _syncRepository.commitBatch();
+    final db = await DatabaseService.instance.database;
+    final batch = db.batch();
+    for (final p in remote) {
+      batch.insert(
+        'passages',
+        SyncRepository.sanitizePassage(p.toMap()),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
   }
 }

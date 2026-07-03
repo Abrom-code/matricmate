@@ -155,6 +155,14 @@ class SyncRepository {
     // questions go through QuestionModel.toMap() — not sanitized here
   };
 
+  /// Public static accessor so SyncingController can sanitize test maps
+  /// without going through the shared batch.
+  static Map<String, dynamic> sanitizeTest(Map<String, dynamic> row) =>
+      _sanitizeFor('tests', row);
+
+  static Map<String, dynamic> sanitizePassage(Map<String, dynamic> row) =>
+      _sanitizeFor('passages', row);
+
   /// Sanitizes a raw Supabase map for a specific SQLite table:
   /// 1. Strips columns not in the local schema
   /// 2. bool  → 0/1

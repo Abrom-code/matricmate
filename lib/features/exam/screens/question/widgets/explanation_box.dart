@@ -59,7 +59,7 @@ class ExplanationBox extends StatelessWidget {
                     : explanationEn,
                 textAlign: TextAlign.left,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   height: 1.6,
                   letterSpacing: 0.1,
                 ),

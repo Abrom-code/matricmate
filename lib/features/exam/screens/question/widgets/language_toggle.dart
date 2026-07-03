@@ -26,13 +26,13 @@ class LanguageToggle extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildItem(
-              label: 'English',
+              label: 'En',
               isSelected: selected == 'EN',
               dark: dark,
               onTap: () => controller.languageSelected.value = 'EN',
             ),
             _buildItem(
-              label: 'አማርኛ',
+              label: 'አማ',
               isSelected: selected == 'AM',
               dark: dark,
               onTap: () => controller.languageSelected.value = 'AM',
@@ -57,8 +57,8 @@ class LanguageToggle extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? dark
-                  ? const Color.fromARGB(255, 44, 44, 44)
-                  : Colors.grey.shade100
+                    ? const Color.fromARGB(255, 44, 44, 44)
+                    : Colors.grey.shade100
               : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
@@ -69,8 +69,8 @@ class LanguageToggle extends StatelessWidget {
             color: isSelected
                 ? Colors.teal
                 : dark
-                    ? Colors.white70
-                    : Colors.black54,
+                ? Colors.white70
+                : Colors.black54,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),

@@ -33,6 +33,10 @@ class GradeTestsPage extends GetView<GradeTestController> {
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
           final tests = controller.chapterTests;
 
           if (tests.isEmpty) {

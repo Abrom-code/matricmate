@@ -17,8 +17,9 @@ class ChapterTestController extends GetxController {
   final RxInt chapterId = 0.obs;
   final RxString chapter = ''.obs;
   final RxInt chapterNumber = 0.obs;
-
   final RxBool isLoading = false.obs;
+
+  final RxMap<int, int> testQuestionCounts = <int, int>{}.obs;
 
   @override
   void onInit() {
@@ -56,6 +57,7 @@ class ChapterTestController extends GetxController {
       chapterTest.assignAll(data);
 
       await loadTestQuestionFlags(data);
+      await loadActualQuestionCounts(data);
       await loadTestResults(data);
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -69,6 +71,17 @@ class ChapterTestController extends GetxController {
       for (final test in tests) {
         final hasQn = await _testRepository.hasQns(test.id);
         testHasQuestions[test.id] = hasQn;
+      }
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
+  }
+
+  Future<void> loadActualQuestionCounts(List<TestModel> tests) async {
+    try {
+      for (final test in tests) {
+        final count = await _testRepository.getActualQuestionCount(test.id);
+        testQuestionCounts[test.id] = count;
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -109,12 +122,10 @@ class ChapterTestController extends GetxController {
 
   int getMaxStep(int testId) {
     final result = testResults[testId];
-
-    if (result != null) {
-      return result.testQuestions.length;
-    }
-
-    final test = chapterTest.firstWhereOrNull((t) => t.id == testId);
-    return test?.questionCount ?? 0;
+    if (result != null) return result.testQuestions.length;
+    // Use actual DB count; fall back to stored questionCount if not loaded yet
+    return testQuestionCounts[testId] ?? chapterTest
+        .firstWhereOrNull((t) => t.id == testId)
+        ?.questionCount ?? 0;
   }
 }

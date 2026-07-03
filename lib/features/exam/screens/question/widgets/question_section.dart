@@ -12,20 +12,25 @@ class QuestionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     return Text.rich(
-      textAlign: TextAlign.start,
+      textAlign: TextAlign.left,
       TextSpan(
         children: [
           TextSpan(
             text: '$qnNumber. ',
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+            style: TextStyle(
               fontSize: 17,
+              fontWeight: FontWeight.w700,
+              height: 1.6,
               color: dark ? AppColors.grey : AppColors.darkerGrey,
             ),
           ),
           TextSpan(
             text: examQn,
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-              fontSize: 17,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              height: 1.6,
+              letterSpacing: 0.1,
               color: dark ? AppColors.grey : AppColors.darkerGrey,
             ),
           ),

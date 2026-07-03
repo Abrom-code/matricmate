@@ -49,7 +49,7 @@ class ChapterTestScreen extends GetView<ChapterTestController> {
 
               final hasQn = controller.testHasQuestions[test.id] ?? false;
 
-              final qnCount = test.questionCount;
+              final qnCount = controller.testQuestionCounts[test.id] ?? test.questionCount;
               final time = test.time;
 
               return Padding(

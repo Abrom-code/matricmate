@@ -57,10 +57,12 @@ class ExplanationBox extends StatelessWidget {
                 controller.languageSelected.value == 'AM'
                     ? explanationAm
                     : explanationEn,
-                textAlign: TextAlign.start,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall!.copyWith(fontSize: 14),
+                textAlign: TextAlign.left,
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.6,
+                  letterSpacing: 0.1,
+                ),
               ),
             ),
           ],

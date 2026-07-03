@@ -10,62 +10,68 @@ class LanguageToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<QuestionController>();
     final dark = AppHelperFunctions.isDark(context);
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: dark
             ? const Color.fromARGB(255, 71, 71, 71)
-            : Colors.grey.shade300, // background
+            : Colors.grey.shade300,
         borderRadius: BorderRadius.circular(30),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildItem(
-            'English',
-            controller.languageSelected.value == 'EN',
-            context = context,
-            () => controller.languageSelected.value = 'EN',
-          ),
-          _buildItem(
-            'አማርኛ',
-            controller.languageSelected.value == 'AM',
-            context = context,
-            () => controller.languageSelected.value = 'AM',
-          ),
-        ],
-      ),
+      // Obx here so the highlighted pill re-renders when languageSelected changes
+      child: Obx(() {
+        final selected = controller.languageSelected.value;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildItem(
+              label: 'English',
+              isSelected: selected == 'EN',
+              dark: dark,
+              onTap: () => controller.languageSelected.value = 'EN',
+            ),
+            _buildItem(
+              label: 'አማርኛ',
+              isSelected: selected == 'AM',
+              dark: dark,
+              onTap: () => controller.languageSelected.value = 'AM',
+            ),
+          ],
+        );
+      }),
     );
   }
 
-  Widget _buildItem(
-    String text,
-    bool selected,
-    BuildContext context,
-    VoidCallback onTap,
-  ) {
-    final dark = AppHelperFunctions.isDark(context);
+  Widget _buildItem({
+    required String label,
+    required bool isSelected,
+    required bool dark,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: selected
+          color: isSelected
               ? dark
-                    ? const Color.fromARGB(255, 44, 44, 44)
-                    : Colors.grey.shade100
+                  ? const Color.fromARGB(255, 44, 44, 44)
+                  : Colors.grey.shade100
               : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Text(
-          text,
+          label,
           style: TextStyle(
-            color: selected
+            fontSize: 12,
+            color: isSelected
                 ? Colors.teal
                 : dark
-                ? Colors.white70
-                : Colors.black54,
-            fontWeight: FontWeight.w600,
+                    ? Colors.white70
+                    : Colors.black54,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
       ),

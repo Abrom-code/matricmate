@@ -39,10 +39,7 @@ import 'package:matricmate/routes/app_routes.dart';
 class AppRoutes {
   static final pages = [
     // splash — initial route
-    GetPage(
-      name: Routes.splash,
-      page: () => const SplashScreen(),
-    ),
+    GetPage(name: Routes.splash, page: () => const SplashScreen()),
 
     // main
     GetPage(name: Routes.navigationMenu, page: () => const NavigationMenu()),
@@ -84,7 +81,7 @@ class AppRoutes {
     ),
 
     // analytics
-    GetPage(name: Routes.analytics, page: () => AnalyticsScreen()),
+    GetPage(name: Routes.analytics, page: () => const AnalyticsScreen()),
 
     // profile
     GetPage(name: Routes.userProfile, page: () => const ProfileScreen()),

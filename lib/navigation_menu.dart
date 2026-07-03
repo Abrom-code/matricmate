@@ -45,27 +45,24 @@ class NavigationMenu extends StatelessWidget {
 // ── Floating pill nav bar ────────────────────────────────────────────────────
 
 class _FloatingNavBar extends StatelessWidget {
-  const _FloatingNavBar({
-    required this.selectedIndex,
-    required this.onTap,
-  });
+  const _FloatingNavBar({required this.selectedIndex, required this.onTap});
 
   final int selectedIndex;
   final void Function(int) onTap;
 
   static const _items = [
     _NavItem(icon: Iconsax.message_question_copy, label: 'Test'),
-    _NavItem(icon: Iconsax.book_1_copy,           label: 'Exam'),
-    _NavItem(icon: Iconsax.archive_tick_copy,     label: 'Bookmark'),
-    _NavItem(icon: Iconsax.chart_copy,            label: 'Analytics'),
-    _NavItem(icon: Iconsax.user_copy,             label: 'Profile'),
+    _NavItem(icon: Iconsax.book_1_copy, label: 'Exam'),
+    _NavItem(icon: Iconsax.archive_tick_copy, label: 'Bookmark'),
+    _NavItem(icon: Iconsax.chart_copy, label: 'Analytics'),
+    _NavItem(icon: Iconsax.user_copy, label: 'Profile'),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final dark         = AppHelperFunctions.isDark(context);
-    final screenWidth  = MediaQuery.of(context).size.width;
-    final bottomInset  = MediaQuery.of(context).padding.bottom;
+    final dark = AppHelperFunctions.isDark(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     // Pill width: at most 420 px, at least full width on tiny screens
     final pillWidth = screenWidth > 480 ? 420.0 : screenWidth - 32.0;
@@ -196,8 +193,9 @@ class NavigationController extends GetxController {
   final Rx<int> selectedIdx = 0.obs;
   static const int navigatorId = 1;
 
-  final GlobalKey<NavigatorState> navigatorKey =
-      GlobalKey<NavigatorState>(debugLabel: 'bottom_nav');
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>(
+    debugLabel: 'bottom_nav',
+  );
 
   final List<String> routes = [
     Routes.home,
@@ -207,9 +205,12 @@ class NavigationController extends GetxController {
     Routes.userProfile,
   ];
 
-  void backToHome() {
-    selectedIdx.value = 0;
-    navigatorKey.currentState?.popUntil((route) => route.isFirst);
+  void backToSubjects() {
+    selectedIdx.value = 1; 
+    navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      Routes.home,
+      (route) => false,
+    );
   }
 
   void changePage(int index) {

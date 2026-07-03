@@ -95,7 +95,6 @@ class AnalyticsScreen extends StatelessWidget {
                   ActiveFilterRow(controller: controller),
 
                 AnalyticsSummaryGrid(controller: controller),
-                const SizedBox(height: AppSizes.spaceBtwSections),
 
                 ScoreTrendChart(controller: controller),
                 const SizedBox(height: AppSizes.spaceBtwSections),
@@ -110,7 +109,7 @@ class AnalyticsScreen extends StatelessWidget {
                 const SizedBox(height: AppSizes.spaceBtwSections),
 
                 WeakestAreasCard(controller: controller),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                const SizedBox(height: AppSizes.spaceBtwSections * 2),
               ],
             ),
           ),

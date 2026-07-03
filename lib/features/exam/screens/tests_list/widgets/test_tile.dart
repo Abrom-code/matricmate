@@ -29,7 +29,9 @@ class TestTile extends StatelessWidget {
       iconBgColor: iconColor,
       subTitle: LinearProgressIndicator(
         borderRadius: BorderRadius.circular(10),
-        value: maxStep > 0 ? (currentStep / maxStep).clamp(0.0, 1.0) : null,
+        // value: null → indeterminate spinner (bad UX for unattempted tests)
+        // Use 0.0 when maxStep is unknown so bar is empty but static
+        value: maxStep > 0 ? (currentStep / maxStep).clamp(0.0, 1.0) : 0.0,
         backgroundColor: dark ? AppColors.darkGrey : AppColors.grey,
         color: AppColors.primary,
         minHeight: 8,

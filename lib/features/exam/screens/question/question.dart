@@ -9,6 +9,7 @@ import 'package:matricmate/features/exam/screens/question/widgets/normal_questio
 import 'package:matricmate/features/exam/screens/question/widgets/passage_container.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/passage_layout_ctrl.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class QuestionScreen extends StatefulWidget {
@@ -25,6 +26,15 @@ class _QuestionScreenState extends State<QuestionScreen> {
   void dispose() {
     _pageScrollController.dispose();
     super.dispose();
+  }
+
+  void _showQuestionNavigator(BuildContext context, QuestionController ctrl) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _QuestionNavigatorSheet(controller: ctrl),
+    );
   }
 
   @override
@@ -99,6 +109,14 @@ class _QuestionScreenState extends State<QuestionScreen> {
             backgroundColor: Colors.transparent,
           ),
 
+          floatingActionButton: hasData
+              ? _ProgressFab(
+                  controller: controller,
+                  onPressed: () =>
+                      _showQuestionNavigator(context, controller),
+                )
+              : null,
+
           body:
               (controller.isLoading.value || controller.isPassageLoading.value)
               ? const AppCircularLoading()
@@ -120,4 +138,313 @@ class _QuestionScreenState extends State<QuestionScreen> {
       }),
     );
   }
+}
+
+// ── Question Navigator Bottom Sheet ─────────────────────────────────────────
+
+class _QuestionNavigatorSheet extends StatelessWidget {
+  const _QuestionNavigatorSheet({required this.controller});
+  final QuestionController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
+    final sheetBg = dark ? AppColors.dark : AppColors.white;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.55,
+      minChildSize: 0.35,
+      maxChildSize: 0.90,
+      expand: false,
+      builder: (_, scrollCtrl) => Container(
+        decoration: BoxDecoration(
+          color: sheetBg,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppSizes.borderRadiusLg * 2),
+          ),
+        ),
+        child: Column(
+          children: [
+            // drag handle
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.darkGrey.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // header
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.defaultSpace,
+                vertical: AppSizes.xs,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Questions',
+                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  // legend
+                  Row(
+                    children: [
+                      const _LegendDot(color: AppColors.success, label: 'Done'),
+                      const SizedBox(width: AppSizes.sm),
+                      const _LegendDot(color: Colors.amber, label: 'Skipped'),
+                      const SizedBox(width: AppSizes.sm),
+                      _LegendDot(
+                        color: AppColors.darkGrey.withValues(alpha: 0.35),
+                        label: 'Not done',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const Divider(height: 1),
+
+            // grid
+            Expanded(
+              child: Obx(() {
+                final questions = controller.testQuestions;
+                return GridView.builder(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.all(AppSizes.defaultSpace),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5,
+                    crossAxisSpacing: AppSizes.sm,
+                    mainAxisSpacing: AppSizes.sm,
+                  ),
+                  itemCount: questions.length,
+                  itemBuilder: (_, i) {
+                    final q = questions[i];
+                    final isCurrent = controller.currentIndex.value == i;
+                    final isChecked = controller.isAnswerChecked(q.id);
+                    final isSkipped = controller.isSkipped(q.id);
+
+                    final Color bg;
+                    if (isChecked) {
+                      bg = AppColors.success;
+                    } else if (isSkipped) {
+                      bg = Colors.amber;
+                    } else {
+                      bg = dark
+                          ? AppColors.darkerGrey.withValues(alpha: 0.5)
+                          : AppColors.grey;
+                    }
+
+                    return GestureDetector(
+                      onTap: () {
+                        controller.jumpToQuestion(i);
+                        Navigator.pop(context);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: bg,
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.borderRadiusMd,
+                          ),
+                          border: isCurrent
+                              ? Border.all(
+                                  color: AppColors.primary,
+                                  width: 2.5,
+                                )
+                              : null,
+                          boxShadow: isCurrent
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                    blurRadius: 6,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${i + 1}',
+                            style: TextStyle(
+                              color: isChecked || isSkipped
+                                  ? AppColors.white
+                                  : dark
+                                  ? AppColors.white.withValues(alpha: 0.8)
+                                  : AppColors.darkerGrey,
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color, required this.label});
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall!.copyWith(
+            color: AppColors.darkGrey,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Progress FAB ─────────────────────────────────────────────────────────────
+
+class _ProgressFab extends StatelessWidget {
+  const _ProgressFab({
+    required this.controller,
+    required this.onPressed,
+  });
+
+  final QuestionController controller;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final total = controller.testQuestions.length;
+      final done = controller.isChecked.values.where((v) => v).length;
+      final progress = total == 0 ? 0.0 : done / total;
+
+      return GestureDetector(
+        onTap: onPressed,
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: CustomPaint(
+            painter: _ProgressRingPainter(
+              progress: progress,
+              ringColor: AppColors.primary,
+              trackColor: AppColors.primary.withValues(alpha: 0.18),
+            ),
+            child: Container(
+              margin: const EdgeInsets.all(5),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '$done',
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      height: 1.1,
+                    ),
+                  ),
+                  Text(
+                    '/$total',
+                    style: TextStyle(
+                      color: AppColors.white.withValues(alpha: 0.75),
+                      fontSize: 9,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _ProgressRingPainter extends CustomPainter {
+  const _ProgressRingPainter({
+    required this.progress,
+    required this.ringColor,
+    required this.trackColor,
+  });
+
+  final double progress;
+  final Color ringColor;
+  final Color trackColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const strokeWidth = 3.5;
+    final rect = Rect.fromLTWH(
+      strokeWidth / 2,
+      strokeWidth / 2,
+      size.width - strokeWidth,
+      size.height - strokeWidth,
+    );
+
+    // background track
+    canvas.drawArc(
+      rect,
+      -1.5708, // -90° (start at top)
+      6.2832,  // full circle
+      false,
+      Paint()
+        ..color = trackColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // progress arc
+    if (progress > 0) {
+      canvas.drawArc(
+        rect,
+        -1.5708,
+        6.2832 * progress,
+        false,
+        Paint()
+          ..color = ringColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ProgressRingPainter old) => old.progress != progress;
 }

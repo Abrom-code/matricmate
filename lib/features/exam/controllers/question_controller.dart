@@ -190,6 +190,13 @@ class QuestionController extends GetxController {
 
   bool isSkipped(int questionId) => skippedQuestions.contains(questionId);
 
+  void jumpToQuestion(int index) {
+    if (index < 0 || index >= testQuestions.length) return;
+    currentIndex.value = index;
+    _syncBlockWithIndex();
+    isExplanationExpanaded.value = false;
+  }
+
   void _syncBlockWithIndex() {
     final currentQ = testQuestions[currentIndex.value];
     for (int i = 0; i < blocks.length; i++) {

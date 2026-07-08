@@ -124,37 +124,9 @@ class QuesitonSection extends GetView<QuestionController> {
 
             /// EXPLANATION — practice mode only, after checking
             if (isChecked && !examMode) ...[
-              Column(
-                children: [
-                  TextButton(
-                    onPressed: () =>
-                        controller.isExplanationExpanaded.value =
-                            !controller.isExplanationExpanaded.value,
-                    child: Row(
-                      children: [
-                        Icon(
-                          controller.isExplanationExpanaded.value
-                              ? Icons.keyboard_arrow_up
-                              : Icons.keyboard_arrow_right,
-                          color: AppColors.primary,
-                        ),
-                        Text(
-                          'Explanation',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleMedium!.apply(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (controller.isExplanationExpanaded.value)
-                    ExplanationBox(
-                      explanationEn: q.explanationEn,
-                      explanationAm: q.explanationAm,
-                    ),
-                ],
+              ExplanationBox(
+                explanationEn: q.explanationEn,
+                explanationAm: q.explanationAm,
               ),
               const SizedBox(height: AppSizes.spaceBtwItems / 2),
             ],

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:matricmate/app.dart';
 import 'package:matricmate/bindings/exam/bookmark_binding.dart';
 import 'package:matricmate/bindings/auth/change_password_binding.dart';
 import 'package:matricmate/bindings/exam/chapter_binding.dart';
@@ -19,7 +20,6 @@ import 'package:matricmate/features/authentication/screens/password_configration
 import 'package:matricmate/features/authentication/screens/password_configration/reset_password.dart';
 import 'package:matricmate/features/authentication/screens/signup/signup.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
-import 'package:matricmate/features/authentication/screens/splash/splash_screen.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/grade_test.dart';
@@ -38,8 +38,8 @@ import 'package:matricmate/routes/app_routes.dart';
 
 class AppRoutes {
   static final pages = [
-    // splash — initial route
-    GetPage(name: Routes.splash, page: () => const SplashScreen()),
+    // loading — initial route (blank while auth decides where to go)
+    GetPage(name: Routes.loading, page: () => const LoadingScreen()),
 
     // main
     GetPage(name: Routes.navigationMenu, page: () => const NavigationMenu()),

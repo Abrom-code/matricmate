@@ -18,9 +18,20 @@ class App extends StatelessWidget {
         themeMode: ThemeController.instance.themeMode.value,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        initialRoute: Routes.splash,
+        initialRoute: Routes.loading,
         getPages: AppRoutes.pages,
       ),
     );
+  }
+}
+
+/// Blank screen shown only while [AuthenticationController.onReady] decides
+/// where to navigate. It never stays on screen longer than one frame cycle.
+class LoadingScreen extends StatelessWidget {
+  const LoadingScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold();
   }
 }

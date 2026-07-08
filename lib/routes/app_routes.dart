@@ -33,8 +33,8 @@ class Routes {
   static const forgetPassword = '/forget-password';
   static const resetPassword = '/reset-password';
 
-  // splash
-  static const splash = '/splash';
+  // loading (blank screen while auth decides where to navigate)
+  static const loading = '/loading';
 
   // success screen
   static const success = '/success';

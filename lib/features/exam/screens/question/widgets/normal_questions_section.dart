@@ -119,17 +119,15 @@ class QuesitonSection extends GetView<QuestionController> {
               );
             }),
 
-            if (!isChecked || examMode)
-              const SizedBox(height: AppSizes.spaceBtwItems),
-
             /// EXPLANATION — practice mode only, after checking
             if (isChecked && !examMode) ...[
               ExplanationBox(
                 explanationEn: q.explanationEn,
                 explanationAm: q.explanationAm,
               ),
-              const SizedBox(height: AppSizes.spaceBtwItems / 2),
-            ],
+              const SizedBox(height: AppSizes.spaceBtwItems),
+            ] else
+              const SizedBox(height: AppSizes.xs),
 
             /// BUTTONS — Previous | Skip | Check/Next/Finish
             Row(

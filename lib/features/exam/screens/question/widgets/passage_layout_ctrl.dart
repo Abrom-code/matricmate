@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
+/// Shown in the appbar when the current question has a passage.
+/// Displays the question counter and optional timer — text-scale
+/// controls have moved to the passage header itself.
 class PassageLayoutCtrl extends StatelessWidget {
   const PassageLayoutCtrl({super.key, required this.controller});
 
@@ -10,46 +13,12 @@ class PassageLayoutCtrl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.text_decrease,
-                size: 20,
-                color: AppColors.primary,
-              ),
-              onPressed: controller.decreaseTextScale,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-
-            IconButton(
-              icon: const Icon(
-                Icons.text_increase,
-                size: 20,
-                color: AppColors.primary,
-              ),
-              onPressed: controller.increaseTextScale,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-          ],
-        ),
-        if (controller.isTimed)
-          Obx(
-            () => Text(
-              '(${controller.formattedTime(controller.remainingSeconds.value)})',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium!.copyWith(color: AppColors.primary),
-            ),
-          ),
-      ],
-    );
+    return Obx(() => Text(
+      '${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
+      '${controller.isTimed ? ' (${controller.formattedTime(controller.remainingSeconds.value)})' : ''}',
+      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+        color: AppColors.primary,
+      ),
+    ));
   }
 }

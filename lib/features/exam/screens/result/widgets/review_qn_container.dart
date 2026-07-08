@@ -175,8 +175,6 @@ class ReviewContainer extends GetView<ReviewController> {
             );
           }),
 
-          const SizedBox(height: AppSizes.spaceBtwItems),
-
           // ── Explanation ─────────────────────────────────────────────────
           Obx(() {
             final expanded = controller.isExpanded[qn.id] ?? false;

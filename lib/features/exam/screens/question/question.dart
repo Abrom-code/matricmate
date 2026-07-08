@@ -229,11 +229,16 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                   itemBuilder: (_, i) {
                     final q = questions[i];
                     final isCurrent = controller.currentIndex.value == i;
-                    final isChecked = controller.isAnswerChecked(q.id);
                     final isSkipped = controller.isSkipped(q.id);
 
+                    // In exam mode answers are never "checked", so treat
+                    // "has a selected answer" as done instead.
+                    final isDone = controller.isExamMode
+                        ? controller.selectedAnswers.containsKey(q.id)
+                        : controller.isAnswerChecked(q.id);
+
                     final Color bg;
-                    if (isChecked) {
+                    if (isDone) {
                       bg = AppColors.success;
                     } else if (isSkipped) {
                       bg = Colors.amber;
@@ -276,7 +281,7 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                           child: Text(
                             '${i + 1}',
                             style: TextStyle(
-                              color: isChecked || isSkipped
+                              color: isDone || isSkipped
                                   ? AppColors.white
                                   : dark
                                   ? AppColors.white.withValues(alpha: 0.8)
@@ -345,7 +350,9 @@ class _ProgressFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final total = controller.testQuestions.length;
-      final done = controller.isChecked.values.where((v) => v).length;
+      final done = controller.isExamMode
+          ? controller.selectedAnswers.length
+          : controller.isChecked.values.where((v) => v).length;
       final progress = total == 0 ? 0.0 : done / total;
 
       return GestureDetector(

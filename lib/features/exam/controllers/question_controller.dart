@@ -44,6 +44,7 @@ class QuestionController extends GetxController {
   var textScale = 1.0.obs;
   late int testId;
   late bool isTimed;
+  late bool isExamMode;
   late int time;
   late int ctrlId;
 
@@ -51,6 +52,7 @@ class QuestionController extends GetxController {
   void onInit() {
     testId = Get.arguments['test_id'];
     isTimed = Get.arguments['is_timed'];
+    isExamMode = Get.arguments['is_exam_mode'] ?? false;
     time = Get.arguments['time'];
     ctrlId = Get.arguments['id'];
     loadTestQuestions(testId);

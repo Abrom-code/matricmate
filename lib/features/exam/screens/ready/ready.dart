@@ -73,8 +73,8 @@ class ReadyDialog extends StatelessWidget {
                   Obx(
                     () => TimerContainer(
                       time: time,
-                      value: controller.isTimed.value,
-                      onChange: controller.changeTimed,
+                      value: controller.isExamMode.value,
+                      onChange: controller.changeExamMode,
                     ),
                   ),
 
@@ -89,7 +89,8 @@ class ReadyDialog extends StatelessWidget {
                           Routes.questions,
                           arguments: {
                             'test_id': testId,
-                            'is_timed': controller.isTimed.value,
+                            'is_timed': controller.isExamMode.value,
+                            'is_exam_mode': controller.isExamMode.value,
                             'time': time,
                             'id': id,
                           },
@@ -139,9 +140,9 @@ class ReadyDialog extends StatelessWidget {
 
 class ReadyController extends GetxController {
   static ReadyController get instance => Get.find();
-  final isTimed = false.obs;
+  final isExamMode = false.obs;
 
-  void changeTimed() {
-    isTimed.value = !isTimed.value;
+  void changeExamMode() {
+    isExamMode.value = !isExamMode.value;
   }
 }

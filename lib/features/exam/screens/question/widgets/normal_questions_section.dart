@@ -19,6 +19,45 @@ class QuesitonSection extends GetView<QuestionController> {
   const QuesitonSection({super.key, required this.question});
   final QuestionModel question;
 
+  // ── shared submit helper ────────────────────────────────────────────────────
+  Future<void> _submitResult(BuildContext context, QuestionModel q) async {
+    // In exam mode, mark every unanswered question as checked now so the
+    // result screen can compute the score properly.
+    if (controller.isExamMode) {
+      for (final tq in controller.testQuestions) {
+        controller.checkAnswer(tq.id);
+      }
+    }
+
+    final result = ResultModel(
+      userId: UserController.instance.user.value.id,
+      testId: q.testId,
+      selectedAnswers: controller.selectedAnswers,
+      testQuestions: controller.testQuestions.toList(),
+      correctAnswers: controller.correctAnswers,
+    );
+
+    await controller.saveResult(result);
+
+    switch (controller.ctrlId) {
+      case 0:
+        final c = Get.find<GradeTestController>();
+        await c.loadTestResults(c.chapterTests);
+      case 1:
+        final c = Get.find<ChapterTestController>();
+        await c.loadTestResults(c.chapterTest);
+      case 2:
+        final c = Get.find<ExamsController>();
+        await c.loadTestResults(c.entranceTests);
+      default:
+        break;
+    }
+
+    Get.offNamed(Routes.result, arguments: {'result': result});
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -34,13 +73,18 @@ class QuesitonSection extends GetView<QuestionController> {
         }
 
         final q = controller.testQuestions[controller.currentIndex.value];
+        final examMode = controller.isExamMode;
 
         final isChecked = controller.isAnswerChecked(q.id);
         final selectedIndex = controller.getSelectedAnswer(q.id);
         final isLast =
             controller.currentIndex.value ==
             controller.testQuestions.length - 1;
-        final canSkip = !isChecked && !isLast;
+
+        // Skip is available in practice mode only (not yet checked, not last).
+        // In exam mode Next already advances without requiring an answer,
+        // so a separate Skip button would be redundant.
+        final canSkip = !examMode && !isChecked && !isLast;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,28 +105,31 @@ class QuesitonSection extends GetView<QuestionController> {
 
               return ChoiceButton(
                 selectedIndex: selectedIndex ?? -1,
-                isChecked: isChecked,
+                // in exam mode, never show green/red reveal colours
+                isChecked: examMode ? false : isChecked,
                 optionTxt: option,
                 index: index,
                 questionId: q.id,
                 correctIndex: q.correctOptionIndex,
-                onTap: () {
-                  if (!isChecked) {
-                    controller.selectAnswer(q.id, index);
-                  }
-                },
+                onTap: examMode
+                    ? () => controller.selectAnswer(q.id, index)
+                    : () {
+                        if (!isChecked) controller.selectAnswer(q.id, index);
+                      },
               );
             }),
 
-            if (!isChecked) const SizedBox(height: AppSizes.spaceBtwItems),
+            if (!isChecked || examMode)
+              const SizedBox(height: AppSizes.spaceBtwItems),
 
-            /// EXPLANATION
-            if (isChecked)
+            /// EXPLANATION — practice mode only, after checking
+            if (isChecked && !examMode) ...[
               Column(
                 children: [
                   TextButton(
-                    onPressed: () => controller.isExplanationExpanaded.value =
-                        !controller.isExplanationExpanaded.value,
+                    onPressed: () =>
+                        controller.isExplanationExpanaded.value =
+                            !controller.isExplanationExpanaded.value,
                     child: Row(
                       children: [
                         Icon(
@@ -93,14 +140,15 @@ class QuesitonSection extends GetView<QuestionController> {
                         ),
                         Text(
                           'Explanation',
-                          style: Theme.of(context).textTheme.titleMedium!.apply(
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleMedium!.apply(
                             color: AppColors.primary,
                           ),
                         ),
                       ],
                     ),
                   ),
-
                   if (controller.isExplanationExpanaded.value)
                     ExplanationBox(
                       explanationEn: q.explanationEn,
@@ -108,8 +156,8 @@ class QuesitonSection extends GetView<QuestionController> {
                     ),
                 ],
               ),
-            if (isChecked) const SizedBox(height: AppSizes.spaceBtwItems / 2),
-            if (!isChecked) const SizedBox(height: AppSizes.spaceBtwItems),
+              const SizedBox(height: AppSizes.spaceBtwItems / 2),
+            ],
 
             /// BUTTONS — Previous | Skip | Check/Next/Finish
             Row(
@@ -123,7 +171,10 @@ class QuesitonSection extends GetView<QuestionController> {
                     onPressed: controller.currentIndex.value > 0
                         ? controller.previousQuestion
                         : null,
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 14,
+                    ),
                     label: const Text(
                       'Prev',
                       maxLines: 1,
@@ -134,7 +185,7 @@ class QuesitonSection extends GetView<QuestionController> {
 
                 const SizedBox(width: 8),
 
-                /// SKIP — centre slot, only when no answer & not last
+                /// SKIP — centre slot
                 if (canSkip) ...[
                   Expanded(
                     child: OutlinedButton.icon(
@@ -163,51 +214,33 @@ class QuesitonSection extends GetView<QuestionController> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 13),
                     ),
-                    onPressed: selectedIndex == null
+                    onPressed: examMode
+                        ? () async {
+                            if (isLast) {
+                              await _submitResult(context, q);
+                            } else {
+                              controller.nextQuestion();
+                            }
+                          }
+                        : selectedIndex == null
                         ? null
                         : () async {
                             if (!isChecked) {
                               controller.checkAnswer(q.id);
                               return;
                             }
-
                             if (isLast) {
-                              final result = ResultModel(
-                                userId: UserController.instance.user.value.id,
-                                testId: q.testId,
-                                selectedAnswers: controller.selectedAnswers,
-                                testQuestions: controller.testQuestions
-                                    .toList(),
-                                correctAnswers: controller.correctAnswers,
-                              );
-
-                              await controller.saveResult(result);
-                              // grade test   id:0
-                              // chapter test id:1
-                              // exam         id:2
-                              switch (controller.ctrlId) {
-                                case 0:
-                                  final c = Get.find<GradeTestController>();
-                                  await c.loadTestResults(c.chapterTests);
-                                case 1:
-                                  final c = Get.find<ChapterTestController>();
-                                  await c.loadTestResults(c.chapterTest);
-                                case 2:
-                                  final c = Get.find<ExamsController>();
-                                  await c.loadTestResults(c.entranceTests);
-                                default:
-                                  break;
-                              }
-                              Get.offNamed(
-                                Routes.result,
-                                arguments: {'result': result},
-                              );
+                              await _submitResult(context, q);
                             } else {
                               controller.nextQuestion();
                             }
                           },
                     icon: Icon(
-                      !isChecked
+                      examMode
+                          ? (isLast
+                              ? Icons.flag_rounded
+                              : Icons.arrow_forward_ios_rounded)
+                          : !isChecked
                           ? Icons.check_circle_outline_rounded
                           : (isLast
                               ? Icons.flag_rounded
@@ -215,7 +248,9 @@ class QuesitonSection extends GetView<QuestionController> {
                       size: 15,
                     ),
                     label: Text(
-                      !isChecked
+                      examMode
+                          ? (isLast ? 'Finish' : 'Next')
+                          : !isChecked
                           ? 'Check'
                           : (isLast ? 'Finish' : 'Next'),
                       maxLines: 1,

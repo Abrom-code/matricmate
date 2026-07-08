@@ -25,7 +25,7 @@ class TimerContainer extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Timed Mode',
+                'Exam Mode',
                 style: Theme.of(
                   context,
                 ).textTheme.headlineSmall!.copyWith(color: AppColors.primary),
@@ -36,7 +36,9 @@ class TimerContainer extends StatelessWidget {
           const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
           Text(
-            'When enabled, a $time-minute timer will apply, The test will be closed when time expires.',
+            value
+                ? 'Exam mode is on. Answers are hidden until you finish. A $time-minute timer will apply and the test closes when time expires.'
+                : 'Practice mode is on. You can check answers as you go — no timer, no pressure.',
             style: Theme.of(
               context,
             ).textTheme.labelSmall!.copyWith(fontSize: 14),

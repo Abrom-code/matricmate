@@ -53,10 +53,7 @@ class SubjectsScreen extends StatelessWidget {
               if (stream.isNotEmpty)
                 Text(
                   stream,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               if (stream.isNotEmpty) const SizedBox(width: 8),
               Container(
@@ -86,20 +83,11 @@ class SubjectsScreen extends StatelessWidget {
               child: IconButton(
                 tooltip: 'Sync content',
                 onPressed: syncing ? null : () => subjectController.syncAll(),
-                icon: syncing
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          color: AppColors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.cloud_sync_outlined,
-                        size: AppSizes.iconMd * 1.2,
-                        color: AppColors.white,
-                      ),
+                icon: const Icon(
+                  Icons.cloud_sync_outlined,
+                  size: AppSizes.iconMd * 1.2,
+                  color: AppColors.white,
+                ),
               ),
             );
           }),
@@ -133,8 +121,7 @@ class SubjectsScreen extends StatelessWidget {
                   ),
                 if (isInactive) const SizedBox(height: AppSizes.spaceBtwItems),
 
-                if (isPending)
-                  const PendingPaymentBanner(),
+                if (isPending) const PendingPaymentBanner(),
                 if (isPending) const SizedBox(height: AppSizes.spaceBtwItems),
                 GridLayout(
                   itemCount: filteredSubjects.length,

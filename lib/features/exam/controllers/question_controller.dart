@@ -34,6 +34,7 @@ class QuestionController extends GetxController {
 
   final RxMap<int, int> selectedAnswers = <int, int>{}.obs;
   final RxMap<int, bool> isChecked = <int, bool>{}.obs;
+  final RxSet<int> skippedQuestions = <int>{}.obs;
   final RxInt currentIndex = 0.obs;
   final RxInt currentBlockIndex = 0.obs;
   final RxBool isExplanationExpanaded = false.obs;
@@ -66,6 +67,7 @@ class QuestionController extends GetxController {
       blocks.clear();
       selectedAnswers.clear();
       isChecked.clear();
+      skippedQuestions.clear();
       currentIndex.value = 0;
 
       final dbQuestions = await _repo.getQnByTestIdLocal(testId);
@@ -174,6 +176,19 @@ class QuestionController extends GetxController {
       isExplanationExpanaded.value = false;
     }
   }
+
+  void skipQuestion() {
+    if (currentIndex.value < testQuestions.length - 1) {
+      final q = testQuestions[currentIndex.value];
+      skippedQuestions.add(q.id);
+      selectedAnswers.remove(q.id); // clear any half-picked answer
+      currentIndex.value++;
+      _syncBlockWithIndex();
+      isExplanationExpanaded.value = false;
+    }
+  }
+
+  bool isSkipped(int questionId) => skippedQuestions.contains(questionId);
 
   void _syncBlockWithIndex() {
     final currentQ = testQuestions[currentIndex.value];

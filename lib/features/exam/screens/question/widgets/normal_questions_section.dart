@@ -14,7 +14,6 @@ import 'package:matricmate/features/personalization/controller/user_controller.d
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class QuesitonSection extends GetView<QuestionController> {
   const QuesitonSection({super.key, required this.question});
@@ -22,8 +21,6 @@ class QuesitonSection extends GetView<QuestionController> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFunctions.isDark(context);
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.defaultSpace,
@@ -43,6 +40,7 @@ class QuesitonSection extends GetView<QuestionController> {
         final isLast =
             controller.currentIndex.value ==
             controller.testQuestions.length - 1;
+        final canSkip = !isChecked && !isLast;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,44 +111,57 @@ class QuesitonSection extends GetView<QuestionController> {
             if (isChecked) const SizedBox(height: AppSizes.spaceBtwItems / 2),
             if (!isChecked) const SizedBox(height: AppSizes.spaceBtwItems),
 
-            /// BUTTONS
+            /// BUTTONS — Previous | Skip | Check/Next/Finish
             Row(
               children: [
                 /// PREVIOUS
                 Expanded(
-                  child: OutlinedButton(
+                  child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.all(13),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                     ),
                     onPressed: controller.currentIndex.value > 0
                         ? controller.previousQuestion
                         : null,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.arrow_left),
-                        Text(
-                          'Previous',
-                          style: TextStyle(
-                            color: dark
-                                ? controller.currentIndex.value <= 0
-                                      ? AppColors.darkGrey
-                                      : null
-                                : null,
-                          ),
-                        ),
-                      ],
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+                    label: const Text(
+                      'Prev',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
 
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
+
+                /// SKIP — centre slot, only when no answer & not last
+                if (canSkip) ...[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        foregroundColor: AppColors.darkGrey,
+                        side: BorderSide(
+                          color: AppColors.darkGrey.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      onPressed: controller.skipQuestion,
+                      icon: const Icon(Icons.skip_next_rounded, size: 16),
+                      label: const Text(
+                        'Skip',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
 
                 /// NEXT / CHECK / FINISH
                 Expanded(
-                  child: OutlinedButton(
+                  child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.all(13),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                     ),
                     onPressed: selectedIndex == null
                         ? null
@@ -195,17 +206,20 @@ class QuesitonSection extends GetView<QuestionController> {
                               controller.nextQuestion();
                             }
                           },
-                    child: Text(
+                    icon: Icon(
                       !isChecked
-                          ? 'Check Answer'
-                          : (isLast ? 'Finished' : 'Next'),
-                      style: TextStyle(
-                        color: dark
-                            ? selectedIndex == null
-                                  ? AppColors.darkGrey
-                                  : null
-                            : null,
-                      ),
+                          ? Icons.check_circle_outline_rounded
+                          : (isLast
+                              ? Icons.flag_rounded
+                              : Icons.arrow_forward_ios_rounded),
+                      size: 15,
+                    ),
+                    label: Text(
+                      !isChecked
+                          ? 'Check'
+                          : (isLast ? 'Finish' : 'Next'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),

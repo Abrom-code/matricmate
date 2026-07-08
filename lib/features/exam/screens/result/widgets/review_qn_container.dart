@@ -140,7 +140,7 @@ class ReviewContainer extends GetView<ReviewController> {
                                 child: CircularProgressIndicator(),
                               ),
                             )
-                          : SelectableText(
+                          : Text(
                               passage.content,
                               style: TextStyle(
                                 fontSize: 14,
@@ -260,12 +260,11 @@ class _ReviewExplanationBox extends StatelessWidget {
                             ),
                           ),
                         ),
-                      Icon(
-                        expanded
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
-                        color: AppColors.primary,
-                      ),
+                      if (!expanded)
+                        const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: AppColors.primary,
+                        ),
                       const SizedBox(width: 4),
                     ],
                   ),
@@ -278,7 +277,7 @@ class _ReviewExplanationBox extends StatelessWidget {
               Obx(
                 () => Padding(
                   padding: const EdgeInsets.all(16),
-                  child: SelectableText(
+                  child: Text(
                     languageSelected.value == 'AM'
                         ? qn.explanationAm
                         : qn.explanationEn,

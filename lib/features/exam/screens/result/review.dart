@@ -23,13 +23,12 @@ class TestReviewScreen extends GetView<ReviewController> {
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
-      body: SingleChildScrollView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
-        child: Column(
-          spacing: AppSizes.spaceBtwItems,
-          children: [
-            ...examQn.map((qn) => ReviewContainer(qn: qn, result: result)),
-          ],
+        itemCount: examQn.length,
+        itemBuilder: (_, i) => Padding(
+          padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+          child: ReviewContainer(qn: examQn[i], result: result),
         ),
       ),
       bottomNavigationBar: SizedBox(

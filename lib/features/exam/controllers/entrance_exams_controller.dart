@@ -15,6 +15,7 @@ class ExamsController extends GetxController {
 
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
   final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
+  final RxMap<int, int> testQuestionCounts = <int, int>{}.obs;
 
   final RxBool isLoading = false.obs;
 
@@ -35,6 +36,7 @@ class ExamsController extends GetxController {
       isLoading.value = true;
       testHasQuestions.clear();
       testResults.clear();
+      testQuestionCounts.clear();
       entranceTests.clear();
       modelTests.clear();
 
@@ -51,8 +53,11 @@ class ExamsController extends GetxController {
       modelTests.assignAll(model);
 
       final all = [...entrance, ...model];
-      await loadTestQuestionFlags(all);
-      await loadTestResults(all);
+      await Future.wait([
+        loadTestQuestionFlags(all),
+        loadActualQuestionCounts(all),
+        loadTestResults(all),
+      ]);
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -66,6 +71,19 @@ class ExamsController extends GetxController {
         final hasQn = await _testRepository.hasQns(test.id);
         testHasQuestions[test.id] = hasQn;
       }
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
+  }
+
+  Future<void> loadActualQuestionCounts(List<TestModel> tests) async {
+    try {
+      await Future.wait(
+        tests.map((test) async {
+          final count = await _testRepository.getActualQuestionCount(test.id);
+          testQuestionCounts[test.id] = count;
+        }),
+      );
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }

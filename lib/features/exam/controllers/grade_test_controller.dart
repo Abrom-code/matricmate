@@ -10,6 +10,7 @@ class GradeTestController extends GetxController {
   final RxList<TestModel> chapterTests = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
   final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
+  final RxMap<int, int> testQuestionCounts = <int, int>{}.obs;
 
   final RxBool isLoading = false.obs;
   late String subjectName;
@@ -31,6 +32,7 @@ class GradeTestController extends GetxController {
       isLoading.value = true;
       testHasQuestions.clear();
       testResults.clear();
+      testQuestionCounts.clear();
 
       final dbExams = await _testRepository.getLocalTests(
         subjectId: subjectId,
@@ -44,6 +46,7 @@ class GradeTestController extends GetxController {
       // so the UI never shows "no questions" for a test that has them.
       await Future.wait([
         loadTestQuestionFlags(data),
+        loadActualQuestionCounts(data),
         loadTestResults(data),
       ]);
 
@@ -58,11 +61,23 @@ class GradeTestController extends GetxController {
 
   Future<void> loadTestQuestionFlags(List<TestModel> tests) async {
     try {
-      // Run all DB checks in parallel instead of sequentially.
       await Future.wait(
         tests.map((test) async {
           final hasQn = await _testRepository.hasQns(test.id);
           testHasQuestions[test.id] = hasQn;
+        }),
+      );
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
+  }
+
+  Future<void> loadActualQuestionCounts(List<TestModel> tests) async {
+    try {
+      await Future.wait(
+        tests.map((test) async {
+          final count = await _testRepository.getActualQuestionCount(test.id);
+          testQuestionCounts[test.id] = count;
         }),
       );
     } catch (e) {

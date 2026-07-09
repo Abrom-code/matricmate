@@ -138,7 +138,7 @@ class _ExamList extends StatelessWidget {
                 }
                 Get.dialog(
                   ReadyDialog(
-                    qnCount: test.questionCount,
+                    qnCount: controller.testQuestionCounts[test.id] ?? test.questionCount,
                     time: test.time,
                     testId: test.id,
                     id: 2,

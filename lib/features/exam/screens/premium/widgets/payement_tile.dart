@@ -22,7 +22,7 @@ Widget paymentTile({
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: dark ? AppColors.black : AppColors.white,
+            color: dark ? AppColors.darkCard : AppColors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected
@@ -39,7 +39,7 @@ Widget paymentTile({
                 children: [
                   CircleAvatar(
                     backgroundColor: dark
-                        ? AppColors.darkerGrey.withValues(alpha: 0.3)
+                        ? AppColors.darkSurface
                         : AppColors.grey.withValues(alpha: 0.4),
                     child: Icon(icon, color: AppColors.primary),
                   ),

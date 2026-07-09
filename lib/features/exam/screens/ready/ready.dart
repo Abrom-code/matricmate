@@ -24,7 +24,7 @@ class ReadyDialog extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
     final controller = Get.put(ReadyController());
     return Dialog(
-      backgroundColor: dark ? AppColors.dark : AppColors.light,
+      backgroundColor: dark ? AppColors.darkCard : AppColors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Stack(
         children: [

@@ -44,7 +44,7 @@ class ResultScreen extends GetView<ResultController> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(150),
                   color: dark
-                      ? AppColors.darkerGrey.withValues(alpha: 0.5)
+                      ? AppColors.darkCard
                       : AppColors.lightCard,
                 ),
                 child: Stack(

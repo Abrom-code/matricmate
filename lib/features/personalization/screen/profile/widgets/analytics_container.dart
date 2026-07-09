@@ -17,7 +17,7 @@ class AnalyticsContainer extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
     return Container(
       decoration: BoxDecoration(
-        color: !dark ? AppColors.light : AppColors.black,
+        color: !dark ? AppColors.white : AppColors.darkCard,
         borderRadius: BorderRadius.circular(AppSizes.md),
         border: BoxBorder.fromLTRB(
           left: const BorderSide(color: AppColors.primary, width: 4),

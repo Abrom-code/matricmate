@@ -35,7 +35,7 @@ class PassageContainer extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: dark
-              ? AppColors.darkerGrey.withValues(alpha: 0.45)
+              ? AppColors.darkCard
               : Colors.white,
           borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
           border: Border.all(

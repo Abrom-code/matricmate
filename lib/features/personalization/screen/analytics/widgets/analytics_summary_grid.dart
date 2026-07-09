@@ -74,11 +74,11 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
-        color: dark ? AppColors.black : AppColors.white,
+        color: dark ? AppColors.darkCard : AppColors.white,
         borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: dark ? 0.0 : 0.06),
             blurRadius: 10,
             spreadRadius: -2,
             offset: const Offset(0, 4),

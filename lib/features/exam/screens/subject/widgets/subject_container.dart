@@ -57,7 +57,7 @@ class SubjectContainer extends StatelessWidget {
                         Container(
                           decoration: BoxDecoration(
                             color: dark
-                                ? AppColors.darkerGrey.withValues(alpha: 0.4)
+                                ? AppColors.darkCard.withValues(alpha: 0.5)
                                 : Colors.transparent,
                             borderRadius: const BorderRadius.only(
                               bottomLeft: Radius.circular(

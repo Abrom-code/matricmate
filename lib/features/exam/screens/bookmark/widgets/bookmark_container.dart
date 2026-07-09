@@ -40,7 +40,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
         onTap: () => Get.to(() => BookmarkedQnContainer(qn: qn)),
         child: Container(
           decoration: BoxDecoration(
-            color: dark ? const Color(0xFF191919) : AppColors.white,
+            color: dark ? AppColors.darkCard : AppColors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: dark

@@ -71,7 +71,7 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
             maxHeight: MediaQuery.of(context).size.height * 0.88,
           ),
           decoration: BoxDecoration(
-            color: dark ? AppColors.dark : AppColors.white,
+            color: dark ? AppColors.darkCard : AppColors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.lg)),
           ),
           child: Column(

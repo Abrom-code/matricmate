@@ -31,7 +31,7 @@ class TestTypeDistribution extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
-        color: dark ? AppColors.black : AppColors.white,
+        color: dark ? AppColors.darkCard : AppColors.white,
         borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
         boxShadow: [
           BoxShadow(

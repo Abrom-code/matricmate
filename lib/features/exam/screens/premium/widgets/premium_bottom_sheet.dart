@@ -15,7 +15,7 @@ class PremiumBottomSheet extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        color: dark ? AppColors.dark : AppColors.lightCard,
+        color: dark ? AppColors.darkCard : AppColors.lightCard,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -115,7 +115,7 @@ class PremiumBottomSheet extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
-        color: dark ? const Color.fromARGB(255, 14, 14, 14) : Colors.white,
+        color: dark ? const Color(0xFF0E0E0E) : Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6),

@@ -212,7 +212,7 @@ class _QuestionNavigatorSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final sheetBg = dark ? AppColors.dark : AppColors.white;
+    final sheetBg = dark ? AppColors.darkCard : AppColors.white;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.55,
@@ -428,7 +428,7 @@ class _QuestionTile extends StatelessWidget {
       bg = Colors.amber;
     } else {
       bg = dark
-          ? AppColors.darkerGrey.withValues(alpha: 0.5)
+          ? AppColors.darkSurface
           : AppColors.grey;
     }
 

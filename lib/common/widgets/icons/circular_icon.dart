@@ -43,7 +43,7 @@ class CircularIcon extends StatelessWidget {
             : isCustomColor
             ? (background ?? Colors.grey)
             : dark
-            ? AppColors.black.withValues(alpha: 0.9)
+            ? AppColors.darkCard.withValues(alpha: 0.9)
             : AppColors.white.withValues(alpha: 0.9),
       ),
       child: IconButton(

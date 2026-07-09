@@ -25,7 +25,7 @@ class ReciptContainer extends StatelessWidget {
           color: AppColors.primary.withValues(alpha: 0.4),
           width: 1.5,
         ),
-        color: isDark ? AppColors.dark : AppColors.lightContainer,
+        color: isDark ? AppColors.darkCard : AppColors.lightContainer,
       ),
       child: file == null
           ? Column(

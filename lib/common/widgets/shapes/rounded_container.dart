@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -33,8 +32,18 @@ class RoundedContainer extends StatelessWidget {
             horizontal: AppSizes.sm * 1.5,
           ),
       decoration: BoxDecoration(
-        color: dark ? const Color.fromARGB(255, 27, 27, 27) : AppColors.white,
+        color: dark ? AppColors.darkCard : AppColors.white,
         borderRadius: BorderRadius.circular(radius ?? AppSizes.sm),
+        boxShadow: dark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 10,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: child,
     );

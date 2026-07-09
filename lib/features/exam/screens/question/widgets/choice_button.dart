@@ -38,19 +38,19 @@ class ChoiceButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isChecked
               ? (isCorrect
-                    ? Colors.green.withValues(alpha: 0.2)
+                    ? Colors.green.withValues(alpha: 0.15)
                     : isSelected
-                    ? Colors.red.withValues(alpha: 0.2)
+                    ? Colors.red.withValues(alpha: 0.15)
                     : dark
-                    ? AppColors.darkerGrey.withValues(alpha: 0.3)
-                    : Colors.grey[300])
+                    ? AppColors.darkChoice
+                    : Colors.grey[200])
               : (isSelected
                     ? dark
-                          ? const Color.fromARGB(255, 73, 78, 80)
+                          ? const Color(0xFF1E3A42)
                           : const Color.fromARGB(255, 179, 195, 203)
                     : dark
-                    ? AppColors.darkerGrey.withValues(alpha: 0.3)
-                    : AppColors.grey.withValues(alpha: 0.5)),
+                    ? AppColors.darkChoice
+                    : AppColors.grey.withValues(alpha: 0.45)),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isChecked
@@ -77,13 +77,13 @@ class ChoiceButton extends StatelessWidget {
                           : isSelected
                           ? Colors.red
                           : dark
-                          ? Colors.black
-                          : const Color.fromARGB(255, 109, 109, 109))
+                          ? AppColors.darkerGrey
+                          : const Color(0xFF8A8A8A))
                     : (isSelected
                           ? Colors.green
                           : dark
-                          ? Colors.black
-                          : const Color.fromARGB(255, 109, 109, 109)),
+                          ? AppColors.darkerGrey
+                          : const Color(0xFF8A8A8A)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(

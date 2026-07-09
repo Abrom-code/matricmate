@@ -19,9 +19,20 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.teal,
       brightness: Brightness.light,
+      surface: AppColors.light,           // scaffold surface
+      onSurface: const Color(0xFF1A1A1A),
     ),
     textTheme: GoogleFonts.interTextTheme(AppTextTheme.lightTextTheme),
     scaffoldBackgroundColor: AppColors.light,
+    cardColor: AppColors.lightContainer,  // white card layer
+    cardTheme: CardThemeData(
+      color: AppColors.lightContainer,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+    dividerColor: AppColors.borderPrimary,
     appBarTheme: AppAppBarTheme.lightAppBarTheme,
     bottomSheetTheme: AppBottomSheetTheme.lightBottomSheetTheme,
     checkboxTheme: AppCheckboxTheme.lightCheckboxTheme,
@@ -38,9 +49,20 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.teal,
       brightness: Brightness.dark,
+      surface: AppColors.dark,            // deep near-black scaffold
+      onSurface: AppColors.white,
     ),
     textTheme: GoogleFonts.interTextTheme(AppTextTheme.darkTextTheme),
-    scaffoldBackgroundColor: Colors.black,
+    scaffoldBackgroundColor: AppColors.dark,
+    cardColor: AppColors.darkCard,        // #1E1E1E card layer
+    cardTheme: CardThemeData(
+      color: AppColors.darkCard,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+    dividerColor: AppColors.darkBorder,
     appBarTheme: AppAppBarTheme.darkAppBarTheme,
     bottomSheetTheme: AppBottomSheetTheme.darkBottomSheetTheme,
     checkboxTheme: AppCheckboxTheme.darkCheckboxTheme,

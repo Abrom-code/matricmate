@@ -32,32 +32,47 @@ class AppExplanationBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
+    // Tinted teal background — signals "explanation" without being loud
+    final bgColor = dark
+        ? AppColors.primary.withValues(alpha: 0.10)
+        : AppColors.primary.withValues(alpha: 0.06);
+    final borderColor = AppColors.primary.withValues(alpha: dark ? 0.30 : 0.25);
+
     return GestureDetector(
       onTap: onToggle,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: dark
-              ? AppColors.darkerGrey.withValues(alpha: 0.5)
-              : Colors.white,
+          color: bgColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+          border: Border.all(color: borderColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Header ──────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Explanation',
-                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                      fontSize: 15,
-                      color: AppColors.primary,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.lightbulb_outline_rounded,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Explanation',
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ),
                   Row(
                     children: [
@@ -76,9 +91,10 @@ class AppExplanationBox extends StatelessWidget {
                           ),
                         ),
                       if (!expanded)
-                        const Icon(
+                        Icon(
                           Icons.keyboard_arrow_down_rounded,
-                          color: AppColors.primary,
+                          color: AppColors.primary.withValues(alpha: 0.8),
+                          size: 20,
                         ),
                       const SizedBox(width: 4),
                     ],
@@ -89,7 +105,7 @@ class AppExplanationBox extends StatelessWidget {
 
             // ── Body ────────────────────────────────────────────────────
             if (expanded) ...[
-              const Divider(height: 1),
+              Divider(height: 1, color: AppColors.primary.withValues(alpha: 0.15)),
               Obx(
                 () => Padding(
                   padding: const EdgeInsets.all(16),
@@ -99,9 +115,11 @@ class AppExplanationBox extends StatelessWidget {
                         : explanationEn,
                     style: TextStyle(
                       fontSize: 15,
-                      height: 1.6,
+                      height: 1.7,
                       letterSpacing: 0.1,
-                      color: dark ? AppColors.grey : AppColors.darkerGrey,
+                      color: dark
+                          ? AppColors.white.withValues(alpha: 0.85)
+                          : AppColors.darkerGrey,
                     ),
                   ),
                 ),
@@ -131,11 +149,11 @@ class _LangToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: dark
-            ? const Color.fromARGB(255, 71, 71, 71)
-            : Colors.grey.shade300,
+            ? AppColors.primary.withValues(alpha: 0.18)
+            : AppColors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -155,8 +173,8 @@ class _LangToggle extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? dark
-                    ? const Color.fromARGB(255, 44, 44, 44)
-                    : Colors.grey.shade100
+                    ? AppColors.primary.withValues(alpha: 0.35)
+                    : AppColors.primary.withValues(alpha: 0.18)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
@@ -167,8 +185,8 @@ class _LangToggle extends StatelessWidget {
             color: isSelected
                 ? AppColors.primary
                 : dark
-                ? AppColors.white.withValues(alpha: 0.7)
-                : AppColors.darkerGrey,
+                ? AppColors.primary.withValues(alpha: 0.6)
+                : AppColors.primary.withValues(alpha: 0.55),
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),

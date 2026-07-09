@@ -68,7 +68,7 @@ class _ImageSectionState extends State<ImageSection> {
         height: 200,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.grey.withValues(alpha: 0.5),
+          color: AppColors.grey.withValues(alpha: 0.35),
           borderRadius: BorderRadius.circular(16),
         ),
         child: ClipRRect(

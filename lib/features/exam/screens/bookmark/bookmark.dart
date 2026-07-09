@@ -50,7 +50,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
                   automaticallyImplyLeading: false,
                   pinned: true,
                   floating: true,
-                  backgroundColor: dark ? AppColors.black : AppColors.white,
+                  backgroundColor: dark ? AppColors.darkCard : AppColors.white,
                   expandedHeight: 130,
                   flexibleSpace: const Padding(
                     padding: EdgeInsets.all(AppSizes.defaultSpace),
@@ -63,7 +63,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
                     isScrollable: true,
                     tabAlignment: TabAlignment.start,
                     dividerHeight: 50,
-                    dividerColor: dark ? AppColors.black : AppColors.white,
+                    dividerColor: dark ? AppColors.darkCard : AppColors.white,
                     tabs: tabs.map((t) => Tab(text: t)).toList(),
                   ),
                 ),

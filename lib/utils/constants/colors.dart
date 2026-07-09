@@ -14,14 +14,29 @@ class AppColors {
   static const Color textWhite = Colors.white;
 
   // Background Colors
-  static const Color light = Color(0xFFF6F6F6);
-  static const Color dark = Color(0xFF272727);
+  // Light scaffold: warm off-white — cards sit on this as elevated white surfaces
+  static const Color light = Color(0xFFF2F3F5);
+  // Dark scaffold: near-black base — deepest layer
+  static const Color dark = Color(0xFF0F0F0F);
   static const Color primaryBackground = Color(0xFFF3F5FF);
 
-  // Background Container Colors
-  static const Color lightContainer = Color(0xFFF6F6F6);
-  static const Color lightCard = Color(0xFFe7eae7);
-  static Color darkContainer = Colors.white.withValues(alpha: 0.1);
+  // Surface / Card Colors
+  // Light: pure white cards pop off the off-white scaffold
+  static const Color lightContainer = Color(0xFFFFFFFF);
+  static const Color lightCard = Color(0xFFEDF0ED);
+  // Dark depth layers — each step is visibly lighter than the one below
+  // Scaffold base:  #0F0F0F  (set in AppTheme)
+  static const Color darkCard = Color(0xFF1E1E1E); // cards on scaffold
+  static const Color darkSurface = Color(
+    0xFF272727,
+  ); // nested containers inside cards
+  static const Color darkChoice = Color.fromARGB(
+    255,
+    22,
+    22,
+    22,
+  ); // choice buttons (reused in card & scaffold contexts)
+  static Color darkContainer = Colors.white.withValues(alpha: 0.08);
 
   // Button Colors
   static const Color buttonPrimary = Colors.teal;
@@ -29,8 +44,9 @@ class AppColors {
   static const Color buttonDisabled = Color(0xFFC4C4C4);
 
   // Border Colors
-  static const Color borderPrimary = Color(0xFFD9D9D9);
-  static const Color borderSecondary = Color(0xFFE6E6E6);
+  static const Color borderPrimary = Color(0xFFDDE1E7);
+  static const Color borderSecondary = Color(0xFFEDF0F2);
+  static const Color darkBorder = Color(0xFF2E2E2E);
 
   // Error and Validation Colors
   static const Color error = Color(0xFFd32f2f);
@@ -39,7 +55,7 @@ class AppColors {
   static const Color info = Color(0xFF1976d2);
 
   // Neutral Shades
-  static const Color black = Color(0xFF232323);
+  static const Color black = Color(0xFF1A1A1A);
   static const Color darkerGrey = Color(0xFF4F4F4F);
   static const Color darkGrey = Color(0xFF939393);
   static const Color grey = Color(0xFFE0E0E0);

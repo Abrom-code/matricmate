@@ -122,12 +122,10 @@ class RichTextParser {
 
   static TextStyle _applyTag(String tag, TextStyle base) {
     if (tag == 'b') {
-      // Bold: heavier weight + full-opacity color + slightly larger
-      final baseColor = base.color ?? AppColors.darkerGrey;
       return base.copyWith(
         fontWeight: FontWeight.w900,
         fontSize: (base.fontSize ?? 16) * 1.05,
-        color: baseColor.withValues(alpha: 1.0),
+        color: _boldColor(base),
       );
     }
     if (tag == 'i') {
@@ -140,12 +138,11 @@ class RichTextParser {
       return base.copyWith(decoration: TextDecoration.lineThrough);
     }
     if (tag == 'bi') {
-      final baseColor = base.color ?? AppColors.darkerGrey;
       return base.copyWith(
         fontWeight: FontWeight.w900,
         fontStyle: FontStyle.italic,
         fontSize: (base.fontSize ?? 16) * 1.05,
-        color: baseColor.withValues(alpha: 1.0),
+        color: _boldColor(base),
       );
     }
     if (tag == 'sup' || tag == 'sub') {
@@ -162,6 +159,20 @@ class RichTextParser {
       return base.copyWith(color: color);
     }
     return base;
+  }
+
+  /// Returns the appropriate bold text color based on the base text color.
+  ///
+  /// If the surrounding text is already dark (light mode), bold pops with
+  /// near-black. If it is light (dark mode), bold pops with pure white.
+  /// This keeps bold visually distinct without needing a BuildContext.
+  static Color _boldColor(TextStyle base) {
+    final baseColor = base.color ?? AppColors.darkerGrey;
+    // Use perceived luminance: values above 0.5 = light text = dark mode
+    final luminance = baseColor.computeLuminance();
+    return luminance > 0.5
+        ? const Color(0xFFFFFFFF) // dark mode  → pure white
+        : const Color(0xFF0D0D0D); // light mode → near-black
   }
 
   static Color? _hexColor(String hex) {

@@ -15,7 +15,7 @@ class ConnectSupportSection extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSizes.md),
-        color: dark ? AppColors.black : AppColors.white,
+        color: dark ? AppColors.darkCard : AppColors.white,
       ),
       child: Column(
         children: [

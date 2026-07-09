@@ -164,7 +164,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
                                 height: 1.6,
                                 color: dark
                                     ? const Color(0xFFC8C8C8)
-                                    : const Color(0xFF3A3A3A),
+                                    : AppColors.darkerGrey,
                               ),
                             ),
                           ),

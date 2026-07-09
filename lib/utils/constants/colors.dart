@@ -9,7 +9,7 @@ class AppColors {
   static const Color accent = Color(0xFFb0c7ff);
 
   // Text Colors
-  static const Color textPrimary = Color(0xFF333333);
+  static const Color textPrimary = Color(0xFF1C1C1E);
   static const Color textSecondary = Color(0xFF6C757D);
   static const Color textWhite = Colors.white;
 
@@ -55,8 +55,8 @@ class AppColors {
   static const Color info = Color(0xFF1976d2);
 
   // Neutral Shades
-  static const Color black = Color(0xFF1A1A1A);
-  static const Color darkerGrey = Color(0xFF4F4F4F);
+  static const Color black = Color(0xFF0A0A0A);
+  static const Color darkerGrey = Color(0xFF1C1C1E); // modern near-black — body text in light mode
   static const Color darkGrey = Color(0xFF939393);
   static const Color grey = Color(0xFFE0E0E0);
   static const Color softGrey = Color(0xFFF4F4F4);

@@ -4,6 +4,7 @@ import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 class PassageContainer extends StatelessWidget {
   const PassageContainer({super.key, required this.controller});
@@ -77,9 +78,9 @@ class PassageContainer extends StatelessWidget {
                     AppSizes.md,
                     AppSizes.md,
                   ),
-                  child: Obx(() => Text(
+                  child: Obx(() => RichTextParser.widget(
                     block.passage?.content ?? 'Loading...',
-                    style: TextStyle(
+                    baseStyle: TextStyle(
                       fontSize: 15 * controller.textScale.value,
                       height: 1.75,
                       color: dark ? AppColors.grey : AppColors.darkerGrey,

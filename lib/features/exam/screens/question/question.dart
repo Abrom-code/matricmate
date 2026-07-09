@@ -12,52 +12,10 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class QuestionScreen extends StatefulWidget {
+class QuestionScreen extends StatelessWidget {
   const QuestionScreen({super.key});
 
-  @override
-  State<QuestionScreen> createState() => _QuestionScreenState();
-}
-
-class _QuestionScreenState extends State<QuestionScreen> {
-  final ScrollController _pageScrollController = ScrollController();
-
-  // ── Overlay FAB ────────────────────────────────────────────────────────────
-  OverlayEntry? _fabEntry;
-  Offset? _fabOffset; // null = default bottom-right
-
-  void _insertFab() {
-    _fabEntry = OverlayEntry(builder: (_) => _OverlayFab(state: this));
-    // Schedule insertion after the first frame so Overlay is ready.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Overlay.of(context).insert(_fabEntry!);
-    });
-  }
-
-  void _removeFab() {
-    _fabEntry?.remove();
-    _fabEntry = null;
-  }
-
-  void _updateFabOffset(Offset o) {
-    _fabOffset = o;
-    _fabEntry?.markNeedsBuild();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _insertFab();
-  }
-
-  @override
-  void dispose() {
-    _removeFab();
-    _pageScrollController.dispose();
-    super.dispose();
-  }
-
-  void _showQuestionNavigator(BuildContext context, QuestionController ctrl) {
+  void _openSheet(BuildContext context, QuestionController ctrl) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -75,7 +33,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-
         AppHelperFunctions.showAppDialog(
           context,
           'Want to Exit?',
@@ -92,12 +49,14 @@ class _QuestionScreenState extends State<QuestionScreen> {
             ? controller.testQuestions[controller.currentIndex.value]
             : null;
 
-        // Keep FAB visible only when there are questions to navigate
-        if (hasData) {
-          _fabEntry ??= OverlayEntry(builder: (_) => _OverlayFab(state: this));
-        }
-
         return Scaffold(
+          floatingActionButton: hasData
+              ? _ProgressFab(
+                  controller: controller,
+                  onPressed: () => _openSheet(context, controller),
+                )
+              : null,
+
           appBar: Appbar(
             leadingIcon: Icons.close,
             leadingIconColor: AppColors.error,
@@ -110,45 +69,32 @@ class _QuestionScreenState extends State<QuestionScreen> {
                 Navigator.pop(context);
               },
             ),
-
             title: Builder(
-              builder: (context) {
-                final hasPassage =
-                    currentQ != null && currentQ.passageId != null;
-
+              builder: (ctx) {
+                final hasPassage = currentQ?.passageId != null;
                 final sectionTitle =
-                    (currentQ != null &&
-                        currentQ.sectionTitle != null &&
-                        currentQ.sectionTitle!.trim().isNotEmpty)
-                    ? currentQ.sectionTitle!.trim()
-                    : null;
-
-                final timerText = controller.isTimed
-                    ? controller.formattedTime(
-                        controller.remainingSeconds.value,
-                      )
-                    : '';
-
+                    (currentQ?.sectionTitle?.trim().isNotEmpty == true)
+                        ? currentQ!.sectionTitle!.trim()
+                        : null;
                 final counterText = hasData
-                    ? '${controller.currentIndex.value + 1} of '
-                          '${controller.testQuestions.length}'
+                    ? '${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
                     : 'Loading...';
-
-                if (hasPassage)
-                  return PassageLayoutCtrl(controller: controller);
-
-                final Color timerColor = controller.remainingSeconds.value < 300
+                final timerText = controller.isTimed
+                    ? controller.formattedTime(controller.remainingSeconds.value)
+                    : '';
+                final timerColor = controller.remainingSeconds.value < 300
                     ? Colors.amber
                     : AppColors.primary;
+
+                if (hasPassage) return PassageLayoutCtrl(controller: controller);
 
                 if (sectionTitle == null) {
                   return Text(
                     controller.isTimed
                         ? '$counterText ($timerText)'
                         : counterText,
-                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color:
-                          controller.isTimed &&
+                    style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                      color: controller.isTimed &&
                               controller.remainingSeconds.value < 300
                           ? Colors.amber
                           : AppColors.primary,
@@ -164,22 +110,19 @@ class _QuestionScreenState extends State<QuestionScreen> {
                         sectionTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium!
+                        style: Theme.of(ctx).textTheme.titleMedium!
                             .copyWith(color: AppColors.primary),
                       ),
                     ),
                     if (controller.isTimed) ...[
                       const SizedBox(width: AppSizes.xs),
-                      Obx(
-                        () => Text(
-                          '(${controller.formattedTime(controller.remainingSeconds.value)})',
-                          style: Theme.of(context).textTheme.labelMedium!
-                              .copyWith(
-                                color: timerColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
+                      Obx(() => Text(
+                            '(${controller.formattedTime(controller.remainingSeconds.value)})',
+                            style: Theme.of(ctx).textTheme.labelMedium!.copyWith(
+                              color: timerColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          )),
                     ],
                   ],
                 );
@@ -192,13 +135,10 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   final isSaved = controller.isBookmarked(currentQ.id);
                   return IconButton(
                     onPressed: isSaved
-                        ? () =>
-                              bookmarkController.removeFromBookmark(currentQ.id)
+                        ? () => bookmarkController.removeFromBookmark(currentQ.id)
                         : () => bookmarkController.addToBookmark(currentQ.id),
                     icon: Icon(
-                      isSaved
-                          ? Iconsax.archive_minus
-                          : Iconsax.archive_add_copy,
+                      isSaved ? Iconsax.archive_minus : Iconsax.archive_add_copy,
                       color: AppColors.primary,
                     ),
                   );
@@ -210,7 +150,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
           body: (controller.isLoading.value || controller.isPassageLoading.value)
               ? const AppCircularLoading()
               : SingleChildScrollView(
-                  controller: _pageScrollController,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -228,7 +167,57 @@ class _QuestionScreenState extends State<QuestionScreen> {
   }
 }
 
-// ── Question Navigator Bottom Sheet ─────────────────────────────────────────
+// ── FAB with progress ring ────────────────────────────────────────────────────
+
+class _ProgressFab extends StatelessWidget {
+  const _ProgressFab({
+    required this.controller,
+    required this.onPressed,
+  });
+
+  final QuestionController controller;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final total = controller.testQuestions.length;
+      final done = controller.isExamMode
+          ? controller.selectedAnswers.length
+          : controller.isChecked.values.where((v) => v).length;
+      final progress = total == 0 ? 0.0 : done / total;
+
+      return GestureDetector(
+        onTap: onPressed,
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: CustomPaint(
+            painter: _ProgressRingPainter(
+              progress: progress,
+              ringColor: AppColors.primary,
+              trackColor: AppColors.primary.withValues(alpha: 0.18),
+            ),
+            child: Container(
+              margin: const EdgeInsets.all(5),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.grid_view_rounded,
+                color: AppColors.white,
+                size: 22,
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+// ── Question Navigator Bottom Sheet ──────────────────────────────────────────
 
 class _QuestionNavigatorSheet extends StatelessWidget {
   const _QuestionNavigatorSheet({required this.controller});
@@ -265,7 +254,6 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                 ),
               ),
             ),
-
             // header
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -277,9 +265,8 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                 children: [
                   Text(
                     'Questions',
-                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.titleMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
                   ),
                   Row(
                     children: [
@@ -296,33 +283,25 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                 ],
               ),
             ),
-
             const Divider(height: 1),
-
             Expanded(
               child: Obx(() {
                 final questions = controller.testQuestions;
-
-                // Build ordered list of sections, preserving question order.
-                // Key = section label (title or null-group key).
-                // Value = list of (globalIndex, question) pairs.
                 final bool hasSections = questions.any(
-                  (q) =>
-                      q.sectionTitle != null &&
+                  (q) => q.sectionTitle != null &&
                       q.sectionTitle!.trim().isNotEmpty,
                 );
 
                 if (!hasSections) {
-                  // ── Plain grid (no sections) ──────────────────────────────
                   return GridView.builder(
                     controller: scrollCtrl,
                     padding: const EdgeInsets.all(AppSizes.defaultSpace),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 6,
-                          crossAxisSpacing: AppSizes.xs,
-                          mainAxisSpacing: AppSizes.xs,
-                        ),
+                      crossAxisCount: 6,
+                      crossAxisSpacing: AppSizes.xs,
+                      mainAxisSpacing: AppSizes.xs,
+                    ),
                     itemCount: questions.length,
                     itemBuilder: (_, i) => _QuestionTile(
                       index: i,
@@ -333,23 +312,19 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                   );
                 }
 
-                // ── Sectioned list ────────────────────────────────────────
-                // Group into ordered sections, preserving encounter order.
                 final sections = <String, List<int>>{};
                 for (int i = 0; i < questions.length; i++) {
                   final label =
                       (questions[i].sectionTitle?.trim().isNotEmpty == true)
-                      ? questions[i].sectionTitle!.trim()
-                      : '—';
+                          ? questions[i].sectionTitle!.trim()
+                          : '—';
                   sections.putIfAbsent(label, () => []).add(i);
                 }
 
-                // Flatten into a scroll-list of header + grid rows
                 return CustomScrollView(
                   controller: scrollCtrl,
                   slivers: [
                     for (final entry in sections.entries) ...[
-                      // Section header
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(
@@ -363,7 +338,9 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   entry.key,
-                                  style: Theme.of(context).textTheme.titleSmall!
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall!
                                       .copyWith(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w700,
@@ -372,15 +349,15 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                               ),
                               Text(
                                 '${entry.value.length} questions',
-                                style: Theme.of(context).textTheme.labelSmall!
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall!
                                     .copyWith(color: AppColors.darkGrey),
                               ),
                             ],
                           ),
                         ),
                       ),
-
-                      // Grid of tiles for this section
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSizes.defaultSpace,
@@ -388,10 +365,10 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                         sliver: SliverGrid(
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 6,
-                                crossAxisSpacing: AppSizes.xs,
-                                mainAxisSpacing: AppSizes.xs,
-                              ),
+                            crossAxisCount: 6,
+                            crossAxisSpacing: AppSizes.xs,
+                            mainAxisSpacing: AppSizes.xs,
+                          ),
                           delegate: SliverChildBuilderDelegate(
                             (_, j) => _QuestionTile(
                               index: entry.value[j],
@@ -418,7 +395,7 @@ class _QuestionNavigatorSheet extends StatelessWidget {
   }
 }
 
-// ── Single question number tile ───────────────────────────────────────────────
+// ── Single question tile ──────────────────────────────────────────────────────
 
 class _QuestionTile extends StatelessWidget {
   const _QuestionTile({
@@ -480,8 +457,8 @@ class _QuestionTile extends StatelessWidget {
               color: isDone || isSkipped
                   ? AppColors.white
                   : dark
-                  ? AppColors.white.withValues(alpha: 0.8)
-                  : AppColors.darkerGrey,
+                      ? AppColors.white.withValues(alpha: 0.8)
+                      : AppColors.darkerGrey,
               fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
               fontSize: 13,
             ),
@@ -491,6 +468,8 @@ class _QuestionTile extends StatelessWidget {
     );
   }
 }
+
+// ── Legend dot ────────────────────────────────────────────────────────────────
 
 class _LegendDot extends StatelessWidget {
   const _LegendDot({required this.color, required this.label});
@@ -509,118 +488,17 @@ class _LegendDot extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall!.copyWith(color: AppColors.darkGrey),
+          style: Theme.of(context)
+              .textTheme
+              .labelSmall!
+              .copyWith(color: AppColors.darkGrey),
         ),
       ],
     );
   }
 }
 
-// ── Overlay FAB ───────────────────────────────────────────────────────────────
-//
-// Renders the draggable FAB in the Flutter Overlay so it floats above the
-// entire screen — including the AppBar and system UI areas.
-//
-// • Default position: bottom-right corner (matches original floatingActionButton).
-// • Drag freely across the whole screen.
-// • Clamped to screen bounds so it never goes fully off-screen.
-// • Uses Listener (raw pointer events) so dragging never loses to the
-//   scroll view's gesture arena.
-
-class _OverlayFab extends StatelessWidget {
-  const _OverlayFab({required this.state});
-
-  final _QuestionScreenState state;
-
-  static const double _size   = 56;
-  static const double _margin = 16;
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<QuestionController>();
-    final screen     = MediaQuery.of(context).size;
-    final padding    = MediaQuery.of(context).padding;
-
-    // Usable area: full screen minus system bars
-    final maxX = screen.width  - _size - _margin;
-    final maxY = screen.height - _size - _margin - padding.bottom;
-    final minX = _margin;
-    final minY = _margin + padding.top;
-
-    // Use stored offset or default to bottom-right
-    final pos = state._fabOffset ??
-        Offset(maxX, maxY);
-
-    return Positioned(
-      left: pos.dx,
-      top:  pos.dy,
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerMove: (event) {
-          final next = Offset(
-            (pos.dx + event.delta.dx).clamp(minX, maxX),
-            (pos.dy + event.delta.dy).clamp(minY, maxY),
-          );
-          state._updateFabOffset(next);
-        },
-        child: _ProgressFab(
-          controller: controller,
-          onPressed: () =>
-              state._showQuestionNavigator(context, controller),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Progress FAB ─────────────────────────────────────────────────────────────
-
-class _ProgressFab extends StatelessWidget {
-  const _ProgressFab({required this.controller, required this.onPressed});
-
-  final QuestionController controller;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final total = controller.testQuestions.length;
-      final done = controller.isExamMode
-          ? controller.selectedAnswers.length
-          : controller.isChecked.values.where((v) => v).length;
-      final progress = total == 0 ? 0.0 : done / total;
-
-      return GestureDetector(
-        onTap: onPressed,
-        child: SizedBox(
-          width: 56,
-          height: 56,
-          child: CustomPaint(
-            painter: _ProgressRingPainter(
-              progress: progress,
-              ringColor: AppColors.primary,
-              trackColor: AppColors.primary.withValues(alpha: 0.18),
-            ),
-            child: Container(
-              margin: const EdgeInsets.all(5),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.grid_view_rounded,
-                color: AppColors.white,
-                size: 22,
-              ),
-            ),
-          ),
-        ),
-      );
-    });
-  }
-}
+// ── Progress ring painter ─────────────────────────────────────────────────────
 
 class _ProgressRingPainter extends CustomPainter {
   const _ProgressRingPainter({
@@ -643,12 +521,8 @@ class _ProgressRingPainter extends CustomPainter {
       size.height - strokeWidth,
     );
 
-    // background track
     canvas.drawArc(
-      rect,
-      -1.5708, // -90° (start at top)
-      6.2832, // full circle
-      false,
+      rect, -1.5708, 6.2832, false,
       Paint()
         ..color = trackColor
         ..style = PaintingStyle.stroke
@@ -656,13 +530,9 @@ class _ProgressRingPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round,
     );
 
-    // progress arc
     if (progress > 0) {
       canvas.drawArc(
-        rect,
-        -1.5708,
-        6.2832 * progress,
-        false,
+        rect, -1.5708, 6.2832 * progress, false,
         Paint()
           ..color = ringColor
           ..style = PaintingStyle.stroke

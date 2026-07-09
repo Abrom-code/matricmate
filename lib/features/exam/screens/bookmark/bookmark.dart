@@ -18,30 +18,32 @@ class BookmarkScreen extends GetView<BookmarkController> {
     final dark = AppHelperFunctions.isDark(context);
     controller.clearSearch();
 
-    final tabs = controller.subjects;
+    return Scaffold(
+      appBar: ModernAppbarWithBuilder(
+        title: 'Bookmarks',
+        subtitleBuilder: (_) => Obx(() {
+          final count = controller.bookmarkedQuestions.length;
+          return Text(
+            '$count ${count == 1 ? 'item' : 'items'} saved',
+            style: const TextStyle(
+              color: AppColors.white,
+              fontSize: 12,
+            ),
+          );
+        }),
+      ),
+      body: Obx(() {
+        if (UserController.instance.userFetching.value) {
+          return const AppCircularLoading(title: 'Loading...');
+        }
 
-    return DefaultTabController(
-      length: tabs.length,
-      child: Scaffold(
-        appBar: ModernAppbarWithBuilder(
-          title: 'Bookmarks',
-          subtitleBuilder: (_) => Obx(() {
-            final count = controller.bookmarkedQuestions.length;
-            return Text(
-              '$count ${count == 1 ? 'item' : 'items'} saved',
-              style: const TextStyle(
-                color: AppColors.white,
-                fontSize: 12,
-              ),
-            );
-          }),
-        ),
-        body: Obx(() {
-          if (UserController.instance.userFetching.value) {
-            return const AppCircularLoading(title: 'Loading...');
-          }
+        // Re-evaluated reactively every time bookmarkedQuestions or subjects change
+        final tabs = controller.subjects;
 
-          return NestedScrollView(
+        return DefaultTabController(
+          key: ValueKey(tabs.length),
+          length: tabs.length,
+          child: NestedScrollView(
             headerSliverBuilder: (_, innerBoxScrolled) {
               return [
                 SliverAppBar(
@@ -70,33 +72,31 @@ class BookmarkScreen extends GetView<BookmarkController> {
 
             body: TabBarView(
               children: tabs.map((subject) {
-                return Obx(() {
-                  final filtered = controller.getBySubject(subject);
-                  if (controller.isLoading.value) {
-                    return const AppCircularLoading(title: 'Loading...');
-                  }
-                  if (filtered.isEmpty) {
-                    return const Center(child: Text('No bookmark found'));
-                  }
+                final filtered = controller.getBySubject(subject);
+                if (controller.isLoading.value) {
+                  return const AppCircularLoading(title: 'Loading...');
+                }
+                if (filtered.isEmpty) {
+                  return const Center(child: Text('No bookmark found'));
+                }
 
-                  return Container(
-                    margin: const EdgeInsets.all(AppSizes.defaultSpace / 2),
-                    child: ListView.separated(
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSizes.spaceBtwItems),
-                      itemBuilder: (_, index) {
-                        final qn = filtered[index];
-                        return BookmarkContainer(qn: qn);
-                      },
-                    ),
-                  );
-                });
+                return Container(
+                  margin: const EdgeInsets.all(AppSizes.defaultSpace / 2),
+                  child: ListView.separated(
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSizes.spaceBtwItems),
+                    itemBuilder: (_, index) {
+                      final qn = filtered[index];
+                      return BookmarkContainer(qn: qn);
+                    },
+                  ),
+                );
               }).toList(),
             ),
-          );
-        }),
-      ),
+          ),
+        );
+      }),
     );
   }
 }

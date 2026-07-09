@@ -81,13 +81,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
               final hasPassage =
                   currentQ != null && currentQ.passageId != null;
 
-              // The counter / timer text shown for non-passage questions
-              final counterText = hasData
-                  ? '${controller.currentIndex.value + 1} of '
-                      '${controller.testQuestions.length}'
-                      '${controller.isTimed ? ' (${controller.formattedTime(controller.remainingSeconds.value)})' : ''}'
-                  : 'Loading...';
-
               // Section title — shown only when present and non-empty
               final sectionTitle =
                   (currentQ != null &&
@@ -96,30 +89,64 @@ class _QuestionScreenState extends State<QuestionScreen> {
                       ? currentQ.sectionTitle!.trim()
                       : null;
 
-              // The main title widget (counter or PassageLayoutCtrl)
-              final Widget mainTitle = hasPassage
-                  ? PassageLayoutCtrl(controller: controller)
-                  : Text(
-                      counterText,
+              // Timer string — non-empty only when timed
+              final timerText = controller.isTimed
+                  ? controller.formattedTime(controller.remainingSeconds.value)
+                  : '';
+
+              // Counter text (no timer — timer shown separately when needed)
+              final counterText = hasData
+                  ? '${controller.currentIndex.value + 1} of '
+                      '${controller.testQuestions.length}'
+                  : 'Loading...';
+
+              // Passage questions always use PassageLayoutCtrl
+              if (hasPassage) return PassageLayoutCtrl(controller: controller);
+
+              // Timer color: yellow under 5 minutes, primary otherwise
+              final Color timerColor = controller.remainingSeconds.value < 300
+                  ? Colors.amber
+                  : AppColors.primary;
+
+              // When no section title just show counter + optional timer inline
+              if (sectionTitle == null) {
+                return Text(
+                  controller.isTimed
+                      ? '$counterText ($timerText)'
+                      : counterText,
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: controller.isTimed &&
+                            controller.remainingSeconds.value < 300
+                        ? Colors.amber
+                        : AppColors.primary,
+                  ),
+                );
+              }
+
+              // Section title: truncated + timer always visible when timed
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      sectionTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium!.copyWith(
                         color: AppColors.primary,
                       ),
-                    );
-
-              if (sectionTitle == null) return mainTitle;
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    sectionTitle,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  mainTitle,
+                  if (controller.isTimed) ...[
+                    const SizedBox(width: AppSizes.xs),
+                    Obx(() => Text(
+                      '(${controller.formattedTime(controller.remainingSeconds.value)})',
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                        color: timerColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )),
+                  ],
                 ],
               );
             }),
@@ -229,7 +256,6 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  // legend
                   Row(
                     children: [
                       const _LegendDot(color: AppColors.success, label: 'Done'),
@@ -248,94 +274,199 @@ class _QuestionNavigatorSheet extends StatelessWidget {
 
             const Divider(height: 1),
 
-            // grid
             Expanded(
               child: Obx(() {
                 final questions = controller.testQuestions;
-                return GridView.builder(
+
+                // Build ordered list of sections, preserving question order.
+                // Key = section label (title or null-group key).
+                // Value = list of (globalIndex, question) pairs.
+                final bool hasSections = questions.any(
+                  (q) =>
+                      q.sectionTitle != null &&
+                      q.sectionTitle!.trim().isNotEmpty,
+                );
+
+                if (!hasSections) {
+                  // ── Plain grid (no sections) ──────────────────────────────
+                  return GridView.builder(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.all(AppSizes.defaultSpace),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 6,
+                      crossAxisSpacing: AppSizes.xs,
+                      mainAxisSpacing: AppSizes.xs,
+                    ),
+                    itemCount: questions.length,
+                    itemBuilder: (_, i) => _QuestionTile(
+                      index: i,
+                      controller: controller,
+                      dark: dark,
+                      context: context,
+                    ),
+                  );
+                }
+
+                // ── Sectioned list ────────────────────────────────────────
+                // Group into ordered sections, preserving encounter order.
+                final sections = <String, List<int>>{};
+                for (int i = 0; i < questions.length; i++) {
+                  final label =
+                      (questions[i].sectionTitle?.trim().isNotEmpty == true)
+                          ? questions[i].sectionTitle!.trim()
+                          : '—';
+                  sections.putIfAbsent(label, () => []).add(i);
+                }
+
+                // Flatten into a scroll-list of header + grid rows
+                return CustomScrollView(
                   controller: scrollCtrl,
-                  padding: const EdgeInsets.all(AppSizes.defaultSpace),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    crossAxisSpacing: AppSizes.sm,
-                    mainAxisSpacing: AppSizes.sm,
-                  ),
-                  itemCount: questions.length,
-                  itemBuilder: (_, i) {
-                    final q = questions[i];
-                    final isCurrent = controller.currentIndex.value == i;
-                    final isSkipped = controller.isSkipped(q.id);
-
-                    // In exam mode answers are never "checked", so treat
-                    // "has a selected answer" as done instead.
-                    final isDone = controller.isExamMode
-                        ? controller.selectedAnswers.containsKey(q.id)
-                        : controller.isAnswerChecked(q.id);
-
-                    final Color bg;
-                    if (isDone) {
-                      bg = AppColors.success;
-                    } else if (isSkipped) {
-                      bg = Colors.amber;
-                    } else {
-                      bg = dark
-                          ? AppColors.darkerGrey.withValues(alpha: 0.5)
-                          : AppColors.grey;
-                    }
-
-                    return GestureDetector(
-                      onTap: () {
-                        controller.jumpToQuestion(i);
-                        Navigator.pop(context);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        decoration: BoxDecoration(
-                          color: bg,
-                          borderRadius: BorderRadius.circular(
-                            AppSizes.borderRadiusMd,
+                  slivers: [
+                    for (final entry in sections.entries) ...[
+                      // Section header
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSizes.defaultSpace,
+                            AppSizes.spaceBtwItems,
+                            AppSizes.defaultSpace,
+                            AppSizes.sm,
                           ),
-                          border: isCurrent
-                              ? Border.all(
-                                  color: AppColors.primary,
-                                  width: 2.5,
-                                )
-                              : null,
-                          boxShadow: isCurrent
-                              ? [
-                                  BoxShadow(
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.4,
-                                    ),
-                                    blurRadius: 6,
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${i + 1}',
-                            style: TextStyle(
-                              color: isDone || isSkipped
-                                  ? AppColors.white
-                                  : dark
-                                  ? AppColors.white.withValues(alpha: 0.8)
-                                  : AppColors.darkerGrey,
-                              fontWeight: isCurrent
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                              fontSize: 13,
-                            ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  entry.key,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall!
+                                      .copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ),
+                              Text(
+                                '${entry.value.length} questions',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall!
+                                    .copyWith(color: AppColors.darkGrey),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    );
-                  },
+
+                      // Grid of tiles for this section
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.defaultSpace,
+                        ),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 6,
+                            crossAxisSpacing: AppSizes.xs,
+                            mainAxisSpacing: AppSizes.xs,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (_, j) => _QuestionTile(
+                              index: entry.value[j],
+                              controller: controller,
+                              dark: dark,
+                              context: context,
+                            ),
+                            childCount: entry.value.length,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: AppSizes.defaultSpace),
+                    ),
+                  ],
                 );
               }),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Single question number tile ───────────────────────────────────────────────
+
+class _QuestionTile extends StatelessWidget {
+  const _QuestionTile({
+    required this.index,
+    required this.controller,
+    required this.dark,
+    required this.context,
+  });
+
+  final int index;
+  final QuestionController controller;
+  final bool dark;
+  final BuildContext context;
+
+  @override
+  Widget build(BuildContext _) {
+    final q = controller.testQuestions[index];
+    final isCurrent = controller.currentIndex.value == index;
+    final isSkipped = controller.isSkipped(q.id);
+    final isDone = controller.isExamMode
+        ? controller.selectedAnswers.containsKey(q.id)
+        : controller.isAnswerChecked(q.id);
+
+    final Color bg;
+    if (isDone) {
+      bg = AppColors.success;
+    } else if (isSkipped) {
+      bg = Colors.amber;
+    } else {
+      bg = dark
+          ? AppColors.darkerGrey.withValues(alpha: 0.5)
+          : AppColors.grey;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        controller.jumpToQuestion(index);
+        Navigator.pop(context);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
+          border: isCurrent
+              ? Border.all(color: AppColors.primary, width: 2.5)
+              : null,
+          boxShadow: isCurrent
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                    blurRadius: 6,
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            '${index + 1}',
+            style: TextStyle(
+              color: isDone || isSkipped
+                  ? AppColors.white
+                  : dark
+                  ? AppColors.white.withValues(alpha: 0.8)
+                  : AppColors.darkerGrey,
+              fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
         ),
       ),
     );
@@ -408,27 +539,10 @@ class _ProgressFab extends StatelessWidget {
                 color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '$done',
-                    style: const TextStyle(
-                      color: AppColors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      height: 1.1,
-                    ),
-                  ),
-                  Text(
-                    '/$total',
-                    style: TextStyle(
-                      color: AppColors.white.withValues(alpha: 0.75),
-                      fontSize: 9,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
+              child: const Icon(
+                Icons.grid_view_rounded,
+                color: AppColors.white,
+                size: 22,
               ),
             ),
           ),

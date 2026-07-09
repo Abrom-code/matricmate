@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/exam/bookmark_repository.dart';
 import 'package:matricmate/data/repositories/exam/question_repository.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -24,6 +25,13 @@ class BookmarkController extends GetxController {
   final RxMap<int, bool> isPassageExpanded = <int, bool>{}.obs;
   final RxMap<int, PassageModel> passages = <int, PassageModel>{}.obs;
   final RxBool isLoading = false.obs;
+
+  // testId → type string cache (populated during loadBookmarks)
+  final Map<int, String> _testTypeCache = {};
+
+  /// Returns the display label for a question's test type.
+  /// Falls back to 'Unknown' if the test isn't cached yet.
+  String testType(int testId) => _testTypeCache[testId] ?? 'Unknown';
 
   void toggleExpanded(int qnId) {
     isExpanded[qnId] = !(isExpanded[qnId] ?? false);
@@ -93,6 +101,7 @@ class BookmarkController extends GetxController {
           .toList();
 
       await _loadPassages(bookmarkedQuestions);
+      await _loadTestTypes(bookmarkedQuestions);
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -113,6 +122,27 @@ class BookmarkController extends GetxController {
           passages[pid] = p;
         } catch (_) {}
       }
+    }
+  }
+
+  Future<void> _loadTestTypes(List<QuestionModel> questions) async {
+    final testIds = questions.map((q) => q.testId).toSet();
+    final db = await DatabaseService.instance.database;
+
+    for (final tid in testIds) {
+      if (_testTypeCache.containsKey(tid)) continue;
+      try {
+        final rows = await db.query(
+          'tests',
+          columns: ['type'],
+          where: 'id = ?',
+          whereArgs: [tid],
+          limit: 1,
+        );
+        if (rows.isNotEmpty) {
+          _testTypeCache[tid] = rows.first['type'] as String? ?? 'Unknown';
+        }
+      } catch (_) {}
     }
   }
 

@@ -7,7 +7,6 @@ import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/bookmark_qn_container.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
@@ -20,7 +19,11 @@ class BookmarkContainer extends GetView<BookmarkController> {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final isGrater = qn.questionText.length > 150;
+
+    final preview = qn.questionText.length > 120
+        ? '${qn.questionText.substring(0, 120)}...'
+        : qn.questionText;
+
     final bookmark = controller.bookmarkedQuestionIds.firstWhere(
       (b) => b.questionId == qn.id,
       orElse: () => BookmarkModel(
@@ -30,95 +33,248 @@ class BookmarkContainer extends GetView<BookmarkController> {
       ),
     );
 
-    final savedAt = bookmark.savedAt;
     return Obx(() {
+      final subjectName = controller.subject(qn.subjectId);
+
       return GestureDetector(
-        onTap: () => Get.to(BookmarkedQnContainer(qn: qn)),
+        onTap: () => Get.to(() => BookmarkedQnContainer(qn: qn)),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.defaultSpace / 1.3,
-            vertical: AppSizes.defaultSpace / 3,
-          ),
           decoration: BoxDecoration(
-            color: dark
-                ? AppColors.darkerGrey.withValues(alpha: 0.5)
-                : AppColors.lightCard,
-            borderRadius: BorderRadius.circular(AppSizes.md),
+            color: dark ? const Color(0xFF191919) : AppColors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: dark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : const Color(0xFFEAEAEA),
+            ),
+            boxShadow: dark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.055),
+                      blurRadius: 14,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // ── Left accent bar ───────────────────────────────────
                   Container(
-                    padding: const EdgeInsets.all(AppSizes.sm),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppSizes.lg),
-                    ),
-                    child: Text(
-                      controller.subject(qn.subjectId).toUpperCase(),
-                      style: const TextStyle(color: AppColors.primary),
-                    ),
-                  ),
-
-                  IconButton(
-                    padding: const EdgeInsets.all(0),
-                    onPressed: () => AppHelperFunctions.showAppDialog(
-                      context,
-                      'Do you want to remove?',
-                      'It will be deleted from your bookmark!',
-                      () async {
-                        Get.back();
-
-                        await controller.removeFromBookmark(qn.id);
-                        FocusManager.instance.primaryFocus?.unfocus();
-                      },
-                    ),
-                    icon: const Icon(Iconsax.archive_minus, color: AppColors.primary),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: AppSizes.spaceBtwItems / 2),
-
-              Text.rich(
-                RichTextParser.parse(
-                  ' ${qn.questionText.substring(0, isGrater ? 150 : qn.questionText.length)}${isGrater ? ' ...' : ''}',
-                  TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    height: 1.6,
-                    letterSpacing: 0.1,
-                    color: dark ? AppColors.grey : AppColors.darkerGrey,
-                  ),
-                ),
-                textAlign: TextAlign.start,
-              ),
-              const SizedBox(height: AppSizes.spaceBtwItems / 2),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.date_range, color: AppColors.darkGrey, size: 17),
-                      const SizedBox(width: AppSizes.xs),
-                      Text(
-                        'Saved ${AppFormatter.formatDate(savedAt)}',
-                        style: const TextStyle(color: AppColors.darkGrey),
+                    width: 4,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF00897B), Color(0xFF4DB6AC)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
-                    ],
+                    ),
                   ),
-                  const Icon(Icons.keyboard_arrow_right),
+
+                  // ── Card body ─────────────────────────────────────────
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 11, 10, 11),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Top row: subject + actions ──────────────
+                          Row(
+                            children: [
+                              // Subject chip
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary
+                                      .withValues(alpha: dark ? 0.18 : 0.09),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  subjectName.toUpperCase(),
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.6,
+                                  ),
+                                ),
+                              ),
+
+                              const Spacer(),
+
+                              // Clock + date
+                              const Icon(
+                                Iconsax.clock,
+                                size: 11,
+                                color: AppColors.darkGrey,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                AppFormatter.formatDate(bookmark.savedAt),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.darkGrey,
+                                ),
+                              ),
+
+                              const SizedBox(width: 8),
+
+                              // Delete icon
+                              GestureDetector(
+                                onTap: () =>
+                                    AppHelperFunctions.showAppDialog(
+                                  context,
+                                  'Remove bookmark?',
+                                  'This question will be removed from your saved list.',
+                                  () async {
+                                    Get.back();
+                                    await controller
+                                        .removeFromBookmark(qn.id);
+                                    FocusManager.instance.primaryFocus
+                                        ?.unfocus();
+                                  },
+                                ),
+                                child: Icon(
+                                  Iconsax.archive_minus,
+                                  size: 16,
+                                  color: dark
+                                      ? AppColors.darkGrey
+                                      : const Color(0xFFAAAAAA),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 9),
+
+                          // ── Question preview ────────────────────────
+                          Text.rich(
+                            RichTextParser.parse(
+                              preview,
+                              TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w400,
+                                height: 1.6,
+                                color: dark
+                                    ? const Color(0xFFC8C8C8)
+                                    : const Color(0xFF3A3A3A),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // ── Footer ──────────────────────────────────
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _TestTypePill(type: controller.testType(qn.testId), dark: dark),
+
+                              // View link
+                              const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'View',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 10,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: AppSizes.spaceBtwItems / 2),
-            ],
+            ),
           ),
         ),
       );
     });
+  }
+}
+
+// ── Test type pill ──────────────────────────────────────────────────────────
+class _TestTypePill extends StatelessWidget {
+  const _TestTypePill({required this.type, required this.dark});
+
+  final String type;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    final key = type.toLowerCase();
+
+    final IconData icon;
+    final String label;
+
+    switch (key) {
+      case 'entrance':
+        icon = Iconsax.medal_star;
+        label = 'Entrance';
+        break;
+      case 'model':
+        icon = Iconsax.clipboard_text;
+        label = 'Model';
+        break;
+      case 'chapter':
+        icon = Iconsax.book;
+        label = 'Chapter';
+        break;
+      case 'grade':
+        icon = Iconsax.award;
+        label = 'Grade';
+        break;
+      default:
+        icon = Iconsax.info_circle;
+        label = type.isEmpty ? 'Unknown' : type;
+    }
+
+    final color = AppColors.primary;
+    final bg = dark
+        ? AppColors.primary.withValues(alpha: 0.15)
+        : AppColors.primary.withValues(alpha: 0.08);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -23,26 +23,26 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        // Drop and recreate all tables on schema changes.
-        final tables = [
-          'bookmarks',
-          'results',
-          'questions',
-          'passages',
-          'tests',
-          'chapters',
-          'subjects',
-          'user',
-        ];
-        for (final table in tables) {
-          await db.execute('DROP TABLE IF EXISTS $table');
+        if (oldVersion < 3) {
+          // Safe migration: add section columns if they don't exist yet.
+          // SQLite has no IF NOT EXISTS for ALTER TABLE, so we catch the
+          // duplicate-column error and ignore it.
+          for (final sql in [
+            'ALTER TABLE questions ADD COLUMN section_id INTEGER',
+            'ALTER TABLE questions ADD COLUMN section_title TEXT',
+          ]) {
+            try {
+              await db.execute(sql);
+            } catch (_) {
+              // Column already exists — safe to ignore.
+            }
+          }
         }
-        await DBschema.create(db);
       },
     );
   }

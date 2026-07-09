@@ -77,16 +77,52 @@ class _QuestionScreenState extends State<QuestionScreen> {
               },
             ),
 
-            title: (currentQ != null && currentQ.passageId != null)
-                ? PassageLayoutCtrl(controller: controller)
-                : Text(
-                    hasData
-                        ? "${controller.currentIndex.value + 1} of ${controller.testQuestions.length} ${controller.isTimed ? '(${controller.formattedTime(controller.remainingSeconds.value)})' : ''}"
-                        : 'Loading...',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium!.copyWith(color: AppColors.primary),
+            title: Builder(builder: (context) {
+              final hasPassage =
+                  currentQ != null && currentQ.passageId != null;
+
+              // The counter / timer text shown for non-passage questions
+              final counterText = hasData
+                  ? '${controller.currentIndex.value + 1} of '
+                      '${controller.testQuestions.length}'
+                      '${controller.isTimed ? ' (${controller.formattedTime(controller.remainingSeconds.value)})' : ''}'
+                  : 'Loading...';
+
+              // Section title — shown only when present and non-empty
+              final sectionTitle =
+                  (currentQ != null &&
+                          currentQ.sectionTitle != null &&
+                          currentQ.sectionTitle!.trim().isNotEmpty)
+                      ? currentQ.sectionTitle!.trim()
+                      : null;
+
+              // The main title widget (counter or PassageLayoutCtrl)
+              final Widget mainTitle = hasPassage
+                  ? PassageLayoutCtrl(controller: controller)
+                  : Text(
+                      counterText,
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    );
+
+              if (sectionTitle == null) return mainTitle;
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    sectionTitle,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+                  const SizedBox(height: 2),
+                  mainTitle,
+                ],
+              );
+            }),
             centerTitle: true,
             actions: [
               if (currentQ != null)

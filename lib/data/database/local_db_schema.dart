@@ -76,6 +76,8 @@ class DBschema {
         explanation_en TEXT,
         explanation_am TEXT,
         question_order INTEGER DEFAULT 1,
+        section_id INTEGER,
+        section_title TEXT,
 
         FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
         FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE SET NULL,

@@ -85,7 +85,7 @@ class SyncRepository {
 
       final questionsData = await supabase
           .from('questions')
-          .select()
+          .select('*, question_sections(title)')
           .inFilter('test_id', testIds);
 
       final Set<int> passageIds = {};
@@ -132,6 +132,12 @@ class SyncRepository {
     String table,
     List<String> ids,
   ) async {
+    if (table == 'questions') {
+      return await supabase
+          .from('questions')
+          .select('*, question_sections(title)')
+          .inFilter('subject_id', ids);
+    }
     return await supabase.from(table).select().inFilter('subject_id', ids);
   }
 
@@ -153,6 +159,7 @@ class SyncRepository {
     },
     'passages': {'id', 'content', 'title', 'image_url'},
     // questions go through QuestionModel.toMap() — not sanitized here
+    // (section_id and section_title are included via toMap())
   };
 
   /// Public static accessor so SyncingController can sanitize test maps

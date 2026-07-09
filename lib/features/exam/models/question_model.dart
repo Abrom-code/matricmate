@@ -2,19 +2,17 @@ import 'dart:convert';
 
 class QuestionModel {
   int id;
-
   int subjectId;
   int? grade;
-
   int? chapterId;
   int testId;
-
   int? passageId;
-
   int? questionOrder;
+  int? sectionId;
 
   String questionText;
   String? imageUrl;
+  String? sectionTitle;
 
   int correctOptionIndex;
 
@@ -31,11 +29,12 @@ class QuestionModel {
     required this.correctOptionIndex,
     required this.questionText,
     required this.options,
-
     this.chapterId,
     this.passageId,
     this.questionOrder,
     this.imageUrl,
+    this.sectionId,
+    this.sectionTitle,
     this.explanationEn = 'No English Explanation!',
     this.explanationAm = 'No Amharic Explanation!',
   });
@@ -45,23 +44,23 @@ class QuestionModel {
       id: map['id'],
       subjectId: map['subject_id'],
       grade: map['grade'],
-
       testId: map['test_id'],
-
       correctOptionIndex: map['correct_option_index'],
       questionText: map['question_text'] ?? '',
-
       chapterId: map['chapter_id'],
       passageId: map['passage_id'],
       questionOrder: map['question_order'],
-
       imageUrl: map['image_url']?.toString(),
-
+      sectionId: map['section_id'],
+      // Handles both SQLite flat column and Supabase nested relation
+      sectionTitle: map['section_title']?.toString() ??
+          (map['question_sections'] is Map
+              ? map['question_sections']['title']?.toString()
+              : null),
       explanationEn:
           map['explanation_en']?.toString() ?? 'No English Explanation!',
       explanationAm:
           map['explanation_am']?.toString() ?? 'No Amharic Explanation!',
-
       options: map['options'] == null
           ? []
           : map['options'] is String
@@ -79,20 +78,17 @@ class QuestionModel {
       'subject_id': subjectId,
       'grade': grade,
       'test_id': testId,
-
       'chapter_id': chapterId,
       'passage_id': passageId,
       'question_order': questionOrder,
-
       'question_text': questionText,
       'image_url': imageUrl,
-
       'correct_option_index': correctOptionIndex,
-
       'explanation_en': explanationEn,
       'explanation_am': explanationAm,
-
       'options': jsonEncode(options),
+      'section_id': sectionId,
+      'section_title': sectionTitle,
     };
   }
 
@@ -109,6 +105,8 @@ class QuestionModel {
       passageId: null,
       questionOrder: null,
       imageUrl: null,
+      sectionId: null,
+      sectionTitle: null,
       explanationEn: 'No English Explanation!',
       explanationAm: 'No Amharic Explanation!',
     );

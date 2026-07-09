@@ -40,7 +40,7 @@ class AppDrawer extends StatelessWidget {
                       Text(
                         'Stream: $stream',
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: AppColors.white,
                           fontSize: 14,
                         ),
                       ),

@@ -41,7 +41,7 @@ class BookmarkContainer extends GetView<BookmarkController> {
           decoration: BoxDecoration(
             color: dark
                 ? AppColors.darkerGrey.withValues(alpha: 0.5)
-                : const Color(0xFFe7eae7),
+                : AppColors.lightCard,
             borderRadius: BorderRadius.circular(AppSizes.md),
           ),
           child: Column(
@@ -98,11 +98,11 @@ class BookmarkContainer extends GetView<BookmarkController> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.date_range, color: Colors.grey, size: 17),
+                      const Icon(Icons.date_range, color: AppColors.darkGrey, size: 17),
                       const SizedBox(width: AppSizes.xs),
                       Text(
                         'Saved ${AppFormatter.formatDate(savedAt)}',
-                        style: const TextStyle(color: Colors.grey),
+                        style: const TextStyle(color: AppColors.darkGrey),
                       ),
                     ],
                   ),

@@ -39,9 +39,9 @@ Widget paymentTile({
                 children: [
                   CircleAvatar(
                     backgroundColor: dark
-                        ? Colors.grey.withValues(alpha: 0.3)
-                        : Colors.grey.shade200,
-                    child: Icon(icon, color: Colors.teal),
+                        ? AppColors.darkerGrey.withValues(alpha: 0.3)
+                        : AppColors.grey.withValues(alpha: 0.4),
+                    child: Icon(icon, color: AppColors.primary),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -55,7 +55,7 @@ Widget paymentTile({
                         Text(
                           subtitle,
                           style: const TextStyle(
-                            color: Colors.grey,
+                            color: AppColors.darkGrey,
                             fontSize: 12,
                           ),
                         ),
@@ -67,7 +67,7 @@ Widget paymentTile({
                       selected
                           ? Icons.radio_button_checked
                           : Icons.radio_button_off,
-                      color: selected ? Colors.green : Colors.grey,
+                      color: selected ? AppColors.success : AppColors.darkGrey,
                     ),
                 ],
               ),

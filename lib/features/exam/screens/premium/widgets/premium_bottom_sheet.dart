@@ -15,7 +15,7 @@ class PremiumBottomSheet extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        color: dark ? AppColors.dark : Colors.grey.shade300,
+        color: dark ? AppColors.dark : AppColors.lightCard,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -30,7 +30,7 @@ class PremiumBottomSheet extends StatelessWidget {
 
           const Text(
             'Precision tools designed for the modern students.',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
+            style: TextStyle(fontSize: 13, color: AppColors.darkGrey),
             textAlign: TextAlign.center,
           ),
 
@@ -65,7 +65,7 @@ class PremiumBottomSheet extends StatelessWidget {
             Icons.psychology_alt_outlined,
             'Amharic Explanations',
             'Get detail explanation for each questions in "Amharic" and English',
-            Colors.teal,
+            AppColors.primary,
             dark,
           ),
 
@@ -131,7 +131,7 @@ class PremiumBottomSheet extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         subTitle: Text(
           subtitle,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
+          style: const TextStyle(fontSize: 12, color: AppColors.darkGrey),
         ),
       ),
     );

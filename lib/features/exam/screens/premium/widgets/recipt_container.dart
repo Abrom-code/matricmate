@@ -22,11 +22,10 @@ class ReciptContainer extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.teal.withValues(alpha: 0.4),
+          color: AppColors.primary.withValues(alpha: 0.4),
           width: 1.5,
-          style: BorderStyle.solid,
         ),
-        color: isDark ? AppColors.dark : Colors.grey.shade100,
+        color: isDark ? AppColors.dark : AppColors.lightContainer,
       ),
       child: file == null
           ? Column(
@@ -34,13 +33,13 @@ class ReciptContainer extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.cloud_upload_outlined,
-                    color: Colors.teal,
+                    color: AppColors.white,
                     size: 28,
                   ),
                 ),
@@ -50,11 +49,11 @@ class ReciptContainer extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                const Text(
                   'PNG, JPG OR PDF UP TO 5MB',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.grey.shade600,
+                    color: AppColors.darkGrey,
                     letterSpacing: 0.5,
                   ),
                 ),

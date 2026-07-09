@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 
 class PendingPaymentBanner extends StatelessWidget {
   const PendingPaymentBanner({super.key});
@@ -51,7 +52,10 @@ class PendingPaymentBanner extends StatelessWidget {
                 SizedBox(height: 4),
                 Text(
                   'We are verifying your receipt',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

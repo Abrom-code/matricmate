@@ -165,10 +165,10 @@ class _LangToggle extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             color: isSelected
-                ? Colors.teal
+                ? AppColors.primary
                 : dark
-                ? Colors.white70
-                : Colors.black54,
+                ? AppColors.white.withValues(alpha: 0.7)
+                : AppColors.darkerGrey,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),

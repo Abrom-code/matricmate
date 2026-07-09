@@ -18,7 +18,7 @@ class InstructionBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.md),
         color: dark
             ? AppColors.darkerGrey.withValues(alpha: 0.5)
-            : const Color(0xFFe7eae7),
+            : AppColors.lightCard,
       ),
       child: Row(
         children: [

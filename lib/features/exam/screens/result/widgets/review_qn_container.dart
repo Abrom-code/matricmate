@@ -28,7 +28,7 @@ class ReviewContainer extends GetView<ReviewController> {
       decoration: BoxDecoration(
         color: dark
             ? AppColors.darkerGrey.withValues(alpha: 0.5)
-            : const Color(0xFFe7eae7),
+            : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppSizes.md),
       ),
       child: Column(
@@ -144,7 +144,7 @@ class ReviewContainer extends GetView<ReviewController> {
                               style: TextStyle(
                                 fontSize: 14,
                                 height: 1.7,
-                                color: dark ? AppColors.grey : Colors.black87,
+                        color: dark ? AppColors.grey : AppColors.darkerGrey,
                               ),
                             ),
                     ),

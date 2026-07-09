@@ -49,7 +49,7 @@ class WeakestAreasCard extends StatelessWidget {
                       '${area.name}  ${area.avgScore.toStringAsFixed(0)}%',
                       style: TextStyle(
                         fontSize: 13,
-                        color: dark ? Colors.white70 : AppColors.darkerGrey,
+                        color: dark ? AppColors.white.withValues(alpha: 0.7) : AppColors.darkerGrey,
                       ),
                     ),
                   ),

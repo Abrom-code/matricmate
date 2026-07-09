@@ -28,7 +28,7 @@ class ProfileScreen extends StatelessWidget {
           final fullName = UserController.instance.user.value.fullName.trim();
           return Text(
             fullName,
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
+            style: const TextStyle(color: AppColors.darkGrey, fontSize: 12),
           );
         }),
       ),

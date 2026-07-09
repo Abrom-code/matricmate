@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/bookmark_repository.dart';
+import 'package:matricmate/data/repositories/exam/question_repository.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
+import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
@@ -10,6 +12,7 @@ import 'package:matricmate/utils/helpers/toast_helper.dart';
 class BookmarkController extends GetxController {
   static BookmarkController get instance => Get.find();
   final BookmarkRepository _repo = BookmarkRepository();
+  final QuestionRepository _questionRepo = QuestionRepository();
 
   final RxList<BookmarkModel> bookmarkedQuestionIds = <BookmarkModel>[].obs;
   final RxList<QuestionModel> bookmarkedQuestions = <QuestionModel>[].obs;
@@ -17,8 +20,18 @@ class BookmarkController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   final RxString languageSelected = 'EN'.obs;
-  final RxBool isQnExpanded = false.obs;
+  final RxMap<int, bool> isExpanded = <int, bool>{}.obs;
+  final RxMap<int, bool> isPassageExpanded = <int, bool>{}.obs;
+  final RxMap<int, PassageModel> passages = <int, PassageModel>{}.obs;
   final RxBool isLoading = false.obs;
+
+  void toggleExpanded(int qnId) {
+    isExpanded[qnId] = !(isExpanded[qnId] ?? false);
+  }
+
+  void togglePassage(int qnId) {
+    isPassageExpanded[qnId] = !(isPassageExpanded[qnId] ?? false);
+  }
 
   @override
   void onInit() {
@@ -78,10 +91,28 @@ class BookmarkController extends GetxController {
           })
           .whereType<QuestionModel>()
           .toList();
+
+      await _loadPassages(bookmarkedQuestions);
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadPassages(List<QuestionModel> questions) async {
+    final passageIds = questions
+        .where((q) => q.passageId != null)
+        .map((q) => q.passageId!)
+        .toSet();
+
+    for (final pid in passageIds) {
+      if (!passages.containsKey(pid)) {
+        try {
+          final p = await _questionRepo.getLocalPassage(pid);
+          passages[pid] = p;
+        } catch (_) {}
+      }
     }
   }
 

@@ -11,9 +11,9 @@ class AppTile extends StatelessWidget {
     this.iconColor = AppColors.primary,
     required this.title,
     this.onTap,
-    this.iconBgColor = Colors.grey,
+    this.iconBgColor = AppColors.darkGrey,
     this.isBorderVisible = true,
-    this.titleColor = Colors.teal,
+    this.titleColor = AppColors.primary,
     this.style,
   });
   final Widget? subTitle;

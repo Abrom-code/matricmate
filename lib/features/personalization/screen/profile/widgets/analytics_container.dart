@@ -45,7 +45,7 @@ class AnalyticsContainer extends StatelessWidget {
                   Text(
                     '$value',
                     style: TextStyle(
-                      color: dark ? Colors.white : Colors.black,
+                      color: dark ? AppColors.white : AppColors.black,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -56,7 +56,7 @@ class AnalyticsContainer extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       letterSpacing: 1,
-                      color: Colors.grey,
+                      color: AppColors.darkGrey,
                     ),
                   ),
                 ],

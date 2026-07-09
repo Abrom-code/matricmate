@@ -116,7 +116,7 @@ class _ExamList extends StatelessWidget {
 
             return TestTile(
               icon: isActive ? Iconsax.message_question_copy : Icons.lock,
-              iconColor: isActive ? Colors.teal : Colors.amber,
+              iconColor: isActive ? AppColors.primary : Colors.amber,
               currentStep: controller.getCurrentStep(test.id),
               maxStep: controller.getMaxStep(test.id),
               testName: test.title,

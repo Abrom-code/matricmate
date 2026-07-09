@@ -20,6 +20,7 @@ class AppColors {
 
   // Background Container Colors
   static const Color lightContainer = Color(0xFFF6F6F6);
+  static const Color lightCard = Color(0xFFe7eae7);
   static Color darkContainer = Colors.white.withValues(alpha: 0.1);
 
   // Button Colors

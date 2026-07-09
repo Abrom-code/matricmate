@@ -30,7 +30,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
             return Text(
               '$count ${count == 1 ? 'item' : 'items'} saved',
               style: const TextStyle(
-                color: Colors.white70,
+                color: AppColors.white,
                 fontSize: 12,
               ),
             );
@@ -61,7 +61,7 @@ class BookmarkScreen extends GetView<BookmarkController> {
                     isScrollable: true,
                     tabAlignment: TabAlignment.start,
                     dividerHeight: 50,
-                    dividerColor: dark ? AppColors.black : Colors.white,
+                    dividerColor: dark ? AppColors.black : AppColors.white,
                     tabs: tabs.map((t) => Tab(text: t)).toList(),
                   ),
                 ),

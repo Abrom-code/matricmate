@@ -82,7 +82,7 @@ class PassageContainer extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15 * controller.textScale.value,
                       height: 1.75,
-                      color: dark ? AppColors.grey : Colors.black87,
+                      color: dark ? AppColors.grey : AppColors.darkerGrey,
                     ),
                   )),
                 ),

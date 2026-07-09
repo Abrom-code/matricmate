@@ -48,7 +48,10 @@ class PaymentVerificationScreen extends StatelessWidget {
                   'We are verifying your receipt. This usually takes a few hours. '
                   "Please click the refresh status button after around 30 minutes. If this couldn't work, please contact the our support on Telegram.",
                   textAlign: TextAlign.left,
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  style: const TextStyle(
+                    color: AppColors.darkGrey,
+                    fontSize: 12,
+                  ),
                 ),
 
                 const SizedBox(height: 40),

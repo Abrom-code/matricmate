@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -67,7 +68,7 @@ class _ImageSectionState extends State<ImageSection> {
         height: 200,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: AppColors.grey.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
         ),
         child: ClipRRect(
@@ -95,12 +96,12 @@ class _ImageSectionState extends State<ImageSection> {
                       const Icon(
                         Icons.broken_image,
                         size: 40,
-                        color: Colors.grey,
+                        color: AppColors.darkGrey,
                       ),
                       const SizedBox(height: 8),
                       const Text(
                         'Failed to load image',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: AppColors.darkGrey),
                       ),
                       const SizedBox(height: 8),
                       ElevatedButton(
@@ -124,7 +125,7 @@ class _ImageSectionState extends State<ImageSection> {
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.black54,
+                        color: AppColors.black.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(

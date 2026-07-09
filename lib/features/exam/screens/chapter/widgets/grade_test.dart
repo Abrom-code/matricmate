@@ -67,7 +67,7 @@ class GradeTestsPage extends GetView<GradeTestController> {
                     icon: canAccess
                         ? Iconsax.message_question_copy
                         : Icons.lock,
-                    iconColor: canAccess ? Colors.teal : Colors.amber,
+                    iconColor: canAccess ? AppColors.primary : Colors.amber,
                     currentStep: controller.getCurrentStep(test.id),
                     maxStep: controller.getMaxStep(test.id),
                     testName: test.title,

@@ -38,7 +38,7 @@ class PremiumScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade700,
+                    color: AppColors.primary.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Column(
@@ -46,7 +46,7 @@ class PremiumScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Total Amount Due',
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(color: AppColors.white),
                       ),
                       SizedBox(height: 8),
                       Text(
@@ -89,7 +89,7 @@ class PremiumScreen extends StatelessWidget {
 
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal.shade700,
+                backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

@@ -36,15 +36,15 @@ class SubjectsScreen extends StatelessWidget {
           String statusText;
           switch (user.status) {
             case 'active':
-              statusColor = const Color(0xFF1DE9B6);
+              statusColor = AppColors.success;
               statusText = 'PREMIUM';
               break;
             case 'pending':
-              statusColor = const Color(0xFFFFD54F);
+              statusColor = Colors.amber;
               statusText = 'PENDING';
               break;
             default:
-              statusColor = const Color(0xFFB2DFDB);
+              statusColor = AppColors.primary.withValues(alpha: 0.6);
               statusText = 'FREE';
           }
 
@@ -53,7 +53,7 @@ class SubjectsScreen extends StatelessWidget {
               if (stream.isNotEmpty)
                 Text(
                   stream,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  style: const TextStyle(color: AppColors.darkGrey, fontSize: 12),
                 ),
               if (stream.isNotEmpty) const SizedBox(width: 8),
               Container(

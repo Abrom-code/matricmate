@@ -49,7 +49,7 @@ class ChoiceButton extends StatelessWidget {
                           : const Color.fromARGB(255, 179, 195, 203)
                     : dark
                     ? AppColors.darkerGrey.withValues(alpha: 0.3)
-                    : Colors.grey[300]),
+                    : AppColors.grey.withValues(alpha: 0.5)),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isChecked
@@ -57,10 +57,10 @@ class ChoiceButton extends StatelessWidget {
                       ? Colors.green.withValues(alpha: 0.7)
                       : isSelected
                       ? Colors.red.withValues(alpha: 0.7)
-                      : Colors.grey.withValues(alpha: 0.7))
+                      : AppColors.darkGrey.withValues(alpha: 0.4))
                 : (isSelected
                       ? Colors.green.withValues(alpha: 0.7)
-                      : Colors.grey.withValues(alpha: 0.7)),
+                      : AppColors.darkGrey.withValues(alpha: 0.5)),
             width: 2,
           ),
         ),

@@ -30,7 +30,10 @@ class AnalyticsScreen extends StatelessWidget {
               : '';
           return Text(
             label,
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
+            style: const TextStyle(
+              color: AppColors.darkGrey,
+              fontSize: 12,
+            ),
           );
         }),
         actions: [
@@ -63,7 +66,7 @@ class AnalyticsScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: AppColors.black,
                           ),
                         ),
                       ),

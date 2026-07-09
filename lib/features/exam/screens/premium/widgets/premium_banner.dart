@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 
 class PremiumBanner extends StatelessWidget {
   final VoidCallback onTap;
@@ -51,7 +52,10 @@ class PremiumBanner extends StatelessWidget {
                 SizedBox(height: 4),
                 Text(
                   'Unlock all tests & features',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),

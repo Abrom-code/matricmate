@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/themes/custom_themes/appbar_theme.dart';
 import 'package:matricmate/utils/themes/custom_themes/bottom_sheet_theme.dart';
@@ -19,10 +20,7 @@ class AppTheme {
       seedColor: Colors.teal,
       brightness: Brightness.light,
     ),
-    fontFamily: 'Poppins',
-    textTheme: AppTextTheme.lightTextTheme.apply(
-      fontFamilyFallback: ['Roboto', 'Sans-serif'],
-    ),
+    textTheme: GoogleFonts.interTextTheme(AppTextTheme.lightTextTheme),
     scaffoldBackgroundColor: AppColors.light,
     appBarTheme: AppAppBarTheme.lightAppBarTheme,
     bottomSheetTheme: AppBottomSheetTheme.lightBottomSheetTheme,
@@ -41,11 +39,7 @@ class AppTheme {
       seedColor: Colors.teal,
       brightness: Brightness.dark,
     ),
-    fontFamily: 'Poppins',
-    textTheme: AppTextTheme.darkTextTheme.apply(
-      // FIXED: Using darkTextTheme
-      fontFamilyFallback: ['Roboto', 'Sans-serif'],
-    ),
+    textTheme: GoogleFonts.interTextTheme(AppTextTheme.darkTextTheme),
     scaffoldBackgroundColor: Colors.black,
     appBarTheme: AppAppBarTheme.darkAppBarTheme,
     bottomSheetTheme: AppBottomSheetTheme.darkBottomSheetTheme,

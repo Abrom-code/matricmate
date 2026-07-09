@@ -77,79 +77,87 @@ class _QuestionScreenState extends State<QuestionScreen> {
               },
             ),
 
-            title: Builder(builder: (context) {
-              final hasPassage =
-                  currentQ != null && currentQ.passageId != null;
+            title: Builder(
+              builder: (context) {
+                final hasPassage =
+                    currentQ != null && currentQ.passageId != null;
 
-              // Section title — shown only when present and non-empty
-              final sectionTitle =
-                  (currentQ != null &&
-                          currentQ.sectionTitle != null &&
-                          currentQ.sectionTitle!.trim().isNotEmpty)
-                      ? currentQ.sectionTitle!.trim()
-                      : null;
+                // Section title — shown only when present and non-empty
+                final sectionTitle =
+                    (currentQ != null &&
+                        currentQ.sectionTitle != null &&
+                        currentQ.sectionTitle!.trim().isNotEmpty)
+                    ? currentQ.sectionTitle!.trim()
+                    : null;
 
-              // Timer string — non-empty only when timed
-              final timerText = controller.isTimed
-                  ? controller.formattedTime(controller.remainingSeconds.value)
-                  : '';
+                // Timer string — non-empty only when timed
+                final timerText = controller.isTimed
+                    ? controller.formattedTime(
+                        controller.remainingSeconds.value,
+                      )
+                    : '';
 
-              // Counter text (no timer — timer shown separately when needed)
-              final counterText = hasData
-                  ? '${controller.currentIndex.value + 1} of '
-                      '${controller.testQuestions.length}'
-                  : 'Loading...';
+                // Counter text (no timer — timer shown separately when needed)
+                final counterText = hasData
+                    ? '${controller.currentIndex.value + 1} of '
+                          '${controller.testQuestions.length}'
+                    : 'Loading...';
 
-              // Passage questions always use PassageLayoutCtrl
-              if (hasPassage) return PassageLayoutCtrl(controller: controller);
+                // Passage questions always use PassageLayoutCtrl
+                if (hasPassage)
+                  return PassageLayoutCtrl(controller: controller);
 
-              // Timer color: yellow under 5 minutes, primary otherwise
-              final Color timerColor = controller.remainingSeconds.value < 300
-                  ? Colors.amber
-                  : AppColors.primary;
+                // Timer color: yellow under 5 minutes, primary otherwise
+                final Color timerColor = controller.remainingSeconds.value < 300
+                    ? Colors.amber
+                    : AppColors.primary;
 
-              // When no section title just show counter + optional timer inline
-              if (sectionTitle == null) {
-                return Text(
-                  controller.isTimed
-                      ? '$counterText ($timerText)'
-                      : counterText,
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: controller.isTimed &&
-                            controller.remainingSeconds.value < 300
-                        ? Colors.amber
-                        : AppColors.primary,
-                  ),
-                );
-              }
+                // When no section title just show counter + optional timer inline
+                if (sectionTitle == null) {
+                  return Text(
+                    controller.isTimed
+                        ? '$counterText ($timerText)'
+                        : counterText,
+                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                      color:
+                          controller.isTimed &&
+                              controller.remainingSeconds.value < 300
+                          ? Colors.amber
+                          : AppColors.primary,
+                    ),
+                  );
+                }
 
-              // Section title: truncated + timer always visible when timed
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      sectionTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        color: AppColors.primary,
+                // Section title: truncated + timer always visible when timed
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        sectionTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(color: AppColors.primary),
                       ),
                     ),
-                  ),
-                  if (controller.isTimed) ...[
-                    const SizedBox(width: AppSizes.xs),
-                    Obx(() => Text(
-                      '(${controller.formattedTime(controller.remainingSeconds.value)})',
-                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                        color: timerColor,
-                        fontWeight: FontWeight.w600,
+                    if (controller.isTimed) ...[
+                      const SizedBox(width: AppSizes.xs),
+                      Obx(
+                        () => Text(
+                          '(${controller.formattedTime(controller.remainingSeconds.value)})',
+                          style: Theme.of(context).textTheme.labelMedium!
+                              .copyWith(
+                                color: timerColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
                       ),
-                    )),
+                    ],
                   ],
-                ],
-              );
-            }),
+                );
+              },
+            ),
             centerTitle: true,
             actions: [
               if (currentQ != null)
@@ -157,8 +165,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   final isSaved = controller.isBookmarked(currentQ.id);
                   return IconButton(
                     onPressed: isSaved
-                        ? () => bookmarkController.removeFromBookmark(
-                            currentQ.id)
+                        ? () =>
+                              bookmarkController.removeFromBookmark(currentQ.id)
                         : () => bookmarkController.addToBookmark(currentQ.id),
                     icon: Icon(
                       isSaved
@@ -175,8 +183,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
           floatingActionButton: hasData
               ? _ProgressFab(
                   controller: controller,
-                  onPressed: () =>
-                      _showQuestionNavigator(context, controller),
+                  onPressed: () => _showQuestionNavigator(context, controller),
                 )
               : null,
 
@@ -294,10 +301,10 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                     padding: const EdgeInsets.all(AppSizes.defaultSpace),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 6,
-                      crossAxisSpacing: AppSizes.xs,
-                      mainAxisSpacing: AppSizes.xs,
-                    ),
+                          crossAxisCount: 6,
+                          crossAxisSpacing: AppSizes.xs,
+                          mainAxisSpacing: AppSizes.xs,
+                        ),
                     itemCount: questions.length,
                     itemBuilder: (_, i) => _QuestionTile(
                       index: i,
@@ -314,8 +321,8 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                 for (int i = 0; i < questions.length; i++) {
                   final label =
                       (questions[i].sectionTitle?.trim().isNotEmpty == true)
-                          ? questions[i].sectionTitle!.trim()
-                          : '—';
+                      ? questions[i].sectionTitle!.trim()
+                      : '—';
                   sections.putIfAbsent(label, () => []).add(i);
                 }
 
@@ -338,9 +345,7 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   entry.key,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall!
+                                  style: Theme.of(context).textTheme.titleSmall!
                                       .copyWith(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w700,
@@ -349,9 +354,7 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                               ),
                               Text(
                                 '${entry.value.length} questions',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall!
+                                style: Theme.of(context).textTheme.labelSmall!
                                     .copyWith(color: AppColors.darkGrey),
                               ),
                             ],
@@ -367,10 +370,10 @@ class _QuestionNavigatorSheet extends StatelessWidget {
                         sliver: SliverGrid(
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 6,
-                            crossAxisSpacing: AppSizes.xs,
-                            mainAxisSpacing: AppSizes.xs,
-                          ),
+                                crossAxisCount: 6,
+                                crossAxisSpacing: AppSizes.xs,
+                                mainAxisSpacing: AppSizes.xs,
+                              ),
                           delegate: SliverChildBuilderDelegate(
                             (_, j) => _QuestionTile(
                               index: entry.value[j],
@@ -427,9 +430,7 @@ class _QuestionTile extends StatelessWidget {
     } else if (isSkipped) {
       bg = Colors.amber;
     } else {
-      bg = dark
-          ? AppColors.darkSurface
-          : AppColors.grey;
+      bg = dark ? AppColors.darkSurface : AppColors.grey;
     }
 
     return GestureDetector(
@@ -485,17 +486,14 @@ class _LegendDot extends StatelessWidget {
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 3),
         Text(
           label,
-          style: Theme.of(context).textTheme.labelSmall!.copyWith(
-            color: AppColors.darkGrey,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall!.copyWith(color: AppColors.darkGrey),
         ),
       ],
     );
@@ -505,10 +503,7 @@ class _LegendDot extends StatelessWidget {
 // ── Progress FAB ─────────────────────────────────────────────────────────────
 
 class _ProgressFab extends StatelessWidget {
-  const _ProgressFab({
-    required this.controller,
-    required this.onPressed,
-  });
+  const _ProgressFab({required this.controller, required this.onPressed});
 
   final QuestionController controller;
   final VoidCallback onPressed;
@@ -577,7 +572,7 @@ class _ProgressRingPainter extends CustomPainter {
     canvas.drawArc(
       rect,
       -1.5708, // -90° (start at top)
-      6.2832,  // full circle
+      6.2832, // full circle
       false,
       Paint()
         ..color = trackColor

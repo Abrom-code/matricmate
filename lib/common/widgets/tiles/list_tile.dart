@@ -36,7 +36,8 @@ class AppListTile extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontSize: 15,
             color: dark ? AppColors.grey : AppColors.darkerGrey,
           ),
         ),

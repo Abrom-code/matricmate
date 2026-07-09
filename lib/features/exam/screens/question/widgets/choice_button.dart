@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 class ChoiceButton extends StatelessWidget {
   const ChoiceButton({
@@ -89,21 +90,27 @@ class ChoiceButton extends StatelessWidget {
                 child: Text(
                   String.fromCharCode(65 + index),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontWeight: FontWeight.bold,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                optionTxt,
-                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  fontSize: 17,
-                  color: dark
-                      ? const Color.fromARGB(255, 187, 187, 187)
-                      : AppColors.darkerGrey,
+              child: Text.rich(
+                RichTextParser.parse(
+                  optionTxt,
+                  TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    height: 1.6,
+                    letterSpacing: 0.1,
+                    color: dark
+                        ? const Color.fromARGB(255, 187, 187, 187)
+                        : AppColors.darkerGrey,
+                  ),
                 ),
               ),
             ),

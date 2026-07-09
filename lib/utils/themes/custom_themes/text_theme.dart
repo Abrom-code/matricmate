@@ -36,7 +36,7 @@ class AppTextTheme {
     ),
     bodyLarge: const TextStyle(
       fontSize: 14,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w400,
       color: Colors.black,
     ),
     bodyMedium: const TextStyle(
@@ -94,7 +94,7 @@ class AppTextTheme {
     ),
     bodyLarge: const TextStyle(
       fontSize: 14,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w400,
       color: Colors.white,
     ),
     bodyMedium: const TextStyle(

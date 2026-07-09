@@ -25,7 +25,7 @@ class QuestionSection extends StatelessWidget {
       text: qnNumber != null ? '$qnNumber. ' : '',
       style: baseStyle.copyWith(
         fontSize: 17,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
       ),
     );
 

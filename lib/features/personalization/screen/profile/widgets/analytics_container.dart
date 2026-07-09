@@ -47,7 +47,7 @@ class AnalyticsContainer extends StatelessWidget {
                     style: TextStyle(
                       color: dark ? AppColors.white : AppColors.black,
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),

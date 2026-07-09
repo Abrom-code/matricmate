@@ -10,6 +10,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 class BookmarkContainer extends GetView<BookmarkController> {
   const BookmarkContainer({super.key, required this.qn});
@@ -82,14 +83,18 @@ class BookmarkContainer extends GetView<BookmarkController> {
 
               const SizedBox(height: AppSizes.spaceBtwItems / 2),
 
-              Text(
-                " ${qn.questionText.substring(0, isGrater ? 150 : qn.questionText.length)} ${isGrater ? '...' : ''}",
-                textAlign: TextAlign.start,
-
-                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  fontSize: 17,
-                  color: dark ? AppColors.grey : AppColors.darkerGrey,
+              Text.rich(
+                RichTextParser.parse(
+                  ' ${qn.questionText.substring(0, isGrater ? 150 : qn.questionText.length)}${isGrater ? ' ...' : ''}',
+                  TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    height: 1.6,
+                    letterSpacing: 0.1,
+                    color: dark ? AppColors.grey : AppColors.darkerGrey,
+                  ),
                 ),
+                textAlign: TextAlign.start,
               ),
               const SizedBox(height: AppSizes.spaceBtwItems / 2),
               const Divider(),

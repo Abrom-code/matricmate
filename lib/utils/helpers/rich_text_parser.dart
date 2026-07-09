@@ -122,7 +122,13 @@ class RichTextParser {
 
   static TextStyle _applyTag(String tag, TextStyle base) {
     if (tag == 'b') {
-      return base.copyWith(fontWeight: FontWeight.w800);
+      // Bold: heavier weight + full-opacity color + slightly larger
+      final baseColor = base.color ?? AppColors.darkerGrey;
+      return base.copyWith(
+        fontWeight: FontWeight.w900,
+        fontSize: (base.fontSize ?? 16) * 1.05,
+        color: baseColor.withValues(alpha: 1.0),
+      );
     }
     if (tag == 'i') {
       return base.copyWith(fontStyle: FontStyle.italic);
@@ -134,9 +140,12 @@ class RichTextParser {
       return base.copyWith(decoration: TextDecoration.lineThrough);
     }
     if (tag == 'bi') {
+      final baseColor = base.color ?? AppColors.darkerGrey;
       return base.copyWith(
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w900,
         fontStyle: FontStyle.italic,
+        fontSize: (base.fontSize ?? 16) * 1.05,
+        color: baseColor.withValues(alpha: 1.0),
       );
     }
     if (tag == 'sup' || tag == 'sub') {
@@ -148,7 +157,7 @@ class RichTextParser {
       );
     }
     if (tag.startsWith('c=')) {
-      final hex = tag.substring(2); // e.g. #FF0000
+      final hex = tag.substring(2);
       final color = _hexColor(hex) ?? AppColors.primary;
       return base.copyWith(color: color);
     }

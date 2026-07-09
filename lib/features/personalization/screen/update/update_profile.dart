@@ -112,8 +112,8 @@ class EditProfileScreen extends StatelessWidget {
                             'Delete Account',
                             style: TextStyle(
                               color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
                             ),
                           ),
                         );

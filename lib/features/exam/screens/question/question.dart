@@ -22,8 +22,37 @@ class QuestionScreen extends StatefulWidget {
 class _QuestionScreenState extends State<QuestionScreen> {
   final ScrollController _pageScrollController = ScrollController();
 
+  // ── Overlay FAB ────────────────────────────────────────────────────────────
+  OverlayEntry? _fabEntry;
+  Offset? _fabOffset; // null = default bottom-right
+
+  void _insertFab() {
+    _fabEntry = OverlayEntry(builder: (_) => _OverlayFab(state: this));
+    // Schedule insertion after the first frame so Overlay is ready.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Overlay.of(context).insert(_fabEntry!);
+    });
+  }
+
+  void _removeFab() {
+    _fabEntry?.remove();
+    _fabEntry = null;
+  }
+
+  void _updateFabOffset(Offset o) {
+    _fabOffset = o;
+    _fabEntry?.markNeedsBuild();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _insertFab();
+  }
+
   @override
   void dispose() {
+    _removeFab();
     _pageScrollController.dispose();
     super.dispose();
   }
@@ -63,6 +92,11 @@ class _QuestionScreenState extends State<QuestionScreen> {
             ? controller.testQuestions[controller.currentIndex.value]
             : null;
 
+        // Keep FAB visible only when there are questions to navigate
+        if (hasData) {
+          _fabEntry ??= OverlayEntry(builder: (_) => _OverlayFab(state: this));
+        }
+
         return Scaffold(
           appBar: Appbar(
             leadingIcon: Icons.close,
@@ -82,7 +116,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
                 final hasPassage =
                     currentQ != null && currentQ.passageId != null;
 
-                // Section title — shown only when present and non-empty
                 final sectionTitle =
                     (currentQ != null &&
                         currentQ.sectionTitle != null &&
@@ -90,29 +123,24 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     ? currentQ.sectionTitle!.trim()
                     : null;
 
-                // Timer string — non-empty only when timed
                 final timerText = controller.isTimed
                     ? controller.formattedTime(
                         controller.remainingSeconds.value,
                       )
                     : '';
 
-                // Counter text (no timer — timer shown separately when needed)
                 final counterText = hasData
                     ? '${controller.currentIndex.value + 1} of '
                           '${controller.testQuestions.length}'
                     : 'Loading...';
 
-                // Passage questions always use PassageLayoutCtrl
                 if (hasPassage)
                   return PassageLayoutCtrl(controller: controller);
 
-                // Timer color: yellow under 5 minutes, primary otherwise
                 final Color timerColor = controller.remainingSeconds.value < 300
                     ? Colors.amber
                     : AppColors.primary;
 
-                // When no section title just show counter + optional timer inline
                 if (sectionTitle == null) {
                   return Text(
                     controller.isTimed
@@ -128,7 +156,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   );
                 }
 
-                // Section title: truncated + timer always visible when timed
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -180,27 +207,18 @@ class _QuestionScreenState extends State<QuestionScreen> {
             backgroundColor: Colors.transparent,
           ),
 
-          floatingActionButton: hasData
-              ? _ProgressFab(
-                  controller: controller,
-                  onPressed: () => _showQuestionNavigator(context, controller),
-                )
-              : null,
-
-          body:
-              (controller.isLoading.value || controller.isPassageLoading.value)
+          body: (controller.isLoading.value || controller.isPassageLoading.value)
               ? const AppCircularLoading()
               : SingleChildScrollView(
                   controller: _pageScrollController,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (currentQ?.passageId != null) ...[
+                      if (currentQ?.passageId != null)
                         PassageContainer(controller: controller),
-                      ],
-                      if (currentQ != null) ...[
+                      if (currentQ != null)
                         QuesitonSection(question: currentQ),
-                      ],
+                      const SizedBox(height: 80),
                     ],
                   ),
                 ),
@@ -496,6 +514,63 @@ class _LegendDot extends StatelessWidget {
           ).textTheme.labelSmall!.copyWith(color: AppColors.darkGrey),
         ),
       ],
+    );
+  }
+}
+
+// ── Overlay FAB ───────────────────────────────────────────────────────────────
+//
+// Renders the draggable FAB in the Flutter Overlay so it floats above the
+// entire screen — including the AppBar and system UI areas.
+//
+// • Default position: bottom-right corner (matches original floatingActionButton).
+// • Drag freely across the whole screen.
+// • Clamped to screen bounds so it never goes fully off-screen.
+// • Uses Listener (raw pointer events) so dragging never loses to the
+//   scroll view's gesture arena.
+
+class _OverlayFab extends StatelessWidget {
+  const _OverlayFab({required this.state});
+
+  final _QuestionScreenState state;
+
+  static const double _size   = 56;
+  static const double _margin = 16;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<QuestionController>();
+    final screen     = MediaQuery.of(context).size;
+    final padding    = MediaQuery.of(context).padding;
+
+    // Usable area: full screen minus system bars
+    final maxX = screen.width  - _size - _margin;
+    final maxY = screen.height - _size - _margin - padding.bottom;
+    final minX = _margin;
+    final minY = _margin + padding.top;
+
+    // Use stored offset or default to bottom-right
+    final pos = state._fabOffset ??
+        Offset(maxX, maxY);
+
+    return Positioned(
+      left: pos.dx,
+      top:  pos.dy,
+      child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerMove: (event) {
+          final next = Offset(
+            (pos.dx + event.delta.dx).clamp(minX, maxX),
+            (pos.dy + event.delta.dy).clamp(minY, maxY),
+          );
+          state._updateFabOffset(next);
+        },
+        child: _ProgressFab(
+          controller: controller,
+          onPressed: () =>
+              state._showQuestionNavigator(context, controller),
+        ),
+      ),
     );
   }
 }

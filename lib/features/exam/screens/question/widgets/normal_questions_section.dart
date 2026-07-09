@@ -114,7 +114,10 @@ class QuesitonSection extends GetView<QuestionController> {
                 onTap: examMode
                     ? () => controller.selectAnswer(q.id, index)
                     : () {
-                        if (!isChecked) controller.selectAnswer(q.id, index);
+                        if (!isChecked) {
+                          controller.selectAnswer(q.id, index);
+                          controller.checkAnswer(q.id);
+                        }
                       },
               );
             }),
@@ -129,7 +132,7 @@ class QuesitonSection extends GetView<QuestionController> {
             ] else
               const SizedBox(height: AppSizes.xs),
 
-            /// BUTTONS — Previous | Skip | Check/Next/Finish
+            /// BUTTONS — always two: Prev | (Skip or Next/Finish)
             Row(
               children: [
                 /// PREVIOUS
@@ -155,78 +158,59 @@ class QuesitonSection extends GetView<QuestionController> {
 
                 const SizedBox(width: 8),
 
-                /// SKIP — centre slot
-                if (canSkip) ...[
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        foregroundColor: AppColors.darkGrey,
-                        side: BorderSide(
-                          color: AppColors.darkGrey.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      onPressed: controller.skipQuestion,
-                      icon: const Icon(Icons.skip_next_rounded, size: 16),
-                      label: const Text(
-                        'Skip',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-
-                /// NEXT / CHECK / FINISH
+                /// SKIP — when not yet answered (practice) or any non-last (exam)
+                /// NEXT / FINISH — after answer is given
                 Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                    ),
-                    onPressed: examMode
-                        ? () async {
-                            if (isLast) {
-                              await _submitResult(context, q);
-                            } else {
-                              controller.nextQuestion();
-                            }
-                          }
-                        : selectedIndex == null
-                        ? null
-                        : () async {
-                            if (!isChecked) {
-                              controller.checkAnswer(q.id);
-                              return;
-                            }
-                            if (isLast) {
-                              await _submitResult(context, q);
-                            } else {
-                              controller.nextQuestion();
-                            }
-                          },
-                    icon: Icon(
-                      examMode
-                          ? (isLast
-                              ? Icons.flag_rounded
-                              : Icons.arrow_forward_ios_rounded)
-                          : !isChecked
-                          ? Icons.check_circle_outline_rounded
-                          : (isLast
-                              ? Icons.flag_rounded
-                              : Icons.arrow_forward_ios_rounded),
-                      size: 15,
-                    ),
-                    label: Text(
-                      examMode
-                          ? (isLast ? 'Finish' : 'Next')
-                          : !isChecked
-                          ? 'Check'
-                          : (isLast ? 'Finish' : 'Next'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                  child: canSkip
+                      ? OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            foregroundColor: AppColors.darkGrey,
+                            side: BorderSide(
+                              color: AppColors.darkGrey.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          onPressed: controller.skipQuestion,
+                          icon: const Icon(Icons.skip_next_rounded, size: 16),
+                          label: const Text(
+                            'Skip',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      : OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                          ),
+                          onPressed: examMode
+                              ? () async {
+                                  if (isLast) {
+                                    await _submitResult(context, q);
+                                  } else {
+                                    controller.nextQuestion();
+                                  }
+                                }
+                              : !isChecked
+                              ? null
+                              : () async {
+                                  if (isLast) {
+                                    await _submitResult(context, q);
+                                  } else {
+                                    controller.nextQuestion();
+                                  }
+                                },
+                          icon: Icon(
+                            isLast
+                                ? Icons.flag_rounded
+                                : Icons.arrow_forward_ios_rounded,
+                            size: 15,
+                          ),
+                          label: Text(
+                            isLast ? 'Finish' : 'Next',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                 ),
               ],
             ),

@@ -15,7 +15,7 @@ class QuestionSection extends StatelessWidget {
 
     final baseStyle = TextStyle(
       fontSize: 16,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w400,
       height: 1.6,
       letterSpacing: 0.1,
       color: dark ? AppColors.grey : AppColors.darkerGrey,

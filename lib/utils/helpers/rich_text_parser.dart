@@ -122,7 +122,7 @@ class RichTextParser {
 
   static TextStyle _applyTag(String tag, TextStyle base) {
     if (tag == 'b') {
-      return base.copyWith(fontWeight: FontWeight.bold);
+      return base.copyWith(fontWeight: FontWeight.w800);
     }
     if (tag == 'i') {
       return base.copyWith(fontStyle: FontStyle.italic);
@@ -135,7 +135,7 @@ class RichTextParser {
     }
     if (tag == 'bi') {
       return base.copyWith(
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w800,
         fontStyle: FontStyle.italic,
       );
     }

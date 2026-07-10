@@ -108,10 +108,6 @@ class AppCircularButtonLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 18,
-      width: 18,
-      child: CircularProgressIndicator(color: color.withValues(alpha: .6)),
-    );
+    return AppPulsingDots(dotSize: 6, color: color);
   }
 }

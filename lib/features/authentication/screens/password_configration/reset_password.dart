@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/reset_password_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
@@ -61,11 +62,9 @@ class ResetPassword extends GetView<ResetPasswordController> {
                 child: TextButton(
                   onPressed: () => controller.sendResetEmail(),
                   child: Obx(
-                    () => Text(
-                      controller.isSending.value
-                          ? 'Sending...'
-                          : AppTextStrings.resendEmail,
-                    ),
+                    () => controller.isSending.value
+                        ? const AppCircularButtonLoading(color: AppColors.primary)
+                        : const Text(AppTextStrings.resendEmail),
                   ),
                 ),
               ),

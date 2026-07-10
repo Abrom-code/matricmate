@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/link_input_field.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_detail.dart';
@@ -114,13 +115,7 @@ class PayementScreen extends StatelessWidget {
                   ? null
                   : () => controller.completePayment(),
               child: controller.isUploading.value
-                  ? SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        color: AppColors.white.withValues(alpha: .5),
-                      ),
-                    )
+                  ? const AppCircularButtonLoading()
                   : const Text(
                       'Complete Payment',
                       style: TextStyle(fontSize: 16, color: Colors.white),

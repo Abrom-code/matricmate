@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -65,13 +66,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                     },
                     icon: isFetching ? null : const Icon(Icons.refresh),
                     label: isFetching && !isLoading
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              color: AppColors.white.withValues(alpha: .5),
-                            ),
-                          )
+                        ? const AppCircularButtonLoading()
                         : const Text(
                             'Refresh Payment',
                             style: TextStyle(fontSize: 16, color: Colors.white),
@@ -103,13 +98,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                           );
                         },
                   child: isLoading
-                      ? SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            color: AppColors.error.withValues(alpha: .5),
-                          ),
-                        )
+                      ? const AppCircularButtonLoading(color: AppColors.error)
                       : const Text(
                           'Cancel Payment',
                           style: TextStyle(fontSize: 16, color: Colors.red),

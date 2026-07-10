@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 
@@ -112,11 +113,7 @@ class AppDialogBoxes {
                       }
                     },
               child: ctrl.isUpdating.value
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                  ? const AppCircularButtonLoading()
                   : const Text('Update'),
             ),
           ),

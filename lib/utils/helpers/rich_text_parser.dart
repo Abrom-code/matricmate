@@ -27,8 +27,10 @@ class RichTextParser {
   /// Parses [text] and returns a [TextSpan] with [baseStyle] applied to
   /// plain segments. Inline tags override specific style properties.
   static TextSpan parse(String text, TextStyle baseStyle) {
+    // Normalize literal "\n" (two chars from DB/JSON) to real newlines
+    final normalized = text.replaceAll(r'\n', '\n');
     final spans = <InlineSpan>[];
-    _parse(text, 0, text.length, baseStyle, spans);
+    _parse(normalized, 0, normalized.length, baseStyle, spans);
     return TextSpan(children: spans);
   }
 

@@ -3,6 +3,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -21,6 +22,36 @@ class SyncingController extends GetxController {
   final SyncRepository _syncRepository = SyncRepository();
 
   final refreshing = false.obs;
+  final entranceSyncing = false.obs;
+
+  /// Syncs only entrance/model tests and their questions for all subjects.
+  /// Used by the entrance exam screen sync button.
+  Future<void> syncEntranceExams() async {
+    try {
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) {
+        ToastHelper.warning('No Internet!');
+        return;
+      }
+
+      entranceSyncing.value = true;
+
+      final localSubjects = await _subjectRepo.getLocalSubjects();
+      final subjectIds = localSubjects.map((s) => s['id'] as int).toList();
+
+      if (subjectIds.isEmpty) {
+        ToastHelper.warning('No subjects found. Sync from home first.');
+        return;
+      }
+
+      await _syncRepository.downloadEntranceTests(subjectIds);
+      ToastHelper.success('Entrance exams updated!');
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      entranceSyncing.value = false;
+    }
+  }
 
   Future<bool> syncAll() async {
     try {

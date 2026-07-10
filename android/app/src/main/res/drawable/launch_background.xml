@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Solid teal background while Flutter engine initialises.
-     Matches the custom SplashScreen background so there is no visible
-     colour flash between the OS splash and the Flutter splash. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_bg" />
 </layer-list>

@@ -130,7 +130,12 @@ class SyncingController extends GetxController {
     final fetchChapters = since == null;
 
     final futures = <Future>[
-      _syncRepository.getBySubjectId('tests', downloadedIds, since: since),
+      // Only sync chapter/grade tests — entrance & model are handled separately
+      _syncRepository.getBySubjectId(
+        'tests', downloadedIds,
+        since: since,
+        typeFilter: ['chapter', 'grade'],
+      ),
       _syncRepository.getBySubjectId('questions', downloadedIds, since: since),
     ];
     if (fetchChapters) {

@@ -295,20 +295,38 @@ class SyncRepository {
     String table,
     List<String> ids, {
     DateTime? since,
+    List<String>? typeFilter,
   }) async {
     final sinceIso = since?.toUtc().toIso8601String();
 
-    if (table == 'questions') {
-      var q = supabase
-          .from('questions')
-          .select('*, question_sections(title)')
-          .inFilter('subject_id', ids);
+    if (table == 'tests') {
+      var q = supabase.from('tests').select().inFilter('subject_id', ids);
+      if (typeFilter != null && typeFilter.isNotEmpty) {
+        q = q.inFilter('type', typeFilter);
+      }
       if (sinceIso != null) q = q.gt('updated_at', sinceIso);
       return await q;
     }
 
-    if (table == 'tests') {
-      var q = supabase.from('tests').select().inFilter('subject_id', ids);
+    if (table == 'questions') {
+      // Fetch only questions that belong to chapter/grade tests by joining
+      // through the test_id so we never pull entrance/model questions here.
+      // 1. First get the relevant test IDs from the local DB.
+      final db = await _dbService.database;
+      final testRows = await db.query(
+        'tests',
+        columns: ['id'],
+        where:
+            'subject_id IN (${ids.map((_) => '?').join(',')}) AND type IN (\'chapter\', \'grade\')',
+        whereArgs: ids,
+      );
+      if (testRows.isEmpty) return [];
+      final testIds = testRows.map((r) => r['id'].toString()).toList();
+
+      var q = supabase
+          .from('questions')
+          .select('*, question_sections(title)')
+          .inFilter('test_id', testIds);
       if (sinceIso != null) q = q.gt('updated_at', sinceIso);
       return await q;
     }

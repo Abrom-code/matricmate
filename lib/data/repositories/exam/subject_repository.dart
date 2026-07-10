@@ -47,21 +47,30 @@ class SubjectRepository {
         (p) => onStep('Fetching chapters…', p),
       );
 
-      // Step 2 — tests (0.15 → 0.28)
+      // Step 2 — tests (chapter/grade only — entrance & model are downloaded
+      //           separately from the entrance screen) (0.15 → 0.28)
       final tests = await _withProgress(
-        supabase.from('tests').select().eq('subject_id', subjectId),
+        supabase
+            .from('tests')
+            .select()
+            .eq('subject_id', subjectId)
+            .inFilter('type', ['chapter', 'grade']),
         0.15, 0.28,
         (p) => onStep('Fetching tests…', p),
       );
 
-      // Step 3 — questions (0.28 → 0.62)
-      final questionsData = await _withProgress(
-        supabase.from('questions')
-            .select('*, question_sections(title)')
-            .eq('subject_id', subjectId),
-        0.28, 0.62,
-        (p) => onStep('Fetching questions…', p),
-      );
+      // Step 3 — questions for chapter/grade tests only (0.28 → 0.62)
+      final testIds = tests.map<int>((t) => t['id'] as int).toList();
+      final questionsData = testIds.isEmpty
+          ? <dynamic>[]
+          : await _withProgress(
+              supabase
+                  .from('questions')
+                  .select('*, question_sections(title)')
+                  .inFilter('test_id', testIds),
+              0.28, 0.62,
+              (p) => onStep('Fetching questions…', p),
+            );
 
       final Set<int> passageIds = {};
       final Set<String> imgUrls = {};
@@ -79,8 +88,7 @@ class SubjectRepository {
       List<dynamic> passageData = [];
       if (passageIds.isNotEmpty) {
         passageData = await _withProgress(
-          supabase.from('passages').select()
-              .inFilter('id', passageIds.toList()),
+          supabase.from('passages').select().inFilter('id', passageIds.toList()),
           0.62, 0.74,
           (p) => onStep('Fetching passages…', p),
         );

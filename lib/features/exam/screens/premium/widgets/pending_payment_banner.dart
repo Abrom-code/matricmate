@@ -1,83 +1,137 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
-import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PendingPaymentBanner extends StatelessWidget {
   const PendingPaymentBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    final dark = AppHelperFunctions.isDark(context);
+
+    final bg = dark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7);
+    final borderColor = dark
+        ? const Color(0xFF2C2C2E)
+        : const Color(0xFFD1D1D6);
+    final titleColor = dark ? Colors.white : const Color(0xFF1C1C1E);
+    final subtitleColor = dark
+        ? const Color(0xFF8E8E93)
+        : const Color(0xFF6C6C70);
+    final iconBg = dark
+        ? const Color(0xFF2C2C2E)
+        : const Color(0xFFE5E5EA);
+
+    return GestureDetector(
+      onTap: () => Get.to(() => const PaymentVerificationScreen()),
+      child: Container(
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor, width: 1),
         ),
-      ),
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.hourglass_top_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-
-          const SizedBox(width: 14),
-
-          // Text
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            // Status dot + icon
+            Stack(
               children: [
-                Text(
-                  'Payment Pending',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.receipt_long_rounded,
+                    color: dark
+                        ? const Color(0xFF8E8E93)
+                        : const Color(0xFF6C6C70),
+                    size: 20,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'We are verifying your receipt',
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontSize: 12,
+                // Amber status dot
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF9F0A),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: bg,
+                        width: 2,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
 
-          // Button
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF1565C0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            const SizedBox(width: 14),
+
+            // Copy
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Payment Pending',
+                    style: TextStyle(
+                      color: titleColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Verifying your receipt',
+                    style: TextStyle(
+                      color: subtitleColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
-            onPressed: () => Get.to(() => const PaymentVerificationScreen()),
-            child: const Text(
-              'Check',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+
+            // Check status chip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: dark
+                    ? const Color(0xFF2C2C2E)
+                    : const Color(0xFFE5E5EA),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Check',
+                    style: TextStyle(
+                      color: dark ? Colors.white : const Color(0xFF1C1C1E),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 10,
+                    color: dark ? Colors.white : const Color(0xFF1C1C1E),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

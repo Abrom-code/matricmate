@@ -45,7 +45,7 @@ class AppExplanationBox extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: bgColor,
+          color: bgColor.withValues(alpha: .06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: borderColor),
         ),
@@ -107,29 +107,28 @@ class AppExplanationBox extends StatelessWidget {
 
             // ── Body ────────────────────────────────────────────────────
             if (expanded) ...[
-              Divider(height: 1, color: AppColors.primary.withValues(alpha: 0.15)),
-              Obx(
-                () {
-                  final text = languageSelected.value == 'AM'
-                      ? explanationAm
-                      : explanationEn;
-                  final baseStyle = GoogleFonts.lora(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    height: 1.75,
-                    letterSpacing: 0.1,
-                    color: dark
-                        ? AppColors.white.withValues(alpha: 0.85)
-                        : AppColors.darkerGrey,
-                  );
-                  return Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text.rich(
-                      RichTextParser.parse(text, baseStyle),
-                    ),
-                  );
-                },
+              Divider(
+                height: 1,
+                color: AppColors.primary.withValues(alpha: 0.15),
               ),
+              Obx(() {
+                final text = languageSelected.value == 'AM'
+                    ? explanationAm
+                    : explanationEn;
+                final baseStyle = GoogleFonts.lora(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  height: 1.75,
+                  letterSpacing: 0.1,
+                  color: dark
+                      ? AppColors.white.withValues(alpha: 0.85)
+                      : AppColors.darkerGrey,
+                );
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text.rich(RichTextParser.parse(text, baseStyle)),
+                );
+              }),
             ] else
               const SizedBox(height: 4),
           ],

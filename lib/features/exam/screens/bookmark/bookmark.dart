@@ -5,18 +5,29 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/bookmark_container.dart';
 import 'package:matricmate/features/exam/screens/bookmark/widgets/search_field.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class BookmarkScreen extends GetView<BookmarkController> {
+class BookmarkScreen extends StatefulWidget {
   BookmarkScreen({super.key});
+
+  @override
+  State<BookmarkScreen> createState() => _BookmarkScreenState();
+}
+
+class _BookmarkScreenState extends State<BookmarkScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Clear search once when screen opens, not on every rebuild
+    BookmarkController.instance.clearSearch();
+  }
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    controller.clearSearch();
+    final controller = BookmarkController.instance;
 
     return Scaffold(
       appBar: ModernAppbarWithBuilder(
@@ -25,26 +36,24 @@ class BookmarkScreen extends GetView<BookmarkController> {
           final count = controller.bookmarkedQuestions.length;
           return Text(
             '$count ${count == 1 ? 'item' : 'items'} saved',
-            style: const TextStyle(
-              color: AppColors.white,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: AppColors.white, fontSize: 12),
           );
         }),
       ),
       body: Obx(() {
-        if (UserController.instance.userFetching.value) {
+        // Show loader only on initial load when list is empty
+        if (controller.isLoading.value &&
+            controller.bookmarkedQuestions.isEmpty) {
           return const AppCircularLoading(title: 'Loading...');
         }
 
-        // Re-evaluated reactively every time bookmarkedQuestions or subjects change
         final tabs = controller.subjects;
 
         return DefaultTabController(
           key: ValueKey(tabs.length),
           length: tabs.length,
           child: NestedScrollView(
-            headerSliverBuilder: (_, innerBoxScrolled) {
+            headerSliverBuilder: (_, __) {
               return [
                 SliverAppBar(
                   automaticallyImplyLeading: false,
@@ -69,22 +78,17 @@ class BookmarkScreen extends GetView<BookmarkController> {
                 ),
               ];
             },
-
             body: TabBarView(
               children: tabs.map((subject) {
                 final filtered = controller.getBySubject(subject);
-                if (controller.isLoading.value) {
-                  return const AppCircularLoading(title: 'Loading...');
-                }
                 if (filtered.isEmpty) {
                   return const Center(child: Text('No bookmark found'));
                 }
-
                 return Container(
                   margin: const EdgeInsets.all(AppSizes.defaultSpace / 2),
                   child: ListView.separated(
                     itemCount: filtered.length,
-                    separatorBuilder: (_, _) =>
+                    separatorBuilder: (_, __) =>
                         const SizedBox(height: AppSizes.spaceBtwItems),
                     itemBuilder: (_, index) {
                       final qn = filtered[index];

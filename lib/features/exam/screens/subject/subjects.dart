@@ -94,16 +94,16 @@ class SubjectsScreen extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        if (UserController.instance.userFetching.value ||
-            subjectController.isLoading.value ||
-            syncController.refreshing.value) {
-          return const AppCircularLoading(title: 'Loading...');
-        }
-
         final isInactive = UserController.instance.user.value.isInactive;
         final isPending = UserController.instance.user.value.isPending;
-
         final filteredSubjects = subjectController.filteredSubjects;
+
+        // Show loading only if subjects are empty AND actively syncing
+        if (filteredSubjects.isEmpty &&
+            (subjectController.isLoading.value ||
+                syncController.refreshing.value)) {
+          return const AppCircularLoading(title: 'Loading subjects...');
+        }
 
         return SingleChildScrollView(
           child: Padding(

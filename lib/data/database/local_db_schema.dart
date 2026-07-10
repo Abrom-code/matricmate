@@ -21,7 +21,8 @@ class DBschema {
         name TEXT NOT NULL UNIQUE,
         is_natural INTEGER NOT NULL,
         is_common INTEGER DEFAULT 0,
-        is_downloaded INTEGER DEFAULT 0
+        is_downloaded INTEGER DEFAULT 0,
+        is_entrance_downloaded INTEGER DEFAULT 0
       );
     ''');
 

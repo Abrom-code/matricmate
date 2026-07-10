@@ -17,15 +17,12 @@ class AppHelperFunctions {
   }
 
   static Future<void> downloadImages(Set<String> urls) async {
+    if (urls.isEmpty) return;
     final cache = DefaultCacheManager();
-
-    for (final url in urls) {
-      try {
-        await cache.downloadFile(url);
-      } catch (e) {
-        throw e;
-      }
-    }
+    // Download all images concurrently instead of one by one
+    await Future.wait(
+      urls.map((url) => cache.downloadFile(url).catchError((e) => throw e)),
+    );
   }
 
   static Future<void> showImageZoom(

@@ -18,16 +18,6 @@ class ProfileSection extends StatelessWidget {
     return Obx(() {
       final user = UserController.instance.user.value;
       final controller = Get.find<ProfileController>();
-      final isFetching = UserController.instance.userFetching.value;
-
-      if (isFetching) {
-        return const SizedBox(
-          height: 180,
-          child: Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-        );
-      }
 
       return Container(
         width: double.infinity,

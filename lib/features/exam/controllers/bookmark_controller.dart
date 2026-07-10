@@ -80,28 +80,26 @@ class BookmarkController extends GetxController {
 
       final userId = UserController.instance.user.value.id;
       final data = await _repo.loadBookmarks(userId);
-
-      bookmarkedQuestionIds.value = data;
-      // ignore: invalid_use_of_protected_member
-      bookmarkedIds.value = data.map((b) => b.questionId).toSet();
-
       final allQns = await _repo.getQns();
 
-      bookmarkedQuestions.value = data
+      // Build the full new list before touching any observables
+      final newQuestions = data
           .map((b) {
             final qnList = allQns.where((q) => q['id'] == b.questionId);
-
-            if (qnList.isNotEmpty) {
-              return QuestionModel.fromMap(qnList.first);
-            }
-
+            if (qnList.isNotEmpty) return QuestionModel.fromMap(qnList.first);
             return null;
           })
           .whereType<QuestionModel>()
           .toList();
 
-      await _loadPassages(bookmarkedQuestions);
-      await _loadTestTypes(bookmarkedQuestions);
+      await _loadPassages(newQuestions);
+      await _loadTestTypes(newQuestions);
+
+      // Swap all observables atomically — one rebuild, no flicker
+      bookmarkedQuestionIds.value = data;
+      // ignore: invalid_use_of_protected_member
+      bookmarkedIds.value = data.map((b) => b.questionId).toSet();
+      bookmarkedQuestions.value = newQuestions;
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

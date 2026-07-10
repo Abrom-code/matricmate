@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/status_badge.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -37,15 +38,12 @@ class SubjectsScreen extends StatelessWidget {
               if (stream.isNotEmpty) ...[
                 Text(
                   stream,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 const SizedBox(width: 8),
-                _StatusBadge(status: user.status),
+                StatusBadge(status: user.status),
               ] else
-                _StatusBadge(status: user.status),
+                StatusBadge(status: user.status),
             ],
           );
         }),
@@ -84,7 +82,6 @@ class SubjectsScreen extends StatelessWidget {
         final isPending = UserController.instance.user.value.isPending;
         final filteredSubjects = subjectController.filteredSubjects;
 
-        // Show loading only when subjects haven't loaded from local DB yet
         if (filteredSubjects.isEmpty && subjectController.isLoading.value) {
           return const AppCircularLoading(title: 'Loading subjects...');
         }
@@ -96,22 +93,20 @@ class SubjectsScreen extends StatelessWidget {
               children: [
                 if (isInactive)
                   PremiumBanner(
-                    onTap: () {
-                      Get.bottomSheet(
-                        const PremiumBottomSheet(),
-                        isScrollControlled: true,
-                      );
-                    },
+                    onTap: () => Get.bottomSheet(
+                      const PremiumBottomSheet(),
+                      isScrollControlled: true,
+                    ),
                   ),
                 if (isInactive) const SizedBox(height: AppSizes.spaceBtwItems),
 
                 if (isPending) const PendingPaymentBanner(),
                 if (isPending) const SizedBox(height: AppSizes.spaceBtwItems),
+
                 GridLayout(
                   itemCount: filteredSubjects.length,
                   itemBuilder: (_, index) {
                     final subject = filteredSubjects[index];
-
                     return SubjectContainer(
                       title: subject.name,
                       image: AppHelperFunctions.getSubjectImage(subject.name),
@@ -132,6 +127,7 @@ class SubjectsScreen extends StatelessWidget {
                     );
                   },
                 ),
+
                 if (filteredSubjects.isEmpty)
                   const Padding(
                     padding: EdgeInsets.only(top: AppSizes.spaceBtwSections),
@@ -147,125 +143,6 @@ class SubjectsScreen extends StatelessWidget {
           ),
         );
       }),
-    );
-  }
-}
-
-// ── Status badge ──────────────────────────────────────────────────────────────
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    switch (status) {
-      case 'active':
-        return _GoldPremiumBadge();
-      case 'pending':
-        return _PendingBadge();
-      default:
-        return _FreeBadge();
-    }
-  }
-}
-
-/// Gold gradient pill with a star — shown for premium users.
-class _GoldPremiumBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFD700), Color(0xFFFFA000)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFFD700).withValues(alpha: 0.4),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.star_rounded, size: 11, color: Colors.white),
-          SizedBox(width: 3),
-          Text(
-            'PREMIUM',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Amber pill with a clock — shown while payment is pending.
-class _PendingBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.amber, width: 1),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.access_time_rounded, size: 11, color: Colors.amber),
-          SizedBox(width: 3),
-          Text(
-            'PENDING',
-            style: TextStyle(
-              color: Colors.amber,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Subtle teal outline pill — shown for free users (low emphasis).
-class _FreeBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: const Text(
-        'FREE',
-        style: TextStyle(
-          color: Colors.white70,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
-      ),
     );
   }
 }

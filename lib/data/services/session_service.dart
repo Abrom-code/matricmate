@@ -23,7 +23,7 @@ class SessionService {
         await _supabase.from('user_sessions').insert({
           'firebase_uid': uid,
           'device_id': deviceId,
-          'trial': 2,
+          'trial': 5,
         });
         return SessionValidationResult.allowed;
       }

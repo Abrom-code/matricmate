@@ -3,13 +3,11 @@ class Routes {
   static const home = '/';
   static const bookmark = '/bookmark';
   static const chapter = '/chapter';
-  static const tests = '/tests';
   static const gradeTests = '/gradeTests';
   static const entrance = '/entrance';
   static const entranceExams = '/entrance-exams';
   static const testLists = '/test_lists';
   static const questions = '/questions';
-  static const questionsSections = '/questions-section';
   static const result = '/result';
   static const review = '/review';
   static const ready = '/ready';
@@ -26,16 +24,12 @@ class Routes {
 
   // auth
   static const signup = '/signup';
-  static const signupSuccess = '/signup-success';
   static const verifyEmail = '/verify-email';
   static const signIn = '/sign-in';
   static const changePassword = '/change-password';
   static const forgetPassword = '/forget-password';
   static const resetPassword = '/reset-password';
 
-  // loading (blank screen while auth decides where to navigate)
+  // loading
   static const loading = '/loading';
-
-  // success screen
-  static const success = '/success';
 }

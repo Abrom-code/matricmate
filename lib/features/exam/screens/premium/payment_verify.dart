@@ -13,7 +13,9 @@ class PaymentVerificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(PremiumController());
+    final controller = Get.isRegistered<PremiumController>()
+        ? Get.find<PremiumController>()
+        : Get.put(PremiumController());
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
@@ -72,6 +74,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                     style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -82,27 +85,31 @@ class PaymentVerificationScreen extends StatelessWidget {
                 const SizedBox(height: 15),
 
                 // Cancel button
-                TextButton(
-                  onPressed: isLoading
-                      ? null
-                      : () {
-                          AppDialogBoxes.showOkCancelDialog(
-                            context: context,
-                            title: 'Cancel Payment',
-                            subtitle:
-                                'Are you sure you want to cancel this payment?',
-                            onPressed: () {
-                              Get.back();
-                              controller.cancelPayment();
-                            },
-                          );
-                        },
-                  child: isLoading
-                      ? const AppCircularButtonLoading(color: AppColors.error)
-                      : const Text(
-                          'Cancel Payment',
-                          style: TextStyle(fontSize: 16, color: Colors.red),
-                        ),
+                SizedBox(
+                  height: 50,
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            AppDialogBoxes.showOkCancelDialog(
+                              context: context,
+                              title: 'Cancel Payment',
+                              subtitle:
+                                  'Are you sure you want to cancel this payment?',
+                              onPressed: () {
+                                Get.back();
+                                controller.cancelPayment();
+                              },
+                            );
+                          },
+                    child: isLoading
+                        ? const AppCircularButtonLoading(color: AppColors.error)
+                        : const Text(
+                            'Cancel Payment',
+                            style: TextStyle(fontSize: 16, color: Colors.red),
+                          ),
+                  ),
                 ),
                 const SizedBox(height: 15),
                 const Divider(),

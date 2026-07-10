@@ -67,6 +67,9 @@ class LoginForm extends GetView<LoginController> {
             () => SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
                 onPressed: controller.isLogging.value
                     ? null
                     : () => controller.emailAndPasswordLogin(),

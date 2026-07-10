@@ -30,15 +30,19 @@ class EntranceScreen extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: IconButton(
                 tooltip: 'Sync entrance exams',
-                onPressed:
-                    syncing ? null : () => syncController.syncEntranceExams(),
+                onPressed: syncing
+                    ? null
+                    : () => syncController.syncEntranceExams(),
                 icon: syncing
                     ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.white,
+                        width: 24,
+                        height: 24,
+                        child: Center(
+                          child: AppPulsingDots(
+                            dotSize: 4,
+                            dotSpacing: 2,
+                            color: AppColors.white,
+                          ),
                         ),
                       )
                     : const Icon(
@@ -52,15 +56,11 @@ class EntranceScreen extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        if (controller.isLoading.value) {
-          return const AppCircularLoading(title: 'Loading...');
-        }
-
         final subjects = controller.filteredSubjects;
 
-        // Still syncing on first launch — subjects haven't arrived yet
-        if (subjects.isEmpty && syncController.refreshing.value) {
-          return const AppCircularLoading(title: 'Loading subjects...');
+        // Show loading only when local DB hasn't returned data yet
+        if (controller.isLoading.value && subjects.isEmpty) {
+          return const AppCircularLoading(title: 'Loading...');
         }
 
         if (subjects.isEmpty) {
@@ -131,12 +131,12 @@ class _EntranceSubjectTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
           onTap: isDownloaded && total > 0
               ? () => Get.toNamed(
-                    Routes.entranceExams,
-                    arguments: {
-                      'subject_id': subject.id,
-                      'subject': subject.name,
-                    },
-                  )
+                  Routes.entranceExams,
+                  arguments: {
+                    'subject_id': subject.id,
+                    'subject': subject.name,
+                  },
+                )
               : null,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -157,8 +157,9 @@ class _EntranceSubjectTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary
-                        .withValues(alpha: dark ? 0.2 : 0.1),
+                    color: AppColors.primary.withValues(
+                      alpha: dark ? 0.2 : 0.1,
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -177,10 +178,9 @@ class _EntranceSubjectTile extends StatelessWidget {
                     children: [
                       Text(
                         subject.name,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall!
-                            .copyWith(color: AppColors.primary),
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                       const SizedBox(height: 3),
 
@@ -205,8 +205,9 @@ class _EntranceSubjectTile extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 4,
-                            backgroundColor:
-                                AppColors.primary.withValues(alpha: 0.15),
+                            backgroundColor: AppColors.primary.withValues(
+                              alpha: 0.15,
+                            ),
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               AppColors.primary,
                             ),
@@ -268,9 +269,11 @@ class _ActionWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_rounded,
-                size: 13,
-                color: AppColors.primary.withValues(alpha: dark ? 0.9 : 1)),
+            Icon(
+              Icons.check_rounded,
+              size: 13,
+              color: AppColors.primary.withValues(alpha: dark ? 0.9 : 1),
+            ),
             const SizedBox(width: 4),
             Text(
               'Ready',
@@ -290,15 +293,17 @@ class _ActionWidget extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: AppColors.darkGrey.withValues(alpha: 0.12),
+          color: AppColors.darkGrey.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.download_rounded,
-                size: 13,
-                color: AppColors.darkGrey.withValues(alpha: 0.4)),
+            Icon(
+              Icons.download_rounded,
+              size: 13,
+              color: AppColors.darkGrey.withValues(alpha: 0.4),
+            ),
             const SizedBox(width: 4),
             Text(
               'Download',

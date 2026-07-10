@@ -77,6 +77,9 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
                 width: double.infinity,
                 child: Obx(
                   () => ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                    ),
                     onPressed: !controller.isChecking.value
                         ? controller.checkEmailVerification
                         : null,
@@ -96,13 +99,16 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
                 width: double.infinity,
                 child: Obx(() {
                   final isResending = controller.isResending.value;
-                  return TextButton(
-                    onPressed: isResending
-                        ? null
-                        : controller.sendEmailVerification,
-                    child: isResending
-                        ? const AppCircularButtonLoading(color: AppColors.primary)
-                        : const Text(AppTextStrings.resendEmail),
+                  return SizedBox(
+                    height: 50,
+                    child: TextButton(
+                      onPressed: isResending
+                          ? null
+                          : controller.sendEmailVerification,
+                      child: isResending
+                          ? const AppCircularButtonLoading(color: AppColors.primary)
+                          : const Text(AppTextStrings.resendEmail),
+                    ),
                   );
                 }),
               ),

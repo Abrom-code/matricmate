@@ -62,9 +62,18 @@ class ResetPassword extends GetView<ResetPasswordController> {
                 child: TextButton(
                   onPressed: () => controller.sendResetEmail(),
                   child: Obx(
-                    () => controller.isSending.value
-                        ? const AppCircularButtonLoading(color: AppColors.primary)
-                        : const Text(AppTextStrings.resendEmail),
+                    () => SizedBox(
+                      height: 50,
+                      child: controller.isSending.value
+                          ? const Center(
+                              child: AppCircularButtonLoading(
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : const Center(
+                              child: Text(AppTextStrings.resendEmail),
+                            ),
+                    ),
                   ),
                 ),
               ),

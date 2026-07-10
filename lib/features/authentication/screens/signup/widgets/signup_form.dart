@@ -115,6 +115,9 @@ class SignupForm extends GetView<SignupController> {
             () => SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
                 onPressed: controller.isSigning.value
                     ? null
                     : () => controller.signup(),

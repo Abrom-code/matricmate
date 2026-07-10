@@ -109,7 +109,8 @@ class SyncingController extends GetxController {
       }
 
       await SyncPrefs.saveEntranceSync(syncStarted);
-      await SubjectsController.instance.syncSubjects();
+      // Reload local subjects to reflect any changes written by syncSubjects()
+      await SubjectsController.instance.loadLocalSubjects();
       return true;
     } catch (e) {
       rethrow;

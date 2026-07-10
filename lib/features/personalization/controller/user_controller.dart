@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
@@ -10,7 +9,6 @@ import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
-import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -144,34 +142,6 @@ class UserController extends GetxController {
     }
   }
 
-  Future<void> handleDeleteAccount(BuildContext context) async {
-    AppDialogBoxes.showOkCancelDialog(
-      context: context,
-      onPressed: () async {
-        try {
-          AppFullScreenLoader.openLoadingDialog('Deleting account...');
-
-          final authUser = _authRepo.currentUser;
-
-          if (authUser == null) return;
-
-          await _userRepository.deleteUserRecord(authUser.uid);
-
-          await authUser.delete();
-
-          AppFullScreenLoader.stopLoading();
-
-          user(UserModel.empty());
-
-          Get.offAll(() => const LoginScreen());
-        } catch (e) {
-          AppFullScreenLoader.stopLoading();
-          AppExceptionHandler.handleResponse(e);
-        }
-      },
-    );
-  }
-
   void showDeleteDialog() {
     final passwordController = TextEditingController();
 
@@ -211,6 +181,7 @@ class UserController extends GetxController {
           child: Obx(
             () => OutlinedButton(
               style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
                 side: const BorderSide(color: AppColors.error),
               ),
               onPressed: isDeleting.value

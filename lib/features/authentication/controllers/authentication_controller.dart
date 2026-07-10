@@ -63,6 +63,9 @@ class AuthenticationController extends GetxController {
       return;
     }
 
+    // Reset so _runInitThenNavigate always runs fresh on each login.
+    _initStarted = false;
+
     // If we're not already on the loading screen, navigate there first
     // so the splash is visible during init.
     final currentRoute = Get.currentRoute;

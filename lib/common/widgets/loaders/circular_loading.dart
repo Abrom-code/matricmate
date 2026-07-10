@@ -35,10 +35,12 @@ class AppPulsingDots extends StatefulWidget {
   const AppPulsingDots({
     super.key,
     this.dotSize = 7,
+    this.dotSpacing = 4,
     this.color = AppColors.primary,
   });
 
   final double dotSize;
+  final double dotSpacing;
   final Color color;
 
   @override
@@ -80,7 +82,7 @@ class _AppPulsingDotsState extends State<AppPulsingDots>
                     ? 1.0 - ((t - 0.4) / 0.4)
                     : 0.0;
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
+              margin: EdgeInsets.symmetric(horizontal: widget.dotSpacing),
               width: widget.dotSize,
               height: widget.dotSize,
               decoration: BoxDecoration(

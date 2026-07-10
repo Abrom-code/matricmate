@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/personalization/controller/update_profile_controller.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
@@ -93,12 +94,9 @@ class EditProfileScreen extends StatelessWidget {
                         if (userController.isDeleting.value) {
                           return const Center(
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(),
-                                ),
+                                AppPulsingDots(color: AppColors.error),
                                 SizedBox(height: 8),
                                 Text('Deleting...'),
                               ],
@@ -130,7 +128,7 @@ class EditProfileScreen extends StatelessWidget {
                 child: ModalBarrier(dismissible: false, color: Colors.black),
               ),
             if (controller.isUpdating.value)
-              const Center(child: CircularProgressIndicator()),
+              const Center(child: AppPulsingDots()),
           ],
         ),
       ),

@@ -81,6 +81,9 @@ class ChangePassword extends GetView<ChangePasswordController> {
                   () => SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                      ),
                       onPressed: controller.isUpdating.value
                           ? null
                           : () => controller.changePassword(),

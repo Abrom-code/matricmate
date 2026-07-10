@@ -54,7 +54,9 @@ class ForgetPassword extends GetView<ForgetPasswordController> {
                 () => SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                    ),
                     onPressed: controller.isLoading.value
                         ? null
                         : () => controller.resetPassword(),

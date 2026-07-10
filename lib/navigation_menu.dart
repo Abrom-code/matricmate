@@ -205,14 +205,6 @@ class NavigationController extends GetxController {
     Routes.userProfile,
   ];
 
-  void backToSubjects() {
-    selectedIdx.value = 1; 
-    navigatorKey.currentState?.pushNamedAndRemoveUntil(
-      Routes.home,
-      (route) => false,
-    );
-  }
-
   void changePage(int index) {
     if (selectedIdx.value == index) return;
     selectedIdx.value = index;

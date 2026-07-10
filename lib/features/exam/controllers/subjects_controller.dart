@@ -116,27 +116,6 @@ class SubjectsController extends GetxController {
     }
   }
 
-  Future<void> syncSubjects() async {
-    try {
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) return;
-
-      // 1. Fetch from Supabase
-      final response = await _repo.getSupabaseSubjects();
-      final remoteData = (response as List)
-          .map((e) => SubjectModel.fromJson(e))
-          .toList();
-
-      for (final subject in remoteData) {
-        await _repo.addSubject(subject);
-      }
-
-      await loadLocalSubjects();
-    } catch (e) {
-      AppExceptionHandler.handleResponse(e);
-    }
-  }
-
   /// DOWNLOAD SUBJECT (chapter content)
   Future<void> downloadSubject(String subject, int subjectId) async {
     try {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// A reusable collapsible passage/comprehension box.
 ///
@@ -125,15 +127,18 @@ class _AppPassageBoxState extends State<AppPassageBox> {
                             child: CircularProgressIndicator(),
                           ),
                         )
-                      : Text(
-                          widget.content!,
-                          style: TextStyle(
-                            fontSize: 15,
-                            height: 1.7,
-                            letterSpacing: 0.1,
-                            color: dark
-                                ? AppColors.white.withValues(alpha: 0.85)
-                                : AppColors.darkerGrey,
+                      : Text.rich(
+                          RichTextParser.parse(
+                            widget.content!,
+                            GoogleFonts.lora(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              height: 1.75,
+                              letterSpacing: 0.1,
+                              color: dark
+                                  ? AppColors.white.withValues(alpha: 0.85)
+                                  : AppColors.darkerGrey,
+                            ),
                           ),
                         ),
                 ),

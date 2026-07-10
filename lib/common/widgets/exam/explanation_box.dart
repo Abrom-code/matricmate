@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// A reusable collapsible explanation box used on both the question screen
 /// and the review screen.
@@ -107,22 +109,26 @@ class AppExplanationBox extends StatelessWidget {
             if (expanded) ...[
               Divider(height: 1, color: AppColors.primary.withValues(alpha: 0.15)),
               Obx(
-                () => Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    languageSelected.value == 'AM'
-                        ? explanationAm
-                        : explanationEn,
-                    style: TextStyle(
-                      fontSize: 15,
-                      height: 1.7,
-                      letterSpacing: 0.1,
-                      color: dark
-                          ? AppColors.white.withValues(alpha: 0.85)
-                          : AppColors.darkerGrey,
+                () {
+                  final text = languageSelected.value == 'AM'
+                      ? explanationAm
+                      : explanationEn;
+                  final baseStyle = GoogleFonts.lora(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    height: 1.75,
+                    letterSpacing: 0.1,
+                    color: dark
+                        ? AppColors.white.withValues(alpha: 0.85)
+                        : AppColors.darkerGrey,
+                  );
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text.rich(
+                      RichTextParser.parse(text, baseStyle),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ] else
               const SizedBox(height: 4),

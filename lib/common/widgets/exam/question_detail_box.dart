@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:matricmate/common/widgets/exam/explanation_box.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
@@ -8,6 +9,7 @@ import 'package:matricmate/features/exam/screens/question/widgets/question_secti
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// A reusable question detail card used on both the bookmark detail screen
 /// and the exam review screen.
@@ -243,12 +245,15 @@ class _PassageSection extends StatelessWidget {
                       child: CircularProgressIndicator(),
                     ),
                   )
-                : Text(
-                    content!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.7,
-                      color: dark ? AppColors.grey : AppColors.darkerGrey,
+                : Text.rich(
+                    RichTextParser.parse(
+                      content!,
+                      GoogleFonts.lora(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        height: 1.75,
+                        color: dark ? AppColors.grey : AppColors.darkerGrey,
+                      ),
                     ),
                   ),
           ),

@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/routes/routes.dart';
+import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
+import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
+import 'package:matricmate/features/exam/screens/entrance/entrance.dart';
+import 'package:matricmate/features/exam/screens/subject/subjects.dart';
+import 'package:matricmate/features/personalization/screen/analytics/analytics_screen.dart';
+import 'package:matricmate/features/personalization/screen/profile/profile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -15,28 +19,18 @@ class NavigationMenu extends StatelessWidget {
     final controller = Get.find<NavigationController>();
 
     return Scaffold(
-      extendBody: true, // body goes under the nav bar for the floating effect
+      extendBody: true,
       bottomNavigationBar: Obx(
         () => _FloatingNavBar(
           selectedIndex: controller.selectedIdx.value,
           onTap: controller.changePage,
         ),
       ),
-      body: Navigator(
-        key: controller.navigatorKey,
-        initialRoute: Routes.home,
-        onGenerateRoute: (settings) {
-          final routePage = AppRoutes.pages.firstWhere(
-            (page) => page.name == settings.name,
-            orElse: () => AppRoutes.pages.first,
-          );
-          return GetPageRoute(
-            routeName: routePage.name,
-            page: routePage.page,
-            binding: routePage.binding,
-            settings: settings,
-          );
-        },
+      body: PageView(
+        controller: controller.pageController,
+        physics: const ClampingScrollPhysics(), // no bounce — cleaner feel
+        onPageChanged: controller.onPageChanged,
+        children: controller.pages,
       ),
     );
   }
@@ -64,7 +58,6 @@ class _FloatingNavBar extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
-    // Pill width: at most 420 px, at least full width on tiny screens
     final pillWidth = screenWidth > 480 ? 420.0 : screenWidth - 32.0;
 
     return Padding(
@@ -152,7 +145,6 @@ class _NavButton extends StatelessWidget {
                   ? AppColors.primary
                   : (dark ? Colors.white54 : AppColors.darkGrey),
             ),
-            // Label slides in only for the selected item
             AnimatedSize(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
@@ -191,26 +183,73 @@ class NavigationController extends GetxController {
   static NavigationController get instance => Get.find();
 
   final Rx<int> selectedIdx = 0.obs;
-  static const int navigatorId = 1;
 
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>(
-    debugLabel: 'bottom_nav',
-  );
+  late final PageController pageController;
 
-  final List<String> routes = [
-    Routes.home,
-    Routes.entrance,
-    Routes.bookmark,
-    Routes.analytics,
-    Routes.userProfile,
-  ];
+  /// Screens are instantiated once and kept alive via AutomaticKeepAlive.
+  late final List<Widget> pages;
 
+  @override
+  void onInit() {
+    super.onInit();
+    pageController = PageController(initialPage: 0);
+
+    // Ensure BookmarkController is registered before BookmarkScreen builds.
+    if (!Get.isRegistered<BookmarkController>()) {
+      Get.lazyPut<BookmarkController>(() => BookmarkController(), fenix: true);
+    }
+
+    pages = [
+      _KeepAlivePage(child: SubjectsScreen()),
+      _KeepAlivePage(child: EntranceScreen()),
+      _KeepAlivePage(child: BookmarkScreen()),
+      const _KeepAlivePage(child: AnalyticsScreen()),
+      const _KeepAlivePage(child: ProfileScreen()),
+    ];
+  }
+
+  @override
+  void onClose() {
+    pageController.dispose();
+    super.onClose();
+  }
+
+  /// Called by the nav bar tap — animates the PageView.
   void changePage(int index) {
     if (selectedIdx.value == index) return;
     selectedIdx.value = index;
-    navigatorKey.currentState?.pushNamedAndRemoveUntil(
-      routes[index],
-      (route) => false,
+    pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
     );
+  }
+
+  /// Called when the user swipes — syncs the nav bar indicator.
+  void onPageChanged(int index) {
+    selectedIdx.value = index;
+  }
+}
+
+// ── Keep-alive wrapper ────────────────────────────────────────────────────────
+// Prevents PageView from disposing screens when swiping away from them.
+
+class _KeepAlivePage extends StatefulWidget {
+  const _KeepAlivePage({required this.child});
+  final Widget child;
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:matricmate/common/widgets/exam/explanation_box.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
@@ -239,11 +240,9 @@ class _PassageSection extends StatelessWidget {
               ),
             ),
             child: content == null
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(AppSizes.md),
-                      child: CircularProgressIndicator(),
-                    ),
+                ? const Padding(
+                    padding: EdgeInsets.all(AppSizes.md),
+                    child: Center(child: AppPulsingDots()),
                   )
                 : Text.rich(
                     RichTextParser.parse(

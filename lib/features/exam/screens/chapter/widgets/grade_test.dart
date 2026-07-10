@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
@@ -34,7 +35,7 @@ class GradeTestsPage extends GetView<GradeTestController> {
         padding: const EdgeInsets.all(AppSizes.defaultSpace),
         child: Obx(() {
           if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
+            return const AppCircularLoading(title: 'Loading...');
           }
 
           final tests = controller.chapterTests;

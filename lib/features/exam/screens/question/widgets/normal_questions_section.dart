@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
@@ -69,7 +70,7 @@ class QuesitonSection extends GetView<QuestionController> {
       ),
       child: Obx(() {
         if (controller.testQuestions.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppPulsingDots());
         }
 
         final q = controller.testQuestions[controller.currentIndex.value];

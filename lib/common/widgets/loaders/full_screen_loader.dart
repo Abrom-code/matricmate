@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -19,23 +20,16 @@ class AppFullScreenLoader {
           width: double.infinity,
           height: double.infinity,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // Built-in centering
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Built-in Flutter Material Loader
-              const CircularProgressIndicator(
-                color: AppColors.primary,
-                strokeWidth: 3,
-              ),
-
+              const AppPulsingDots(),
               const SizedBox(height: 24),
-
-              // Loading Text
               DefaultTextStyle(
                 style: Theme.of(Get.context!).textTheme.bodyMedium!.copyWith(
                   color: AppHelperFunctions.isDark(Get.context!)
                       ? Colors.white
                       : Colors.black,
-                  decoration: TextDecoration.none, // Removes yellow underlines
+                  decoration: TextDecoration.none,
                 ),
                 child: Text(text, textAlign: TextAlign.center),
               ),

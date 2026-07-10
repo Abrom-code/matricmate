@@ -10,6 +10,7 @@ import 'package:matricmate/features/personalization/screen/analytics/widgets/sco
 import 'package:matricmate/features/personalization/screen/analytics/widgets/subject_performance_section.dart';
 import 'package:matricmate/features/personalization/screen/analytics/widgets/test_type_distribution.dart';
 import 'package:matricmate/features/personalization/screen/analytics/widgets/weakest_areas_card.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
@@ -80,9 +81,7 @@ class AnalyticsScreen extends StatelessWidget {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          );
+          return const AppCircularLoading(title: 'Loading analytics...');
         }
         return RefreshIndicator(
           color: AppColors.primary,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -121,11 +122,9 @@ class _AppPassageBoxState extends State<AppPassageBox> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: widget.content == null
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppSizes.md),
-                            child: CircularProgressIndicator(),
-                          ),
+                      ? const Padding(
+                          padding: EdgeInsets.all(AppSizes.md),
+                          child: Center(child: AppPulsingDots()),
                         )
                       : Text.rich(
                           RichTextParser.parse(

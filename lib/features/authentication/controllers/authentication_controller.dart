@@ -125,14 +125,14 @@ class AuthenticationController extends GetxController {
       // Delta sync — picks up any new tests/questions since last sync
       unawaited(SyncingController.instance.syncAll());
 
-      // Start Realtime scoped to downloaded subjects
+      // Start Realtime: user status channel (always) + question edits
+      // scoped to downloaded subjects only.
+      final uid = authRepo.currentUser?.uid ?? '';
       final downloadedIds = SubjectsController.instance.subjects
           .where((s) => s.isDownloaded || s.isEntranceDownloaded)
           .map((s) => s.id)
           .toList();
-      if (downloadedIds.isNotEmpty) {
-        unawaited(RealtimeService.instance.start(downloadedIds));
-      }
+      unawaited(RealtimeService.instance.start(downloadedIds, userId: uid));
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }

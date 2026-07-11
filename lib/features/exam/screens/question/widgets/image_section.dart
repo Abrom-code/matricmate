@@ -64,82 +64,99 @@ class _ImageSectionState extends State<ImageSection> {
           isAssetImage: false,
         );
       },
-      child: Container(
-        height: 200,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppColors.grey.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: FutureBuilder<File?>(
-            future: _imageFuture, // ✅ cached future (no flicker)
-            builder: (context, snapshot) {
-              // LOADING
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+      child: FutureBuilder<File?>(
+        future: _imageFuture,
+        builder: (context, snapshot) {
+          // LOADING
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Container(
+              height: 160,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.grey.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          }
+
+          // ERROR / NO IMAGE
+          if (!snapshot.hasData || snapshot.data == null) {
+            return Container(
+              height: 160,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.grey.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.broken_image,
+                      size: 40,
+                      color: AppColors.darkGrey,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Failed to load image',
+                      style: TextStyle(color: AppColors.darkGrey),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: retry,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          // SUCCESS — fill full width, cap height so very tall images
+          // don't push answer choices off screen.
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: 160,
+                    maxHeight: 320,
                   ),
-                );
-              }
-
-              // ERROR / NO IMAGE
-              if (!snapshot.hasData || snapshot.data == null) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.broken_image,
-                        size: 40,
-                        color: AppColors.darkGrey,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Failed to load image',
-                        style: TextStyle(color: AppColors.darkGrey),
-                      ),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: retry,
-                        child: const Text('Retry'),
-                      ),
-                    ],
+                  child: Image.file(
+                    snapshot.data!,
+                    width: double.infinity,
+                    fit: BoxFit.fitWidth,
                   ),
-                );
-              }
-
-              // SUCCESS
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.file(snapshot.data!, fit: BoxFit.cover),
-
-                  Positioned(
-                    bottom: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppColors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.zoom_in,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.zoom_in,
+                      color: Colors.white,
+                      size: 18,
                     ),
                   ),
-                ],
-              );
-            },
-          ),
-        ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

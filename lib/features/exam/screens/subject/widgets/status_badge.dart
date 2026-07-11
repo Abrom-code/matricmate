@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:matricmate/utils/constants/colors.dart';
 
 /// Picks the right badge based on user status string.
 class StatusBadge extends StatelessWidget {

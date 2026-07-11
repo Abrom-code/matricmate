@@ -343,11 +343,65 @@ class SyncRepository {
     List<int> passageIds, {
     DateTime? since,
   }) async {
-    var q = supabase.from('passages').select().inFilter('id', passageIds);
-    if (since != null) {
-      q = q.gt('updated_at', since.toUtc().toIso8601String());
+    if (since == null) {
+      // Full sync — fetch all referenced passages.
+      return await supabase
+          .from('passages')
+          .select()
+          .inFilter('id', passageIds);
     }
-    return await q;
+
+    // Delta sync: always fetch passages that are not yet in the local DB
+    // (e.g. a passage that predates the last sync but was just referenced by a
+    // newly inserted question), PLUS any passages whose content was edited.
+    final db = await _dbService.database;
+    final localRows = await db.query(
+      'passages',
+      columns: ['id'],
+      where: 'id IN (${passageIds.map((_) => '?').join(',')})',
+      whereArgs: passageIds,
+    );
+    final localIds = localRows.map((r) => r['id'] as int).toSet();
+    final missingIds = passageIds.where((id) => !localIds.contains(id)).toList();
+
+    // Fetch missing passages (no updated_at filter — they just don't exist locally)
+    // and updated passages (updated_at > since) in one round-trip if possible.
+    final sinceIso = since.toUtc().toIso8601String();
+
+    if (missingIds.isEmpty) {
+      // All passages already exist locally — only re-fetch edited ones.
+      return await supabase
+          .from('passages')
+          .select()
+          .inFilter('id', passageIds)
+          .gt('updated_at', sinceIso);
+    }
+
+    if (missingIds.length == passageIds.length) {
+      // None exist locally — fetch everything, no filter needed.
+      return await supabase
+          .from('passages')
+          .select()
+          .inFilter('id', passageIds);
+    }
+
+    // Mixed: some missing, some present. Fetch missing unconditionally +
+    // existing ones only if updated.
+    final existingIds = passageIds.where((id) => localIds.contains(id)).toList();
+    final results = await Future.wait([
+      supabase.from('passages').select().inFilter('id', missingIds),
+      supabase
+          .from('passages')
+          .select()
+          .inFilter('id', existingIds)
+          .gt('updated_at', sinceIso),
+    ]);
+
+    final Map<int, dynamic> merged = {};
+    for (final p in [...results[0], ...results[1]]) {
+      merged[p['id'] as int] = p;
+    }
+    return merged.values.toList();
   }
 
   // ── Sanitization ──────────────────────────────────────────────────────────

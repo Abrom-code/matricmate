@@ -52,7 +52,33 @@ class SyncingController extends GetxController {
 
       await _syncRepository.downloadEntranceTests(subjectIds, since: since);
 
+      // Mark every subject that now has entrance tests in the local DB as
+      // entrance-downloaded (the bulk sync writes the rows but never sets the flag).
+      final db = await DatabaseService.instance.database;
+      final entranceSubjectRows = await db.rawQuery(
+        'SELECT DISTINCT subject_id FROM tests WHERE subject_id IN (${subjectIds.map((_) => '?').join(',')}) AND type IN (\'entrance\', \'model\')',
+        subjectIds,
+      );
+      for (final row in entranceSubjectRows) {
+        await db.update(
+          'subjects',
+          {'is_entrance_downloaded': 1},
+          where: 'id = ?',
+          whereArgs: [row['subject_id']],
+        );
+      }
+
       await SyncPrefs.saveEntranceSync(syncStarted);
+
+      // Reload subjects (updates is_entrance_downloaded flags) then force-reload
+      // test counts from local SQLite — this bypasses the "needsRemote" guard in
+      // loadTestNumbers so newly synced tests are reflected immediately.
+      final dbSubjects = await _subjectRepo.getLocalSubjects();
+      SubjectsController.instance.subjects.assignAll(
+        dbSubjects.map((e) => SubjectModel.fromMap(e)).toList(),
+      );
+      await SubjectsController.instance.reloadTestNumbersFromLocal();
+
       ToastHelper.success(since == null ? 'Entrance exams loaded!' : 'Entrance exams updated!');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);

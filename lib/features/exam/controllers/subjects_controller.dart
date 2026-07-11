@@ -208,6 +208,22 @@ class SubjectsController extends GetxController {
     }
   }
 
+  /// Reloads entrance/model test counts from local SQLite unconditionally.
+  /// Called after a sync so newly downloaded rows are reflected immediately.
+  Future<void> reloadTestNumbersFromLocal() async {
+    try {
+      final current = subjects.toList();
+      await Future.wait(
+        current.map((s) async {
+          entranceTestNumbers[s.id] = await _repo.testNumbers(s.id, 'entrance');
+          modelTestNumbers[s.id] = await _repo.testNumbers(s.id, 'model');
+        }),
+      );
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
+  }
+
   Future<void> _fetchRemoteCountsIfNeeded(List<SubjectModel> subjects) async {
     try {
       final isConnected = await NetworkManager.instance.isConnected();

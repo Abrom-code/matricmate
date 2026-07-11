@@ -58,7 +58,7 @@ class QuestionNavigatorTile extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            '${index + 1}',
+            '${q.questionOrder ?? index + 1}',
             style: TextStyle(
               color: isDone || isSkipped
                   ? AppColors.white

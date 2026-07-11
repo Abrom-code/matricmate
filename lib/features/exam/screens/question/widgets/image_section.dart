@@ -50,19 +50,16 @@ class _ImageSectionState extends State<ImageSection> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        final isConnected = await NetworkManager.instance.isConnected();
-
-        if (!isConnected) {
-          ToastHelper.warning('No Internet!');
-          return;
-        }
-
-        AppHelperFunctions.showImageZoom(
-          context,
-          widget.imgUrl ?? '',
-          isAssetImage: false,
-        );
+      onTap: () {
+        // Use the already-cached file if available; fall back to network URL.
+        _imageFuture.then((file) {
+          AppHelperFunctions.showImageZoom(
+            context,
+            widget.imgUrl ?? '',
+            isAssetImage: false,
+            cachedFile: file,
+          );
+        });
       },
       child: FutureBuilder<File?>(
         future: _imageFuture,

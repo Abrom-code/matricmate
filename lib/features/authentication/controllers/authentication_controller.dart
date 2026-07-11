@@ -100,6 +100,11 @@ class AuthenticationController extends GetxController {
       if (!hasSubjects && isConnected) {
         initStatus.value = 'Loading subjects…';
         await SubjectsController.instance.initFromRemote();
+      } else if (hasSubjects && isConnected) {
+        // Subjects already in local DB — refresh entrance/model counts from
+        // remote so newly added exams appear immediately instead of waiting
+        // for the background sync to complete.
+        await SubjectsController.instance.refreshEntranceCountsFromRemote();
       }
 
       initStatus.value = 'Almost done…';

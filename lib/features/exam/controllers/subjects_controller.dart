@@ -181,6 +181,37 @@ class SubjectsController extends GetxController {
     }
   }
 
+  /// Fetches remote entrance/model counts and merges them with local counts.
+  /// Used on login when subjects are already cached locally — ensures newly
+  /// added exams on the server are reflected immediately instead of waiting
+  /// for the background sync to write tests to the local DB first.
+  Future<void> refreshEntranceCountsFromRemote() async {
+    try {
+      final current = subjects.toList();
+      if (current.isEmpty) return;
+
+      final subjectIds = current.map((s) => s.id).toList();
+      final remoteCounts = await _repo.remoteEntranceTestCounts(subjectIds);
+
+      for (final entry in remoteCounts.entries) {
+        final sid = entry.key;
+        final remoteEntrance = entry.value['entrance'] ?? 0;
+        final remoteModel = entry.value['model'] ?? 0;
+        // Use whichever is higher — local may already have downloaded tests
+        entranceTestNumbers[sid] =
+            ((entranceTestNumbers[sid] ?? 0) >= remoteEntrance)
+                ? (entranceTestNumbers[sid] ?? 0)
+                : remoteEntrance;
+        modelTestNumbers[sid] =
+            ((modelTestNumbers[sid] ?? 0) >= remoteModel)
+                ? (modelTestNumbers[sid] ?? 0)
+                : remoteModel;
+      }
+    } catch (_) {
+      // Non-fatal — best-effort
+    }
+  }
+
   Future<void> loadTestNumbers(List<SubjectModel> subjects) async {
     try {
       // Load local counts first (instant — SQLite)

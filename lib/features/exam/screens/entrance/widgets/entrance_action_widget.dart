@@ -22,32 +22,19 @@ class EntranceActionWidget extends StatelessWidget {
     // Downloading — progress bar is in the tile, trailing shows nothing
     if (isDownloading) return const SizedBox.shrink();
 
-    // Already downloaded — ready badge
+    // Already downloaded — icon only
     if (isDownloaded) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        width: 30,
+        height: 30,
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.1),
-          borderRadius: BorderRadius.circular(20),
+          shape: BoxShape.circle,
+          color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.12),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.check_rounded,
-              size: 13,
-              color: AppColors.primary.withValues(alpha: dark ? 0.9 : 1),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'Ready',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary.withValues(alpha: dark ? 0.9 : 1),
-              ),
-            ),
-          ],
+        child: Icon(
+          Icons.check_rounded,
+          size: 16,
+          color: AppColors.primary.withValues(alpha: dark ? 0.9 : 1),
         ),
       );
     }
@@ -55,7 +42,7 @@ class EntranceActionWidget extends StatelessWidget {
     // No content yet — disabled download button (greyed out)
     if (noContent) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(
           color: AppColors.darkGrey.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
@@ -86,7 +73,7 @@ class EntranceActionWidget extends StatelessWidget {
     return GestureDetector(
       onTap: () => SubjectsController.instance.downloadEntranceExams(subject),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(20),

@@ -82,10 +82,13 @@ class QuesitonSection extends GetView<QuestionController> {
             controller.currentIndex.value ==
             controller.testQuestions.length - 1;
 
-        // Skip is available in practice mode only (not yet checked, not last).
-        // In exam mode Next already advances without requiring an answer,
-        // so a separate Skip button would be redundant.
-        final canSkip = !examMode && !isChecked && !isLast;
+        // In practice mode: Skip shown when not yet answered and not last.
+        // In exam mode: Skip shown when no option selected (unanswered), so
+        // the user can move on without committing; once an option is selected
+        // the button becomes Next/Finish.
+        final canSkip = examMode
+            ? selectedIndex == null
+            : !isChecked && !isLast;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,8 +162,9 @@ class QuesitonSection extends GetView<QuestionController> {
 
                 const SizedBox(width: 8),
 
-                /// SKIP — when not yet answered (practice) or any non-last (exam)
-                /// NEXT / FINISH — after answer is given
+                /// SKIP — when no answer selected in exam mode (any question),
+                ///         or when not yet answered in practice mode (non-last)
+                /// NEXT / FINISH — after option selected (exam) or checked (practice)
                 Expanded(
                   child: canSkip
                       ? OutlinedButton.icon(
@@ -171,10 +175,24 @@ class QuesitonSection extends GetView<QuestionController> {
                               color: AppColors.darkGrey.withValues(alpha: 0.4),
                             ),
                           ),
-                          onPressed: controller.skipQuestion,
-                          icon: const Icon(Icons.skip_next_rounded, size: 16),
-                          label: const Text(
-                            'Skip',
+                          onPressed: examMode
+                              ? () async {
+                                  // In exam mode, Skip on last question = Finish
+                                  if (isLast) {
+                                    await _submitResult(context, q);
+                                  } else {
+                                    controller.skipQuestion();
+                                  }
+                                }
+                              : controller.skipQuestion,
+                          icon: Icon(
+                            examMode && isLast
+                                ? Icons.flag_rounded
+                                : Icons.skip_next_rounded,
+                            size: 16,
+                          ),
+                          label: Text(
+                            examMode && isLast ? 'Finish' : 'Skip',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

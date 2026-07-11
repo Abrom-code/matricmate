@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get/get.dart';
@@ -36,6 +38,7 @@ class AppHelperFunctions {
     BuildContext context,
     String imageUrl, {
     bool isAssetImage = false,
+    File? cachedFile,
   }) {
     return Navigator.of(context).push(
       PageRouteBuilder(
@@ -56,6 +59,8 @@ class AppHelperFunctions {
                       child: Center(
                         child: isAssetImage
                             ? Image.asset(imageUrl, fit: BoxFit.contain)
+                            : cachedFile != null
+                            ? Image.file(cachedFile, fit: BoxFit.contain)
                             : Image.network(imageUrl, fit: BoxFit.contain),
                       ),
                     ),

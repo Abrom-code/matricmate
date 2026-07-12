@@ -8,6 +8,22 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
+/// Parses the year and code from an entrance exam title.
+/// Titles follow the pattern: first number = year, last number = code.
+/// e.g. "2023 Physics 4" → (year: 2023, code: 4)
+/// Returns null for either value if not found.
+({int? year, int? code}) _parseEntranceTitle(String title) {
+  final numbers = RegExp(
+    r'\d+',
+  ).allMatches(title).map((m) => int.parse(m.group(0)!)).toList();
+  if (numbers.isEmpty) return (year: null, code: null);
+  final year = numbers.first >= 1900 && numbers.first <= 2100
+      ? numbers.first
+      : null;
+  final code = numbers.length >= 2 ? numbers.last : null;
+  return (year: year, code: code);
+}
+
 class ReadyDialog extends StatelessWidget {
   const ReadyDialog({
     super.key,
@@ -16,12 +32,16 @@ class ReadyDialog extends StatelessWidget {
     required this.testId,
     required this.id,
     this.draft,
+    this.examTitle,
   });
 
   final int qnCount, time, testId, id;
 
   /// Non-null when the user has an in-progress attempt to resume.
   final ResultModel? draft;
+
+  /// When provided (entrance exams), year and code are parsed and displayed.
+  final String? examTitle;
 
   void _launch({
     required bool examMode,
@@ -47,6 +67,12 @@ class ReadyDialog extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
     final hasDraft = draft != null;
     final answered = draft?.selectedAnswers.length ?? 0;
+
+    // Parse year/code from entrance exam title if provided
+    final parsed = examTitle != null ? _parseEntranceTitle(examTitle!) : null;
+    final examYear = parsed?.year;
+    final examCode = parsed?.code;
+    final hasExamMeta = examYear != null || examCode != null;
 
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
@@ -74,50 +100,45 @@ class ReadyDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
-                  // ── Info banner ───────────────────────────────────────
-                  const SizedBox(height: AppSizes.spaceBtwItems),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.teal.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Colors.teal.withValues(alpha: 0.30),
-                      ),
-                    ),
-                    child: Row(
+                  // ── Entrance exam year & code chips ───────────────────
+                  if (hasExamMeta) ...[
+                    Row(
                       children: [
-                        const Icon(
-                          Icons.info_outline_rounded,
-                          size: 16,
-                          color: Colors.teal,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            hasDraft
-                                ? 'You answered $answered of $qnCount questions last time.'
-                                : 'This test has $qnCount questions${time > 0 ? ' for $time minutes' : ''}.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: dark
-                                  ? AppColors.white.withValues(alpha: 0.55)
-                                  : AppColors.darkerGrey.withValues(alpha: 0.7),
-                            ),
+                        if (examYear != null)
+                          _MetaChip(
+                            icon: Icons.calendar_today_rounded,
+                            label: '$examYear',
+                            color: Colors.blueAccent,
+                            dark: dark,
                           ),
-                        ),
+                        if (examYear != null && examCode != null)
+                          const SizedBox(width: 8),
+                        if (examCode != null)
+                          _MetaChip(
+                            icon: Icons.tag_rounded,
+                            label: 'Booklet Code: $examCode',
+                            color: Colors.teal,
+                            dark: dark,
+                          ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: AppSizes.spaceBtwSections),
+                    const SizedBox(height: AppSizes.spaceBtwItems),
+                  ],
 
                   // ── Action buttons ────────────────────────────────────
                   // Resume (only when draft exists)
                   if (hasDraft) ...[
+                    Divider(color: AppColors.darkGrey.withValues(alpha: 0.15)),
+
+                    Text(
+                      'Continue',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppColors.darkGrey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.spaceBtwItems),
+
                     _ActionButton(
                       label: 'Resume',
                       description:
@@ -269,6 +290,49 @@ class _ActionButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Meta chip (year / code) ───────────────────────────────────────────────────
+
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.dark,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: dark ? 0.18 : 0.10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

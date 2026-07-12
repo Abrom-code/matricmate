@@ -174,6 +174,7 @@ class _ExamList extends StatelessWidget {
                     time: test.time,
                     testId: test.id,
                     id: 2,
+                    examTitle: test.title,
                     draft: controller.isInProgress(test.id)
                         ? controller.testResults[test.id]
                         : null,

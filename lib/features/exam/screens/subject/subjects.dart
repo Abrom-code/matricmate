@@ -109,12 +109,15 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
         final isInactive = UserController.instance.user.value.isInactive;
         final isPending = UserController.instance.user.value.isPending;
         final filteredSubjects = ctrl.filteredSubjects;
+        final syncing = syncController.refreshing.value;
 
         if (filteredSubjects.isEmpty && ctrl.isLoading.value) {
           return const AppCircularLoading(title: 'Loading subjects...');
         }
 
-        return SingleChildScrollView(
+        return Stack(
+          children: [
+            SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(AppSizes.defaultSpace),
             child: Column(
@@ -185,6 +188,14 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               ],
             ),
           ),
+        ),
+            if (syncing)
+              const Opacity(
+                opacity: 0.5,
+                child: ModalBarrier(dismissible: false, color: Colors.black),
+              ),
+            if (syncing) const Center(child: AppPulsingDots()),
+          ],
         );
       }),
     );

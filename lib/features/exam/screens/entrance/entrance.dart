@@ -61,6 +61,9 @@ class EntranceScreen extends StatelessWidget {
         // (from refreshEntranceCountsFromRemote) triggers a rebuild.
         final entranceNums = controller.entranceTestNumbers;
         final modelNums = controller.modelTestNumbers;
+        final syncing = syncController.entranceSyncing.value;
+        final anyDownloading = controller.entranceDownloadStep.isNotEmpty;
+        final busy = syncing || anyDownloading;
 
         if (controller.isLoading.value && subjects.isEmpty) {
           return const AppCircularLoading(title: 'Loading...');
@@ -75,23 +78,33 @@ class EntranceScreen extends StatelessWidget {
           );
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(AppSizes.defaultSpace),
-          itemCount: subjects.length,
-          separatorBuilder: (_, __) =>
-              const SizedBox(height: AppSizes.spaceBtwItems),
-          itemBuilder: (_, index) {
-            final subject = subjects[index];
-            final entranceCount = entranceNums[subject.id] ?? 0;
-            final modelCount = modelNums[subject.id] ?? 0;
+        return Stack(
+          children: [
+            ListView.separated(
+              padding: const EdgeInsets.all(AppSizes.defaultSpace),
+              itemCount: subjects.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: AppSizes.spaceBtwItems),
+              itemBuilder: (_, index) {
+                final subject = subjects[index];
+                final entranceCount = entranceNums[subject.id] ?? 0;
+                final modelCount = modelNums[subject.id] ?? 0;
 
-            return EntranceSubjectTile(
-              subject: subject,
-              entranceCount: entranceCount,
-              modelCount: modelCount,
-              total: entranceCount + modelCount,
-            );
-          },
+                return EntranceSubjectTile(
+                  subject: subject,
+                  entranceCount: entranceCount,
+                  modelCount: modelCount,
+                  total: entranceCount + modelCount,
+                );
+              },
+            ),
+            if (busy)
+              const Opacity(
+                opacity: 0.5,
+                child: ModalBarrier(dismissible: false, color: Colors.black),
+              ),
+            if (busy) const Center(child: AppPulsingDots()),
+          ],
         );
       }),
     );

@@ -82,10 +82,10 @@ class ReadyDialog extends StatelessWidget {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.indigo.withValues(alpha: 0.08),
+                      color: Colors.teal.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: Colors.indigo.withValues(alpha: 0.30),
+                        color: Colors.teal.withValues(alpha: 0.30),
                       ),
                     ),
                     child: Row(
@@ -93,7 +93,7 @@ class ReadyDialog extends StatelessWidget {
                         const Icon(
                           Icons.info_outline_rounded,
                           size: 16,
-                          color: Colors.indigo,
+                          color: Colors.teal,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -101,9 +101,11 @@ class ReadyDialog extends StatelessWidget {
                             hasDraft
                                 ? 'You answered $answered of $qnCount questions last time.'
                                 : 'This test has $qnCount questions${time > 0 ? ' for $time minutes' : ''}.',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: Colors.indigo,
+                              color: dark
+                                  ? AppColors.white.withValues(alpha: 0.55)
+                                  : AppColors.darkerGrey.withValues(alpha: 0.7),
                             ),
                           ),
                         ),

@@ -74,42 +74,42 @@ class ReadyDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
-                  // ── In-progress banner ────────────────────────────────
-                  if (hasDraft) ...[
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Colors.indigo.withValues(alpha: 0.30),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.info_outline_rounded,
-                            size: 16,
-                            color: Colors.indigo,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'You answered $answered of $qnCount questions last time.',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Colors.indigo,
-                              ),
-                            ),
-                          ),
-                        ],
+                  // ── Info banner ───────────────────────────────────────
+                  const SizedBox(height: AppSizes.spaceBtwItems),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.indigo.withValues(alpha: 0.30),
                       ),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          size: 16,
+                          color: Colors.indigo,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            hasDraft
+                                ? 'You answered $answered of $qnCount questions last time.'
+                                : 'This test has $qnCount questions${time > 0 ? ' for $time minutes' : ''}.',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.indigo,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                   const SizedBox(height: AppSizes.spaceBtwSections),
 
@@ -136,20 +136,20 @@ class ReadyDialog extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: AppSizes.spaceBtwItems),
-                    Divider(
-                      height: 1,
-                      color: AppColors.darkGrey.withValues(alpha: 0.15),
-                    ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-                    Text(
-                      'Start fresh',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.darkGrey,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
                   ],
+                  Divider(
+                    height: 1,
+                    color: AppColors.darkGrey.withValues(alpha: 0.15),
+                  ),
+                  const SizedBox(height: AppSizes.spaceBtwItems),
+                  Text(
+                    'Start fresh',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: AppColors.darkGrey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.spaceBtwItems),
 
                   // Practice button
                   _ActionButton(
@@ -169,7 +169,7 @@ class ReadyDialog extends StatelessWidget {
                     description:
                         'Answers hidden until you finish. $time-min timer applies',
                     icon: Iconsax.timer_1_copy,
-                    color: const Color(0xFF7C3AED),
+                    color: Colors.blue,
                     onTap: () => _launch(examMode: true),
                   ),
 

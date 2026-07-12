@@ -366,7 +366,9 @@ class QuestionController extends GetxController {
 
       // Save draft every 30 seconds so remaining time stays current
       // even if the user hasn't answered a question.
-      if (ticksSinceLastSave >= 30 && testQuestions.isNotEmpty) {
+      // Only write if at least one answer exists — avoids overwriting a
+      // previous paused draft when the user starts fresh and idles.
+      if (ticksSinceLastSave >= 30 && testQuestions.isNotEmpty && selectedAnswers.isNotEmpty) {
         ticksSinceLastSave = 0;
         _saveDraft();
       }
@@ -414,7 +416,12 @@ class QuestionController extends GetxController {
     _timer?.cancel();
     // Only save draft on exit if not already submitted — prevents overwriting
     // a completed result (isCompleted=true) with a draft (isCompleted=false).
-    if (testQuestions.isNotEmpty && !_isSubmitted) _saveDraft();
+    // Also require at least one answered question: if the user opened a fresh
+    // start and left immediately without touching anything, the existing draft
+    // (from a previous paused session) must be preserved.
+    if (testQuestions.isNotEmpty && !_isSubmitted && selectedAnswers.isNotEmpty) {
+      _saveDraft();
+    }
     super.onClose();
   }
 }

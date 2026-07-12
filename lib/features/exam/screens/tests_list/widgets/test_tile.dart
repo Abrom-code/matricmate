@@ -19,6 +19,7 @@ class TestTile extends StatelessWidget {
     this.isInProgress = false,
     this.questionCount = 0,
     this.timeMinutes = -1,
+    this.isNew = false,
   });
 
   final String testName;
@@ -31,6 +32,8 @@ class TestTile extends StatelessWidget {
   final bool isInProgress;
   final int questionCount;
   final int timeMinutes;
+  /// When true, shows a "NEW" badge next to the test title.
+  final bool isNew;
 
   @override
   Widget build(BuildContext context) {
@@ -161,14 +164,42 @@ class TestTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Title
-                    Text(
-                      testName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            testName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                        ),
+                        if (isNew) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              'NEW',
+                              style: tt.labelSmall?.copyWith(
+                                color: Colors.green,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 9,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 5),
 

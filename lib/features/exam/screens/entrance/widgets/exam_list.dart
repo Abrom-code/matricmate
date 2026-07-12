@@ -149,6 +149,7 @@ class _ExamList extends StatelessWidget {
               questionCount: controller.testQuestionCounts[test.id] ??
                   test.questionCount,
               timeMinutes: test.time,
+              isNew: test.isNew,
               onTap: () {
                 if (isInactive) {
                   Get.bottomSheet(

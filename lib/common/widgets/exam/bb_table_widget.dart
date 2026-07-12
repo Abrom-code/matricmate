@@ -12,11 +12,7 @@ import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 /// - Cell content is passed through [RichTextParser] so inline tags like
 ///   [b], [i], [c=…] still work inside cells.
 class BBTableWidget extends StatelessWidget {
-  const BBTableWidget({
-    super.key,
-    required this.rows,
-    this.baseStyle,
-  });
+  const BBTableWidget({super.key, required this.rows, this.baseStyle});
 
   /// Parsed rows — `rows[0]` is the header row.
   final List<List<String>> rows;
@@ -32,11 +28,11 @@ class BBTableWidget extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
 
     // Derive column count from the widest row so ragged tables don't crash.
-    final colCount =
-        rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+    final colCount = rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
     if (colCount == 0) return const SizedBox.shrink();
 
-    final effectiveBaseStyle = baseStyle ??
+    final effectiveBaseStyle =
+        baseStyle ??
         TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
@@ -80,13 +76,16 @@ class BBTableWidget extends StatelessWidget {
             color: isHeader
                 ? headerBg
                 : (i.isEven && !isHeader)
-                    ? (dark
-                        ? Colors.white.withValues(alpha: 0.03)
-                        : Colors.grey.shade50)
-                    : Colors.transparent,
+                ? (dark
+                      ? Colors.white.withValues(alpha: 0.03)
+                      : Colors.grey.shade50)
+                : Colors.transparent,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Text.rich(
-              RichTextParser.parse(content, style),
+            // Constrains each cell to a max width so long text wraps,
+            // while still shrinking to fit shorter content.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 150),
+              child: Text.rich(RichTextParser.parse(content, style)),
             ),
           ),
         );
@@ -95,18 +94,17 @@ class BBTableWidget extends StatelessWidget {
       tableRows.add(TableRow(children: cells));
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: ConstrainedBox(
-        // Ensure the table is at least as wide as the available space but
-        // can grow beyond it (scroll kicks in on overflow).
-        constraints: BoxConstraints(
-          minWidth: MediaQuery.of(context).size.width -
-              // subtract typical horizontal padding so it fits on-screen
-              48,
-        ),
+        constraints: BoxConstraints(minWidth: screenWidth - 48),
         child: Table(
           border: tableBorder,
+          // IntrinsicColumnWidth sizes each column to its content,
+          // but maxWidth caps it so overly long text wraps rather than
+          // stretching the column indefinitely.
           defaultColumnWidth: const IntrinsicColumnWidth(),
           children: tableRows,
         ),

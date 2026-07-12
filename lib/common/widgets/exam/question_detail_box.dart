@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:matricmate/common/widgets/exam/bb_table_widget.dart';
 import 'package:matricmate/common/widgets/exam/explanation_box.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -9,6 +10,7 @@ import 'package:matricmate/features/exam/screens/question/widgets/image_section.
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/bb_table_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
@@ -245,19 +247,51 @@ class _PassageSection extends StatelessWidget {
                     padding: EdgeInsets.all(AppSizes.md),
                     child: Center(child: AppPulsingDots()),
                   )
-                : Text.rich(
-                    RichTextParser.parse(
-                      content!,
-                      GoogleFonts.lora(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        height: 1.75,
-                        color: dark ? AppColors.grey : AppColors.darkerGrey,
-                      ),
+                : _RichContent(
+                    text: content!,
+                    style: GoogleFonts.lora(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      height: 1.75,
+                      color: dark ? AppColors.grey : AppColors.darkerGrey,
                     ),
                   ),
           ),
         ],
+      ],
+    );
+  }
+}
+
+// ── Shared rich-content renderer ─────────────────────────────────────────────
+
+/// Renders [text] that may contain BBCode tags and/or [table] blocks.
+///
+/// - No table → single [Text.rich] (zero overhead).
+/// - Has table(s) → [Column] of interleaved [Text.rich] + [BBTableWidget].
+class _RichContent extends StatelessWidget {
+  const _RichContent({required this.text, required this.style});
+
+  final String text;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!BBTableParser.containsTable(text)) {
+      return Text.rich(RichTextParser.parse(text, style));
+    }
+
+    final segments = BBTableParser.splitSegments(text);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final seg in segments)
+          if (seg.isTable) ...[
+            const SizedBox(height: 8),
+            BBTableWidget(rows: seg.tableRows!, baseStyle: style),
+            const SizedBox(height: 8),
+          ] else
+            Text.rich(RichTextParser.parse(seg.text!, style)),
       ],
     );
   }

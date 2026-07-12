@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:matricmate/common/widgets/exam/bb_table_widget.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/bb_table_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
@@ -132,7 +134,15 @@ class AppExplanationBox extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text.rich(RichTextParser.parse(text, baseStyle)),
+                      // ── Table-aware rendering ──────────────────────────
+                      // Split the explanation into plain-text and table
+                      // segments, render each in order. Falls back to a
+                      // single Text.rich when no [table] tags are present.
+                      if (BBTableParser.containsTable(text))
+                        ..._buildSegments(text, baseStyle)
+                      else
+                        Text.rich(RichTextParser.parse(text, baseStyle)),
+                      // ── Optional explanation image ─────────────────────
                       if (explanationImageUrl != null &&
                           explanationImageUrl!.isNotEmpty) ...[
                         const SizedBox(height: 12),
@@ -149,6 +159,28 @@ class AppExplanationBox extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Segment renderer helper ───────────────────────────────────────────────────
+
+/// Converts BBTableParser segments into a flat list of widgets for use inside
+/// a [Column]. Plain-text segments go through [RichTextParser]; table segments
+/// are rendered by [BBTableWidget].
+List<Widget> _buildSegments(String text, TextStyle baseStyle) {
+  final segments = BBTableParser.splitSegments(text);
+  final widgets = <Widget>[];
+
+  for (final seg in segments) {
+    if (seg.isTable) {
+      widgets.add(const SizedBox(height: 8));
+      widgets.add(BBTableWidget(rows: seg.tableRows!, baseStyle: baseStyle));
+      widgets.add(const SizedBox(height: 8));
+    } else {
+      widgets.add(Text.rich(RichTextParser.parse(seg.text!, baseStyle)));
+    }
+  }
+
+  return widgets;
 }
 
 // ── Language toggle pill ─────────────────────────────────────────────────────

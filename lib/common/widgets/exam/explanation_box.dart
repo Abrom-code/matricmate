@@ -45,20 +45,21 @@ class AppExplanationBox extends StatelessWidget {
         : AppColors.primary.withValues(alpha: 0.06);
     final borderColor = AppColors.primary.withValues(alpha: dark ? 0.30 : 0.25);
 
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: bgColor.withValues(alpha: .06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──────────────────────────────────────────────────
-            Padding(
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: bgColor.withValues(alpha: .06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header (tap to expand only) ──────────────────────────────
+          GestureDetector(
+            onTap: onToggle,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -109,35 +110,44 @@ class AppExplanationBox extends StatelessWidget {
                 ],
               ),
             ),
+          ),
 
-            // ── Body ────────────────────────────────────────────────────
-            if (expanded) ...[
-              Divider(
-                height: 1,
-                color: AppColors.primary.withValues(alpha: 0.15),
-              ),
-              Obx(() {
-                final text = languageSelected.value == 'AM'
-                    ? explanationAm
-                    : explanationEn;
-                final baseStyle = GoogleFonts.lora(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  height: 1.75,
-                  letterSpacing: 0.1,
-                  color: dark
-                      ? AppColors.white.withValues(alpha: 0.85)
-                      : AppColors.darkerGrey,
-                );
-                return Padding(
-                  padding: const EdgeInsets.all(16),
+          // ── Body ────────────────────────────────────────────────────
+          if (expanded) ...[
+            Divider(
+              height: 1,
+              color: AppColors.primary.withValues(alpha: 0.15),
+            ),
+            Obx(() {
+              final text = languageSelected.value == 'AM'
+                  ? explanationAm
+                  : explanationEn;
+              final baseStyle = GoogleFonts.lora(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                height: 1.75,
+                letterSpacing: 0.1,
+                color: dark
+                    ? AppColors.white.withValues(alpha: 0.85)
+                    : AppColors.darkerGrey,
+              );
+              return GestureDetector(
+                // Swipe left → Amharic, swipe right → English
+                onHorizontalDragEnd: (details) {
+                  final dx = details.primaryVelocity ?? 0;
+                  if (dx < -200 && languageSelected.value != 'AM') {
+                    onLanguageChange('AM');
+                  } else if (dx > 200 && languageSelected.value != 'EN') {
+                    onLanguageChange('EN');
+                  }
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ── Table-aware rendering ──────────────────────────
-                      // Split the explanation into plain-text and table
-                      // segments, render each in order. Falls back to a
-                      // single Text.rich when no [table] tags are present.
                       if (BBTableParser.containsTable(text))
                         ..._buildSegments(text, baseStyle)
                       else
@@ -148,14 +158,28 @@ class AppExplanationBox extends StatelessWidget {
                         const SizedBox(height: 12),
                         ImageSection(imgUrl: explanationImageUrl),
                       ],
+                      // ── Close button ───────────────────────────────────
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: GestureDetector(
+                          onTap: onToggle,
+                          child: Icon(
+                            Icons.keyboard_arrow_up_rounded,
+                            size: 20,
+                            color: AppColors.primary.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                     ],
                   ),
-                );
-              }),
-            ] else
-              const SizedBox(height: 4),
-          ],
-        ),
+                ),
+              );
+            }),
+          ] else
+            const SizedBox(height: 4),
+        ],
       ),
     );
   }

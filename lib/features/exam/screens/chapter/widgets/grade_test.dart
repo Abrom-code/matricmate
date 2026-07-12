@@ -106,6 +106,8 @@ class _GradeTestsPageState extends State<GradeTestsPage> with RouteAware {
                     maxStep: ctrl.getMaxStep(test.id),
                     correctAnswers: ctrl.getCorrectAnswers(test.id),
                     isInProgress: ctrl.isInProgress(test.id),
+                    questionCount: qnCount,
+                    timeMinutes: time,
                     onTap: () {
                       if (isInactive && index > 0) {
                         Get.bottomSheet(const PremiumBottomSheet(),

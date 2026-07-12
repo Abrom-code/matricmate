@@ -97,7 +97,8 @@ class DBschema {
         selectedAnswers TEXT,
         correctAnswers INTEGER,
         isCompleted INTEGER DEFAULT 1,
-        checkedQuestions TEXT
+        checkedQuestions TEXT,
+        remainingSeconds INTEGER DEFAULT 0
       );
     ''');
     await db.execute('''

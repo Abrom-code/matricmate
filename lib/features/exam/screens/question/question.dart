@@ -35,14 +35,17 @@ class QuestionScreen extends StatelessWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+        if (controller.exitDialogOpen) return; // dialog already showing
+        controller.pauseTimer();
         AppHelperFunctions.showAppDialog(
           context,
-          'Want to Exit?',
-          'Your progress will be saved.',
+          'Pause & Exit?',
+          'Your progress will be saved. You can resume later.',
           () {
-            Navigator.pop(context);
-            Navigator.pop(context);
+            Navigator.pop(context); // dismiss dialog
+            Navigator.pop(context); // pop question screen
           },
+          onCancel: () => controller.resumeTimer(),
         );
       },
       child: Obx(() {
@@ -60,17 +63,22 @@ class QuestionScreen extends StatelessWidget {
               : null,
 
           appBar: Appbar(
-            leadingIcon: Icons.close,
+            leadingIcon: Icons.pause_rounded,
             leadingIconColor: AppColors.error,
-            leadingOnPressed: () => AppHelperFunctions.showAppDialog(
-              context,
-              'Want to Exit?',
-              'Your progress will not be saved.',
-              () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-            ),
+            leadingOnPressed: () {
+              if (controller.exitDialogOpen) return;
+              controller.pauseTimer();
+              AppHelperFunctions.showAppDialog(
+                context,
+                'Pause & Exit?',
+                'Your progress will be saved. You can resume later.',
+                () {
+                  Navigator.pop(context); // dismiss dialog
+                  Navigator.pop(context); // pop question screen
+                },
+                onCancel: () => controller.resumeTimer(),
+              );
+            },
             title: Builder(
               builder: (ctx) {
                 final hasPassage = currentQ?.passageId != null;

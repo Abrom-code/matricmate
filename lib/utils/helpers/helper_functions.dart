@@ -97,16 +97,21 @@ class AppHelperFunctions {
     BuildContext context,
     String title,
     String message,
-    VoidCallback onOkPressed,
-  ) {
+    VoidCallback onOkPressed, {
+    VoidCallback? onCancel,
+  }) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Text(title),
         content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              onCancel?.call();
+            },
             child: const Text('Cancel'),
           ),
           ElevatedButton(onPressed: onOkPressed, child: const Text('Ok')),

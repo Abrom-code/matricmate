@@ -3,12 +3,12 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
-import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/status_badge.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
@@ -210,110 +210,129 @@ class _ResumeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFunctions.isDark(context);
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final progress = total > 0 ? answered / total : 0.0;
+    final pct = (progress * 100).round();
+
+    // Indigo accent — distinct from teal primary, works in light and dark
+    const accentColor = Colors.indigo;
 
     return Material(
-      color: Colors.transparent,
+      color: cs.surfaceContainerHighest.withValues(alpha: 0.55),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {
-          Get.delete<QuestionController>(force: true);
-          Get.toNamed(
-            Routes.questions,
-            arguments: {
-              'test_id': draft.testId,
-              'is_timed': false,
-              'is_exam_mode': false,
-              'time': testTime,
-              'id': -1, // no parent controller to refresh on this path
-              'draft': draft,
-            },
-          );
-        },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.orange.withValues(alpha: dark ? 0.15 : 0.09),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.orange.withValues(alpha: 0.45)),
+        onTap: () => Get.dialog(
+          ReadyDialog(
+            qnCount: total,
+            time: testTime,
+            testId: draft.testId,
+            id: -1,
+            draft: draft,
           ),
-          child: Row(
-            children: [
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.orange.shade700,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
+        ),
+        child: Row(
+          children: [
+            // Left accent stripe
+            Container(width: 4, height: 72, color: accentColor),
 
-              // Text + progress bar
-              Expanded(
+            const SizedBox(width: 14),
+
+            // Play icon
+            const Icon(
+              Icons.pause_circle_filled_rounded,
+              color: accentColor,
+              size: 28,
+            ),
+
+            const SizedBox(width: 12),
+
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Label row
                     Row(
                       children: [
-                        Expanded(
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                           child: Text(
-                            testTitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.orange.shade800,
+                            'IN PROGRESS',
+                            style: tt.labelSmall?.copyWith(
+                              color: accentColor,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              fontSize: 9,
                             ),
                           ),
                         ),
+                        const Spacer(),
                         Text(
-                          '$answered/$total',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange.shade700,
-                            fontWeight: FontWeight.w600,
+                          '$pct%',
+                          style: tt.labelSmall?.copyWith(
+                            color: accentColor,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 5),
+
+                    // Test title
+                    Text(
+                      testTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 6),
+
+                    // Progress bar
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: progress.clamp(0.0, 1.0),
-                        minHeight: 5,
-                        backgroundColor: Colors.orange.withValues(alpha: 0.18),
-                        color: Colors.orange.shade600,
+                        minHeight: 4,
+                        backgroundColor: accentColor.withValues(alpha: 0.15),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          accentColor,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
+
                     Text(
-                      'Tap to continue',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.orange.shade600,
+                      '$answered of $total questions answered',
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   ],
                 ),
               ),
+            ),
 
-              const SizedBox(width: 8),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 13,
-                color: Colors.orange.shade600,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Icon(
+                Icons.chevron_right_rounded,
+                color: cs.onSurface.withValues(alpha: 0.35),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

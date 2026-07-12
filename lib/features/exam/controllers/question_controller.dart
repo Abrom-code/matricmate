@@ -48,6 +48,13 @@ class QuestionController extends GetxController {
   late int time;
   late int ctrlId;
 
+  /// Set to true after a successful submit so onClose doesn't overwrite
+  /// the completed result with a draft.
+  bool _isSubmitted = false;
+
+  /// Pauses the timer without cancelling it (used when the exit dialog is open).
+  bool _timerPaused = false;
+
   @override
   void onInit() {
     testId = Get.arguments['test_id'];
@@ -60,7 +67,17 @@ class QuestionController extends GetxController {
     final draft = Get.arguments['draft'] as ResultModel?;
 
     loadTestQuestions(testId, draft: draft);
-    if (isTimed) startTimer(time);
+
+    if (isTimed) {
+      // If resuming a timed draft, start from where the timer was saved.
+      // Fall back to the full time if no saved seconds (new exam or untimed draft).
+      final savedSeconds =
+          (draft != null && draft.remainingSeconds > 0)
+              ? draft.remainingSeconds
+              : null;
+      startTimerFromSeconds(savedSeconds ?? time * 60);
+    }
+
     super.onInit();
   }
 
@@ -84,23 +101,22 @@ class QuestionController extends GetxController {
         );
         blocks.assignAll(await buildBlocks(testQuestions));
 
-        // Restore draft answers and jump to the last answered question
-        if (draft != null && draft.selectedAnswers.isNotEmpty) {
+        // Restore draft answers and jump to the last answered question.
+        // Only restore isChecked from in-progress drafts — completed results
+        // have selectedAnswers too, but restoring isChecked for them would
+        // shade all questions green on a fresh start.
+        if (draft != null && draft.selectedAnswers.isNotEmpty &&
+            !draft.isCompleted) {
           selectedAnswers.assignAll(draft.selectedAnswers);
 
           // Restore which questions had their answer revealed.
-          // checkedQuestions holds the explicitly checked set, but in
-          // practice mode the draft may be saved between selectAnswer and
-          // checkAnswer (the last question answered). So always also mark
-          // isChecked for every selectedAnswer key in practice mode —
-          // this covers the gap for the most-recently answered question.
           if (draft.checkedQuestions.isNotEmpty) {
             for (final qId in draft.checkedQuestions) {
               isChecked[qId] = true;
             }
           }
-          // In practice mode every selected answer was (or should be)
-          // checked — fill any gap left by the draft timing issue.
+          // In practice mode every selected answer was checked — fill any
+          // gap left by the draft/checkAnswer timing.
           if (!isExamMode) {
             for (final qId in draft.selectedAnswers.keys) {
               isChecked[qId] = true;
@@ -199,6 +215,10 @@ class QuestionController extends GetxController {
     }
   }
 
+  /// Called before navigating to the result screen so onClose doesn't
+  /// overwrite the completed result with a draft.
+  void markSubmitted() => _isSubmitted = true;
+
   // Navigation Logic
   void nextQuestion() {
     if (currentIndex.value < testQuestions.length - 1) {
@@ -271,6 +291,7 @@ class QuestionController extends GetxController {
       checkedQuestions: Set<int>.from(
         isChecked.entries.where((e) => e.value).map((e) => e.key),
       ),
+      remainingSeconds: isTimed ? remainingSeconds.value : 0,
     );
     _repo.saveResult(draft).catchError((e) {
       ToastHelper.error('Draft save failed: $e');
@@ -298,28 +319,61 @@ class QuestionController extends GetxController {
   }
 
   /// timer section
-  void startTimer(int minutes) {
-    _timer?.cancel();
+  void startTimer(int minutes) => startTimerFromSeconds(minutes * 60);
 
-    remainingSeconds.value = minutes * 60;
+  void startTimerFromSeconds(int seconds) {
+    _timer?.cancel();
+    _timerPaused = false;
+
+    remainingSeconds.value = seconds;
+    int ticksSinceLastSave = 0;
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      // Don't tick while the exit dialog is open
+      if (_timerPaused) return;
+
       if (remainingSeconds.value == 2)
         SnackbarHelper.warning("Time's up!", 'Submitting ...');
 
       if (remainingSeconds.value <= 1) {
         remainingSeconds.value = 0;
         timer.cancel();
-
         _onTimeUp();
         return;
       }
 
       remainingSeconds.value--;
+      ticksSinceLastSave++;
+
+      // Save draft every 30 seconds so remaining time stays current
+      // even if the user hasn't answered a question.
+      if (ticksSinceLastSave >= 30 && testQuestions.isNotEmpty) {
+        ticksSinceLastSave = 0;
+        _saveDraft();
+      }
     });
   }
 
+  /// True while the exit confirmation dialog is visible.
+  /// Prevents double-opening the dialog from PopScope + appbar button.
+  bool _exitDialogOpen = false;
+
+  /// Pauses the timer (dialog open). Does not cancel it.
+  void pauseTimer() {
+    _timerPaused = true;
+    _exitDialogOpen = true;
+  }
+
+  /// Resumes the timer (dialog dismissed without exiting).
+  void resumeTimer() {
+    _timerPaused = false;
+    _exitDialogOpen = false;
+  }
+
+  bool get exitDialogOpen => _exitDialogOpen;
+
   void _onTimeUp() {
+    _isSubmitted = true;
     final result = ResultModel(
       userId: UserController.instance.user.value.id,
       testId: testId,
@@ -339,6 +393,9 @@ class QuestionController extends GetxController {
   @override
   void onClose() {
     _timer?.cancel();
+    // Only save draft on exit if not already submitted — prevents overwriting
+    // a completed result (isCompleted=true) with a draft (isCompleted=false).
+    if (testQuestions.isNotEmpty && !_isSubmitted) _saveDraft();
     super.onClose();
   }
 }

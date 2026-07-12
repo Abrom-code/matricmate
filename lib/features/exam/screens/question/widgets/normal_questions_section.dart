@@ -30,6 +30,9 @@ class QuesitonSection extends GetView<QuestionController> {
       }
     }
 
+    // Mark submitted BEFORE saving so onClose doesn't overwrite with a draft.
+    controller.markSubmitted();
+
     final result = ResultModel(
       userId: UserController.instance.user.value.id,
       testId: q.testId,

@@ -61,6 +61,11 @@ class DatabaseService extends GetxController {
               'ALTER TABLE results ADD COLUMN checkedQuestions TEXT',
             );
           } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE results ADD COLUMN remainingSeconds INTEGER DEFAULT 0',
+            );
+          } catch (_) {}
         }
       },
       // Ensure the column exists even on devices that somehow missed onUpgrade
@@ -73,6 +78,11 @@ class DatabaseService extends GetxController {
         try {
           await db.execute(
             'ALTER TABLE results ADD COLUMN checkedQuestions TEXT',
+          );
+        } catch (_) {}
+        try {
+          await db.execute(
+            'ALTER TABLE results ADD COLUMN remainingSeconds INTEGER DEFAULT 0',
           );
         } catch (_) {}
       },

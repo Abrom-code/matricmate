@@ -59,10 +59,9 @@ class _EntranceExamsState extends State<EntranceExams> with RouteAware {
         ),
         title: Text(
           subject,
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall!
-              .apply(color: AppColors.white),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
         bottom: TabBar(
           controller: tabCtrl.tabController,
@@ -95,11 +94,7 @@ class _EntranceExamsState extends State<EntranceExams> with RouteAware {
               controller: ctrl,
               label: 'Entrance',
             ),
-            _ExamList(
-              tests: ctrl.modelTests,
-              controller: ctrl,
-              label: 'Model',
-            ),
+            _ExamList(tests: ctrl.modelTests, controller: ctrl, label: 'Model'),
           ],
         );
       }),
@@ -136,10 +131,8 @@ class _ExamList extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
           child: Obx(() {
-            final isInactive =
-                UserController.instance.user.value.isInactive;
-            final isPending =
-                UserController.instance.user.value.isPending;
+            final isInactive = UserController.instance.user.value.isInactive;
+            final isPending = UserController.instance.user.value.isPending;
             final isActive = UserController.instance.user.value.isActive;
 
             // Subscribe to testResults so tile rebuilds reactively.
@@ -147,16 +140,21 @@ class _ExamList extends StatelessWidget {
 
             return TestTile(
               icon: isActive ? Iconsax.message_question_copy : Icons.lock,
-              iconColor: isActive ? AppColors.primary : Colors.amber,
+              iconColor: isActive ? AppColors.primary : AppColors.info,
               currentStep: controller.getCurrentStep(test.id),
               maxStep: controller.getMaxStep(test.id),
               correctAnswers: controller.getCorrectAnswers(test.id),
               isInProgress: controller.isInProgress(test.id),
               testName: test.title,
+              questionCount: controller.testQuestionCounts[test.id] ??
+                  test.questionCount,
+              timeMinutes: test.time,
               onTap: () {
                 if (isInactive) {
-                  Get.bottomSheet(const PremiumBottomSheet(),
-                      isScrollControlled: true);
+                  Get.bottomSheet(
+                    const PremiumBottomSheet(),
+                    isScrollControlled: true,
+                  );
                   return;
                 }
                 if (isPending) {
@@ -167,17 +165,19 @@ class _ExamList extends StatelessWidget {
                   ToastHelper.info('No questions added!');
                   return;
                 }
-                Get.dialog(ReadyDialog(
-                  qnCount:
-                      controller.testQuestionCounts[test.id] ??
-                      test.questionCount,
-                  time: test.time,
-                  testId: test.id,
-                  id: 2,
-                  draft: controller.isInProgress(test.id)
-                      ? controller.testResults[test.id]
-                      : null,
-                ));
+                Get.dialog(
+                  ReadyDialog(
+                    qnCount:
+                        controller.testQuestionCounts[test.id] ??
+                        test.questionCount,
+                    time: test.time,
+                    testId: test.id,
+                    id: 2,
+                    draft: controller.isInProgress(test.id)
+                        ? controller.testResults[test.id]
+                        : null,
+                  ),
+                );
               },
             );
           }),

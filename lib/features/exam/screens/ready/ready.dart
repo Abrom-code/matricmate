@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
-import 'package:matricmate/features/exam/screens/ready/widgets/attribute_box.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -24,13 +23,17 @@ class ReadyDialog extends StatelessWidget {
   /// Non-null when the user has an in-progress attempt to resume.
   final ResultModel? draft;
 
-  void _launch({required bool examMode, bool resume = false}) {
+  void _launch({
+    required bool examMode,
+    bool isTimed = false,
+    bool resume = false,
+  }) {
     Get.delete<QuestionController>(force: true);
     Get.offNamed(
       Routes.questions,
       arguments: {
         'test_id': testId,
-        'is_timed': examMode,
+        'is_timed': examMode || isTimed, // exam mode always implies timed
         'is_exam_mode': examMode,
         'time': time,
         'id': id,
@@ -71,51 +74,35 @@ class ReadyDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
-                  // ── Stats ──────────────────────────────────────────────
-                  Center(
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: AppSizes.defaultSpace / 2,
-                      runSpacing: AppSizes.spaceBtwItems,
-                      children: [
-                        AttributeBox(
-                          icon: Iconsax.message_question_copy,
-                          value: qnCount,
-                          label: 'questions',
-                        ),
-                        AttributeBox(
-                          icon: Iconsax.timer_1_copy,
-                          value: time,
-                          label: 'minutes',
-                        ),
-                      ],
-                    ),
-                  ),
-
                   // ── In-progress banner ────────────────────────────────
                   if (hasDraft) ...[
                     const SizedBox(height: AppSizes.spaceBtwItems),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.10),
+                        color: Colors.indigo.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: Colors.orange.withValues(alpha: 0.40),
+                          color: Colors.indigo.withValues(alpha: 0.30),
                         ),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline_rounded,
-                              size: 16, color: Colors.orange.shade700),
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            size: 16,
+                            color: Colors.indigo,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'You answered $answered of $qnCount questions last time.',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 13,
-                                color: Colors.orange.shade700,
+                                color: Colors.indigo,
                               ),
                             ),
                           ),
@@ -134,14 +121,19 @@ class ReadyDialog extends StatelessWidget {
                       description:
                           'Continue from question ${answered + 1} where you left off',
                       icon: Icons.play_arrow_rounded,
-                      color: Colors.orange.shade600,
-                      onTap: () => _launch(
-                        examMode: draft!.isCompleted == false &&
-                                draft!.checkedQuestions.isEmpty
-                            ? true   // was exam mode draft
-                            : false, // default to practice on resume
-                        resume: true,
-                      ),
+                      color: Colors.indigo,
+                      onTap: () {
+                        // Detect original mode from saved state:
+                        // - Had remaining seconds → was a timed exam
+                        // - No checked questions → exam mode (answers hidden)
+                        final wasExam = draft!.checkedQuestions.isEmpty;
+                        final wasTimed = draft!.remainingSeconds > 0;
+                        _launch(
+                          examMode: wasExam,
+                          isTimed: wasTimed,
+                          resume: true,
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSizes.spaceBtwItems),
                     Divider(
@@ -152,9 +144,9 @@ class ReadyDialog extends StatelessWidget {
                     Text(
                       'Start fresh',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: AppColors.darkGrey,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: AppColors.darkGrey,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: AppSizes.spaceBtwItems),
                   ],
@@ -177,7 +169,7 @@ class ReadyDialog extends StatelessWidget {
                     description:
                         'Answers hidden until you finish. $time-min timer applies',
                     icon: Iconsax.timer_1_copy,
-                    color: Colors.deepPurple.shade400,
+                    color: const Color(0xFF7C3AED),
                     onTap: () => _launch(examMode: true),
                   ),
 
@@ -193,8 +185,11 @@ class ReadyDialog extends StatelessWidget {
             right: 6,
             child: IconButton(
               onPressed: () => Get.back(),
-              icon: const Icon(Iconsax.close_circle_copy,
-                  color: AppColors.error, size: 22),
+              icon: const Icon(
+                Iconsax.close_circle_copy,
+                color: AppColors.error,
+                size: 22,
+              ),
             ),
           ),
         ],

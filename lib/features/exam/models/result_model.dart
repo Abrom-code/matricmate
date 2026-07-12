@@ -15,6 +15,10 @@ class ResultModel {
   /// Empty for exam-mode sessions and completed results.
   final Set<int> checkedQuestions;
 
+  /// Remaining seconds on the timer when the draft was saved.
+  /// 0 for untimed or completed results.
+  final int remainingSeconds;
+
   ResultModel({
     required this.testQuestions,
     required this.selectedAnswers,
@@ -23,6 +27,7 @@ class ResultModel {
     required this.userId,
     this.isCompleted = true,
     Set<int>? checkedQuestions,
+    this.remainingSeconds = 0,
   }) : checkedQuestions = checkedQuestions ?? {};
 
   Map<String, dynamic> toMap() {
@@ -36,6 +41,7 @@ class ResultModel {
       'user_id': userId,
       'isCompleted': isCompleted ? 1 : 0,
       'checkedQuestions': jsonEncode(checkedQuestions.toList()),
+      'remainingSeconds': remainingSeconds,
     };
   }
 
@@ -68,6 +74,7 @@ class ResultModel {
       userId: map['user_id'],
       isCompleted: (map['isCompleted'] as int? ?? 1) == 1,
       checkedQuestions: checked,
+      remainingSeconds: map['remainingSeconds'] as int? ?? 0,
     );
   }
 }

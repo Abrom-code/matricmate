@@ -95,7 +95,9 @@ class DBschema {
         test_id INTEGER UNIQUE,
         testQuestions TEXT,
         selectedAnswers TEXT,
-        correctAnswers INTEGER
+        correctAnswers INTEGER,
+        isCompleted INTEGER DEFAULT 1,
+        checkedQuestions TEXT
       );
     ''');
     await db.execute('''

@@ -1,3 +1,10 @@
+import 'package:flutter/material.dart';
+
+/// Global route observer — subscribe screens to get `didPopNext` callbacks
+/// when the user navigates back to them.
+final RouteObserver<ModalRoute<void>> appRouteObserver =
+    RouteObserver<ModalRoute<void>>();
+
 class Routes {
   // exam
   static const home = '/';

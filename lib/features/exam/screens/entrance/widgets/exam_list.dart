@@ -5,23 +5,48 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
-import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
+import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class EntranceExams extends StatelessWidget {
+class EntranceExams extends StatefulWidget {
   const EntranceExams({super.key});
 
   @override
+  State<EntranceExams> createState() => _EntranceExamsState();
+}
+
+class _EntranceExamsState extends State<EntranceExams> with RouteAware {
+  ExamsController get ctrl => ExamsController.instance;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    appRouteObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    final all = [...ctrl.entranceTests, ...ctrl.modelTests];
+    if (all.isNotEmpty) ctrl.loadTestResults(all);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = ExamsController.instance;
     final tabCtrl = ExamSelectionController.instance;
-    final subject = controller.subjectName;
+    final subject = ctrl.subjectName;
 
     return Scaffold(
       appBar: AppBar(
@@ -34,9 +59,10 @@ class EntranceExams extends StatelessWidget {
         ),
         title: Text(
           subject,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall!.apply(color: AppColors.white),
+          style: Theme.of(context)
+              .textTheme
+              .headlineSmall!
+              .apply(color: AppColors.white),
         ),
         bottom: TabBar(
           controller: tabCtrl.tabController,
@@ -57,7 +83,7 @@ class EntranceExams extends StatelessWidget {
         ),
       ),
       body: Obx(() {
-        if (controller.isLoading.value) {
+        if (ctrl.isLoading.value) {
           return const AppCircularLoading(title: 'Loading...');
         }
 
@@ -65,13 +91,13 @@ class EntranceExams extends StatelessWidget {
           controller: tabCtrl.tabController,
           children: [
             _ExamList(
-              tests: controller.entranceTests,
-              controller: controller,
+              tests: ctrl.entranceTests,
+              controller: ctrl,
               label: 'Entrance',
             ),
             _ExamList(
-              tests: controller.modelTests,
-              controller: controller,
+              tests: ctrl.modelTests,
+              controller: ctrl,
               label: 'Model',
             ),
           ],
@@ -110,22 +136,27 @@ class _ExamList extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
           child: Obx(() {
-            final isInactive = UserController.instance.user.value.isInactive;
-            final isPending = UserController.instance.user.value.isPending;
+            final isInactive =
+                UserController.instance.user.value.isInactive;
+            final isPending =
+                UserController.instance.user.value.isPending;
             final isActive = UserController.instance.user.value.isActive;
+
+            // Subscribe to testResults so tile rebuilds reactively.
+            final _ = controller.testResults[test.id];
 
             return TestTile(
               icon: isActive ? Iconsax.message_question_copy : Icons.lock,
               iconColor: isActive ? AppColors.primary : Colors.amber,
               currentStep: controller.getCurrentStep(test.id),
               maxStep: controller.getMaxStep(test.id),
+              correctAnswers: controller.getCorrectAnswers(test.id),
+              isInProgress: controller.isInProgress(test.id),
               testName: test.title,
               onTap: () {
                 if (isInactive) {
-                  Get.bottomSheet(
-                    const PremiumBottomSheet(),
-                    isScrollControlled: true,
-                  );
+                  Get.bottomSheet(const PremiumBottomSheet(),
+                      isScrollControlled: true);
                   return;
                 }
                 if (isPending) {
@@ -136,14 +167,17 @@ class _ExamList extends StatelessWidget {
                   ToastHelper.info('No questions added!');
                   return;
                 }
-                Get.dialog(
-                  ReadyDialog(
-                    qnCount: controller.testQuestionCounts[test.id] ?? test.questionCount,
-                    time: test.time,
-                    testId: test.id,
-                    id: 2,
-                  ),
-                );
+                Get.dialog(ReadyDialog(
+                  qnCount:
+                      controller.testQuestionCounts[test.id] ??
+                      test.questionCount,
+                  time: test.time,
+                  testId: test.id,
+                  id: 2,
+                  draft: controller.isInProgress(test.id)
+                      ? controller.testResults[test.id]
+                      : null,
+                ));
               },
             );
           }),

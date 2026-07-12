@@ -55,12 +55,16 @@ class QuestionController extends GetxController {
     isExamMode = Get.arguments['is_exam_mode'] ?? false;
     time = Get.arguments['time'];
     ctrlId = Get.arguments['id'];
-    loadTestQuestions(testId);
+
+    // Restore in-progress draft if the user is resuming
+    final draft = Get.arguments['draft'] as ResultModel?;
+
+    loadTestQuestions(testId, draft: draft);
     if (isTimed) startTimer(time);
     super.onInit();
   }
 
-  Future<void> loadTestQuestions(int testId) async {
+  Future<void> loadTestQuestions(int testId, {ResultModel? draft}) async {
     try {
       isLoading.value = true;
 
@@ -79,6 +83,39 @@ class QuestionController extends GetxController {
           dbQuestions.map((e) => QuestionModel.fromMap(e)).toList(),
         );
         blocks.assignAll(await buildBlocks(testQuestions));
+
+        // Restore draft answers and jump to the last answered question
+        if (draft != null && draft.selectedAnswers.isNotEmpty) {
+          selectedAnswers.assignAll(draft.selectedAnswers);
+
+          // Restore which questions had their answer revealed.
+          // checkedQuestions holds the explicitly checked set, but in
+          // practice mode the draft may be saved between selectAnswer and
+          // checkAnswer (the last question answered). So always also mark
+          // isChecked for every selectedAnswer key in practice mode —
+          // this covers the gap for the most-recently answered question.
+          if (draft.checkedQuestions.isNotEmpty) {
+            for (final qId in draft.checkedQuestions) {
+              isChecked[qId] = true;
+            }
+          }
+          // In practice mode every selected answer was (or should be)
+          // checked — fill any gap left by the draft timing issue.
+          if (!isExamMode) {
+            for (final qId in draft.selectedAnswers.keys) {
+              isChecked[qId] = true;
+            }
+          }
+
+          // Jump to the first unanswered question, or last if all done
+          final firstUnansweredIndex = testQuestions.indexWhere(
+            (q) => !draft.selectedAnswers.containsKey(q.id),
+          );
+          currentIndex.value = firstUnansweredIndex == -1
+              ? testQuestions.length - 1
+              : firstUnansweredIndex;
+          _syncBlockWithIndex();
+        }
         return;
       }
     } catch (e) {
@@ -213,6 +250,31 @@ class QuestionController extends GetxController {
   void selectAnswer(int questionId, int optionIndex) {
     if (isChecked[questionId] == true) return;
     selectedAnswers[questionId] = optionIndex;
+    // In practice mode checkAnswer() is called right after this by the UI,
+    // so pre-mark it here so the draft is consistent if saved immediately.
+    if (!isExamMode) {
+      isChecked[questionId] = true;
+    }
+    _saveDraft();
+  }
+
+  /// Saves the current in-progress state as a draft (isCompleted = false).
+  /// Overwrites any previous draft for the same test.
+  void _saveDraft() {
+    final draft = ResultModel(
+      userId: UserController.instance.user.value.id,
+      testId: testId,
+      selectedAnswers: Map.from(selectedAnswers),
+      testQuestions: testQuestions.toList(),
+      correctAnswers: correctAnswers,
+      isCompleted: false,
+      checkedQuestions: Set<int>.from(
+        isChecked.entries.where((e) => e.value).map((e) => e.key),
+      ),
+    );
+    _repo.saveResult(draft).catchError((e) {
+      ToastHelper.error('Draft save failed: $e');
+    });
   }
 
   bool isBookmarked(int questionId) =>
@@ -264,6 +326,7 @@ class QuestionController extends GetxController {
       selectedAnswers: selectedAnswers,
       testQuestions: testQuestions.toList(),
       correctAnswers: correctAnswers,
+      isCompleted: true,
     );
 
     saveResult(result);

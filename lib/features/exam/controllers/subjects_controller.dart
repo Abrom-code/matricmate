@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controller/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
@@ -32,6 +34,14 @@ class SubjectsController extends GetxController {
 
   final RxString selectedStream = UserController.instance.user.value.stream.obs;
 
+  // ── Resume banner ─────────────────────────────────────────────────────────
+  /// The most recent in-progress draft, or null if none exists.
+  final Rxn<ResultModel> inProgressDraft = Rxn<ResultModel>();
+  /// Test title for the in-progress draft.
+  final RxString inProgressTestTitle = ''.obs;
+  /// Test time (minutes) for the in-progress draft.
+  final RxInt inProgressTestTime = 0.obs;
+
   @override
   void onInit() {
     // Don't call loadLocalSubjects() here — AuthenticationController._init()
@@ -42,6 +52,23 @@ class SubjectsController extends GetxController {
     });
 
     super.onInit();
+  }
+
+  /// Loads the most recent in-progress test draft and populates banner fields.
+  Future<void> loadInProgressBanner() async {
+    try {
+      final row = await DatabaseService.instance.loadMostRecentInProgressResult();
+      if (row == null) {
+        inProgressDraft.value = null;
+        inProgressTestTitle.value = '';
+        return;
+      }
+      inProgressDraft.value = ResultModel.fromMap(row);
+      inProgressTestTitle.value = row['test_title'] as String? ?? '';
+      inProgressTestTime.value = row['test_time'] as int? ?? -1;
+    } catch (_) {
+      inProgressDraft.value = null;
+    }
   }
 
   /// LOCAL ONLY (startup)

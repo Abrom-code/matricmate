@@ -112,13 +112,19 @@ class ChapterTestController extends GetxController {
 
   int getCurrentStep(int testId) {
     final result = testResults[testId];
-
+    // Use attempted (answered) count for progress bar completion
     if (result != null) {
-      return result.correctAnswers;
+      return result.selectedAnswers.length;
     }
-
     return 0;
   }
+
+  int getCorrectAnswers(int testId) =>
+      testResults[testId]?.correctAnswers ?? 0;
+
+  bool isInProgress(int testId) =>
+      testResults.containsKey(testId) &&
+      testResults[testId]!.isCompleted == false;
 
   int getMaxStep(int testId) {
     final result = testResults[testId];

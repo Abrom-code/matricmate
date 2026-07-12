@@ -23,7 +23,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 5,
+      version: 6,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -50,6 +50,31 @@ class DatabaseService extends GetxController {
             );
           } catch (_) {}
         }
+        if (oldVersion < 6) {
+          try {
+            await db.execute(
+              'ALTER TABLE results ADD COLUMN isCompleted INTEGER DEFAULT 1',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE results ADD COLUMN checkedQuestions TEXT',
+            );
+          } catch (_) {}
+        }
+      },
+      // Ensure the column exists even on devices that somehow missed onUpgrade
+      onOpen: (db) async {
+        try {
+          await db.execute(
+            'ALTER TABLE results ADD COLUMN isCompleted INTEGER DEFAULT 1',
+          );
+        } catch (_) {}
+        try {
+          await db.execute(
+            'ALTER TABLE results ADD COLUMN checkedQuestions TEXT',
+          );
+        } catch (_) {}
       },
     );
   }
@@ -223,15 +248,40 @@ class DatabaseService extends GetxController {
   Future<ResultModel?> loadSavedTestResult(int testId) async {
     try {
       final db = await database;
+      final userId = UserController.instance.user.value.id;
       final result = await db.query(
         'results',
-        where: 'test_id = ?',
-        whereArgs: [testId],
+        where: 'test_id = ? AND user_id = ?',
+        whereArgs: [testId, userId],
         limit: 1,
       );
       if (result.isEmpty) return null;
 
       return ResultModel.fromMap(result.first);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Returns the most recent in-progress draft (isCompleted = 0) for the
+  /// current user, joined with its test title and time for display.
+  Future<Map<String, dynamic>?> loadMostRecentInProgressResult() async {
+    try {
+      final db = await database;
+      final userId = UserController.instance.user.value.id;
+      final rows = await db.rawQuery(
+        '''
+        SELECT r.*, t.title AS test_title, t.time AS test_time, t.id AS t_id
+        FROM results r
+        JOIN tests t ON r.test_id = t.id
+        WHERE r.user_id = ? AND r.isCompleted = 0
+        ORDER BY r.rowid DESC
+        LIMIT 1
+        ''',
+        [userId],
+      );
+      if (rows.isEmpty) return null;
+      return rows.first;
     } catch (e) {
       rethrow;
     }

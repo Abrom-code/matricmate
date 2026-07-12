@@ -36,6 +36,7 @@ class QuesitonSection extends GetView<QuestionController> {
       selectedAnswers: controller.selectedAnswers,
       testQuestions: controller.testQuestions.toList(),
       correctAnswers: controller.correctAnswers,
+      isCompleted: true,
     );
 
     await controller.saveResult(result);

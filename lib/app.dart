@@ -22,6 +22,7 @@ class App extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         initialRoute: Routes.loading,
         getPages: AppRoutes.pages,
+        navigatorObservers: [appRouteObserver],
       ),
     );
   }

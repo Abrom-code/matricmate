@@ -138,26 +138,6 @@ class SubjectContainer extends StatelessWidget {
                           ),
                         ),
                       ),
-
-                    // Downloaded — small check badge in the corner
-                    if (isDownloaded)
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primary.withValues(alpha: 0.85),
-                          ),
-                          child: const Icon(
-                            Icons.check_rounded,
-                            size: 13,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),

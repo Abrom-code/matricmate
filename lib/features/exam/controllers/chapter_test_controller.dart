@@ -103,6 +103,9 @@ class ChapterTestController extends GetxController {
         final result = await _testRepository.loadSavedResults(test.id);
         if (result != null) {
           testResults[test.id] = result;
+        } else {
+          // Remove any stale entry — the result was deleted or never existed.
+          testResults.remove(test.id);
         }
       }
     } catch (e) {

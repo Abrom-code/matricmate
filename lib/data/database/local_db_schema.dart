@@ -94,13 +94,14 @@ class DBschema {
       CREATE TABLE results (
         user_id TEXT NOT NULL,
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        test_id INTEGER UNIQUE,
+        test_id INTEGER NOT NULL,
         testQuestions TEXT,
         selectedAnswers TEXT,
         correctAnswers INTEGER,
         isCompleted INTEGER DEFAULT 1,
         checkedQuestions TEXT,
-        remainingSeconds INTEGER DEFAULT 0
+        remainingSeconds INTEGER DEFAULT 0,
+        UNIQUE(user_id, test_id)
       );
     ''');
     await db.execute('''

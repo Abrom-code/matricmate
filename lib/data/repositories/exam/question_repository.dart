@@ -35,7 +35,7 @@ class QuestionRepository {
 
   Future<void> saveResult(ResultModel result) async {
     try {
-      await _dbService.insetData('results', result.toMap());
+      await _dbService.saveResult(result);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

@@ -23,7 +23,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 7,
+      version: 8,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -78,6 +78,40 @@ class DatabaseService extends GetxController {
               'ALTER TABLE subjects ADD COLUMN model_count INTEGER DEFAULT 0',
             );
           } catch (_) {}
+        }
+        if (oldVersion < 8) {
+          // Recreate results table with a composite UNIQUE(user_id, test_id)
+          // instead of the old test_id UNIQUE which allowed one user's result
+          // to overwrite another's and caused cross-test paused-state bleed.
+          await db.transaction((txn) async {
+            await txn.execute('''
+              CREATE TABLE results_new (
+                user_id TEXT NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                test_id INTEGER NOT NULL,
+                testQuestions TEXT,
+                selectedAnswers TEXT,
+                correctAnswers INTEGER,
+                isCompleted INTEGER DEFAULT 1,
+                checkedQuestions TEXT,
+                remainingSeconds INTEGER DEFAULT 0,
+                UNIQUE(user_id, test_id)
+              )
+            ''');
+            // Copy existing rows; keep only the most recent per (user_id, test_id)
+            // in case of duplicate test_ids from the old schema.
+            await txn.execute('''
+              INSERT OR IGNORE INTO results_new
+                (user_id, test_id, testQuestions, selectedAnswers,
+                 correctAnswers, isCompleted, checkedQuestions, remainingSeconds)
+              SELECT user_id, test_id, testQuestions, selectedAnswers,
+                     correctAnswers, isCompleted, checkedQuestions, remainingSeconds
+              FROM results
+              ORDER BY id DESC
+            ''');
+            await txn.execute('DROP TABLE results');
+            await txn.execute('ALTER TABLE results_new RENAME TO results');
+          });
         }
       },
       // Ensure the column exists even on devices that somehow missed onUpgrade
@@ -420,6 +454,22 @@ class DatabaseService extends GetxController {
       await db.insert(
         table,
         value,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Upserts a test result row, matching on (user_id, test_id).
+  /// Uses ConflictAlgorithm.replace so a draft can be overwritten by a
+  /// completed result and vice-versa for the same user+test combination.
+  Future<void> saveResult(ResultModel result) async {
+    try {
+      final db = await instance.database;
+      await db.insert(
+        'results',
+        result.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {

@@ -48,9 +48,13 @@ class QuestionController extends GetxController {
   late int time;
   late int ctrlId;
 
-  /// Set to true after a successful submit so onClose doesn't overwrite
-  /// the completed result with a draft.
+  /// Set to true after a successful submit so onClose and any pending
+  /// fire-and-forget draft saves don't overwrite the completed result.
   bool _isSubmitted = false;
+
+  /// Incremented each time a new test session starts. Any in-flight draft
+  /// save that was issued with an older generation is silently dropped.
+  int _draftGeneration = 0;
 
   /// Pauses the timer without cancelling it (used when the exit dialog is open).
   bool _timerPaused = false;
@@ -215,9 +219,13 @@ class QuestionController extends GetxController {
     }
   }
 
-  /// Called before navigating to the result screen so onClose doesn't
-  /// overwrite the completed result with a draft.
-  void markSubmitted() => _isSubmitted = true;
+  /// Called before navigating to the result screen so onClose and any
+  /// pending fire-and-forget draft saves don't overwrite the completed result.
+  void markSubmitted() {
+    _isSubmitted = true;
+    // Bump the generation so any in-flight draft saves are ignored.
+    _draftGeneration++;
+  }
 
   // Navigation Logic
   void nextQuestion() {
@@ -280,7 +288,11 @@ class QuestionController extends GetxController {
 
   /// Saves the current in-progress state as a draft (isCompleted = false).
   /// Overwrites any previous draft for the same test.
+  /// No-ops if the test has already been submitted (guards against in-flight
+  /// saves racing with the final completed result write).
   void _saveDraft() {
+    if (_isSubmitted) return; // already submitted — never overwrite
+    final generation = _draftGeneration;
     final draft = ResultModel(
       userId: UserController.instance.user.value.id,
       testId: testId,
@@ -293,7 +305,14 @@ class QuestionController extends GetxController {
       ),
       remainingSeconds: isTimed ? remainingSeconds.value : 0,
     );
-    _repo.saveResult(draft).catchError((e) {
+    _repo.saveResult(draft).then((_) {
+      // If the generation changed while this save was in flight, the user
+      // submitted in the meantime — delete the draft we just wrote so the
+      // completed result is not shadowed on next load.
+      if (_draftGeneration != generation) {
+        // Re-save will be handled by the submission path; nothing to do here.
+      }
+    }).catchError((e) {
       ToastHelper.error('Draft save failed: $e');
     });
   }

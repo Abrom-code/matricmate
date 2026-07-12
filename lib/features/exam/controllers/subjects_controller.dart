@@ -104,26 +104,15 @@ class SubjectsController extends GetxController {
       );
 
       if (subjects.isNotEmpty) {
-        // Load local counts (all 0 at this point)
+        // Load local counts (all 0 at this point for a first-run user)
         await Future.wait(
           subjects.map((s) async {
             entranceTestNumbers[s.id] = await _repo.testNumbers(s.id, 'entrance');
             modelTestNumbers[s.id] = await _repo.testNumbers(s.id, 'model');
           }),
         );
-
-        // Await remote counts so the entrance screen shows numbers immediately
-        final isConnected = await NetworkManager.instance.isConnected();
-        if (isConnected) {
-          final subjectIds = subjects.map((s) => s.id).toList();
-          final remoteCounts =
-              await _repo.remoteEntranceTestCounts(subjectIds);
-          for (final entry in remoteCounts.entries) {
-            entranceTestNumbers[entry.key] =
-                entry.value['entrance'] ?? 0;
-            modelTestNumbers[entry.key] = entry.value['model'] ?? 0;
-          }
-        }
+        // Remote counts are fetched by the caller (_runInitThenNavigate)
+        // via refreshEntranceCountsFromRemote — no need to duplicate here.
       }
     } catch (_) {
       // Non-fatal
@@ -208,31 +197,26 @@ class SubjectsController extends GetxController {
     }
   }
 
-  /// Fetches remote entrance/model counts and merges them with local counts.
-  /// Used on login when subjects are already cached locally — ensures newly
-  /// added exams on the server are reflected immediately instead of waiting
-  /// for the background sync to write tests to the local DB first.
+  /// Fetches entrance/model counts from Supabase and updates the in-memory maps.
+  /// Always uses remote values — local SQLite counts are a subset of remote
+  /// (only downloaded subjects have local rows).
   Future<void> refreshEntranceCountsFromRemote() async {
     try {
       final current = subjects.toList();
       if (current.isEmpty) return;
+
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) return;
 
       final subjectIds = current.map((s) => s.id).toList();
       final remoteCounts = await _repo.remoteEntranceTestCounts(subjectIds);
 
       for (final entry in remoteCounts.entries) {
         final sid = entry.key;
-        final remoteEntrance = entry.value['entrance'] ?? 0;
-        final remoteModel = entry.value['model'] ?? 0;
-        // Use whichever is higher — local may already have downloaded tests
-        entranceTestNumbers[sid] =
-            ((entranceTestNumbers[sid] ?? 0) >= remoteEntrance)
-                ? (entranceTestNumbers[sid] ?? 0)
-                : remoteEntrance;
-        modelTestNumbers[sid] =
-            ((modelTestNumbers[sid] ?? 0) >= remoteModel)
-                ? (modelTestNumbers[sid] ?? 0)
-                : remoteModel;
+        // Always take the remote value — it reflects what's available on
+        // the server regardless of what's downloaded locally.
+        entranceTestNumbers[sid] = entry.value['entrance'] ?? 0;
+        modelTestNumbers[sid] = entry.value['model'] ?? 0;
       }
     } catch (_) {
       // Non-fatal — best-effort

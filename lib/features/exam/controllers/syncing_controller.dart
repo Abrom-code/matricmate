@@ -35,13 +35,27 @@ class SyncingController extends GetxController {
         return;
       }
 
+      // Don't run while a per-subject entrance download is already in progress
+      // — they both write to the same tables and would conflict.
+      if (SubjectsController.instance.entranceDownloadStep.isNotEmpty) {
+        ToastHelper.warning('A download is already in progress. Please wait.');
+        return;
+      }
+
       entranceSyncing.value = true;
 
       final localSubjects = await _subjectRepo.getLocalSubjects();
-      final subjectIds = localSubjects.map((s) => s['id'] as int).toList();
+
+      // Only refresh subjects the user has explicitly downloaded.
+      // Passing all subject IDs here would re-download entrance content
+      // for subjects the user never asked for.
+      final subjectIds = localSubjects
+          .where((s) => s['is_entrance_downloaded'] == 1)
+          .map((s) => s['id'] as int)
+          .toList();
 
       if (subjectIds.isEmpty) {
-        ToastHelper.warning('No subjects found. Sync from home first.');
+        ToastHelper.warning('No entrance exams downloaded yet. Download a subject first.');
         return;
       }
 
@@ -122,19 +136,31 @@ class SyncingController extends GetxController {
           .where((s) => s['is_downloaded'] == 1)
           .map((s) => s['id'].toString())
           .toList();
-      final subjectIds = localSubjects.map((s) => s['id'] as int).toList();
+
+      // Only sync entrance/model tests for subjects the user explicitly
+      // downloaded — not all subjects. This prevents re-downloading
+      // entrance content for subjects the user hasn't asked for.
+      final entranceDownloadedIds = localSubjects
+          .where((s) => s['is_entrance_downloaded'] == 1)
+          .map((s) => s['id'] as int)
+          .toList();
 
       if (isValidUser && downloadedIds.isNotEmpty) {
-        await Future.wait([
-          _syncRepository.downloadEntranceTests(subjectIds, since: sinceEntrance),
-          _syncChapterContent(downloadedIds, since: sinceChapters),
-        ]);
+        final futures = <Future>[_syncChapterContent(downloadedIds, since: sinceChapters)];
+        if (entranceDownloadedIds.isNotEmpty) {
+          futures.add(_syncRepository.downloadEntranceTests(
+              entranceDownloadedIds, since: sinceEntrance));
+        }
+        await Future.wait(futures);
         await SyncPrefs.saveChaptersSync(syncStarted);
-      } else {
-        await _syncRepository.downloadEntranceTests(subjectIds, since: sinceEntrance);
+      } else if (entranceDownloadedIds.isNotEmpty) {
+        await _syncRepository.downloadEntranceTests(
+            entranceDownloadedIds, since: sinceEntrance);
       }
 
-      await SyncPrefs.saveEntranceSync(syncStarted);
+      if (entranceDownloadedIds.isNotEmpty) {
+        await SyncPrefs.saveEntranceSync(syncStarted);
+      }
       // Reload local subjects to reflect any changes written by syncSubjects()
       await SubjectsController.instance.loadLocalSubjects();
       return true;

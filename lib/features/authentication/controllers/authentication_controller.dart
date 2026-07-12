@@ -94,14 +94,19 @@ class AuthenticationController extends GetxController {
         await UserController.instance.loadLocalUser();
       }
 
-      // Step 2 — load subjects from local DB so the home screen
-      // is fully populated before we navigate (no post-nav flash).
+      // Step 2 — load subjects from local DB
       initStatus.value = 'Loading subjects…';
       await SubjectsController.instance.loadLocalSubjects();
 
-      // Step 3 — if subjects are still empty (first login), fetch from remote
-      if (SubjectsController.instance.subjects.isEmpty && isConnected) {
-        await SubjectsController.instance.initFromRemote();
+      if (isConnected) {
+        // Step 3 — first login with no local subjects: fetch everything from remote
+        if (SubjectsController.instance.subjects.isEmpty) {
+          await SubjectsController.instance.initFromRemote();
+        }
+        // Always refresh entrance counts from remote so the entrance screen
+        // shows correct numbers immediately — whether new user or returning.
+        initStatus.value = 'Loading exam info…';
+        await SubjectsController.instance.refreshEntranceCountsFromRemote();
       }
 
       initStatus.value = 'Almost done…';
@@ -125,17 +130,10 @@ class AuthenticationController extends GetxController {
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) return;
 
-      // Refresh entrance/model counts so newly added exams appear
-      // without requiring a full sync.
-      unawaited(
-        SubjectsController.instance.refreshEntranceCountsFromRemote(),
-      );
-
       // Delta sync — picks up any new tests/questions since last sync
       unawaited(SyncingController.instance.syncAll());
 
-      // Start Realtime: user status channel (always) + question edits
-      // scoped to downloaded subjects only.
+      // Start Realtime
       final uid = authRepo.currentUser?.uid ?? '';
       final downloadedIds = SubjectsController.instance.subjects
           .where((s) => s.isDownloaded || s.isEntranceDownloaded)

@@ -99,11 +99,16 @@ class EntranceScreen extends StatelessWidget {
               },
             ),
             if (busy)
-              const Opacity(
-                opacity: 0.5,
-                child: ModalBarrier(dismissible: false, color: Colors.black),
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LinearProgressIndicator(
+                  minHeight: 3,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
               ),
-            if (busy) const Center(child: AppPulsingDots()),
           ],
         );
       }),

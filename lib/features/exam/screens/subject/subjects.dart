@@ -118,83 +118,88 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
         return Stack(
           children: [
             SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSizes.defaultSpace),
-            child: Column(
-              children: [
-                // ── Resume banner ──────────────────────────────────────
-                Obx(() {
-                  final draft = ctrl.inProgressDraft.value;
-                  if (draft == null) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: AppSizes.spaceBtwItems,
-                    ),
-                    child: _ResumeBanner(
-                      testTitle: ctrl.inProgressTestTitle.value,
-                      answered: draft.selectedAnswers.length,
-                      total: draft.testQuestions.length,
-                      draft: draft,
-                      testTime: ctrl.inProgressTestTime.value,
-                    ),
-                  );
-                }),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSizes.defaultSpace),
+                child: Column(
+                  children: [
+                    // ── Resume banner ──────────────────────────────────────
+                    Obx(() {
+                      final draft = ctrl.inProgressDraft.value;
+                      if (draft == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppSizes.spaceBtwItems,
+                        ),
+                        child: _ResumeBanner(
+                          testTitle: ctrl.inProgressTestTitle.value,
+                          answered: draft.selectedAnswers.length,
+                          total: draft.testQuestions.length,
+                          draft: draft,
+                          testTime: ctrl.inProgressTestTime.value,
+                        ),
+                      );
+                    }),
 
-                if (isInactive)
-                  PremiumBanner(
-                    onTap: () => Get.bottomSheet(
-                      const PremiumBottomSheet(),
-                      isScrollControlled: true,
-                    ),
-                  ),
-                if (isInactive) const SizedBox(height: AppSizes.spaceBtwItems),
-
-                if (isPending) const PendingPaymentBanner(),
-                if (isPending) const SizedBox(height: AppSizes.spaceBtwItems),
-
-                GridLayout(
-                  itemCount: filteredSubjects.length,
-                  itemBuilder: (_, index) {
-                    final subject = filteredSubjects[index];
-                    return SubjectContainer(
-                      title: subject.name,
-                      image: AppHelperFunctions.getSubjectImage(subject.name),
-                      isDownloaded: subject.isDownloaded,
-                      onPressed: () =>
-                          ctrl.downloadSubject(subject.name, subject.id),
-                      onTap: () => subject.isDownloaded
-                          ? Get.toNamed(
-                              Routes.chapter,
-                              arguments: {
-                                'title': subject.name,
-                                'id': subject.id,
-                              },
-                            )
-                          : null,
-                    );
-                  },
-                ),
-
-                if (filteredSubjects.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: AppSizes.spaceBtwSections),
-                    child: Center(
-                      child: Text(
-                        'No subjects yet.\nTap the sync button to load your content.',
-                        textAlign: TextAlign.center,
+                    if (isInactive)
+                      PremiumBanner(
+                        onTap: () => Get.bottomSheet(
+                          const PremiumBottomSheet(),
+                          isScrollControlled: true,
+                        ),
                       ),
+                    if (isInactive) const SizedBox(height: AppSizes.spaceBtwItems),
+
+                    if (isPending) const PendingPaymentBanner(),
+                    if (isPending) const SizedBox(height: AppSizes.spaceBtwItems),
+
+                    GridLayout(
+                      itemCount: filteredSubjects.length,
+                      itemBuilder: (_, index) {
+                        final subject = filteredSubjects[index];
+                        return SubjectContainer(
+                          title: subject.name,
+                          image: AppHelperFunctions.getSubjectImage(subject.name),
+                          isDownloaded: subject.isDownloaded,
+                          onPressed: () =>
+                              ctrl.downloadSubject(subject.name, subject.id),
+                          onTap: () => subject.isDownloaded
+                              ? Get.toNamed(
+                                  Routes.chapter,
+                                  arguments: {
+                                    'title': subject.name,
+                                    'id': subject.id,
+                                  },
+                                )
+                              : null,
+                        );
+                      },
                     ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-            if (syncing)
-              const Opacity(
-                opacity: 0.5,
-                child: ModalBarrier(dismissible: false, color: Colors.black),
+
+                    if (filteredSubjects.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: AppSizes.spaceBtwSections),
+                        child: Center(
+                          child: Text(
+                            'No subjects yet.\nTap the sync button to load your content.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            if (syncing) const Center(child: AppPulsingDots()),
+            ),
+            if (syncing)
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LinearProgressIndicator(
+                  minHeight: 3,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
           ],
         );
       }),

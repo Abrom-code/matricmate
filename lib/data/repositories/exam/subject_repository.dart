@@ -82,6 +82,9 @@ class SubjectRepository {
         if (question.imageUrl != null && question.imageUrl!.isNotEmpty) {
           imgUrls.add(question.imageUrl!);
         }
+        if (question.explanationImageUrl != null && question.explanationImageUrl!.isNotEmpty) {
+          imgUrls.add(question.explanationImageUrl!);
+        }
       }
 
       // Step 4 — passages (0.62 → 0.74)
@@ -145,6 +148,12 @@ class SubjectRepository {
       'title', 'type', 'question_count', 'time', 'created_at',
     },
     'passages': {'id', 'content', 'title', 'image_url'},
+    'questions': {
+      'id', 'subject_id', 'grade', 'chapter_id', 'test_id', 'passage_id',
+      'question_text', 'image_url', 'options', 'correct_option_index',
+      'explanation_en', 'explanation_am', 'explanation_image_url',
+      'question_order', 'section_id', 'section_title',
+    },
   };
 
   static dynamic _convert(dynamic value) {

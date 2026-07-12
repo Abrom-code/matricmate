@@ -187,6 +187,9 @@ class SyncingController extends GetxController {
       if (model.imageUrl != null && model.imageUrl!.isNotEmpty) {
         imageUrls.add(model.imageUrl!);
       }
+      if (model.explanationImageUrl != null && model.explanationImageUrl!.isNotEmpty) {
+        imageUrls.add(model.explanationImageUrl!);
+      }
       return model;
     }).toList();
 

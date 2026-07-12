@@ -8,10 +8,12 @@ class ExplanationBox extends StatelessWidget {
     super.key,
     this.explanationEn = 'No English Explanation!',
     this.explanationAm = 'No Amharic Explanation!',
+    this.explanationImageUrl,
   });
 
   final String explanationEn;
   final String explanationAm;
+  final String? explanationImageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +22,7 @@ class ExplanationBox extends StatelessWidget {
     return Obx(() => AppExplanationBox(
       explanationEn: explanationEn,
       explanationAm: explanationAm,
+      explanationImageUrl: explanationImageUrl,
       expanded: controller.isExplanationExpanaded.value,
       onToggle: () => controller.isExplanationExpanaded.value =
           !controller.isExplanationExpanaded.value,

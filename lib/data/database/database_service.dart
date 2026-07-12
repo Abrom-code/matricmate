@@ -23,7 +23,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -40,6 +40,13 @@ class DatabaseService extends GetxController {
           try {
             await db.execute(
               'ALTER TABLE subjects ADD COLUMN is_entrance_downloaded INTEGER DEFAULT 0',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 5) {
+          try {
+            await db.execute(
+              'ALTER TABLE questions ADD COLUMN explanation_image_url TEXT',
             );
           } catch (_) {}
         }

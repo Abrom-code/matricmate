@@ -76,6 +76,7 @@ class DBschema {
         correct_option_index INTEGER NOT NULL,
         explanation_en TEXT,
         explanation_am TEXT,
+        explanation_image_url TEXT,
         question_order INTEGER DEFAULT 1,
         section_id INTEGER,
         section_title TEXT,

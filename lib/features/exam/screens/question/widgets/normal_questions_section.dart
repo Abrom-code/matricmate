@@ -131,6 +131,7 @@ class QuesitonSection extends GetView<QuestionController> {
               ExplanationBox(
                 explanationEn: q.explanationEn,
                 explanationAm: q.explanationAm,
+                explanationImageUrl: q.explanationImageUrl,
               ),
               const SizedBox(height: AppSizes.spaceBtwItems),
             ] else

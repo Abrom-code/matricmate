@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
@@ -21,6 +22,7 @@ class AppExplanationBox extends StatelessWidget {
     required this.onToggle,
     required this.languageSelected,
     required this.onLanguageChange,
+    this.explanationImageUrl,
   });
 
   final String explanationEn;
@@ -29,6 +31,7 @@ class AppExplanationBox extends StatelessWidget {
   final VoidCallback onToggle;
   final RxString languageSelected;
   final ValueChanged<String> onLanguageChange;
+  final String? explanationImageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +129,17 @@ class AppExplanationBox extends StatelessWidget {
                 );
                 return Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text.rich(RichTextParser.parse(text, baseStyle)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(RichTextParser.parse(text, baseStyle)),
+                      if (explanationImageUrl != null &&
+                          explanationImageUrl!.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        ImageSection(imgUrl: explanationImageUrl),
+                      ],
+                    ],
+                  ),
                 );
               }),
             ] else

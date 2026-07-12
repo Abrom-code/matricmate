@@ -138,6 +138,7 @@ class QuestionDetailBox extends StatelessWidget {
           AppExplanationBox(
             explanationEn: question.explanationEn,
             explanationAm: question.explanationAm,
+            explanationImageUrl: question.explanationImageUrl,
             expanded: explanationExpanded,
             onToggle: onExplanationToggle,
             languageSelected: languageSelected,

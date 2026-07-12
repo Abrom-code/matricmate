@@ -18,6 +18,7 @@ class QuestionModel {
 
   String explanationEn;
   String explanationAm;
+  String? explanationImageUrl;
 
   List<String> options;
 
@@ -37,6 +38,7 @@ class QuestionModel {
     this.sectionTitle,
     this.explanationEn = 'No English Explanation!',
     this.explanationAm = 'No Amharic Explanation!',
+    this.explanationImageUrl,
   });
 
   factory QuestionModel.fromMap(Map<String, dynamic> map) {
@@ -61,6 +63,7 @@ class QuestionModel {
           map['explanation_en']?.toString() ?? 'No English Explanation!',
       explanationAm:
           map['explanation_am']?.toString() ?? 'No Amharic Explanation!',
+      explanationImageUrl: map['explanation_image_url']?.toString(),
       options: map['options'] == null
           ? []
           : map['options'] is String
@@ -86,6 +89,7 @@ class QuestionModel {
       'correct_option_index': correctOptionIndex,
       'explanation_en': explanationEn,
       'explanation_am': explanationAm,
+      'explanation_image_url': explanationImageUrl,
       'options': jsonEncode(options),
       'section_id': sectionId,
       'section_title': sectionTitle,
@@ -109,6 +113,7 @@ class QuestionModel {
       sectionTitle: null,
       explanationEn: 'No English Explanation!',
       explanationAm: 'No Amharic Explanation!',
+      explanationImageUrl: null,
     );
   }
 }

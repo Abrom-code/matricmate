@@ -57,6 +57,10 @@ class EntranceScreen extends StatelessWidget {
       ),
       body: Obx(() {
         final subjects = controller.filteredSubjects;
+        // Explicitly read both maps inside Obx so any count update
+        // (from refreshEntranceCountsFromRemote) triggers a rebuild.
+        final entranceNums = controller.entranceTestNumbers;
+        final modelNums = controller.modelTestNumbers;
 
         if (controller.isLoading.value && subjects.isEmpty) {
           return const AppCircularLoading(title: 'Loading...');
@@ -78,9 +82,8 @@ class EntranceScreen extends StatelessWidget {
               const SizedBox(height: AppSizes.spaceBtwItems),
           itemBuilder: (_, index) {
             final subject = subjects[index];
-            final entranceCount =
-                controller.entranceTestNumbers[subject.id] ?? 0;
-            final modelCount = controller.modelTestNumbers[subject.id] ?? 0;
+            final entranceCount = entranceNums[subject.id] ?? 0;
+            final modelCount = modelNums[subject.id] ?? 0;
 
             return EntranceSubjectTile(
               subject: subject,

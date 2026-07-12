@@ -23,7 +23,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 6,
+      version: 7,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -67,6 +67,18 @@ class DatabaseService extends GetxController {
             );
           } catch (_) {}
         }
+        if (oldVersion < 7) {
+          try {
+            await db.execute(
+              'ALTER TABLE subjects ADD COLUMN entrance_count INTEGER DEFAULT 0',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE subjects ADD COLUMN model_count INTEGER DEFAULT 0',
+            );
+          } catch (_) {}
+        }
       },
       // Ensure the column exists even on devices that somehow missed onUpgrade
       onOpen: (db) async {
@@ -83,6 +95,16 @@ class DatabaseService extends GetxController {
         try {
           await db.execute(
             'ALTER TABLE results ADD COLUMN remainingSeconds INTEGER DEFAULT 0',
+          );
+        } catch (_) {}
+        try {
+          await db.execute(
+            'ALTER TABLE subjects ADD COLUMN entrance_count INTEGER DEFAULT 0',
+          );
+        } catch (_) {}
+        try {
+          await db.execute(
+            'ALTER TABLE subjects ADD COLUMN model_count INTEGER DEFAULT 0',
           );
         } catch (_) {}
       },

@@ -81,6 +81,8 @@ class SubjectsController extends GetxController {
       subjects.assignAll(
         dbSubjects.map((e) => SubjectModel.fromMap(e)).toList(),
       );
+      // loadTestNumbers reads persisted entrance_count/model_count from the
+      // subjects table — no network call needed on restart.
       await loadTestNumbers(subjects);
     } finally {
       isLoading.value = false;
@@ -197,9 +199,8 @@ class SubjectsController extends GetxController {
     }
   }
 
-  /// Fetches entrance/model counts from Supabase and updates the in-memory maps.
-  /// Always uses remote values — local SQLite counts are a subset of remote
-  /// (only downloaded subjects have local rows).
+  /// Fetches entrance/model counts from Supabase, updates in-memory maps,
+  /// and persists the counts to SQLite so they survive app restarts.
   Future<void> refreshEntranceCountsFromRemote() async {
     try {
       final current = subjects.toList();
@@ -210,13 +211,35 @@ class SubjectsController extends GetxController {
 
       final subjectIds = current.map((s) => s.id).toList();
       final remoteCounts = await _repo.remoteEntranceTestCounts(subjectIds);
+      if (remoteCounts.isEmpty) return;
+
+      final db = await DatabaseService.instance.database;
 
       for (final entry in remoteCounts.entries) {
         final sid = entry.key;
-        // Always take the remote value — it reflects what's available on
-        // the server regardless of what's downloaded locally.
-        entranceTestNumbers[sid] = entry.value['entrance'] ?? 0;
-        modelTestNumbers[sid] = entry.value['model'] ?? 0;
+        final remoteEntrance = entry.value['entrance'] ?? 0;
+        final remoteModel = entry.value['model'] ?? 0;
+        // Take whichever is higher — preserves locally-downloaded counts
+        // if the remote query returns a lower number for any reason.
+        final newEntrance =
+            remoteEntrance > (entranceTestNumbers[sid] ?? 0)
+                ? remoteEntrance
+                : (entranceTestNumbers[sid] ?? 0);
+        final newModel =
+            remoteModel > (modelTestNumbers[sid] ?? 0)
+                ? remoteModel
+                : (modelTestNumbers[sid] ?? 0);
+
+        entranceTestNumbers[sid] = newEntrance;
+        modelTestNumbers[sid] = newModel;
+
+        // Persist so counts are available on restart without a network call
+        await db.update(
+          'subjects',
+          {'entrance_count': newEntrance, 'model_count': newModel},
+          where: 'id = ?',
+          whereArgs: [sid],
+        );
       }
     } catch (_) {
       // Non-fatal — best-effort
@@ -225,42 +248,38 @@ class SubjectsController extends GetxController {
 
   Future<void> loadTestNumbers(List<SubjectModel> subjects) async {
     try {
-      // Load local counts first (instant — SQLite)
-      await Future.wait(
-        subjects.map((s) async {
-          entranceTestNumbers[s.id] = await _repo.testNumbers(s.id, 'entrance');
-          modelTestNumbers[s.id] = await _repo.testNumbers(s.id, 'model');
-        }),
-      );
+      // Read persisted counts from subjects table.
+      // entrance_count/model_count are written by refreshEntranceCountsFromRemote
+      // and survive restarts — no network needed here.
+      for (final s in subjects) {
+        entranceTestNumbers[s.id] = s.entranceCount;
+        modelTestNumbers[s.id] = s.modelCount;
+      }
 
-      // If any subject still shows 0 for both, fetch remote counts in the
-      // background so the user can see what's available to download.
-      // This is fire-and-forget — never blocks startup or navigation.
-      final needsRemote = subjects.any(
-        (s) =>
-            (entranceTestNumbers[s.id] ?? 0) == 0 &&
-            (modelTestNumbers[s.id] ?? 0) == 0,
-      );
-
-      if (needsRemote) {
-        unawaited(_fetchRemoteCountsIfNeeded(subjects));
+      // If ANY subject has 0 for both counts (never fetched or new subject
+      // added), fetch from remote in the background for all zero subjects.
+      final zeroSubjects = subjects
+          .where((s) =>
+              (entranceTestNumbers[s.id] ?? 0) == 0 &&
+              (modelTestNumbers[s.id] ?? 0) == 0)
+          .toList();
+      if (zeroSubjects.isNotEmpty) {
+        unawaited(_fetchRemoteCountsIfNeeded(zeroSubjects));
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
   }
 
-  /// Reloads entrance/model test counts from local SQLite unconditionally.
-  /// Called after a sync so newly downloaded rows are reflected immediately.
+  /// Reloads entrance/model test counts from persisted subject columns.
   Future<void> reloadTestNumbersFromLocal() async {
     try {
-      final current = subjects.toList();
-      await Future.wait(
-        current.map((s) async {
-          entranceTestNumbers[s.id] = await _repo.testNumbers(s.id, 'entrance');
-          modelTestNumbers[s.id] = await _repo.testNumbers(s.id, 'model');
-        }),
-      );
+      final dbSubjects = await _repo.getLocalSubjects();
+      for (final row in dbSubjects) {
+        final sid = row['id'] as int;
+        entranceTestNumbers[sid] = row['entrance_count'] as int? ?? 0;
+        modelTestNumbers[sid] = row['model_count'] as int? ?? 0;
+      }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
@@ -273,19 +292,34 @@ class SubjectsController extends GetxController {
 
       final subjectIds = subjects.map((s) => s.id).toList();
       final remoteCounts = await _repo.remoteEntranceTestCounts(subjectIds);
+      if (remoteCounts.isEmpty) return;
+
+      final db = await DatabaseService.instance.database;
 
       for (final entry in remoteCounts.entries) {
         final sid = entry.key;
-        // Only fill in if local is still 0 — don't overwrite real local data
+        // Only fill if still 0 — don't overwrite values already set
+        final entrance = entry.value['entrance'] ?? 0;
+        final model = entry.value['model'] ?? 0;
         if ((entranceTestNumbers[sid] ?? 0) == 0) {
-          entranceTestNumbers[sid] = entry.value['entrance'] ?? 0;
+          entranceTestNumbers[sid] = entrance;
         }
         if ((modelTestNumbers[sid] ?? 0) == 0) {
-          modelTestNumbers[sid] = entry.value['model'] ?? 0;
+          modelTestNumbers[sid] = model;
         }
+        // Persist both values so the next restart reads from SQLite
+        await db.update(
+          'subjects',
+          {
+            'entrance_count': entranceTestNumbers[sid],
+            'model_count': modelTestNumbers[sid],
+          },
+          where: 'id = ?',
+          whereArgs: [sid],
+        );
       }
     } catch (_) {
-      // Silent — this is best-effort only
+      // Silent — best-effort
     }
   }
 

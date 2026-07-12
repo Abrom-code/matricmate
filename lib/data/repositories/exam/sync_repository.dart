@@ -54,12 +54,22 @@ class SyncRepository {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> updateBatch(SubjectModel s, int localDownloadStatus, {int localEntranceDownloaded = 0}) async {
+  Future<void> updateBatch(
+    SubjectModel s,
+    int localDownloadStatus, {
+    int localEntranceDownloaded = 0,
+    int localEntranceCount = 0,
+    int localModelCount = 0,
+  }) async {
     try {
       final batch = await _getBatch();
       final data = s.toMap();
       data['is_downloaded'] = localDownloadStatus;
       data['is_entrance_downloaded'] = localEntranceDownloaded;
+      // Preserve persisted remote counts — never overwrite them with 0
+      // from the Supabase subject row (which has no count fields).
+      data['entrance_count'] = localEntranceCount;
+      data['model_count'] = localModelCount;
       batch.update('subjects', data, where: 'id = ?', whereArgs: [s.id]);
     } catch (e) {
       throw AppExceptionHandler.handle(e);

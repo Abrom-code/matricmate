@@ -22,7 +22,9 @@ class DBschema {
         is_natural INTEGER NOT NULL,
         is_common INTEGER DEFAULT 0,
         is_downloaded INTEGER DEFAULT 0,
-        is_entrance_downloaded INTEGER DEFAULT 0
+        is_entrance_downloaded INTEGER DEFAULT 0,
+        entrance_count INTEGER DEFAULT 0,
+        model_count INTEGER DEFAULT 0
       );
     ''');
 

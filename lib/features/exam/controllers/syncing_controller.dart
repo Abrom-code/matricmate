@@ -36,7 +36,6 @@ class SyncingController extends GetxController {
       }
 
       // Don't run while a per-subject entrance download is already in progress
-      // — they both write to the same tables and would conflict.
       if (SubjectsController.instance.entranceDownloadStep.isNotEmpty) {
         ToastHelper.warning('A download is already in progress. Please wait.');
         return;
@@ -46,54 +45,54 @@ class SyncingController extends GetxController {
 
       final localSubjects = await _subjectRepo.getLocalSubjects();
 
-      // Only refresh subjects the user has explicitly downloaded.
-      // Passing all subject IDs here would re-download entrance content
-      // for subjects the user never asked for.
-      final subjectIds = localSubjects
+      if (localSubjects.isEmpty) {
+        ToastHelper.warning('No subjects found. Sync from home first.');
+        return;
+      }
+
+      final syncStarted = DateTime.now().toUtc();
+      final since = await SyncPrefs.lastEntranceSync();
+
+      // Sync content only for subjects the user has explicitly downloaded
+      final downloadedIds = localSubjects
           .where((s) => s['is_entrance_downloaded'] == 1)
           .map((s) => s['id'] as int)
           .toList();
 
-      if (subjectIds.isEmpty) {
-        ToastHelper.warning('No entrance exams downloaded yet. Download a subject first.');
-        return;
-      }
+      if (downloadedIds.isNotEmpty) {
+        await _syncRepository.downloadEntranceTests(downloadedIds, since: since);
 
-      // Capture timestamp BEFORE the network call to avoid missing rows
-      // written in the window between fetch-start and fetch-end.
-      final syncStarted = DateTime.now().toUtc();
-      final since = await SyncPrefs.lastEntranceSync();
-
-      await _syncRepository.downloadEntranceTests(subjectIds, since: since);
-
-      // Mark every subject that now has entrance tests in the local DB as
-      // entrance-downloaded (the bulk sync writes the rows but never sets the flag).
-      final db = await DatabaseService.instance.database;
-      final entranceSubjectRows = await db.rawQuery(
-        'SELECT DISTINCT subject_id FROM tests WHERE subject_id IN (${subjectIds.map((_) => '?').join(',')}) AND type IN (\'entrance\', \'model\')',
-        subjectIds,
-      );
-      for (final row in entranceSubjectRows) {
-        await db.update(
-          'subjects',
-          {'is_entrance_downloaded': 1},
-          where: 'id = ?',
-          whereArgs: [row['subject_id']],
+        // Mark subjects that now have entrance tests as downloaded
+        final db = await DatabaseService.instance.database;
+        final entranceSubjectRows = await db.rawQuery(
+          'SELECT DISTINCT subject_id FROM tests WHERE subject_id IN (${downloadedIds.map((_) => '?').join(',')}) AND type IN (\'entrance\', \'model\')',
+          downloadedIds,
         );
+        for (final row in entranceSubjectRows) {
+          await db.update(
+            'subjects',
+            {'is_entrance_downloaded': 1},
+            where: 'id = ?',
+            whereArgs: [row['subject_id']],
+          );
+        }
+
+        await SyncPrefs.saveEntranceSync(syncStarted);
       }
 
-      await SyncPrefs.saveEntranceSync(syncStarted);
-
-      // Reload subjects (updates is_entrance_downloaded flags) then force-reload
-      // test counts from local SQLite — this bypasses the "needsRemote" guard in
-      // loadTestNumbers so newly synced tests are reflected immediately.
+      // Always refresh counts for ALL subjects (downloaded or not) so
+      // the tile numbers stay current regardless of download status.
       final dbSubjects = await _subjectRepo.getLocalSubjects();
       SubjectsController.instance.subjects.assignAll(
         dbSubjects.map((e) => SubjectModel.fromMap(e)).toList(),
       );
-      await SubjectsController.instance.reloadTestNumbersFromLocal();
+      await SubjectsController.instance.refreshEntranceCountsFromRemote();
 
-      ToastHelper.success(since == null ? 'Entrance exams loaded!' : 'Entrance exams updated!');
+      ToastHelper.success(
+        downloadedIds.isNotEmpty
+            ? (since == null ? 'Entrance exams loaded!' : 'Entrance exams updated!')
+            : 'Exam counts refreshed!',
+      );
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -161,7 +160,10 @@ class SyncingController extends GetxController {
       if (entranceDownloadedIds.isNotEmpty) {
         await SyncPrefs.saveEntranceSync(syncStarted);
       }
-      // Reload local subjects to reflect any changes written by syncSubjects()
+
+      // Reload subjects from SQLite to reflect any flag changes from syncSubjects().
+      // loadLocalSubjects will automatically re-apply remote entrance counts
+      // via refreshEntranceCountsFromRemote in the background.
       await SubjectsController.instance.loadLocalSubjects();
       return true;
     } catch (e) {
@@ -274,12 +276,17 @@ class SyncingController extends GetxController {
         final map = s.toMap();
         map['is_downloaded'] = 0;
         map['is_entrance_downloaded'] = 0;
+        map['entrance_count'] = 0;
+        map['model_count'] = 0;
         await _syncRepository.insertBatch('subjects', map);
       } else {
         await _syncRepository.updateBatch(
           s,
           local['is_downloaded'] ?? 0,
           localEntranceDownloaded: local['is_entrance_downloaded'] ?? 0,
+          // Preserve persisted remote counts so syncSubjects never wipes them
+          localEntranceCount: local['entrance_count'] as int? ?? 0,
+          localModelCount: local['model_count'] as int? ?? 0,
         );
       }
     }

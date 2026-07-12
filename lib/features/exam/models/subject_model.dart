@@ -3,6 +3,11 @@ class SubjectModel {
   String name;
   bool isNatural, isCommon, isDownloaded, isEntranceDownloaded;
 
+  /// Cached remote counts — persisted to SQLite so they survive app restarts
+  /// without a network call.
+  int entranceCount;
+  int modelCount;
+
   SubjectModel({
     required this.id,
     required this.name,
@@ -10,6 +15,8 @@ class SubjectModel {
     this.isCommon = false,
     this.isDownloaded = false,
     this.isEntranceDownloaded = false,
+    this.entranceCount = 0,
+    this.modelCount = 0,
   });
 
   factory SubjectModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +36,8 @@ class SubjectModel {
       isCommon: map['is_common'] == 1,
       isDownloaded: map['is_downloaded'] == 1,
       isEntranceDownloaded: (map['is_entrance_downloaded'] ?? 0) == 1,
+      entranceCount: map['entrance_count'] as int? ?? 0,
+      modelCount: map['model_count'] as int? ?? 0,
     );
   }
 
@@ -40,6 +49,8 @@ class SubjectModel {
       'is_common': isCommon ? 1 : 0,
       'is_downloaded': isDownloaded ? 1 : 0,
       'is_entrance_downloaded': isEntranceDownloaded ? 1 : 0,
+      'entrance_count': entranceCount,
+      'model_count': modelCount,
     };
   }
 }

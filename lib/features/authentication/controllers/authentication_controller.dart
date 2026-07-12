@@ -41,10 +41,9 @@ class AuthenticationController extends GetxController {
     try {
       final user = authRepo.currentUser;
       if (user != null && user.emailVerified) {
-        await Future.wait([
-          UserController.instance.loadLocalUser(),
-          SubjectsController.instance.loadLocalSubjects(),
-        ]);
+        // Load user record so UserController.user is populated before
+        // screenRedirect() decides where to navigate.
+        await UserController.instance.loadLocalUser();
       }
     } catch (_) {}
     screenRedirect();
@@ -95,16 +94,14 @@ class AuthenticationController extends GetxController {
         await UserController.instance.loadLocalUser();
       }
 
-      // Step 2 — load subjects (local first, remote if empty)
-      final hasSubjects = SubjectsController.instance.subjects.isNotEmpty;
-      if (!hasSubjects && isConnected) {
-        initStatus.value = 'Loading subjects…';
+      // Step 2 — load subjects from local DB so the home screen
+      // is fully populated before we navigate (no post-nav flash).
+      initStatus.value = 'Loading subjects…';
+      await SubjectsController.instance.loadLocalSubjects();
+
+      // Step 3 — if subjects are still empty (first login), fetch from remote
+      if (SubjectsController.instance.subjects.isEmpty && isConnected) {
         await SubjectsController.instance.initFromRemote();
-      } else if (hasSubjects && isConnected) {
-        // Subjects already in local DB — refresh entrance/model counts from
-        // remote so newly added exams appear immediately instead of waiting
-        // for the background sync to complete.
-        await SubjectsController.instance.refreshEntranceCountsFromRemote();
       }
 
       initStatus.value = 'Almost done…';
@@ -114,10 +111,11 @@ class AuthenticationController extends GetxController {
       isInitializing.value = false;
     }
 
-    // Navigate to home
+    // Navigate to home — all subject/user data is ready at this point.
     Get.offAllNamed(Routes.navigationMenu);
 
-    // Background: full delta sync + realtime (non-blocking)
+    // Background: entrance count refresh + full delta sync + realtime.
+    // None of these block the UI.
     unawaited(_backgroundRefresh());
   }
 
@@ -126,6 +124,12 @@ class AuthenticationController extends GetxController {
     try {
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) return;
+
+      // Refresh entrance/model counts so newly added exams appear
+      // without requiring a full sync.
+      unawaited(
+        SubjectsController.instance.refreshEntranceCountsFromRemote(),
+      );
 
       // Delta sync — picks up any new tests/questions since last sync
       unawaited(SyncingController.instance.syncAll());

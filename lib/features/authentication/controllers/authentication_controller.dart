@@ -131,7 +131,7 @@ class AuthenticationController extends GetxController {
       if (!isConnected) return;
 
       // Delta sync — picks up any new tests/questions since last sync
-      unawaited(SyncingController.instance.syncAll());
+      unawaited(SyncingController.instance.syncAll(showUiLoading: false));
 
       // Start Realtime
       final uid = authRepo.currentUser?.uid ?? '';

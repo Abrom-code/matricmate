@@ -116,7 +116,7 @@ class ReadyDialog extends StatelessWidget {
                         if (examCode != null)
                           _MetaChip(
                             icon: Icons.tag_rounded,
-                            label: 'Booklet Code: $examCode',
+                            label: 'B Code: $examCode',
                             color: Colors.teal,
                             dark: dark,
                           ),

@@ -102,15 +102,19 @@ class SyncingController extends GetxController {
 
   // ── Full sync (from home screen button) ──────────────────────────────────
 
-  Future<bool> syncAll() async {
+  Future<bool> syncAll({bool showUiLoading = true}) async {
     try {
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
-        ToastHelper.warning('No Internet!');
+        if (showUiLoading) {
+          ToastHelper.warning('No Internet!');
+        }
         return false;
       }
 
-      refreshing.value = true;
+      if (showUiLoading) {
+        refreshing.value = true;
+      }
 
       // Capture all timestamps BEFORE any network call
       final syncStarted = DateTime.now().toUtc();

@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:matricmate/app.dart';
+import 'package:matricmate/features/authentication/screens/loading/loading.dart';
 import 'package:matricmate/bindings/exam/bookmark_binding.dart';
 import 'package:matricmate/bindings/auth/change_password_binding.dart';
 import 'package:matricmate/bindings/exam/chapter_binding.dart';

@@ -24,7 +24,6 @@ class AuthenticationController extends GetxController {
   late Rx<User?> firebaseUser;
 
   /// True while the loading screen is doing initial data fetch.
-  /// The LoadingScreen watches this and auto-navigates when it turns false.
   final RxBool isInitializing = false.obs;
   final RxString initStatus = 'Getting things ready…'.obs;
 

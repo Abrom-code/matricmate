@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:matricmate/data/repositories/payment/payment_repository.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';

@@ -7,7 +7,7 @@ import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';

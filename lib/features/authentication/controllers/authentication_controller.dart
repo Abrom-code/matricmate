@@ -9,7 +9,7 @@ import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/realtime_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';

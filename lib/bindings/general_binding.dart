@@ -8,8 +8,8 @@ import 'package:matricmate/features/authentication/controllers/login/login_contr
 import 'package:matricmate/features/authentication/controllers/signup/signup_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
-import 'package:matricmate/features/personalization/controller/change_password_controller.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/features/personalization/controllers/change_password_controller.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 

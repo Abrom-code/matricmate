@@ -6,8 +6,8 @@ import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/entrance/entrance.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
-import 'package:matricmate/features/personalization/screen/analytics/analytics_screen.dart';
-import 'package:matricmate/features/personalization/screen/profile/profile.dart';
+import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
+import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 

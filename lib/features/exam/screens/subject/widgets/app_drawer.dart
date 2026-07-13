@@ -4,7 +4,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/status_title.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/colors.dart';

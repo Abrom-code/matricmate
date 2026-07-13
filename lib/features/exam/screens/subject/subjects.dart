@@ -11,7 +11,7 @@ import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/status_badge.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
-import 'package:matricmate/features/personalization/controller/user_controller.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';

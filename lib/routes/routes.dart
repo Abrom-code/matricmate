@@ -30,9 +30,9 @@ import 'package:matricmate/features/exam/screens/result/result.dart';
 import 'package:matricmate/features/exam/screens/result/review.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
-import 'package:matricmate/features/personalization/screen/analytics/analytics_screen.dart';
-import 'package:matricmate/features/personalization/screen/profile/profile.dart';
-import 'package:matricmate/features/personalization/screen/update/change_password.dart';
+import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
+import 'package:matricmate/features/personalization/screens/profile/profile.dart';
+import 'package:matricmate/features/personalization/screens/update/change_password.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 

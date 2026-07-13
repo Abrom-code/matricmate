@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:matricmate/features/personalization/controller/analytics_controller.dart';
+import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';

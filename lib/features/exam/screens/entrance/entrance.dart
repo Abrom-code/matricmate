@@ -1,19 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/exam/resume_banner.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/entrance/widgets/entrance_subject_tile.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class EntranceScreen extends StatelessWidget {
-  EntranceScreen({super.key});
+class EntranceScreen extends StatefulWidget {
+  const EntranceScreen({super.key});
+
+  @override
+  State<EntranceScreen> createState() => _EntranceScreenState();
+}
+
+class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
+  SubjectsController get ctrl => SubjectsController.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ctrl.loadInProgressEntranceBanner();
+      if (mounted) {
+        appRouteObserver.subscribe(this, ModalRoute.of(context)!);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  // Refresh banner when the user navigates back to this screen.
+  @override
+  void didPopNext() => ctrl.loadInProgressEntranceBanner();
 
   @override
   Widget build(BuildContext context) {
-    final controller = SubjectsController.instance;
     final syncController = Get.find<SyncingController>();
 
     return Scaffold(
@@ -23,8 +55,7 @@ class EntranceScreen extends StatelessWidget {
         actions: [
           Obx(() {
             final syncing = syncController.entranceSyncing.value;
-            // Also disable while any per-subject entrance download is running
-            final anyDownloading = controller.entranceDownloadStep.isNotEmpty;
+            final anyDownloading = ctrl.entranceDownloadStep.isNotEmpty;
             final busy = syncing || anyDownloading;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -56,16 +87,15 @@ class EntranceScreen extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        final subjects = controller.filteredSubjects;
-        // Explicitly read both maps inside Obx so any count update
-        // (from refreshEntranceCountsFromRemote) triggers a rebuild.
-        final entranceNums = controller.entranceTestNumbers;
-        final modelNums = controller.modelTestNumbers;
+        final subjects = ctrl.filteredSubjects;
+        final entranceNums = ctrl.entranceTestNumbers;
+        final modelNums = ctrl.modelTestNumbers;
         final syncing = syncController.entranceSyncing.value;
-        final anyDownloading = controller.entranceDownloadStep.isNotEmpty;
+        final anyDownloading = ctrl.entranceDownloadStep.isNotEmpty;
         final busy = syncing || anyDownloading;
+        final isInactive = UserController.instance.user.value.isInactive;
 
-        if (controller.isLoading.value && subjects.isEmpty) {
+        if (ctrl.isLoading.value && subjects.isEmpty) {
           return const AppCircularLoading(title: 'Loading...');
         }
 
@@ -80,23 +110,79 @@ class EntranceScreen extends StatelessWidget {
 
         return Stack(
           children: [
-            ListView.separated(
-              padding: const EdgeInsets.all(AppSizes.defaultSpace),
-              itemCount: subjects.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: AppSizes.spaceBtwItems),
-              itemBuilder: (_, index) {
-                final subject = subjects[index];
-                final entranceCount = entranceNums[subject.id] ?? 0;
-                final modelCount = modelNums[subject.id] ?? 0;
+            CustomScrollView(
+              slivers: [
+                // ── Banners ─────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSizes.defaultSpace,
+                      AppSizes.defaultSpace,
+                      AppSizes.defaultSpace,
+                      0,
+                    ),
+                    child: Column(
+                      children: [
+                        // Premium banner (inactive users only)
+                        if (isInactive) ...[
+                          PremiumBanner(
+                            onTap: () => Get.bottomSheet(
+                              const PremiumBottomSheet(),
+                              isScrollControlled: true,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.spaceBtwItems),
+                        ],
 
-                return EntranceSubjectTile(
-                  subject: subject,
-                  entranceCount: entranceCount,
-                  modelCount: modelCount,
-                  total: entranceCount + modelCount,
-                );
-              },
+                        // Resume banner (entrance/model in-progress only)
+                        Obx(() {
+                          final draft = ctrl.inProgressEntranceDraft.value;
+                          if (draft == null) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSizes.spaceBtwItems,
+                            ),
+                            child: ResumeBanner(
+                              testTitle: ctrl.inProgressEntranceTitle.value,
+                              answered: draft.selectedAnswers.length,
+                              total: draft.testQuestions.length,
+                              draft: draft,
+                              testTime: ctrl.inProgressEntranceTime.value,
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ── Subject list ─────────────────────────────────────────
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.defaultSpace,
+                    AppSizes.spaceBtwItems,
+                    AppSizes.defaultSpace,
+                    AppSizes.defaultSpace,
+                  ),
+                  sliver: SliverList.separated(
+                    itemCount: subjects.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: AppSizes.spaceBtwItems),
+                    itemBuilder: (_, index) {
+                      final subject = subjects[index];
+                      final entranceCount = entranceNums[subject.id] ?? 0;
+                      final modelCount = modelNums[subject.id] ?? 0;
+
+                      return EntranceSubjectTile(
+                        subject: subject,
+                        entranceCount: entranceCount,
+                        modelCount: modelCount,
+                        total: entranceCount + modelCount,
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             if (busy)
               const Positioned(

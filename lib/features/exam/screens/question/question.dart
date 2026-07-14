@@ -93,22 +93,32 @@ class QuestionScreen extends StatelessWidget {
                 }
 
                 if (sectionTitle == null) {
-                  return Obx(() {
-                    final counterText = hasData
-                        ? '${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
-                        : 'Loading...';
+                  // Counter text is driven by currentIndex which the parent
+                  // Obx already subscribes to — no inner Obx needed here.
+                  final counterText = hasData
+                      ? '${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
+                      : 'Loading...';
+
+                  if (!controller.isTimed) {
                     return Text(
-                      controller.isTimed
-                          ? '$counterText (${controller.formattedTime(controller.remainingSeconds.value)})'
-                          : counterText,
+                      counterText,
                       style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                            color: controller.isTimed &&
-                                    controller.remainingSeconds.value < 300
-                                ? Colors.amber
-                                : AppColors.primary,
+                            color: AppColors.primary,
                           ),
                     );
-                  });
+                  }
+
+                  // Timed: wrap only the timer-sensitive part in its own Obx
+                  // so the title updates every second without rebuilding the
+                  // whole scaffold.
+                  return Obx(() => Text(
+                        '$counterText (${controller.formattedTime(controller.remainingSeconds.value)})',
+                        style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                              color: controller.remainingSeconds.value < 300
+                                  ? Colors.amber
+                                  : AppColors.primary,
+                            ),
+                      ));
                 }
 
                 final timerColor = controller.remainingSeconds.value < 300

@@ -125,7 +125,7 @@ class AppRoutes {
 
     GetPage(
       name: Routes.entrance,
-      page: () => EntranceScreen(),
+      page: () => const EntranceScreen(),
       binding: EntranceBinding(),
     ),
     GetPage(

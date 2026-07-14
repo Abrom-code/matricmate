@@ -42,6 +42,12 @@ class SubjectsController extends GetxController {
   /// Test time (minutes) for the in-progress draft.
   final RxInt inProgressTestTime = 0.obs;
 
+  // ── Entrance resume banner ─────────────────────────────────────────────────
+  /// The most recent in-progress entrance/model exam draft, or null if none.
+  final Rxn<ResultModel> inProgressEntranceDraft = Rxn<ResultModel>();
+  final RxString inProgressEntranceTitle = ''.obs;
+  final RxInt inProgressEntranceTime = 0.obs;
+
   @override
   void onInit() {
     // Don't call loadLocalSubjects() here — AuthenticationController._init()
@@ -68,6 +74,25 @@ class SubjectsController extends GetxController {
       inProgressTestTime.value = row['test_time'] as int? ?? -1;
     } catch (_) {
       inProgressDraft.value = null;
+    }
+  }
+
+  /// Loads the most recent in-progress entrance/model exam draft.
+  Future<void> loadInProgressEntranceBanner() async {
+    try {
+      final row = await DatabaseService.instance.loadMostRecentInProgressResult(
+        types: ['entrance', 'model'],
+      );
+      if (row == null) {
+        inProgressEntranceDraft.value = null;
+        inProgressEntranceTitle.value = '';
+        return;
+      }
+      inProgressEntranceDraft.value = ResultModel.fromMap(row);
+      inProgressEntranceTitle.value = row['test_title'] as String? ?? '';
+      inProgressEntranceTime.value = row['test_time'] as int? ?? -1;
+    } catch (_) {
+      inProgressEntranceDraft.value = null;
     }
   }
 

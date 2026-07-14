@@ -201,7 +201,7 @@ class NavigationController extends GetxController {
 
     pages = [
       _KeepAlivePage(child: SubjectsScreen()),
-      _KeepAlivePage(child: EntranceScreen()),
+      const _KeepAlivePage(child: EntranceScreen()),
       _KeepAlivePage(child: BookmarkScreen()),
       const _KeepAlivePage(child: AnalyticsScreen()),
       const _KeepAlivePage(child: ProfileScreen()),

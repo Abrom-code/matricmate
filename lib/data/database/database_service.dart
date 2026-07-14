@@ -331,20 +331,36 @@ class DatabaseService extends GetxController {
 
   /// Returns the most recent in-progress draft (isCompleted = 0) for the
   /// current user, joined with its test title and time for display.
-  Future<Map<String, dynamic>?> loadMostRecentInProgressResult() async {
+  ///
+  /// Pass [types] to restrict to specific test types (e.g. ['entrance', 'model']).
+  /// If [types] is null or empty, all types are included.
+  Future<Map<String, dynamic>?> loadMostRecentInProgressResult({
+    List<String>? types,
+  }) async {
     try {
       final db = await database;
       final userId = UserController.instance.user.value.id;
+
+      String typeFilter = '';
+      List<Object?> args = [userId];
+
+      if (types != null && types.isNotEmpty) {
+        final placeholders = types.map((_) => '?').join(', ');
+        typeFilter = 'AND t.type IN ($placeholders)';
+        args = [userId, ...types];
+      }
+
       final rows = await db.rawQuery(
         '''
         SELECT r.*, t.title AS test_title, t.time AS test_time, t.id AS t_id
         FROM results r
         JOIN tests t ON r.test_id = t.id
         WHERE r.user_id = ? AND r.isCompleted = 0
+        $typeFilter
         ORDER BY r.rowid DESC
         LIMIT 1
         ''',
-        [userId],
+        args,
       );
       if (rows.isEmpty) return null;
       return rows.first;

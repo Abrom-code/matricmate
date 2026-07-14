@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PendingPaymentBanner extends StatelessWidget {
@@ -23,7 +23,7 @@ class PendingPaymentBanner extends StatelessWidget {
         : const Color(0xFFE5E5EA);
 
     return GestureDetector(
-      onTap: () => Get.to(() => const PaymentVerificationScreen()),
+      onTap: () => Get.toNamed(Routes.paymentVerification),
       child: Container(
         decoration: BoxDecoration(
           color: bg,

@@ -5,7 +5,6 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
-import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
@@ -138,9 +137,11 @@ class _ExamList extends StatelessWidget {
             // Subscribe to testResults so tile rebuilds reactively.
             final _ = controller.testResults[test.id];
 
+            final canAccess = isActive || ((isInactive || isPending) && index < 2);
+
             return TestTile(
-              icon: isActive ? Iconsax.message_question_copy : Icons.lock,
-              iconColor: isActive ? AppColors.primary : AppColors.info,
+              icon: canAccess ? Iconsax.message_question_copy : Icons.lock,
+              iconColor: canAccess ? AppColors.primary : Colors.amber,
               currentStep: controller.getCurrentStep(test.id),
               maxStep: controller.getMaxStep(test.id),
               correctAnswers: controller.getCorrectAnswers(test.id),
@@ -151,15 +152,15 @@ class _ExamList extends StatelessWidget {
               timeMinutes: test.time,
               isNew: test.isNew,
               onTap: () {
-                if (isInactive) {
+                if (isInactive && index >= 2) {
                   Get.bottomSheet(
                     const PremiumBottomSheet(),
                     isScrollControlled: true,
                   );
                   return;
                 }
-                if (isPending) {
-                  Get.to(() => const PaymentVerificationScreen());
+                if (isPending && index >= 2) {
+                  Get.toNamed(Routes.paymentVerification);
                   return;
                 }
                 if (!hasQn) {

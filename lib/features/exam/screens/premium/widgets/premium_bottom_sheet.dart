@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/tiles/tile.dart';
-import 'package:matricmate/features/exam/screens/premium/premium.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -89,7 +89,7 @@ class PremiumBottomSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              onPressed: () => Get.off(() => const PremiumScreen()),
+              onPressed: () => Get.offNamed(Routes.premium),
               child: const Text(
                 'Premium (250 birr)',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

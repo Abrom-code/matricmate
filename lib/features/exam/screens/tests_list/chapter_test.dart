@@ -4,7 +4,6 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
@@ -96,7 +95,7 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                   final _ = ctrl.testResults[test.id];
 
                   final canAccess =
-                      isActive || ((isInactive || isPending) && index < 1);
+                      isActive || ((isInactive || isPending) && index < 3);
 
                   return TestTile(
                     testName: test.title,
@@ -112,13 +111,13 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                     questionCount: qnCount,
                     timeMinutes: time,
                     onTap: () {
-                      if (isInactive && index > 0) {
+                      if (isInactive && index >= 3) {
                         Get.bottomSheet(const PremiumBottomSheet(),
                             isScrollControlled: true);
                         return;
                       }
-                      if (isPending && index > 0) {
-                        Get.to(() => const PaymentVerificationScreen());
+                      if (isPending && index >= 3) {
+                        Get.toNamed(Routes.paymentVerification);
                         return;
                       }
                       if (!hasQn) {

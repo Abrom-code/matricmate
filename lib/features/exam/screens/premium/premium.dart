@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/payement.dart';
-import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/enums/payement_enum.dart';
@@ -15,7 +14,7 @@ class PremiumScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(PremiumController());
+    final controller = PremiumController.instance;
     final methods = PaymentMethod.values;
     return Scaffold(
       appBar: Appbar(
@@ -96,12 +95,11 @@ class PremiumScreen extends StatelessWidget {
                 ),
               ),
               onPressed: isPending
-                  ? () => Get.to(() => const PaymentVerificationScreen())
-                  : () => Get.to(
-                      () => PayementScreen(
-                        method: controller.selectedMethod.value,
+                  ? () => Get.toNamed(Routes.paymentVerification)
+                  : () => Get.toNamed(
+                        Routes.payment,
+                        arguments: controller.selectedMethod.value,
                       ),
-                    ),
               child: Text(
                 isPending ? 'Check Status' : 'Continue to Payment',
                 style: const TextStyle(fontSize: 16, color: Colors.white),

@@ -19,6 +19,11 @@ class Routes {
   static const review = '/review';
   static const ready = '/ready';
 
+  // premium
+  static const premium = '/premium';
+  static const payment = '/payment';
+  static const paymentVerification = '/payment-verification';
+
   // analytics
   static const analytics = '/analytics';
 

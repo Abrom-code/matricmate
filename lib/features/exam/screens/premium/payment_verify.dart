@@ -13,9 +13,7 @@ class PaymentVerificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.isRegistered<PremiumController>()
-        ? Get.find<PremiumController>()
-        : Get.put(PremiumController());
+    final controller = PremiumController.instance;
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,

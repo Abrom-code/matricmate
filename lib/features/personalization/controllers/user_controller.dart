@@ -106,7 +106,10 @@ class UserController extends GetxController {
   }
 
   Future<void> checkPaymentStatus() async {
+    AppFullScreenLoader.openLoadingDialog('Checking payment status...');
     await fetchUserRecord();
+    AppFullScreenLoader.stopLoading();
+
     final current = user.value;
 
     if (current.isActive) {

@@ -24,16 +24,18 @@ class PremiumBanner extends StatelessWidget {
             end: Alignment.bottomRight,
           );
 
-    final titleColor   = dark ? Colors.white         : const Color(0xFF1C1C1E);
-    final subtitleColor = dark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
-    final iconBg       = dark
+    final titleColor = dark ? Colors.white : const Color(0xFF1C1C1E);
+    final subtitleColor = dark
+        ? const Color(0xFF8E8E93)
+        : const Color(0xFF6C6C70);
+    final iconBg = dark
         ? const Color(0xFFFFD60A).withValues(alpha: 0.15)
         : const Color(0xFFFFD60A).withValues(alpha: 0.25);
-    final glowColor    = const Color(0xFFFFD60A);
-    final ctaBg        = const Color(0xFFFFD60A);
-    final ctaText      = const Color(0xFF0A0A0A); // always dark on yellow
+    final glowColor = const Color(0xFFFFD60A);
+    final ctaBg = const Color(0xFFFFD60A);
+    final ctaText = const Color(0xFF0A0A0A); // always dark on yellow
 
-    final borderColor  = dark
+    final borderColor = dark
         ? const Color(0xFF2A2A2A)
         : const Color(0xFFFFD60A).withValues(alpha: 0.4);
 

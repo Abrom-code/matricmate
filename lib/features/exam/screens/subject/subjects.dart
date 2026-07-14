@@ -122,6 +122,15 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                 padding: const EdgeInsets.all(AppSizes.defaultSpace),
                 child: Column(
                   children: [
+                    if (isInactive)
+                      PremiumBanner(
+                        onTap: () => Get.bottomSheet(
+                          const PremiumBottomSheet(),
+                          isScrollControlled: true,
+                        ),
+                      ),
+                    if (isInactive)
+                      const SizedBox(height: AppSizes.spaceBtwItems),
                     // ── Resume banner ──────────────────────────────────────
                     Obx(() {
                       final draft = ctrl.inProgressDraft.value;
@@ -140,17 +149,9 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       );
                     }),
 
-                    if (isInactive)
-                      PremiumBanner(
-                        onTap: () => Get.bottomSheet(
-                          const PremiumBottomSheet(),
-                          isScrollControlled: true,
-                        ),
-                      ),
-                    if (isInactive) const SizedBox(height: AppSizes.spaceBtwItems),
-
                     if (isPending) const PendingPaymentBanner(),
-                    if (isPending) const SizedBox(height: AppSizes.spaceBtwItems),
+                    if (isPending)
+                      const SizedBox(height: AppSizes.spaceBtwItems),
 
                     GridLayout(
                       itemCount: filteredSubjects.length,
@@ -158,7 +159,9 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                         final subject = filteredSubjects[index];
                         return SubjectContainer(
                           title: subject.name,
-                          image: AppHelperFunctions.getSubjectImage(subject.name),
+                          image: AppHelperFunctions.getSubjectImage(
+                            subject.name,
+                          ),
                           isDownloaded: subject.isDownloaded,
                           onPressed: () =>
                               ctrl.downloadSubject(subject.name, subject.id),
@@ -174,10 +177,13 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                         );
                       },
                     ),
-
+                    if (!filteredSubjects.isEmpty)
+                      const SizedBox(height: AppSizes.spaceBtwSections * 2),
                     if (filteredSubjects.isEmpty)
                       const Padding(
-                        padding: EdgeInsets.only(top: AppSizes.spaceBtwSections),
+                        padding: EdgeInsets.only(
+                          top: AppSizes.spaceBtwSections,
+                        ),
                         child: Center(
                           child: Text(
                             'No subjects yet.\nTap the sync button to load your content.',

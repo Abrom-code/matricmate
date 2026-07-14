@@ -24,15 +24,15 @@ class EntranceScreen extends StatelessWidget {
           Obx(() {
             final syncing = syncController.entranceSyncing.value;
             // Also disable while any per-subject entrance download is running
-            final anyDownloading =
-                controller.entranceDownloadStep.isNotEmpty;
+            final anyDownloading = controller.entranceDownloadStep.isNotEmpty;
             final busy = syncing || anyDownloading;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: IconButton(
                 tooltip: busy ? 'Download in progress…' : 'Sync entrance exams',
-                onPressed:
-                    busy ? null : () => syncController.syncEntranceExams(),
+                onPressed: busy
+                    ? null
+                    : () => syncController.syncEntranceExams(),
                 icon: busy
                     ? const SizedBox(
                         width: 24,

@@ -39,7 +39,7 @@ class QuestionScreen extends StatelessWidget {
         controller.pauseTimer();
         AppHelperFunctions.showAppDialog(
           context,
-          'Pause & Exit?',
+          controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
           'Your progress will be saved. You can resume later.',
           () {
             Navigator.pop(context); // dismiss dialog
@@ -63,14 +63,16 @@ class QuestionScreen extends StatelessWidget {
               : null,
 
           appBar: Appbar(
-            leadingIcon: Icons.pause_rounded,
+            leadingIcon: controller.isExamMode
+                ? Icons.pause_rounded
+                : Icons.close_rounded,
             leadingIconColor: AppColors.error,
             leadingOnPressed: () {
               if (controller.exitDialogOpen) return;
               controller.pauseTimer();
               AppHelperFunctions.showAppDialog(
                 context,
-                'Pause & Exit?',
+                controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
                 'Your progress will be saved. You can resume later.',
                 () {
                   Navigator.pop(context); // dismiss dialog
@@ -86,30 +88,32 @@ class QuestionScreen extends StatelessWidget {
                     (currentQ?.sectionTitle?.trim().isNotEmpty == true)
                         ? currentQ!.sectionTitle!.trim()
                         : null;
-                final counterText = hasData
-                    ? '${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
-                    : 'Loading...';
-                final timerColor = controller.remainingSeconds.value < 300
-                    ? Colors.amber
-                    : AppColors.primary;
-
                 if (hasPassage) {
                   return PassageLayoutCtrl(controller: controller);
                 }
 
                 if (sectionTitle == null) {
-                  return Text(
-                    controller.isTimed
-                        ? '$counterText (${controller.formattedTime(controller.remainingSeconds.value)})'
-                        : counterText,
-                    style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                          color: controller.isTimed &&
-                                  controller.remainingSeconds.value < 300
-                              ? Colors.amber
-                              : AppColors.primary,
-                        ),
-                  );
+                  return Obx(() {
+                    final counterText = hasData
+                        ? '${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
+                        : 'Loading...';
+                    return Text(
+                      controller.isTimed
+                          ? '$counterText (${controller.formattedTime(controller.remainingSeconds.value)})'
+                          : counterText,
+                      style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                            color: controller.isTimed &&
+                                    controller.remainingSeconds.value < 300
+                                ? Colors.amber
+                                : AppColors.primary,
+                          ),
+                    );
+                  });
                 }
+
+                final timerColor = controller.remainingSeconds.value < 300
+                    ? Colors.amber
+                    : AppColors.primary;
 
                 return Row(
                   mainAxisSize: MainAxisSize.min,

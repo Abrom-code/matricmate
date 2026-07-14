@@ -115,33 +115,7 @@ class DatabaseService extends GetxController {
         }
       },
       // Ensure the column exists even on devices that somehow missed onUpgrade
-      onOpen: (db) async {
-        try {
-          await db.execute(
-            'ALTER TABLE results ADD COLUMN isCompleted INTEGER DEFAULT 1',
-          );
-        } catch (_) {}
-        try {
-          await db.execute(
-            'ALTER TABLE results ADD COLUMN checkedQuestions TEXT',
-          );
-        } catch (_) {}
-        try {
-          await db.execute(
-            'ALTER TABLE results ADD COLUMN remainingSeconds INTEGER DEFAULT 0',
-          );
-        } catch (_) {}
-        try {
-          await db.execute(
-            'ALTER TABLE subjects ADD COLUMN entrance_count INTEGER DEFAULT 0',
-          );
-        } catch (_) {}
-        try {
-          await db.execute(
-            'ALTER TABLE subjects ADD COLUMN model_count INTEGER DEFAULT 0',
-          );
-        } catch (_) {}
-      },
+      onOpen: (db) async {},
     );
   }
 

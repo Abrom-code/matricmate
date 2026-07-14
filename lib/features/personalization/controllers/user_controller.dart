@@ -29,6 +29,7 @@ class UserController extends GetxController {
   final RxBool isDeleting = false.obs;
   final userFetching = false.obs;
   final isPasswordHidden = true.obs;
+  final RxBool isCheckingPayment = false.obs;
 
   @override
   void onInit() {
@@ -106,20 +107,22 @@ class UserController extends GetxController {
   }
 
   Future<void> checkPaymentStatus() async {
-    AppFullScreenLoader.openLoadingDialog('Checking payment status...');
-    await fetchUserRecord();
-    AppFullScreenLoader.stopLoading();
+    try {
+      isCheckingPayment.value = true;
+      await fetchUserRecord();
+      final current = user.value;
 
-    final current = user.value;
+      if (current.isActive) {
+        Get.offAll(() => const NavigationMenu());
+        ToastHelper.success('Your account is activated!');
+        return;
+      }
 
-    if (current.isActive) {
-      Get.offAll(() => const NavigationMenu());
-      ToastHelper.success('Your account is activated!');
-      return;
-    }
-
-    if (current.isPending) {
-      SnackbarHelper.warning('Progress', 'Your payment is still processing!');
+      if (current.isPending) {
+        SnackbarHelper.warning('Progress', 'Your payment is still processing!');
+      }
+    } finally {
+      isCheckingPayment.value = false;
     }
   }
 

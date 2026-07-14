@@ -17,66 +17,69 @@ class AccountSettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final isInactive = UserController.instance.user.value.isInactive;
-    final isPending = UserController.instance.user.value.isPending;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSizes.md),
-        color: !dark ? AppColors.white : AppColors.darkCard,
-      ),
-      child: Column(
-        children: [
-          AppListTile(
-            icon: const Icon(Iconsax.user_edit_copy),
-            title: 'Edit Profile',
-            trailing: const Icon(Icons.keyboard_arrow_right),
+    final userCtrl = UserController.instance;
+    final isInactive = userCtrl.user.value.isInactive;
+    final isPending = userCtrl.user.value.isPending;
 
-            onTap: () => Get.to(() => const EditProfileScreen()),
-          ),
-          AppListTile(
-            icon: const Icon(Iconsax.lock_circle_copy),
-            title: 'Change Password',
-            trailing: const Icon(Icons.keyboard_arrow_right),
-            onTap: () => Get.toNamed(Routes.changePassword),
-          ),
-
-          if (isInactive)
+    return Obx(() {
+      final checking = userCtrl.isCheckingPayment.value;
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppSizes.md),
+          color: !dark ? AppColors.white : AppColors.darkCard,
+        ),
+        child: Column(
+          children: [
             AppListTile(
-              icon: const Icon(Icons.workspace_premium, color: Colors.amber),
-              title: 'Upgrade Premium',
+              icon: const Icon(Iconsax.user_edit_copy),
+              title: 'Edit Profile',
               trailing: const Icon(Icons.keyboard_arrow_right),
-              onTap: () {
-                Get.bottomSheet(
+              onTap: () => Get.to(() => const EditProfileScreen()),
+            ),
+            AppListTile(
+              icon: const Icon(Iconsax.lock_circle_copy),
+              title: 'Change Password',
+              trailing: const Icon(Icons.keyboard_arrow_right),
+              onTap: () => Get.toNamed(Routes.changePassword),
+            ),
+            if (isInactive)
+              AppListTile(
+                icon: const Icon(
+                  Icons.workspace_premium,
+                  color: Colors.amber,
+                ),
+                title: 'Upgrade Premium',
+                trailing: const Icon(Icons.keyboard_arrow_right),
+                onTap: () => Get.bottomSheet(
                   const PremiumBottomSheet(),
                   isScrollControlled: true,
-                );
-              },
-            ),
-          if (isPending)
+                ),
+              ),
+            if (isPending)
+              AppListTile(
+                icon: const Icon(Icons.loop),
+                title: 'Refresh Payment',
+                trailing: const Icon(Icons.keyboard_arrow_right),
+                onTap: checking ? null : () => userCtrl.checkPaymentStatus(),
+              ),
             AppListTile(
-              icon: const Icon(Icons.loop),
-              title: 'Refresh Payment',
+              icon: const Icon(Icons.help_outlined),
+              title: 'Help & Support',
               trailing: const Icon(Icons.keyboard_arrow_right),
-              onTap: () async {
-                await UserController.instance.checkPaymentStatus();
-              },
+              onTap: () {},
             ),
-          AppListTile(
-            icon: const Icon(Icons.help_outlined),
-            title: 'Help & Support',
-            trailing: const Icon(Icons.keyboard_arrow_right),
-            onTap: () {},
-          ),
-          AppListTile(
-            icon: const Icon(Icons.sunny),
-            title: 'Change Theme',
-            trailing: Switch(
-              value: dark,
-              onChanged: (value) => ThemeController.instance.toggleTheme(value),
+            AppListTile(
+              icon: const Icon(Icons.sunny),
+              title: 'Change Theme',
+              trailing: Switch(
+                value: dark,
+                onChanged: (value) =>
+                    ThemeController.instance.toggleTheme(value),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }

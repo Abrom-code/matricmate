@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/constants/snackbar_colors.dart';
 import 'package:matricmate/utils/themes/custom_themes/appbar_theme.dart';
 import 'package:matricmate/utils/themes/custom_themes/bottom_sheet_theme.dart';
 import 'package:matricmate/utils/themes/custom_themes/checkbox_theme.dart';
@@ -41,6 +42,18 @@ class AppTheme {
     inputDecorationTheme: AppTextFormFieldTheme.lightInputDecorationTheme,
     outlinedButtonTheme: AppOutlinedButtonTheme.lightOutlinedButtonTheme,
     primaryColor: Colors.teal,
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: SnackbarColors.lightSurface,
+      contentTextStyle: const TextStyle(
+        color: SnackbarColors.lightText,
+        fontSize: 13.5,
+        fontWeight: FontWeight.w500,
+      ),
+      actionTextColor: SnackbarColors.actionLight,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 6,
+    ),
   );
 
   static ThemeData darkTheme = ThemeData(
@@ -71,5 +84,17 @@ class AppTheme {
     inputDecorationTheme: AppTextFormFieldTheme.darkInputDecorationTheme,
     outlinedButtonTheme: AppOutlinedButtonTheme.darkOutlinedButtonTheme,
     primaryColor: Colors.teal,
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: SnackbarColors.darkSurface,
+      contentTextStyle: const TextStyle(
+        color: SnackbarColors.darkText,
+        fontSize: 13.5,
+        fontWeight: FontWeight.w500,
+      ),
+      actionTextColor: SnackbarColors.actionDark,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 6,
+    ),
   );
 }

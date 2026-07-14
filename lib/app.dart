@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/bindings/general_binding.dart';
+import 'package:matricmate/common/widgets/toast/app_toast.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/routes/routes.dart';
 import 'package:matricmate/utils/themes/app_theme.dart';
@@ -21,6 +22,9 @@ class App extends StatelessWidget {
         initialRoute: Routes.loading,
         getPages: AppRoutes.pages,
         navigatorObservers: [appRouteObserver],
+        // Inject the toast overlay layer above all routes
+        builder: (context, child) =>
+            ToastHost(child: child ?? const SizedBox()),
       ),
     );
   }

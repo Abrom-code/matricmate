@@ -165,10 +165,13 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
                     AppSizes.defaultSpace,
                   ),
                   sliver: SliverList.separated(
-                    itemCount: subjects.length,
+                    itemCount: subjects.length + 1,
                     separatorBuilder: (_, __) =>
                         const SizedBox(height: AppSizes.spaceBtwItems),
                     itemBuilder: (_, index) {
+                      if (index == subjects.length) {
+                        return const SizedBox(height: AppSizes.spaceBtwSections * 2);
+                      }
                       final subject = subjects[index];
                       final entranceCount = entranceNums[subject.id] ?? 0;
                       final modelCount = modelNums[subject.id] ?? 0;

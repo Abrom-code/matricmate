@@ -76,6 +76,13 @@ class AuthenticationController extends GetxController {
 
   bool _initStarted = false;
 
+  // ── Startup timeouts ───────────────────────────────────────────────────────
+  // Each network step has its own deadline. On timeout the step is silently
+  // abandoned and the app falls back to locally-cached data.
+  static const _kVerifyTimeout         = Duration(seconds: 8);
+  static const _kInitRemoteTimeout     = Duration(seconds: 15);
+  static const _kEntranceCountTimeout  = Duration(seconds: 6);
+
   /// Runs on the loading screen — fetches minimum data then goes to home.
   Future<void> _runInitThenNavigate() async {
     if (_initStarted) return;
@@ -91,10 +98,14 @@ class AuthenticationController extends GetxController {
       // Step 1 — fetch user record (validates session, gets premium status).
       // Wrapped independently so a mid-fetch connection drop cannot skip the
       // local-subject load below (Step 2).
+      // Times out after _kVerifyTimeout — if the server is slow we don't
+      // block the user on the splash forever.
       if (isConnected) {
         try {
           initStatus.value = 'Verifying account…';
-          final fetched = await UserController.instance.fetchUserRecord();
+          final fetched = await UserController.instance
+              .fetchUserRecord()
+              .timeout(_kVerifyTimeout);
           if (fetched) {
             await UserController.instance.loadLocalUser();
             networkFetchSucceeded = true;
@@ -104,7 +115,8 @@ class AuthenticationController extends GetxController {
             await UserController.instance.loadLocalUser();
           }
         } catch (_) {
-          // Connection dropped mid-verify — fall back to local user record.
+          // Connection dropped or timed out mid-verify — fall back to local
+          // user record and continue.
           await UserController.instance.loadLocalUser();
         }
       }
@@ -116,35 +128,41 @@ class AuthenticationController extends GetxController {
       await SubjectsController.instance.loadLocalSubjects();
 
       if (isConnected && networkFetchSucceeded) {
-        // Step 3 — first login with no local subjects: fetch everything from remote
+        // Step 3 — first login with no local subjects: fetch everything from
+        // remote. Times out after _kInitRemoteTimeout.
         if (SubjectsController.instance.subjects.isEmpty) {
           try {
-            await SubjectsController.instance.initFromRemote();
+            await SubjectsController.instance
+                .initFromRemote()
+                .timeout(_kInitRemoteTimeout);
           } catch (_) {
-            // Non-fatal — subjects remain empty; user can retry later.
+            // Timed out or failed — subjects remain empty; user can retry later.
           }
         }
         // Always refresh entrance counts from remote so the entrance screen
         // shows correct numbers immediately — whether new user or returning.
+        // Times out after _kEntranceCountTimeout.
         try {
           initStatus.value = 'Loading exam info…';
-          await SubjectsController.instance.refreshEntranceCountsFromRemote();
+          await SubjectsController.instance
+              .refreshEntranceCountsFromRemote()
+              .timeout(_kEntranceCountTimeout);
         } catch (_) {
-          // Non-fatal — cached counts still shown.
+          // Timed out or failed — cached counts still shown.
         }
       } else if (isConnected && !networkFetchSucceeded) {
         // Partial connectivity: network seemed available but the fetch failed
-        // (e.g. dropped mid-request). Try a lightweight local-only sync so
-        // the subjects screen at least has whatever was stored locally.
-        // If subjects are empty now, attempt a remote fetch as a best-effort
-        // recovery without blocking navigation.
+        // (e.g. dropped mid-request). If subjects are empty, attempt a
+        // best-effort remote fetch with a timeout before navigating.
         if (SubjectsController.instance.subjects.isEmpty) {
           try {
-            await SubjectsController.instance.initFromRemote();
+            await SubjectsController.instance
+                .initFromRemote()
+                .timeout(_kInitRemoteTimeout);
             // Reload after remote fetch so subjects list is populated.
             await SubjectsController.instance.loadLocalSubjects();
           } catch (_) {
-            // Silently ignore — we'll navigate with whatever we have.
+            // Timed out or failed — navigate with whatever we have.
           }
         }
       }

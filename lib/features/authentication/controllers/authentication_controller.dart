@@ -12,6 +12,7 @@ import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class AuthenticationController extends GetxController {
@@ -76,14 +77,8 @@ class AuthenticationController extends GetxController {
 
   bool _initStarted = false;
 
-  // ── Startup timeouts ───────────────────────────────────────────────────────
-  // Each network step has its own deadline. On timeout the step is silently
-  // abandoned and the app falls back to locally-cached data.
-  static const _kVerifyTimeout         = Duration(seconds: 8);
-  static const _kInitRemoteTimeout     = Duration(seconds: 15);
-  static const _kEntranceCountTimeout  = Duration(seconds: 6);
-
   /// Runs on the loading screen — fetches minimum data then goes to home.
+
   Future<void> _runInitThenNavigate() async {
     if (_initStarted) return;
     _initStarted = true;
@@ -105,7 +100,7 @@ class AuthenticationController extends GetxController {
           initStatus.value = 'Verifying account…';
           final fetched = await UserController.instance
               .fetchUserRecord()
-              .timeout(_kVerifyTimeout);
+              .timeout(AppTimeouts.verify);
           if (fetched) {
             await UserController.instance.loadLocalUser();
             networkFetchSucceeded = true;
@@ -134,7 +129,7 @@ class AuthenticationController extends GetxController {
           try {
             await SubjectsController.instance
                 .initFromRemote()
-                .timeout(_kInitRemoteTimeout);
+                .timeout(AppTimeouts.initFromRemote);
           } catch (_) {
             // Timed out or failed — subjects remain empty; user can retry later.
           }
@@ -146,7 +141,7 @@ class AuthenticationController extends GetxController {
           initStatus.value = 'Loading exam info…';
           await SubjectsController.instance
               .refreshEntranceCountsFromRemote()
-              .timeout(_kEntranceCountTimeout);
+              .timeout(AppTimeouts.entranceCounts);
         } catch (_) {
           // Timed out or failed — cached counts still shown.
         }
@@ -158,7 +153,7 @@ class AuthenticationController extends GetxController {
           try {
             await SubjectsController.instance
                 .initFromRemote()
-                .timeout(_kInitRemoteTimeout);
+                .timeout(AppTimeouts.initFromRemote);
             // Reload after remote fetch so subjects list is populated.
             await SubjectsController.instance.loadLocalSubjects();
           } catch (_) {

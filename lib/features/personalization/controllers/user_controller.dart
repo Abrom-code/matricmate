@@ -149,78 +149,99 @@ class UserController extends GetxController {
   }
 
   void showDeleteDialog() {
-    final passwordController = TextEditingController();
+    Get.dialog(const _DeleteAccountDialog(), barrierDismissible: true);
+  }
+}
 
-    Get.defaultDialog(
-      titlePadding: const EdgeInsets.only(top: 18.0),
-      title: 'Delete Account',
-      content: Padding(
-        padding: const EdgeInsets.all(8.0),
+// ── Delete account dialog ─────────────────────────────────────────────────────
+// Self-contained StatefulWidget so the TextEditingController and local
+// visibility state are tied to the widget lifecycle — no leaks when dismissed.
+
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _passwordController = TextEditingController();
+  bool _obscure = true;
+  bool _deleting = false;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_deleting) return;
+    setState(() => _deleting = true);
+    try {
+      await Get.find<AuthenticationController>().deleteAccount(
+        _passwordController.text.trim(),
+      );
+      if (mounted) Get.back();
+      SnackbarHelper.success(
+        'Account Deleted',
+        'Your data has been permanently removed.',
+      );
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            const Text(
+              'Delete Account',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
             const Text('Enter your password to confirm'),
-            const SizedBox(height: 10),
-            Obx(
-              () => TextField(
-                controller: passwordController,
-                obscureText: isPasswordHidden.value,
-                decoration: InputDecoration(
-                  suffixIcon: IconButton(
-                    onPressed: () =>
-                        isPasswordHidden.value = !isPasswordHidden.value,
-                    icon: Icon(
-                      !isPasswordHidden.value
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _passwordController,
+              obscureText: _obscure,
+              decoration: InputDecoration(
+                suffixIcon: IconButton(
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                  icon: Icon(
+                    _obscure ? Icons.visibility_off : Icons.visibility,
                   ),
                 ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  side: const BorderSide(color: AppColors.error),
+                ),
+                onPressed: _deleting ? null : _submit,
+                child: _deleting
+                    ? const AppCircularButtonLoading(color: AppColors.error)
+                    : const Text(
+                        'Delete',
+                        style: TextStyle(color: AppColors.error),
+                      ),
               ),
             ),
           ],
         ),
       ),
-      confirm: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SizedBox(
-          width: double.infinity,
-          child: Obx(
-            () => OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                side: const BorderSide(color: AppColors.error),
-              ),
-              onPressed: isDeleting.value
-                  ? null
-                  : () async {
-                      try {
-                        isDeleting.value = true;
-
-                        await Get.find<AuthenticationController>()
-                            .deleteAccount(passwordController.text.trim());
-
-                        Get.back();
-
-                        SnackbarHelper.success(
-                          'Account Deleted',
-                          'Your data has been permanently removed.',
-                        );
-                      } catch (e) {
-                        AppExceptionHandler.handleResponse(e);
-                      } finally {
-                        isDeleting.value = false;
-                      }
-                    },
-              child: isDeleting.value
-                  ? const AppCircularButtonLoading(color: AppColors.error)
-                  : const Text(
-                      'Delete',
-                      style: TextStyle(color: AppColors.error),
-                    ),
-            ),
-          ),
-        ),
-      ),
-    ).then((_) => passwordController.dispose());
+    );
   }
 }

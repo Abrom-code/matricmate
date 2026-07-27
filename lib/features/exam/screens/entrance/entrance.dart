@@ -55,16 +55,14 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
         actions: [
           Obx(() {
             final syncing = syncController.entranceSyncing.value;
-            final anyDownloading = ctrl.entranceDownloadStep.isNotEmpty;
-            final busy = syncing || anyDownloading;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: IconButton(
-                tooltip: busy ? 'Download in progress…' : 'Sync entrance exams',
-                onPressed: busy
+                tooltip: syncing ? 'Sync in progress…' : 'Sync entrance exams',
+                onPressed: syncing
                     ? null
                     : () => syncController.syncEntranceExams(),
-                icon: busy
+                icon: syncing
                     ? const SizedBox(
                         width: 24,
                         height: 24,
@@ -91,8 +89,6 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
         final entranceNums = ctrl.entranceTestNumbers;
         final modelNums = ctrl.modelTestNumbers;
         final syncing = syncController.entranceSyncing.value;
-        final anyDownloading = ctrl.entranceDownloadStep.isNotEmpty;
-        final busy = syncing || anyDownloading;
         final isInactive = UserController.instance.user.value.isInactive;
 
         if (ctrl.isLoading.value && subjects.isEmpty) {
@@ -187,7 +183,7 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
                 ),
               ],
             ),
-            if (busy)
+            if (syncing)
               const Positioned(
                 top: 0,
                 left: 0,

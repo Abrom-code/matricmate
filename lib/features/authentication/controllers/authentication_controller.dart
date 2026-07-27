@@ -81,36 +81,81 @@ class AuthenticationController extends GetxController {
     if (_initStarted) return;
     _initStarted = true;
 
+    bool networkFetchSucceeded = false;
+
     try {
       isInitializing.value = true;
 
       final isConnected = await NetworkManager.instance.isConnected();
 
-      // Step 1 — fetch user record (validates session, gets premium status)
+      // Step 1 — fetch user record (validates session, gets premium status).
+      // Wrapped independently so a mid-fetch connection drop cannot skip the
+      // local-subject load below (Step 2).
       if (isConnected) {
-        initStatus.value = 'Verifying account…';
-        await UserController.instance.fetchUserRecord();
-        await UserController.instance.loadLocalUser();
+        try {
+          initStatus.value = 'Verifying account…';
+          final fetched = await UserController.instance.fetchUserRecord();
+          if (fetched) {
+            await UserController.instance.loadLocalUser();
+            networkFetchSucceeded = true;
+          } else {
+            // fetchUserRecord returned false (e.g. session blocked) — fall
+            // back to whatever is cached locally.
+            await UserController.instance.loadLocalUser();
+          }
+        } catch (_) {
+          // Connection dropped mid-verify — fall back to local user record.
+          await UserController.instance.loadLocalUser();
+        }
       }
 
-      // Step 2 — load subjects from local DB
+      // Step 2 — load subjects from local DB.
+      // This MUST always run regardless of network outcome so the subjects
+      // screen never renders with an empty list after a mid-fetch dropout.
       initStatus.value = 'Loading subjects…';
       await SubjectsController.instance.loadLocalSubjects();
 
-      if (isConnected) {
+      if (isConnected && networkFetchSucceeded) {
         // Step 3 — first login with no local subjects: fetch everything from remote
         if (SubjectsController.instance.subjects.isEmpty) {
-          await SubjectsController.instance.initFromRemote();
+          try {
+            await SubjectsController.instance.initFromRemote();
+          } catch (_) {
+            // Non-fatal — subjects remain empty; user can retry later.
+          }
         }
         // Always refresh entrance counts from remote so the entrance screen
         // shows correct numbers immediately — whether new user or returning.
-        initStatus.value = 'Loading exam info…';
-        await SubjectsController.instance.refreshEntranceCountsFromRemote();
+        try {
+          initStatus.value = 'Loading exam info…';
+          await SubjectsController.instance.refreshEntranceCountsFromRemote();
+        } catch (_) {
+          // Non-fatal — cached counts still shown.
+        }
+      } else if (isConnected && !networkFetchSucceeded) {
+        // Partial connectivity: network seemed available but the fetch failed
+        // (e.g. dropped mid-request). Try a lightweight local-only sync so
+        // the subjects screen at least has whatever was stored locally.
+        // If subjects are empty now, attempt a remote fetch as a best-effort
+        // recovery without blocking navigation.
+        if (SubjectsController.instance.subjects.isEmpty) {
+          try {
+            await SubjectsController.instance.initFromRemote();
+            // Reload after remote fetch so subjects list is populated.
+            await SubjectsController.instance.loadLocalSubjects();
+          } catch (_) {
+            // Silently ignore — we'll navigate with whatever we have.
+          }
+        }
       }
 
       initStatus.value = 'Almost done…';
     } catch (_) {
-      // Non-fatal — always navigate
+      // Last-resort safety net: even if everything above threw, ensure
+      // subjects are loaded from local before navigating.
+      try {
+        await SubjectsController.instance.loadLocalSubjects();
+      } catch (_) {}
     } finally {
       isInitializing.value = false;
     }

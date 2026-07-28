@@ -7,16 +7,26 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 class PassageContainer extends StatelessWidget {
-  const PassageContainer({super.key, required this.controller});
+  const PassageContainer({
+    super.key,
+    required this.controller,
+    required this.outerScrollController,
+  });
 
   final QuestionController controller;
+
+  /// The page-level ScrollController. When the user scrolls the passage
+  /// text to its bottom edge and keeps dragging, the overscroll is piped
+  /// here so the page scrolls down to the question/options.
+  final ScrollController outerScrollController;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
     return Obx(() {
-      final block = controller.blocks[controller.currentBlockIndex.value];
+      final block =
+          controller.blocks[controller.currentBlockIndex.value];
       final expanded = controller.isFullScreenPassage.value;
       final hidden = controller.isPassageHidden.value;
 
@@ -34,9 +44,7 @@ class PassageContainer extends StatelessWidget {
           0,
         ),
         decoration: BoxDecoration(
-          color: dark
-              ? AppColors.darkCard
-              : Colors.white,
+          color: dark ? AppColors.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
           border: Border.all(
             color: AppColors.primary.withValues(alpha: 0.25),
@@ -70,23 +78,48 @@ class PassageContainer extends StatelessWidget {
                 duration: const Duration(milliseconds: 280),
                 curve: Curves.easeInOut,
                 constraints: BoxConstraints(maxHeight: contentMaxHeight),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSizes.md,
-                    0,
-                    AppSizes.md,
-                    AppSizes.md,
-                  ),
-                  child: Obx(() => RichTextParser.widget(
-                    block.passage?.content ?? 'Loading...',
-                    baseStyle: TextStyle(
-                      fontSize: 15 * controller.textScale.value,
-                      fontWeight: FontWeight.w400,
-                      height: 1.75,
-                      color: dark ? AppColors.grey : AppColors.darkerGrey,
+                // NotificationListener intercepts OverscrollNotification from
+                // the inner scroll.  When the user drags past the bottom of
+                // the passage text, the overscroll amount is forwarded to the
+                // outer page scroll so the question becomes visible — no
+                // manual tap or collapse needed.
+                child: NotificationListener<OverscrollNotification>(
+                  onNotification: (notification) {
+                    // overscroll > 0  → user dragged past the bottom edge
+                    if (notification.overscroll > 0 &&
+                        outerScrollController.hasClients) {
+                      final current = outerScrollController.offset;
+                      final max = outerScrollController.position.maxScrollExtent;
+                      final target =
+                          (current + notification.overscroll).clamp(0.0, max);
+                      outerScrollController.jumpTo(target);
+                    }
+                    // Return false so the notification keeps bubbling; this
+                    // avoids suppressing any other handlers up the tree.
+                    return false;
+                  },
+                  child: SingleChildScrollView(
+                    // ClampingScrollPhysics: no bounce animation at the edges,
+                    // which means the OverscrollNotification is fired cleanly
+                    // with the full attempted-but-blocked delta.
+                    physics: const ClampingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSizes.md,
+                      0,
+                      AppSizes.md,
+                      AppSizes.md,
                     ),
-                  )),
+                    child: Obx(() => RichTextParser.widget(
+                          block.passage?.content ?? 'Loading...',
+                          baseStyle: TextStyle(
+                            fontSize: 15 * controller.textScale.value,
+                            fontWeight: FontWeight.w400,
+                            height: 1.75,
+                            color:
+                                dark ? AppColors.grey : AppColors.darkerGrey,
+                          ),
+                        )),
+                  ),
                 ),
               ),
           ],
@@ -166,8 +199,8 @@ class _PassageHeader extends StatelessWidget {
           // expand / collapse
           GestureDetector(
             onTap: hidden
-                ? controller.togglePassage          // unhide
-                : controller.togglePassageSize,     // expand ↔ collapse
+                ? controller.togglePassage      // unhide
+                : controller.togglePassageSize, // expand ↔ collapse
             child: Icon(
               hidden
                   ? Icons.keyboard_arrow_down_rounded
@@ -184,7 +217,9 @@ class _PassageHeader extends StatelessWidget {
           GestureDetector(
             onTap: controller.togglePassage,
             child: Icon(
-              hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              hidden
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
               color: AppColors.primary.withValues(alpha: 0.7),
               size: 18,
             ),

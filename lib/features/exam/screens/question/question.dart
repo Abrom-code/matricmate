@@ -14,8 +14,17 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class QuestionScreen extends StatelessWidget {
+class QuestionScreen extends StatefulWidget {
   const QuestionScreen({super.key});
+
+  @override
+  State<QuestionScreen> createState() => _QuestionScreenState();
+}
+
+class _QuestionScreenState extends State<QuestionScreen> {
+  /// Outer scroll controller — shared with PassageContainer so it can scroll
+  /// the page to the bottom of the passage after expansion.
+  final ScrollController _scrollController = ScrollController();
 
   void _openSheet(BuildContext context, QuestionController ctrl) {
     showModalBottomSheet(
@@ -27,6 +36,12 @@ class QuestionScreen extends StatelessWidget {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = Get.find<QuestionController>();
     final bookmarkController = Get.find<BookmarkController>();
@@ -35,15 +50,15 @@ class QuestionScreen extends StatelessWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        if (controller.exitDialogOpen) return; // dialog already showing
+        if (controller.exitDialogOpen) return;
         controller.pauseTimer();
         AppHelperFunctions.showAppDialog(
           context,
           controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
           'Your progress will be saved. You can resume later.',
           () {
-            Navigator.pop(context); // dismiss dialog
-            Navigator.pop(context); // pop question screen
+            Navigator.pop(context);
+            Navigator.pop(context);
           },
           onCancel: () => controller.resumeTimer(),
         );
@@ -75,8 +90,8 @@ class QuestionScreen extends StatelessWidget {
                 controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
                 'Your progress will be saved. You can resume later.',
                 () {
-                  Navigator.pop(context); // dismiss dialog
-                  Navigator.pop(context); // pop question screen
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 onCancel: () => controller.resumeTimer(),
               );
@@ -93,8 +108,6 @@ class QuestionScreen extends StatelessWidget {
                 }
 
                 if (sectionTitle == null) {
-                  // Counter text is driven by currentIndex which the parent
-                  // Obx already subscribes to — no inner Obx needed here.
                   final counterText = hasData
                       ? '${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
                       : 'Loading...';
@@ -108,9 +121,6 @@ class QuestionScreen extends StatelessWidget {
                     );
                   }
 
-                  // Timed: wrap only the timer-sensitive part in its own Obx
-                  // so the title updates every second without rebuilding the
-                  // whole scaffold.
                   return Obx(() => Text(
                         '$counterText (${controller.formattedTime(controller.remainingSeconds.value)})',
                         style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
@@ -181,11 +191,15 @@ class QuestionScreen extends StatelessWidget {
           body: (controller.isLoading.value || controller.isPassageLoading.value)
               ? const AppCircularLoading()
               : SingleChildScrollView(
+                  controller: _scrollController,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (currentQ?.passageId != null)
-                        PassageContainer(controller: controller),
+                        PassageContainer(
+                          controller: controller,
+                          outerScrollController: _scrollController,
+                        ),
                       if (currentQ != null)
                         QuesitonSection(question: currentQ),
                       const SizedBox(height: 80),

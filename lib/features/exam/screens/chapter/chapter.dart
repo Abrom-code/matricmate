@@ -34,7 +34,7 @@ class ChapterScreen extends GetView<ChapterController> {
         builder: (context, _) {
           final isLandscape =
               MediaQuery.orientationOf(context) == Orientation.landscape;
-          Widget body = Column(
+          final Widget body = Column(
             children: [
               const SizedBox(height: 10),
               Padding(

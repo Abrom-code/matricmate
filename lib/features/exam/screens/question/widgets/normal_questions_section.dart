@@ -94,7 +94,7 @@ class QuesitonSection extends GetView<QuestionController> {
             MediaQuery.orientationOf(context) == Orientation.landscape;
 
         // ── Options column (shared between portrait and landscape) ─────────
-        Widget optionsColumn = Column(
+        final Widget optionsColumn = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [

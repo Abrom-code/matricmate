@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ResetPasswordController extends GetxController {

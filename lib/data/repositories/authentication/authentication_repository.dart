@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class AuthenticationRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;

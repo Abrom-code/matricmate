@@ -1,6 +1,6 @@
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class ChapterRepository {
   final DatabaseService _dbService = DatabaseService.instance;

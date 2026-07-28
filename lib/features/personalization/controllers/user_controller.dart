@@ -12,7 +12,7 @@ import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 

@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/test_repository.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class GradeTestController extends GetxController {
   static GradeTestController get instance => Get.find();

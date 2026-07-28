@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/ensure_supabase_auth.dart';
 import 'package:matricmate/data/services/session_service.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 

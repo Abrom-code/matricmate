@@ -7,7 +7,7 @@ import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class BookmarkController extends GetxController {
@@ -97,8 +97,7 @@ class BookmarkController extends GetxController {
 
       // Swap all observables atomically — one rebuild, no flicker
       bookmarkedQuestionIds.value = data;
-      // ignore: invalid_use_of_protected_member
-      bookmarkedIds.value = data.map((b) => b.questionId).toSet();
+      bookmarkedIds.assignAll(data.map((b) => b.questionId).toSet());
       bookmarkedQuestions.value = newQuestions;
     } catch (e) {
       AppExceptionHandler.handleResponse(e);

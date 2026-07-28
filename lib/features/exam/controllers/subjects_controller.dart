@@ -8,7 +8,7 @@ import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 

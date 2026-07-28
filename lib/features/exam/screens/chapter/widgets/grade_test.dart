@@ -4,7 +4,6 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
@@ -115,7 +114,7 @@ class _GradeTestsPageState extends State<GradeTestsPage> with RouteAware {
                         return;
                       }
                       if (isPending && index > 0) {
-                        Get.to(() => const PaymentVerificationScreen());
+                        Get.toNamed(Routes.paymentVerification);
                         return;
                       }
                       if (!hasQn) {

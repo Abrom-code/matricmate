@@ -17,13 +17,15 @@ class GridLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
     return GridView.builder(
       itemCount: itemCount,
       shrinkWrap: true,
       padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossCount ?? 2,
+        crossAxisCount: crossCount ?? (isLandscape ? 3 : 2),
         mainAxisExtent: mainAxisExtent,
         mainAxisSpacing: AppSizes.gridViewSpacing,
         crossAxisSpacing: AppSizes.gridViewSpacing,

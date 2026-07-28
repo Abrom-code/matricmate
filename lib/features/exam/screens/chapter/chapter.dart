@@ -30,106 +30,121 @@ class ChapterScreen extends GetView<ChapterController> {
           ).textTheme.headlineMedium!.apply(color: AppColors.white),
         ),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.defaultSpace,
-            ),
-            child: TabBar(
-              tabAlignment: TabAlignment.fill,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-              controller: tabController.tabController,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+      body: LayoutBuilder(
+        builder: (context, _) {
+          final isLandscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+          Widget body = Column(
+            children: [
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.defaultSpace,
+                ),
+                child: TabBar(
+                  tabAlignment: TabAlignment.fill,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  controller: tabController.tabController,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                  tabs: tabController.tabs
+                      .map((t) => Tab(text: t['label']))
+                      .toList(),
+                ),
               ),
-              tabs: tabController.tabs
-                  .map((t) => Tab(text: t['label']))
-                  .toList(),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: TabBarView(
-              controller: tabController.tabController,
-              children: List.generate(tabController.tabs.length, (index) {
-                final tab = tabController.tabs[index];
-                final grade = tab['grade'];
+              const SizedBox(height: 20),
+              Expanded(
+                child: TabBarView(
+                  controller: tabController.tabController,
+                  children: List.generate(tabController.tabs.length, (index) {
+                    final tab = tabController.tabs[index];
+                    final grade = tab['grade'];
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Obx(() {
-                    if (controller.isChapterLoading.value) {
-                      return const AppCircularLoading(title: 'Loading');
-                    }
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Obx(() {
+                        if (controller.isChapterLoading.value) {
+                          return const AppCircularLoading(title: 'Loading');
+                        }
 
-                    final chapters = controller.getChaptersByGrade(grade);
+                        final chapters = controller.getChaptersByGrade(grade);
 
-                    if (chapters.isEmpty) {
-                      return const Center(child: Text('No Chapters Found'));
-                    }
+                        if (chapters.isEmpty) {
+                          return const Center(child: Text('No Chapters Found'));
+                        }
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AllChaptersButton(
-                          onPressed: () => Get.toNamed(
-                            Routes.gradeTests,
-                            arguments: {
-                              'subject_id': subjectId,
-                              'grade': grade,
-                              'subject': title,
-                            },
-                          ),
-                        ),
-                        const Divider(height: AppSizes.spaceBtwSections),
-                        ...chapters.map((chapter) {
-                          final hasTests =
-                              controller.chapterHasTests[chapter.id];
-
-                          if (hasTests == null) {
-                            return const SizedBox();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSizes.spaceBtwItems,
-                            ),
-                            child: ChapterTile(
-                              chapter: AppHelperFunctions.getChapterName(
-                                chapter.chapterNumber,
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AllChaptersButton(
+                              onPressed: () => Get.toNamed(
+                                Routes.gradeTests,
+                                arguments: {
+                                  'subject_id': subjectId,
+                                  'grade': grade,
+                                  'subject': title,
+                                },
                               ),
-                              chapterTitle: chapter.title,
-                              onTap: () {
-                                if (hasTests) {
-                                  Get.toNamed(
-                                    Routes.testLists,
-                                    arguments: {
-                                      'subject_id': subjectId,
-                                      'grade': grade,
-                                      'subject': title,
-                                      'chapter': chapter.title,
-                                      'chapter_id': chapter.id,
-                                      'chapter_number': chapter.chapterNumber,
-                                    },
-                                  );
-                                } else {
-                                  ToastHelper.info('No tests added!');
-                                }
-                              },
                             ),
-                          );
-                        }),
-                        const SizedBox(height: AppSizes.spaceBtwSections),
-                      ],
+                            const Divider(height: AppSizes.spaceBtwSections),
+                            ...chapters.map((chapter) {
+                              final hasTests =
+                                  controller.chapterHasTests[chapter.id];
+
+                              if (hasTests == null) {
+                                return const SizedBox();
+                              }
+                              return Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSizes.spaceBtwItems,
+                                ),
+                                child: ChapterTile(
+                                  chapter: AppHelperFunctions.getChapterName(
+                                    chapter.chapterNumber,
+                                  ),
+                                  chapterTitle: chapter.title,
+                                  onTap: () {
+                                    if (hasTests) {
+                                      Get.toNamed(
+                                        Routes.testLists,
+                                        arguments: {
+                                          'subject_id': subjectId,
+                                          'grade': grade,
+                                          'subject': title,
+                                          'chapter': chapter.title,
+                                          'chapter_id': chapter.id,
+                                          'chapter_number':
+                                              chapter.chapterNumber,
+                                        },
+                                      );
+                                    } else {
+                                      ToastHelper.info('No tests added!');
+                                    }
+                                  },
+                                ),
+                              );
+                            }),
+                            const SizedBox(height: AppSizes.spaceBtwSections),
+                          ],
+                        );
+                      }),
                     );
                   }),
-                );
-              }),
+                ),
+              ),
+            ],
+          );
+
+          if (!isLandscape) return body;
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: body,
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

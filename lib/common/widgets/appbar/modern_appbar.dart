@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
@@ -19,7 +20,11 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBackArrow;
 
   @override
-  Size get preferredSize => const _AppbarSize();
+  Size get preferredSize {
+    final ctx = Get.context;
+    if (ctx != null) return Size.fromHeight(Appbar.toolbarHeight(ctx));
+    return const Size.fromHeight(kToolbarHeight);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +60,11 @@ class ModernAppbarWithBuilder extends StatelessWidget
   final bool showBackArrow;
 
   @override
-  Size get preferredSize => const _AppbarSize();
+  Size get preferredSize {
+    final ctx = Get.context;
+    if (ctx != null) return Size.fromHeight(Appbar.toolbarHeight(ctx));
+    return const Size.fromHeight(kToolbarHeight);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,8 +119,4 @@ class _TitleColumn extends StatelessWidget {
   }
 }
 
-/// Delegates preferred height to [Appbar.preferredSize] without
-/// instantiating an [Appbar] at const-evaluation time.
-class _AppbarSize extends Size {
-  const _AppbarSize() : super.fromHeight(56);
-}
+

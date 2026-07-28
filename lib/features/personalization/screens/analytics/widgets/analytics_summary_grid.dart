@@ -11,11 +11,16 @@ class AnalyticsSummaryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
     return GridView.count(
-      crossAxisCount: 2,
+      // Landscape: 4 cards in a single row — no wasted horizontal space.
+      // Portrait: 2×2 grid as before.
+      crossAxisCount: isLandscape ? 4 : 2,
       crossAxisSpacing: AppSizes.spaceBtwItems,
       mainAxisSpacing: AppSizes.spaceBtwItems,
-      childAspectRatio: 1.3,
+      // Flatter cards in landscape since there's more width per card.
+      childAspectRatio: isLandscape ? 1.8 : 1.3,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [

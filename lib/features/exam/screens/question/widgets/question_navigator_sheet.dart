@@ -16,11 +16,15 @@ class QuestionNavigatorSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final sheetBg = dark ? AppColors.darkCard : AppColors.white;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.55,
-      minChildSize: 0.35,
-      maxChildSize: 0.90,
+      // In landscape the screen is short, so open closer to full height
+      // and allow it to expand further.
+      initialChildSize: isLandscape ? 0.85 : 0.55,
+      minChildSize: isLandscape ? 0.60 : 0.35,
+      maxChildSize: isLandscape ? 0.95 : 0.90,
       expand: false,
       builder: (_, scrollCtrl) => Container(
         decoration: BoxDecoration(
@@ -86,13 +90,16 @@ class QuestionNavigatorSheet extends StatelessWidget {
                       q.sectionTitle!.trim().isNotEmpty,
                 );
 
+                // Use more columns in landscape (screen is wide, not tall)
+                final crossCount = isLandscape ? 10 : 6;
+
                 if (!hasSections) {
                   return GridView.builder(
                     controller: scrollCtrl,
                     padding: const EdgeInsets.all(AppSizes.defaultSpace),
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 6,
+                        SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossCount,
                       crossAxisSpacing: AppSizes.xs,
                       mainAxisSpacing: AppSizes.xs,
                     ),
@@ -158,8 +165,8 @@ class QuestionNavigatorSheet extends StatelessWidget {
                         ),
                         sliver: SliverGrid(
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 6,
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossCount,
                             crossAxisSpacing: AppSizes.xs,
                             mainAxisSpacing: AppSizes.xs,
                           ),

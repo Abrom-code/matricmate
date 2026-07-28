@@ -31,29 +31,52 @@ class ResultScreen extends GetView<ResultController> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.defaultSpace),
-          child: Column(
-            children: [
-              ResultBadgeCircle(ratio: ratio),
-              const SizedBox(height: AppSizes.spaceBtwSections),
+          child: Builder(
+            builder: (context) {
+              final isLandscape =
+                  MediaQuery.orientationOf(context) == Orientation.landscape;
 
-              Text(
-                'TEST RESULT',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSizes.spaceBtwItems / 2),
+              final badge = ResultBadgeCircle(ratio: ratio);
+              final scoreText = Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('TEST RESULT',
+                      style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: AppSizes.spaceBtwItems / 2),
+                  Text(
+                    '${result.correctAnswers}/${result.testQuestions.length}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 44,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.spaceBtwSections),
+                  ResultActionButtons(result: result),
+                ],
+              );
 
-              Text(
-                '${result.correctAnswers}/${result.testQuestions.length}',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 44,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: AppSizes.spaceBtwSections),
+              if (isLandscape) {
+                // Side-by-side: badge left, score + buttons right
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: Center(child: badge)),
+                    const SizedBox(width: AppSizes.spaceBtwSections),
+                    Expanded(child: scoreText),
+                  ],
+                );
+              }
 
-              ResultActionButtons(result: result),
-            ],
+              // Portrait: stacked
+              return Column(
+                children: [
+                  badge,
+                  const SizedBox(height: AppSizes.spaceBtwSections),
+                  scoreText,
+                ],
+              );
+            },
           ),
         ),
       ),

@@ -70,7 +70,10 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
             return const Center(child: Text('No Tests Found'));
           }
 
-          return ListView.builder(
+          final isLandscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+
+          final list = ListView.builder(
             itemCount: tests.length,
             itemBuilder: (context, index) {
               final test = tests[index];
@@ -90,8 +93,6 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                   final isActive =
                       UserController.instance.user.value.isActive;
 
-                  // Subscribe to testResults so tile rebuilds when results
-                  // load or change.
                   final _ = ctrl.testResults[test.id];
 
                   final canAccess =
@@ -138,6 +139,14 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                 }),
               );
             },
+          );
+
+          if (!isLandscape) return list;
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: list,
+            ),
           );
         }),
       ),

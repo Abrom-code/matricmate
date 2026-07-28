@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
@@ -52,6 +53,7 @@ class _EntranceExamsState extends State<EntranceExams> with RouteAware {
         backgroundColor: AppColors.primary,
         elevation: 0,
         scrolledUnderElevation: 0,
+        toolbarHeight: Appbar.toolbarHeight(context),
         leading: IconButton(
           onPressed: Get.back,
           icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.white),
@@ -120,7 +122,10 @@ class _ExamList extends StatelessWidget {
       return Center(child: Text('No $label Exams Found'));
     }
 
-    return ListView.builder(
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
+    final list = ListView.builder(
       padding: const EdgeInsets.all(AppSizes.defaultSpace),
       itemCount: tests.length,
       itemBuilder: (context, index) {
@@ -186,6 +191,16 @@ class _ExamList extends StatelessWidget {
           }),
         );
       },
+    );
+
+    if (!isLandscape) return list;
+
+    // Landscape: constrain width so tiles don't stretch wall-to-wall.
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: list,
+      ),
     );
   }
 }

@@ -23,13 +23,26 @@ class TestReviewScreen extends GetView<ReviewController> {
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
-        itemCount: examQn.length,
-        itemBuilder: (_, i) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
-          child: ReviewContainer(qn: examQn[i], result: result),
-        ),
+      body: LayoutBuilder(
+        builder: (context, _) {
+          final isLandscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+          final list = ListView.builder(
+            padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
+            itemCount: examQn.length,
+            itemBuilder: (_, i) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+              child: ReviewContainer(qn: examQn[i], result: result),
+            ),
+          );
+          if (!isLandscape) return list;
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: list,
+            ),
+          );
+        },
       ),
       bottomNavigationBar: SizedBox(
         width: double.infinity,

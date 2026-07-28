@@ -49,68 +49,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: Obx(() {
         final checking = UserController.instance.isCheckingPayment.value;
+        final isLandscape =
+            MediaQuery.orientationOf(context) == Orientation.landscape;
+        final content = SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSizes.defaultSpace),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Profile card — has its own internal Obx
+                const ProfileSection(),
+                const SizedBox(height: AppSizes.spaceBtwSections),
+
+                // Account settings
+                Text(
+                  'ACCOUNT SETTINGS',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: dark ? AppColors.grey : AppColors.darkerGrey,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.spaceBtwItems),
+                const AccountSettings(),
+                const SizedBox(height: AppSizes.spaceBtwSections),
+
+                // Connect & support
+                Text(
+                  'CONNECT & SUPPORT',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: dark ? AppColors.grey : AppColors.darkerGrey,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.spaceBtwItems),
+                const ConnectSupportSection(),
+                const SizedBox(height: AppSizes.spaceBtwSections),
+
+                // Log out
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => AppDialogBoxes.showOkCancelDialog(
+                      context: context,
+                      onPressed: () {
+                        Get.back();
+                        userController.logOut();
+                      },
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                    ),
+                    child: const Text(
+                      'Log Out',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSizes.spaceBtwSections * 2),
+              ],
+            ),
+          ),
+        );
         return Stack(
           children: [
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSizes.defaultSpace),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Profile card — has its own internal Obx
-                    const ProfileSection(),
-                    const SizedBox(height: AppSizes.spaceBtwSections),
-
-                    // Account settings
-                    Text(
-                      'ACCOUNT SETTINGS',
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        color: dark ? AppColors.grey : AppColors.darkerGrey,
-                      ),
+            isLandscape
+                ? Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: content,
                     ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-                    const AccountSettings(),
-                    const SizedBox(height: AppSizes.spaceBtwSections),
+                  )
+                : content,
 
-                    // Connect & support
-                    Text(
-                      'CONNECT & SUPPORT',
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        color: dark ? AppColors.grey : AppColors.darkerGrey,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-                    const ConnectSupportSection(),
-                    const SizedBox(height: AppSizes.spaceBtwSections),
-
-                    // Log out
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => AppDialogBoxes.showOkCancelDialog(
-                          context: context,
-                          onPressed: () {
-                            Get.back();
-                            userController.logOut();
-                          },
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.red),
-                        ),
-                        child: const Text(
-                          'Log Out',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: AppSizes.spaceBtwSections * 2),
-                  ],
-                ),
-              ),
-            ),
-
-            // Indeterminate progress bar — same pattern as subjects/entrance screens
+            // Indeterminate progress bar
             if (checking)
               const Positioned(
                 top: 0,

@@ -26,58 +26,72 @@ class PremiumScreen extends StatelessWidget {
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Obx(() {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Total Amount Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Total Amount Due',
-                        style: TextStyle(color: AppColors.white),
+      body: LayoutBuilder(
+        builder: (context, _) {
+          final isLandscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+          final content = SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Obx(() {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Total Amount Card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        '250 ETB',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total Amount Due',
+                            style: TextStyle(color: AppColors.white),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            '250 ETB',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                // Payment Options
-                ...methods.map((method) {
-                  return paymentTile(
-                    title: method.title,
-                    subtitle: method.subtitle,
-                    icon: method.icon,
-                    isFeatured: method.isFeatured,
-                    selected: method == controller.selectedMethod.value,
-                    context: context,
-                    onTap: () => controller.selectedMethod.value = method,
-                  );
-                }).toList(),
-              ],
-            );
-          }),
-        ),
+                    // Payment Options
+                    ...methods.map((method) {
+                      return paymentTile(
+                        title: method.title,
+                        subtitle: method.subtitle,
+                        icon: method.icon,
+                        isFeatured: method.isFeatured,
+                        selected: method == controller.selectedMethod.value,
+                        context: context,
+                        onTap: () => controller.selectedMethod.value = method,
+                      );
+                    }).toList(),
+                  ],
+                );
+              }),
+            ),
+          );
+
+          if (!isLandscape) return content;
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: content,
+            ),
+          );
+        },
       ),
       bottomNavigationBar: Obx(() {
       final isPending = UserController.instance.user.value.isPending;

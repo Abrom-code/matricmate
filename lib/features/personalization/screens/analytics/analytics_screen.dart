@@ -86,34 +86,52 @@ class AnalyticsScreen extends StatelessWidget {
         return RefreshIndicator(
           color: AppColors.primary,
           onRefresh: controller.loadAll,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(AppSizes.defaultSpace),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Active filter chips row — no Obx needed, parent Obx covers it
-                if (controller.hasActiveFilters)
-                  ActiveFilterRow(controller: controller),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isLandscape =
+                  MediaQuery.orientationOf(context) == Orientation.landscape;
+              // In landscape, cap content width and center it so charts and
+              // cards don't stretch across the entire wide screen.
+              final content = SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSizes.defaultSpace),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Active filter chips row
+                    if (controller.hasActiveFilters)
+                      ActiveFilterRow(controller: controller),
 
-                AnalyticsSummaryGrid(controller: controller),
+                    AnalyticsSummaryGrid(controller: controller),
 
-                ScoreTrendChart(controller: controller),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                    ScoreTrendChart(controller: controller),
+                    const SizedBox(height: AppSizes.spaceBtwSections),
 
-                SubjectPerformanceSection(controller: controller),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                    SubjectPerformanceSection(controller: controller),
+                    const SizedBox(height: AppSizes.spaceBtwSections),
 
-                TestTypeDistribution(controller: controller),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                    TestTypeDistribution(controller: controller),
+                    const SizedBox(height: AppSizes.spaceBtwSections),
 
-                ChapterProgressSection(controller: controller),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                    ChapterProgressSection(controller: controller),
+                    const SizedBox(height: AppSizes.spaceBtwSections),
 
-                WeakestAreasCard(controller: controller),
-                const SizedBox(height: AppSizes.spaceBtwSections * 2),
-              ],
-            ),
+                    WeakestAreasCard(controller: controller),
+                    const SizedBox(height: AppSizes.spaceBtwSections * 2),
+                  ],
+                ),
+              );
+
+              if (!isLandscape) return content;
+
+              // Landscape: center and cap width so content stays readable.
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: content,
+                ),
+              );
+            },
           ),
         );
       }),

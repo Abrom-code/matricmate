@@ -86,34 +86,24 @@ class QuesitonSection extends GetView<QuestionController> {
             controller.currentIndex.value ==
             controller.testQuestions.length - 1;
 
-        // In practice mode: Skip shown when not yet answered and not last.
-        // In exam mode: Skip shown when no option selected (unanswered), so
-        // the user can move on without committing; once an option is selected
-        // the button becomes Next/Finish.
         final canSkip = examMode
             ? selectedIndex == null
             : !isChecked && !isLast;
 
-        return Column(
+        final isLandscape =
+            MediaQuery.orientationOf(context) == Orientation.landscape;
+
+        // ── Options column (shared between portrait and landscape) ─────────
+        Widget optionsColumn = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            /// QUESTION
-            QuestionSection(qnNumber: q.questionOrder, examQn: q.questionText),
-            const SizedBox(height: AppSizes.spaceBtwItems),
-
-            /// IMAGE
-            if (q.imageUrl != null) ImageSection(imgUrl: q.imageUrl),
-            if (q.imageUrl != null)
-              const SizedBox(height: AppSizes.spaceBtwItems),
-
-            /// OPTIONS
+            // Options
             ...q.options.asMap().entries.map((entry) {
               final index = entry.key;
               final option = entry.value;
-
               return ChoiceButton(
                 selectedIndex: selectedIndex ?? -1,
-                // in exam mode, never show green/red reveal colours
                 isChecked: examMode ? false : isChecked,
                 optionTxt: option,
                 index: index,
@@ -130,7 +120,7 @@ class QuesitonSection extends GetView<QuestionController> {
               );
             }),
 
-            /// EXPLANATION — practice mode only, after checking
+            // Explanation — practice mode only
             if (isChecked && !examMode) ...[
               ExplanationBox(
                 explanationEn: q.explanationEn,
@@ -141,10 +131,9 @@ class QuesitonSection extends GetView<QuestionController> {
             ] else
               const SizedBox(height: AppSizes.xs),
 
-            /// BUTTONS — always two: Prev | (Skip or Next/Finish)
+            // Nav buttons
             Row(
               children: [
-                /// PREVIOUS
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
@@ -164,12 +153,7 @@ class QuesitonSection extends GetView<QuestionController> {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 8),
-
-                /// SKIP — when no answer selected in exam mode (any question),
-                ///         or when not yet answered in practice mode (non-last)
-                /// NEXT / FINISH — after option selected (exam) or checked (practice)
                 Expanded(
                   child: canSkip
                       ? OutlinedButton.icon(
@@ -182,7 +166,6 @@ class QuesitonSection extends GetView<QuestionController> {
                           ),
                           onPressed: examMode
                               ? () async {
-                                  // In exam mode, Skip on last question = Finish
                                   if (isLast) {
                                     await _submitResult(context, q);
                                   } else {
@@ -237,6 +220,56 @@ class QuesitonSection extends GetView<QuestionController> {
                         ),
                 ),
               ],
+            ),
+          ],
+        );
+
+        // ── Portrait: single scrollable column ────────────────────────────
+        if (!isLandscape) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              QuestionSection(qnNumber: q.questionOrder, examQn: q.questionText),
+              const SizedBox(height: AppSizes.spaceBtwItems),
+              if (q.imageUrl != null) ImageSection(imgUrl: q.imageUrl),
+              if (q.imageUrl != null)
+                const SizedBox(height: AppSizes.spaceBtwItems),
+              optionsColumn,
+            ],
+          );
+        }
+
+        // ── Landscape: question + image on left, options + buttons on right ─
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left: question text + image (independently scrollable)
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    QuestionSection(
+                      qnNumber: q.questionOrder,
+                      examQn: q.questionText,
+                    ),
+                    if (q.imageUrl != null) ...[
+                      const SizedBox(height: AppSizes.spaceBtwItems),
+                      ImageSection(imgUrl: q.imageUrl),
+                    ],
+                    const SizedBox(height: AppSizes.spaceBtwItems),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: AppSizes.defaultSpace),
+
+            // Right: options + nav buttons (independently scrollable)
+            Expanded(
+              child: SingleChildScrollView(
+                child: optionsColumn,
+              ),
             ),
           ],
         );

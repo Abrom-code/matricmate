@@ -77,11 +77,17 @@ class ReadyDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Stack(
-        children: [
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 620),
-            child: SingleChildScrollView(
+      child: ConstrainedBox(
+        // Portrait: cap at 620px. Landscape: cap at 85% of screen height.
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.orientationOf(context) == Orientation.landscape
+              ? MediaQuery.sizeOf(context).height * 0.85
+              : 620,
+          maxWidth: 480,
+        ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
                 AppSizes.defaultSpace,
                 AppSizes.defaultSpace,
@@ -146,9 +152,6 @@ class ReadyDialog extends StatelessWidget {
                       icon: Icons.play_arrow_rounded,
                       color: Colors.indigo,
                       onTap: () {
-                        // Detect original mode from saved state:
-                        // - Had remaining seconds → was a timed exam
-                        // - No checked questions → exam mode (answers hidden)
                         final wasExam = draft!.checkedQuestions.isEmpty;
                         final wasTimed = draft!.remainingSeconds > 0;
                         _launch(
@@ -200,22 +203,22 @@ class ReadyDialog extends StatelessWidget {
                 ],
               ),
             ),
-          ),
 
-          // Close button
-          Positioned(
-            top: 6,
-            right: 6,
-            child: IconButton(
-              onPressed: () => Get.back(),
-              icon: const Icon(
-                Iconsax.close_circle_copy,
-                color: AppColors.error,
-                size: 22,
+            // Close button overlay
+            Positioned(
+              top: 6,
+              right: 6,
+              child: IconButton(
+                onPressed: () => Get.back(),
+                icon: const Icon(
+                  Iconsax.close_circle_copy,
+                  color: AppColors.error,
+                  size: 22,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -60,7 +60,12 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
                   pinned: true,
                   floating: true,
                   backgroundColor: dark ? AppColors.darkCard : AppColors.white,
-                  expandedHeight: 130,
+                  // Portrait: 130px gives a comfortable search field area.
+                  // Landscape: shrink to 72px to save precious vertical space.
+                  expandedHeight:
+                      MediaQuery.orientationOf(context) == Orientation.landscape
+                          ? 72
+                          : 130,
                   flexibleSpace: const Padding(
                     padding: EdgeInsets.all(AppSizes.defaultSpace),
                     child: SearchField(),

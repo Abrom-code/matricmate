@@ -6,6 +6,9 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/device/device_utility.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
+/// Compact toolbar height used in landscape to save vertical space.
+const double _kLandscapeToolbarHeight = 40.0;
+
 class Appbar extends StatelessWidget implements PreferredSizeWidget {
   const Appbar({
     super.key,
@@ -28,12 +31,21 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
   final Color backgroundColor;
   final Color leadingIconColor;
 
+  /// Returns the correct toolbar height for the current orientation.
+  static double toolbarHeight(BuildContext context) {
+    return MediaQuery.orientationOf(context) == Orientation.landscape
+        ? _kLandscapeToolbarHeight
+        : AppDeviceUtils.getAppBarHeight();
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool dark = AppHelperFunctions.isDark(context);
+    final double height = toolbarHeight(context);
 
     return AppBar(
       automaticallyImplyLeading: false,
+      toolbarHeight: height,
 
       /// Background
       backgroundColor: backgroundColor,
@@ -76,5 +88,11 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(AppDeviceUtils.getAppBarHeight());
+  Size get preferredSize {
+    // preferredSize is called before build() — read orientation from
+    // Get.context so the Scaffold allocates the right amount of space.
+    final ctx = Get.context;
+    if (ctx != null) return Size.fromHeight(toolbarHeight(ctx));
+    return Size.fromHeight(AppDeviceUtils.getAppBarHeight());
+  }
 }

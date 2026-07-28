@@ -118,5 +118,3 @@ class _TitleColumn extends StatelessWidget {
     );
   }
 }
-
-

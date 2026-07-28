@@ -14,13 +14,30 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class AnalyticsScreen extends StatelessWidget {
+class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.put(AnalyticsController());
+  State<AnalyticsScreen> createState() => _AnalyticsScreenState();
+}
 
+class _AnalyticsScreenState extends State<AnalyticsScreen> {
+  late final AnalyticsController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(AnalyticsController());
+  }
+
+  @override
+  void dispose() {
+    Get.delete<AnalyticsController>(force: true);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: ModernAppbarWithBuilder(
         title: 'Analytics',

@@ -167,6 +167,7 @@ class AppDrawer extends StatelessWidget {
                     title: 'Rate App',
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: implement in-app review (e.g. in_app_review package)
                     },
                   ),
                   AppListTile(
@@ -174,6 +175,7 @@ class AppDrawer extends StatelessWidget {
                     title: 'Share with Friend',
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: implement share sheet (e.g. share_plus package)
                     },
                   ),
                 ],

@@ -16,8 +16,8 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-class QuesitonSection extends GetView<QuestionController> {
-  const QuesitonSection({super.key, required this.question});
+class ExamQuestionSection extends GetView<QuestionController> {
+  const ExamQuestionSection({super.key, required this.question});
   final QuestionModel question;
 
   // ── shared submit helper ────────────────────────────────────────────────────

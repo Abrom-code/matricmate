@@ -201,7 +201,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
                           outerScrollController: _scrollController,
                         ),
                       if (currentQ != null)
-                        QuesitonSection(question: currentQ),
+                        ExamQuestionSection(question: currentQ),
                       const SizedBox(height: 80),
                     ],
                   ),

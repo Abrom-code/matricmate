@@ -23,9 +23,9 @@ class ExplanationBox extends StatelessWidget {
       explanationEn: explanationEn,
       explanationAm: explanationAm,
       explanationImageUrl: explanationImageUrl,
-      expanded: controller.isExplanationExpanaded.value,
-      onToggle: () => controller.isExplanationExpanaded.value =
-          !controller.isExplanationExpanaded.value,
+      expanded: controller.isExplanationExpanded.value,
+      onToggle: () => controller.isExplanationExpanded.value =
+          !controller.isExplanationExpanded.value,
       languageSelected: controller.languageSelected,
       onLanguageChange: (v) => controller.languageSelected.value = v,
     ));

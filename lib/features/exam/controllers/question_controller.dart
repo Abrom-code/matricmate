@@ -9,7 +9,7 @@ import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/utils/exceptions/exeption_handler.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -37,11 +37,11 @@ class QuestionController extends GetxController {
   final RxSet<int> skippedQuestions = <int>{}.obs;
   final RxInt currentIndex = 0.obs;
   final RxInt currentBlockIndex = 0.obs;
-  final RxBool isExplanationExpanaded = false.obs;
+  final RxBool isExplanationExpanded = false.obs;
+  final RxBool isFullScreenPassage = false.obs;
+  final RxBool isPassageHidden = false.obs;
+  final RxDouble textScale = 1.0.obs;
   final RxString languageSelected = 'EN'.obs;
-  var isFullScreenPassage = false.obs;
-  var isPassageHidden = false.obs;
-  var textScale = 1.0.obs;
   late int testId;
   late bool isTimed;
   late bool isExamMode;
@@ -52,9 +52,6 @@ class QuestionController extends GetxController {
   /// fire-and-forget draft saves don't overwrite the completed result.
   bool _isSubmitted = false;
 
-  /// Incremented each time a new test session starts. Any in-flight draft
-  /// save that was issued with an older generation is silently dropped.
-  int _draftGeneration = 0;
 
   /// Pauses the timer without cancelling it (used when the exit dialog is open).
   bool _timerPaused = false;
@@ -223,8 +220,6 @@ class QuestionController extends GetxController {
   /// pending fire-and-forget draft saves don't overwrite the completed result.
   void markSubmitted() {
     _isSubmitted = true;
-    // Bump the generation so any in-flight draft saves are ignored.
-    _draftGeneration++;
   }
 
   // Navigation Logic
@@ -232,7 +227,7 @@ class QuestionController extends GetxController {
     if (currentIndex.value < testQuestions.length - 1) {
       currentIndex.value++;
       _syncBlockWithIndex();
-      isExplanationExpanaded.value = false;
+      isExplanationExpanded.value = false;
     }
   }
 
@@ -240,7 +235,7 @@ class QuestionController extends GetxController {
     if (currentIndex.value > 0) {
       currentIndex.value--;
       _syncBlockWithIndex();
-      isExplanationExpanaded.value = false;
+      isExplanationExpanded.value = false;
     }
   }
 
@@ -251,7 +246,7 @@ class QuestionController extends GetxController {
       selectedAnswers.remove(q.id); // clear any half-picked answer
       currentIndex.value++;
       _syncBlockWithIndex();
-      isExplanationExpanaded.value = false;
+      isExplanationExpanded.value = false;
     }
   }
 
@@ -261,7 +256,7 @@ class QuestionController extends GetxController {
     if (index < 0 || index >= testQuestions.length) return;
     currentIndex.value = index;
     _syncBlockWithIndex();
-    isExplanationExpanaded.value = false;
+    isExplanationExpanded.value = false;
   }
 
   void _syncBlockWithIndex() {
@@ -292,7 +287,6 @@ class QuestionController extends GetxController {
   /// saves racing with the final completed result write).
   void _saveDraft() {
     if (_isSubmitted) return; // already submitted — never overwrite
-    final generation = _draftGeneration;
     final draft = ResultModel(
       userId: UserController.instance.user.value.id,
       testId: testId,
@@ -306,12 +300,7 @@ class QuestionController extends GetxController {
       remainingSeconds: isTimed ? remainingSeconds.value : 0,
     );
     _repo.saveResult(draft).then((_) {
-      // If the generation changed while this save was in flight, the user
-      // submitted in the meantime — delete the draft we just wrote so the
-      // completed result is not shadowed on next load.
-      if (_draftGeneration != generation) {
-        // Re-save will be handled by the submission path; nothing to do here.
-      }
+      // Draft saved successfully.
     }).catchError((e) {
       ToastHelper.error('Draft save failed: $e');
     });
@@ -351,8 +340,9 @@ class QuestionController extends GetxController {
       // Don't tick while the exit dialog is open
       if (_timerPaused) return;
 
-      if (remainingSeconds.value == 2)
+      if (remainingSeconds.value == 2) {
         SnackbarHelper.warning("Time's up!", 'Submitting ...');
+      }
 
       if (remainingSeconds.value <= 1) {
         remainingSeconds.value = 0;

@@ -54,6 +54,7 @@ dependencies:
   iconsax_flutter: ^1.0.1
   fluttertoast: ^9.0.0
   shared_preferences: ^2.3.2
+  flutter_dotenv: ^5.1.2
 
   url_launcher: any
   google_fonts: ^6.2.1

@@ -4,7 +4,10 @@ import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class TestRepository {
-  final DatabaseService _dbService = DatabaseService.instance;
+  TestRepository({DatabaseService? databaseService})
+    : _dbService = databaseService ?? DatabaseService.instance;
+
+  final DatabaseService _dbService;
 
   Future<List<Map<String, dynamic>>> getLocalTests({
     required int subjectId,

@@ -6,7 +6,10 @@ import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class ChapterTestController extends GetxController {
   static ChapterTestController get instance => Get.find();
-  final TestRepository _testRepository = TestRepository();
+  ChapterTestController({TestRepository? testRepository})
+    : _testRepository = testRepository ?? TestRepository();
+
+  final TestRepository _testRepository;
   final RxList<TestModel> chapterTest = <TestModel>[].obs;
   final RxMap<int, bool> testHasQuestions = <int, bool>{}.obs;
   final RxMap<int, ResultModel> testResults = <int, ResultModel>{}.obs;
@@ -122,8 +125,7 @@ class ChapterTestController extends GetxController {
     return 0;
   }
 
-  int getCorrectAnswers(int testId) =>
-      testResults[testId]?.correctAnswers ?? 0;
+  int getCorrectAnswers(int testId) => testResults[testId]?.correctAnswers ?? 0;
 
   bool isInProgress(int testId) =>
       testResults.containsKey(testId) &&
@@ -133,8 +135,8 @@ class ChapterTestController extends GetxController {
     final result = testResults[testId];
     if (result != null) return result.testQuestions.length;
     // Use actual DB count; fall back to stored questionCount if not loaded yet
-    return testQuestionCounts[testId] ?? chapterTest
-        .firstWhereOrNull((t) => t.id == testId)
-        ?.questionCount ?? 0;
+    return testQuestionCounts[testId] ??
+        chapterTest.firstWhereOrNull((t) => t.id == testId)?.questionCount ??
+        0;
   }
 }

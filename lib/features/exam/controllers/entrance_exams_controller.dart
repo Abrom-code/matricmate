@@ -7,7 +7,10 @@ import 'package:matricmate/utils/exceptions/exception_handler.dart';
 class ExamsController extends GetxController {
   static ExamsController get instance => Get.find();
 
-  final TestRepository _testRepository = TestRepository();
+  ExamsController({TestRepository? testRepository})
+    : _testRepository = testRepository ?? TestRepository();
+
+  final TestRepository _testRepository;
 
   // Separate lists for each tab
   final RxList<TestModel> entranceTests = <TestModel>[].obs;
@@ -110,8 +113,7 @@ class ExamsController extends GetxController {
   int getCurrentStep(int testId) =>
       testResults[testId]?.selectedAnswers.length ?? 0;
 
-  int getCorrectAnswers(int testId) =>
-      testResults[testId]?.correctAnswers ?? 0;
+  int getCorrectAnswers(int testId) => testResults[testId]?.correctAnswers ?? 0;
 
   bool isInProgress(int testId) =>
       testResults.containsKey(testId) &&

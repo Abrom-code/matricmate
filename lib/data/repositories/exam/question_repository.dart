@@ -3,11 +3,12 @@ import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class QuestionRepository {
-  final supabase = Supabase.instance.client;
-  final DatabaseService _dbService = DatabaseService.instance;
+  QuestionRepository({DatabaseService? databaseService})
+    : _dbService = databaseService ?? DatabaseService.instance;
+
+  final DatabaseService _dbService;
 
   Future<List<Map<String, dynamic>>> getQnByTestIdLocal(int testId) async {
     try {

@@ -12,8 +12,14 @@ import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class BookmarkController extends GetxController {
   static BookmarkController get instance => Get.find();
-  final BookmarkRepository _repo = BookmarkRepository();
-  final QuestionRepository _questionRepo = QuestionRepository();
+  BookmarkController({
+    BookmarkRepository? repository,
+    QuestionRepository? questionRepository,
+  }) : _repo = repository ?? BookmarkRepository(),
+       _questionRepo = questionRepository ?? QuestionRepository();
+
+  final BookmarkRepository _repo;
+  final QuestionRepository _questionRepo;
 
   final RxList<BookmarkModel> bookmarkedQuestionIds = <BookmarkModel>[].obs;
   final RxList<QuestionModel> bookmarkedQuestions = <QuestionModel>[].obs;

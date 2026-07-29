@@ -40,7 +40,7 @@ class EntranceActionWidget extends StatelessWidget {
     }
 
     // No content yet — disabled download button (greyed out)
-    if (noContent) {
+    if (noContent || !canDownload) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(

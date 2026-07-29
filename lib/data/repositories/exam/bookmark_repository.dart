@@ -1,11 +1,12 @@
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BookmarkRepository {
-  final SupabaseClient supabase = Supabase.instance.client;
-  final DatabaseService _dbService = DatabaseService.instance;
+  BookmarkRepository({DatabaseService? databaseService})
+    : _dbService = databaseService ?? DatabaseService.instance;
+
+  final DatabaseService _dbService;
 
   Future<void> addBookmark(BookmarkModel bookmarkQn) async {
     try {

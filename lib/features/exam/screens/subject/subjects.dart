@@ -8,7 +8,6 @@ import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
-import 'package:matricmate/features/exam/screens/subject/widgets/status_badge.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -56,23 +55,13 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
         title: 'MatricMate',
         showNotification: true,
         subtitleBuilder: (_) => Obx(() {
-          final user = UserController.instance.user.value;
-          final stream = user.stream.isNotEmpty
-              ? '${user.stream[0].toUpperCase()}${user.stream.substring(1)} stream'
-              : '';
-
-          return Row(
-            children: [
-              if (stream.isNotEmpty) ...[
-                Text(
-                  stream,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const SizedBox(width: 8),
-                StatusBadge(status: user.status),
-              ] else
-                StatusBadge(status: user.status),
-            ],
+          final stream = UserController.instance.user.value.stream;
+          if (stream.isEmpty) return const SizedBox.shrink();
+          final label =
+              '${stream[0].toUpperCase()}${stream.substring(1)} stream';
+          return Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
           );
         }),
         actions: [
@@ -103,7 +92,10 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                         color: Colors.indigo,
                         shape: BoxShape.circle,
                       ),
-                      constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
                       child: Text(
                         '$count',
                         style: const TextStyle(
@@ -130,8 +122,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               onPressed: syncing ? null : () => ctrl.syncAll(),
               icon: syncing
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 24,
+                      height: 24,
                       child: Center(
                         child: AppPulsingDots(
                           dotSize: 4,
@@ -178,7 +170,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                     if (isPending) const PendingPaymentBanner(),
                     if (isPending)
                       const SizedBox(height: AppSizes.spaceBtwItems),
-
 
                     GridLayout(
                       itemCount: filteredSubjects.length,

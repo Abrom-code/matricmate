@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/image_string.dart';
+import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppHelperFunctions {
@@ -103,20 +105,132 @@ class AppHelperFunctions {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              onCancel?.call();
-            },
-            child: const Text('Cancel'),
+      builder: (context) {
+        final dark = isDark(context);
+        return Dialog(
+          backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
           ),
-          ElevatedButton(onPressed: onOkPressed, child: const Text('Ok')),
-        ],
-      ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Icon ─────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.amberAccent.withValues(
+                        alpha: dark ? 0.2 : 0.12,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.pause_rounded,
+                      color: AppColors.amberAccent,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.spaceBtwItems),
+
+                  // ── Title ───────────────────────────────────────────
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSizes.sm),
+
+                  // ── Message ─────────────────────────────────────────
+                  Text(
+                    message,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: dark
+                          ? AppColors.grey
+                          : AppColors.darkerGrey.withValues(alpha: 0.8),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSizes.lg),
+
+                  // ── Actions ─────────────────────────────────────────
+                  Row(
+                    children: [
+                      // Secondary button (Cancel - safe default)
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pop(context);
+                              onCancel?.call();
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSizes.sm),
+
+                      // Primary button (Ok - main action)
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: onOkPressed,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Ok',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

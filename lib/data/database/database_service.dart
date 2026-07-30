@@ -466,4 +466,28 @@ class DatabaseService extends GetxController {
       rethrow;
     }
   }
+
+  /// Returns every in-progress (isCompleted = 0) draft for the current user,
+  /// across ALL test types, joined with test + subject info for display.
+  Future<List<Map<String, dynamic>>> loadAllInProgressResults() async {
+    try {
+      final db = await database;
+      final userId = UserController.instance.user.value.id;
+
+      return await db.rawQuery(
+        '''
+        SELECT r.*, t.title AS test_title, t.time AS test_time,
+               t.type AS test_type, s.name AS subject_name
+        FROM results r
+        JOIN tests t ON r.test_id = t.id
+        LEFT JOIN subjects s ON t.subject_id = s.id
+        WHERE r.user_id = ? AND r.isCompleted = 0
+        ORDER BY r.rowid DESC
+        ''',
+        [userId],
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

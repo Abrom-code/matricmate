@@ -16,7 +16,6 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env');
 
   // ThemeController must exist before any widget builds so the
-  // Obx in App.build can safely call ThemeController.instance.
   Get.put(ThemeController(), permanent: true);
 
   await Firebase.initializeApp(

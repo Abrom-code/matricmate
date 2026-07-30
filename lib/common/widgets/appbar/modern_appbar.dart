@@ -12,12 +12,14 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.actions,
     this.showBackArrow = false,
+    this.showNotification = false,
   });
 
   final String title;
   final String? subtitle;
   final List<Widget>? actions;
   final bool showBackArrow;
+  final bool showNotification;
 
   @override
   Size get preferredSize {
@@ -31,6 +33,7 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
     return Appbar(
       showBackArrow: showBackArrow,
       actions: actions,
+      showNotification: showNotification,
       title: _TitleColumn(
         title: title,
         subtitle: subtitle != null && subtitle!.isNotEmpty
@@ -52,12 +55,14 @@ class ModernAppbarWithBuilder extends StatelessWidget
     this.subtitleBuilder,
     this.actions,
     this.showBackArrow = false,
+    this.showNotification = false,
   });
 
   final String title;
   final WidgetBuilder? subtitleBuilder;
   final List<Widget>? actions;
   final bool showBackArrow;
+  final bool showNotification;
 
   @override
   Size get preferredSize {
@@ -71,6 +76,7 @@ class ModernAppbarWithBuilder extends StatelessWidget
     return Appbar(
       showBackArrow: showBackArrow,
       actions: actions,
+      showNotification: showNotification,
       title: _TitleColumn(
         title: title,
         subtitle: subtitleBuilder != null

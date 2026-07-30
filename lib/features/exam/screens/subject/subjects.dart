@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
-import 'package:matricmate/common/widgets/exam/resume_banner.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -31,7 +30,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ctrl.loadInProgressBanner();
+      ctrl.loadPausedTests();
       if (mounted) {
         appRouteObserver.subscribe(this, ModalRoute.of(context)!);
       }
@@ -46,7 +45,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
 
   // Refresh banner whenever the user navigates back to this screen.
   @override
-  void didPopNext() => ctrl.loadInProgressBanner();
+  void didPopNext() => ctrl.loadPausedTests();
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +54,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
     return Scaffold(
       appBar: ModernAppbarWithBuilder(
         title: 'MatricMate',
+        showNotification: true,
         subtitleBuilder: (_) => Obx(() {
           final user = UserController.instance.user.value;
           final stream = user.stream.isNotEmpty
@@ -76,31 +76,75 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
           );
         }),
         actions: [
+          // Paused tests appbar button
+          Obx(() {
+            final count = ctrl.pausedTests.length;
+            if (count == 0) return const SizedBox.shrink();
+            return IconButton(
+              tooltip: '$count test${count == 1 ? '' : 's'} in progress',
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              onPressed: () => Get.toNamed(Routes.pausedTests),
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(
+                    Icons.pause_circle_filled_rounded,
+                    size: 20,
+                    color: AppColors.white,
+                  ),
+                  Positioned(
+                    top: -5,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.indigo,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                      child: Text(
+                        '$count',
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
           Obx(() {
             final syncing = syncController.refreshing.value;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: IconButton(
-                tooltip: 'Sync content',
-                onPressed: syncing ? null : () => ctrl.syncAll(),
-                icon: syncing
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Center(
-                          child: AppPulsingDots(
-                            dotSize: 4,
-                            dotSpacing: 2,
-                            color: AppColors.white,
-                          ),
+            return IconButton(
+              tooltip: 'Sync content',
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onPressed: syncing ? null : () => ctrl.syncAll(),
+              icon: syncing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Center(
+                        child: AppPulsingDots(
+                          dotSize: 4,
+                          dotSpacing: 2,
+                          color: AppColors.white,
                         ),
-                      )
-                    : const Icon(
-                        Icons.cloud_sync_outlined,
-                        size: AppSizes.iconMd * 1.2,
-                        color: AppColors.white,
                       ),
-              ),
+                    )
+                  : const Icon(
+                      Icons.cloud_sync_outlined,
+                      size: 20,
+                      color: AppColors.white,
+                    ),
             );
           }),
         ],
@@ -134,23 +178,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                     if (isPending) const PendingPaymentBanner(),
                     if (isPending)
                       const SizedBox(height: AppSizes.spaceBtwItems),
-                    // ── Resume banner ──────────────────────────────────────
-                    Obx(() {
-                      final draft = ctrl.inProgressDraft.value;
-                      if (draft == null) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSizes.spaceBtwItems,
-                        ),
-                        child: ResumeBanner(
-                          testTitle: ctrl.inProgressTestTitle.value,
-                          answered: draft.selectedAnswers.length,
-                          total: draft.testQuestions.length,
-                          draft: draft,
-                          testTime: ctrl.inProgressTestTime.value,
-                        ),
-                      );
-                    }),
+
 
                     GridLayout(
                       itemCount: filteredSubjects.length,

@@ -18,6 +18,7 @@ class Routes {
   static const result = '/result';
   static const review = '/review';
   static const ready = '/ready';
+  static const pausedTests = '/paused-tests';
 
   // premium
   static const premium = '/premium';

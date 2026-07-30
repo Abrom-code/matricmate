@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
-import 'package:matricmate/common/widgets/exam/resume_banner.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
@@ -27,7 +26,7 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ctrl.loadInProgressEntranceBanner();
+      ctrl.loadPausedTests();
       if (mounted) {
         appRouteObserver.subscribe(this, ModalRoute.of(context)!);
       }
@@ -42,7 +41,7 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
 
   // Refresh banner when the user navigates back to this screen.
   @override
-  void didPopNext() => ctrl.loadInProgressEntranceBanner();
+  void didPopNext() => ctrl.loadPausedTests();
 
   @override
   Widget build(BuildContext context) {
@@ -53,33 +52,79 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
         title: 'Entrance Exams',
         subtitle: 'Select a subject',
         actions: [
+          // Paused tests (entrance + model only)
+          Obx(() {
+            final count = ctrl.pausedTests
+                .where((t) => t.testType == 'entrance' || t.testType == 'model')
+                .length;
+            if (count == 0) return const SizedBox.shrink();
+            return IconButton(
+              tooltip: '$count test${count == 1 ? '' : 's'} in progress',
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              onPressed: () => Get.toNamed(Routes.pausedTests),
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(
+                    Icons.pause_circle_filled_rounded,
+                    size: 20,
+                    color: AppColors.white,
+                  ),
+                  Positioned(
+                    top: -5,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.indigo,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                      child: Text(
+                        '$count',
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
           Obx(() {
             final syncing = syncController.entranceSyncing.value;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: IconButton(
-                tooltip: syncing ? 'Sync in progress…' : 'Sync entrance exams',
-                onPressed: syncing
-                    ? null
-                    : () => syncController.syncEntranceExams(),
-                icon: syncing
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Center(
-                          child: AppPulsingDots(
-                            dotSize: 4,
-                            dotSpacing: 2,
-                            color: AppColors.white,
-                          ),
+            return IconButton(
+              tooltip: syncing ? 'Sync in progress…' : 'Sync entrance exams',
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onPressed: syncing
+                  ? null
+                  : () => syncController.syncEntranceExams(),
+              icon: syncing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Center(
+                        child: AppPulsingDots(
+                          dotSize: 4,
+                          dotSpacing: 2,
+                          color: AppColors.white,
                         ),
-                      )
-                    : const Icon(
-                        Icons.cloud_sync_outlined,
-                        size: AppSizes.iconMd * 1.2,
-                        color: AppColors.white,
                       ),
-              ),
+                    )
+                  : const Icon(
+                      Icons.cloud_sync_outlined,
+                      size: 20,
+                      color: AppColors.white,
+                    ),
             );
           }),
         ],
@@ -129,24 +174,6 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
                           ),
                           const SizedBox(height: AppSizes.spaceBtwItems),
                         ],
-
-                        // Resume banner (entrance/model in-progress only)
-                        Obx(() {
-                          final draft = ctrl.inProgressEntranceDraft.value;
-                          if (draft == null) return const SizedBox.shrink();
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSizes.spaceBtwItems,
-                            ),
-                            child: ResumeBanner(
-                              testTitle: ctrl.inProgressEntranceTitle.value,
-                              answered: draft.selectedAnswers.length,
-                              total: draft.testQuestions.length,
-                              draft: draft,
-                              testTime: ctrl.inProgressEntranceTime.value,
-                            ),
-                          );
-                        }),
                       ],
                     ),
                   ),
@@ -166,7 +193,9 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
                         const SizedBox(height: AppSizes.spaceBtwItems),
                     itemBuilder: (_, index) {
                       if (index == subjects.length) {
-                        return const SizedBox(height: AppSizes.spaceBtwSections * 2);
+                        return const SizedBox(
+                          height: AppSizes.spaceBtwSections * 2,
+                        );
                       }
                       final subject = subjects[index];
                       final entranceCount = entranceNums[subject.id] ?? 0;

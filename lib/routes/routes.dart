@@ -25,6 +25,7 @@ import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/grade_test.dart';
 import 'package:matricmate/features/exam/screens/entrance/entrance.dart';
 import 'package:matricmate/features/exam/screens/entrance/widgets/exam_list.dart';
+import 'package:matricmate/features/exam/screens/paused_tests/paused_tests_screen.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
 import 'package:matricmate/features/exam/screens/result/review.dart';
@@ -148,5 +149,6 @@ class AppRoutes {
       page: () => const PaymentVerificationScreen(),
       binding: PremiumBinding(),
     ),
+    GetPage(name: Routes.pausedTests, page: () => const PausedTestsScreen()),
   ];
 }

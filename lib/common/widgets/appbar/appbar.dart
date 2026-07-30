@@ -20,6 +20,8 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
     this.centerTitle = false,
     this.backgroundColor = AppColors.primary,
     this.leadingIconColor = AppColors.white,
+    this.showNotification = false,
+    this.onNotificationPressed,
   });
 
   final Widget? title;
@@ -30,6 +32,8 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
   final bool centerTitle;
   final Color backgroundColor;
   final Color leadingIconColor;
+  final bool showNotification;
+  final VoidCallback? onNotificationPressed;
 
   /// Returns the correct toolbar height for the current orientation.
   static double toolbarHeight(BuildContext context) {
@@ -71,6 +75,7 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
       /// Title
       title: title,
       centerTitle: centerTitle,
+      titleSpacing: 8,
 
       /// Title Style (if using Text widget)
       titleTextStyle: TextStyle(
@@ -80,7 +85,19 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
       ),
 
       /// Actions
-      actions: actions,
+      actions: [
+        if (actions != null) ...actions!,
+        if (showNotification)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: IconButton(
+              tooltip: 'Notifications',
+              onPressed: onNotificationPressed ?? () {},
+              icon: const Icon(Icons.notifications_outlined, color: AppColors.white),
+            ),
+          ),
+      ],
+      actionsPadding: const EdgeInsets.symmetric(horizontal: 4),
 
       /// Icon Theme (affects actions icons too)
       iconTheme: const IconThemeData(color: AppColors.white),

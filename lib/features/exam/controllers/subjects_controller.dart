@@ -5,7 +5,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
-import 'package:matricmate/features/exam/models/result_model.dart';
+import 'package:matricmate/features/exam/models/paused_test_info.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -34,19 +34,7 @@ class SubjectsController extends GetxController {
 
   final RxString selectedStream = UserController.instance.user.value.stream.obs;
 
-  // ── Resume banner ─────────────────────────────────────────────────────────
-  /// The most recent in-progress draft, or null if none exists.
-  final Rxn<ResultModel> inProgressDraft = Rxn<ResultModel>();
-  /// Test title for the in-progress draft.
-  final RxString inProgressTestTitle = ''.obs;
-  /// Test time (minutes) for the in-progress draft.
-  final RxInt inProgressTestTime = 0.obs;
-
-  // ── Entrance resume banner ─────────────────────────────────────────────────
-  /// The most recent in-progress entrance/model exam draft, or null if none.
-  final Rxn<ResultModel> inProgressEntranceDraft = Rxn<ResultModel>();
-  final RxString inProgressEntranceTitle = ''.obs;
-  final RxInt inProgressEntranceTime = 0.obs;
+  final RxList<PausedTestInfo> pausedTests = <PausedTestInfo>[].obs;
 
   @override
   void onInit() {
@@ -60,41 +48,19 @@ class SubjectsController extends GetxController {
     super.onInit();
   }
 
-  /// Loads the most recent in-progress test draft and populates banner fields.
-  Future<void> loadInProgressBanner() async {
+
+  Future<void> loadPausedTests() async {
     try {
-      final row = await DatabaseService.instance.loadMostRecentInProgressResult();
-      if (row == null) {
-        inProgressDraft.value = null;
-        inProgressTestTitle.value = '';
-        return;
-      }
-      inProgressDraft.value = ResultModel.fromMap(row);
-      inProgressTestTitle.value = row['test_title'] as String? ?? '';
-      inProgressTestTime.value = row['test_time'] as int? ?? -1;
+      final rows = await DatabaseService.instance.loadAllInProgressResults();
+      pausedTests.assignAll(
+        rows.map((r) => PausedTestInfo.fromMap(r)).toList(),
+      );
     } catch (_) {
-      inProgressDraft.value = null;
+      pausedTests.clear();
     }
   }
 
-  /// Loads the most recent in-progress entrance/model exam draft.
-  Future<void> loadInProgressEntranceBanner() async {
-    try {
-      final row = await DatabaseService.instance.loadMostRecentInProgressResult(
-        types: ['entrance', 'model'],
-      );
-      if (row == null) {
-        inProgressEntranceDraft.value = null;
-        inProgressEntranceTitle.value = '';
-        return;
-      }
-      inProgressEntranceDraft.value = ResultModel.fromMap(row);
-      inProgressEntranceTitle.value = row['test_title'] as String? ?? '';
-      inProgressEntranceTime.value = row['test_time'] as int? ?? -1;
-    } catch (_) {
-      inProgressEntranceDraft.value = null;
-    }
-  }
+
 
   /// LOCAL ONLY (startup)
   Future<void> loadLocalSubjects() async {
@@ -134,7 +100,10 @@ class SubjectsController extends GetxController {
         // Load local counts (all 0 at this point for a first-run user)
         await Future.wait(
           subjects.map((s) async {
-            entranceTestNumbers[s.id] = await _repo.testNumbers(s.id, 'entrance');
+            entranceTestNumbers[s.id] = await _repo.testNumbers(
+              s.id,
+              'entrance',
+            );
             modelTestNumbers[s.id] = await _repo.testNumbers(s.id, 'model');
           }),
         );
@@ -246,14 +215,12 @@ class SubjectsController extends GetxController {
         final remoteModel = entry.value['model'] ?? 0;
         // Take whichever is higher — preserves locally-downloaded counts
         // if the remote query returns a lower number for any reason.
-        final newEntrance =
-            remoteEntrance > (entranceTestNumbers[sid] ?? 0)
-                ? remoteEntrance
-                : (entranceTestNumbers[sid] ?? 0);
-        final newModel =
-            remoteModel > (modelTestNumbers[sid] ?? 0)
-                ? remoteModel
-                : (modelTestNumbers[sid] ?? 0);
+        final newEntrance = remoteEntrance > (entranceTestNumbers[sid] ?? 0)
+            ? remoteEntrance
+            : (entranceTestNumbers[sid] ?? 0);
+        final newModel = remoteModel > (modelTestNumbers[sid] ?? 0)
+            ? remoteModel
+            : (modelTestNumbers[sid] ?? 0);
 
         entranceTestNumbers[sid] = newEntrance;
         modelTestNumbers[sid] = newModel;
@@ -284,9 +251,11 @@ class SubjectsController extends GetxController {
       // If ANY subject has 0 for both counts (never fetched or new subject
       // added), fetch from remote in the background for all zero subjects.
       final zeroSubjects = subjects
-          .where((s) =>
-              (entranceTestNumbers[s.id] ?? 0) == 0 &&
-              (modelTestNumbers[s.id] ?? 0) == 0)
+          .where(
+            (s) =>
+                (entranceTestNumbers[s.id] ?? 0) == 0 &&
+                (modelTestNumbers[s.id] ?? 0) == 0,
+          )
           .toList();
       if (zeroSubjects.isNotEmpty) {
         unawaited(_fetchRemoteCountsIfNeeded(zeroSubjects));

@@ -24,6 +24,9 @@ class UserController extends GetxController {
 
   final UserRepository _userRepository = Get.find<UserRepository>();
 
+  /// Kept as a field so we can cancel the realtime watch on logout.
+  final _sessionService = SessionService();
+
   Rx<UserModel> user = UserModel.empty().obs;
 
   final RxBool isDeleting = false.obs;
@@ -60,6 +63,10 @@ class UserController extends GetxController {
     try {
       AppFullScreenLoader.openLoadingDialog('Logging out...');
 
+      // Stop watching the session before signing out so we don't
+      // receive a stale change event during teardown.
+      _sessionService.cancelWatch();
+
       await _authRepo.logout();
 
       user.value = UserModel.empty();
@@ -86,7 +93,7 @@ class UserController extends GetxController {
 
       final deviceId = await DeviceService.getDeviceId();
 
-      final isAllowed = await SessionService().validateSession(uid, deviceId);
+      final isAllowed = await _sessionService.validateSession(uid, deviceId);
 
       if (!isAllowed) {
         SnackbarHelper.warning(
@@ -99,6 +106,21 @@ class UserController extends GetxController {
 
       user.value = freshUser;
       await _userRepository.updateLocalUser(freshUser);
+
+      // Start (or restart) the Realtime watch now that we know this device
+      // is authorised. If the admin changes the device_id in Supabase,
+      // this callback fires and the user is immediately logged out.
+      _sessionService.watchSession(
+        uid: uid,
+        currentDeviceId: deviceId,
+        onDeviceChanged: () {
+          SnackbarHelper.warning(
+            'Session Ended',
+            'Your account was signed in on another device.',
+          );
+          logOut();
+        },
+      );
 
       return true;
     } finally {

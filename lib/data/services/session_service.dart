@@ -7,6 +7,8 @@ enum SessionValidationResult { allowed, blocked, error }
 class SessionService {
   final _supabase = Supabase.instance.client;
 
+  RealtimeChannel? _sessionChannel;
+
   Future<SessionValidationResult> validateSessionDetailed(
     String uid,
     String deviceId,
@@ -85,6 +87,47 @@ class SessionService {
       await _supabase.from('user_sessions').delete().eq('firebase_uid', uid);
     } catch (e) {
       // Non-critical — session cleanup failure should not block logout
+    }
+  }
+
+  // ── Realtime device-change watch ─────────────────────────────────────────
+
+  /// Subscribes to Realtime UPDATE events on this user's session row.
+  /// [onDeviceChanged] fires whenever the `device_id` stored in Supabase
+  /// no longer matches [currentDeviceId] — the caller should trigger logout.
+  void watchSession({
+    required String uid,
+    required String currentDeviceId,
+    required void Function() onDeviceChanged,
+  }) {
+    cancelWatch(); // always clean up before re-subscribing
+
+    _sessionChannel = _supabase
+        .channel('session_watch_$uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'user_sessions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'firebase_uid',
+            value: uid,
+          ),
+          callback: (payload) {
+            final newDeviceId = payload.newRecord['device_id'] as String?;
+            if (newDeviceId != null && newDeviceId != currentDeviceId) {
+              onDeviceChanged();
+            }
+          },
+        )
+        .subscribe();
+  }
+
+  /// Removes the Realtime channel. Call on logout or controller dispose.
+  void cancelWatch() {
+    if (_sessionChannel != null) {
+      _supabase.removeChannel(_sessionChannel!);
+      _sessionChannel = null;
     }
   }
 }

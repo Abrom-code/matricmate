@@ -175,6 +175,7 @@ class _BookmarkScreenState extends State<BookmarkScreen>
                   }).toList(),
                 ),
               ),
+              const SizedBox(height: AppSizes.spaceBtwSections * 2),
             ],
           ),
         );
@@ -239,7 +240,7 @@ class _SearchBar extends StatelessWidget {
   }
 
   OutlineInputBorder _border(Color color) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: color, width: 1.2),
-      );
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(color: color, width: 1.2),
+  );
 }

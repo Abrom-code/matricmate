@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 
 /// Small pill button that replaces the old full-width resume banner.
 /// Shows how many tests are paused; tapping opens the full list.
@@ -8,7 +9,7 @@ class PausedTestsButton extends StatelessWidget {
   const PausedTestsButton({super.key, required this.count});
   final int count;
 
-  static const _accent = Colors.indigo;
+  static const _accent = AppColors.amberAccent;
 
   @override
   Widget build(BuildContext context) {

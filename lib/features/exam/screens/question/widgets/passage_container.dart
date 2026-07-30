@@ -85,14 +85,22 @@ class PassageContainer extends StatelessWidget {
                 // manual tap or collapse needed.
                 child: NotificationListener<OverscrollNotification>(
                   onNotification: (notification) {
-                    // overscroll > 0  → user dragged past the bottom edge
-                    if (notification.overscroll > 0 &&
-                        outerScrollController.hasClients) {
+                    if (outerScrollController.hasClients) {
                       final current = outerScrollController.offset;
                       final max = outerScrollController.position.maxScrollExtent;
-                      final target =
-                          (current + notification.overscroll).clamp(0.0, max);
-                      outerScrollController.jumpTo(target);
+                      
+                      // overscroll > 0  → user dragged past the bottom edge
+                      if (notification.overscroll > 0) {
+                        final target =
+                            (current + notification.overscroll).clamp(0.0, max);
+                        outerScrollController.jumpTo(target);
+                      }
+                      // overscroll < 0  → user dragged past the top edge
+                      else if (notification.overscroll < 0) {
+                        final target =
+                            (current + notification.overscroll).clamp(0.0, max);
+                        outerScrollController.jumpTo(target);
+                      }
                     }
                     // Return false so the notification keeps bubbling; this
                     // avoids suppressing any other handlers up the tree.

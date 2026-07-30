@@ -65,7 +65,9 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               onPressed: () => Get.toNamed(
                 Routes.pausedTests,
-                arguments: {'types': ['entrance', 'model']},
+                arguments: {
+                  'types': ['entrance', 'model'],
+                },
               ),
               icon: Stack(
                 clipBehavior: Clip.none,
@@ -81,10 +83,13 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
                     child: Container(
                       padding: const EdgeInsets.all(2),
                       decoration: const BoxDecoration(
-                        color: Colors.indigo,
+                        color: AppColors.amberAccent,
                         shape: BoxShape.circle,
                       ),
-                      constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
                       child: Text(
                         '$count',
                         style: const TextStyle(
@@ -113,7 +118,7 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
                   : () => syncController.syncEntranceExams(),
               icon: syncing
                   ? const SizedBox(
-                      width: 20,
+                      width: 24,
                       height: 20,
                       child: Center(
                         child: AppPulsingDots(

@@ -114,7 +114,7 @@ class ReadyDialog extends StatelessWidget {
                           _MetaChip(
                             icon: Icons.calendar_today_rounded,
                             label: '$examYear',
-                            color: Colors.blueAccent,
+                            color: AppColors.amberAccent,
                             dark: dark,
                           ),
                         if (examYear != null && examCode != null)
@@ -150,7 +150,7 @@ class ReadyDialog extends StatelessWidget {
                       description:
                           'Continue from question ${answered + 1} where you left off',
                       icon: Icons.play_arrow_rounded,
-                      color: Colors.indigo,
+                      color: AppColors.amberAccent,
                       onTap: () {
                         final wasExam = draft!.checkedQuestions.isEmpty;
                         final wasTimed = draft!.remainingSeconds > 0;

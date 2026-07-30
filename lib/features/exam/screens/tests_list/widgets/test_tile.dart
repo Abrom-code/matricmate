@@ -3,7 +3,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-const _kResumeColor = Colors.indigo;
+const _kResumeColor = AppColors.amberAccent;
 
 class TestTile extends StatelessWidget {
   const TestTile({
@@ -32,6 +32,7 @@ class TestTile extends StatelessWidget {
   final bool isInProgress;
   final int questionCount;
   final int timeMinutes;
+
   /// When true, shows a "NEW" badge next to the test title.
   final bool isNew;
 
@@ -153,7 +154,11 @@ class TestTile extends StatelessWidget {
                   color: iconColor.withValues(alpha: dark ? 0.18 : 0.10),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: iconColor, size: 20),
+                child: Icon(
+                  icon,
+                  color: isInProgress ? _kResumeColor : AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
 

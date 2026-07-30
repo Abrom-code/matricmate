@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
 /// A reusable "resume in-progress test" banner.
@@ -30,7 +31,7 @@ class ResumeBanner extends StatelessWidget {
     final progress = total > 0 ? answered / total : 0.0;
     final pct = (progress * 100).round();
 
-    const accentColor = Colors.indigo;
+    const accentColor = AppColors.amberAccent;
 
     return Material(
       color: cs.surfaceContainerHighest.withValues(alpha: 0.55),

@@ -63,7 +63,10 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
               visualDensity: VisualDensity.compact,
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              onPressed: () => Get.toNamed(Routes.pausedTests),
+              onPressed: () => Get.toNamed(
+                Routes.pausedTests,
+                arguments: {'types': ['entrance', 'model']},
+              ),
               icon: Stack(
                 clipBehavior: Clip.none,
                 children: [

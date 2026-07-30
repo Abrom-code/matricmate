@@ -17,6 +17,24 @@ class PausedTestsScreen extends StatefulWidget {
 class _PausedTestsScreenState extends State<PausedTestsScreen> {
   SubjectsController get ctrl => SubjectsController.instance;
 
+  /// Types to show — null means show everything.
+  List<String>? get _filterTypes {
+    final args = Get.arguments;
+    if (args is Map && args.containsKey('types')) {
+      return List<String>.from(args['types'] as List);
+    }
+    return null;
+  }
+
+  String get _title {
+    final types = _filterTypes;
+    if (types == null) return 'Paused Tests';
+    if (types.contains('entrance') && types.contains('model')) {
+      return 'Entrance & Model Tests';
+    }
+    return 'Paused Tests';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -25,18 +43,22 @@ class _PausedTestsScreenState extends State<PausedTestsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filterTypes = _filterTypes;
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          'Paused Tests',
+          _title,
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
       body: Obx(() {
-        final tests = ctrl.pausedTests;
+        final all = ctrl.pausedTests;
+        final tests = filterTypes == null
+            ? all
+            : all.where((t) => filterTypes.contains(t.testType)).toList();
 
         if (tests.isEmpty) {
           return const Center(child: Text('No paused tests'));

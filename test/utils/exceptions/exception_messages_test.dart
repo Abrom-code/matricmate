@@ -3,7 +3,7 @@ import 'package:matricmate/utils/exceptions/firebase_auth_exceptions.dart';
 import 'package:matricmate/utils/exceptions/firebase_exceptions.dart';
 import 'package:matricmate/utils/exceptions/format_exceptions.dart';
 import 'package:matricmate/utils/exceptions/platform_exceptions.dart';
-import 'package:matricmate/utils/exceptions/sqflite_expcetions.dart';
+import 'package:matricmate/utils/exceptions/sqflite_exceptions.dart';
 import 'package:matricmate/utils/exceptions/supabase_exception.dart';
 
 void main() {

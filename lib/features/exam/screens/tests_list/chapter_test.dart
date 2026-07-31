@@ -4,7 +4,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';

@@ -340,14 +340,3 @@ class _MetaChip extends StatelessWidget {
     );
   }
 }
-
-// ── Controller (kept minimal — no longer needs isExamMode toggle) ─────────────
-
-class ReadyController extends GetxController {
-  static ReadyController get instance => Get.find();
-  final isExamMode = false.obs;
-
-  void changeExamMode() {
-    isExamMode.value = !isExamMode.value;
-  }
-}

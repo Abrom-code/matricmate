@@ -10,7 +10,7 @@ class EntranceExamsBinding extends Bindings {
       () => ExamSelectionController(),
       fenix: true,
     );
-    // ExamsController loads tests for the selected subject
-    Get.lazyPut<ExamsController>(() => ExamsController(), fenix: true);
+    // EntranceExamsController loads tests for the selected subject
+    Get.lazyPut<EntranceExamsController>(() => EntranceExamsController(), fenix: true);
   }
 }

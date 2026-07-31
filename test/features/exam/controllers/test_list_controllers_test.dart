@@ -105,7 +105,7 @@ void main() {
     test(
       'loads entrance/model tests, sorts them, and exposes local progress',
       () async {
-        final controller = ExamsController(testRepository: repository);
+        final controller = EntranceExamsController(testRepository: repository);
 
         await controller.loadAllExams(7);
 

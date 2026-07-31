@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/exam/explanation_box.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
@@ -8,7 +9,6 @@ import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
-import 'package:matricmate/features/exam/screens/question/widgets/explanation_box.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -52,7 +52,7 @@ class ExamQuestionSection extends GetView<QuestionController> {
         final c = Get.find<ChapterTestController>();
         await c.loadTestResults(c.chapterTest);
       case 2:
-        final c = Get.find<ExamsController>();
+        final c = Get.find<EntranceExamsController>();
         await c.loadTestResults(c.entranceTests);
       default:
         break;
@@ -122,10 +122,15 @@ class ExamQuestionSection extends GetView<QuestionController> {
 
             // Explanation — practice mode only
             if (isChecked && !examMode) ...[
-              ExplanationBox(
+              AppExplanationBox(
                 explanationEn: q.explanationEn,
                 explanationAm: q.explanationAm,
                 explanationImageUrl: q.explanationImageUrl,
+                expanded: controller.isExplanationExpanded.value,
+                onToggle: () => controller.isExplanationExpanded.value =
+                    !controller.isExplanationExpanded.value,
+                languageSelected: controller.languageSelected,
+                onLanguageChange: (v) => controller.languageSelected.value = v,
               ),
               const SizedBox(height: AppSizes.spaceBtwItems),
             ] else

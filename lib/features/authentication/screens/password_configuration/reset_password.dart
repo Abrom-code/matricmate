@@ -9,8 +9,8 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ResetPassword extends GetView<ResetPasswordController> {
-  const ResetPassword({super.key});
+class ResetPasswordScreen extends GetView<ResetPasswordController> {
+  const ResetPasswordScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

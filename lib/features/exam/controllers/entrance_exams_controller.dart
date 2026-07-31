@@ -4,10 +4,10 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
-class ExamsController extends GetxController {
-  static ExamsController get instance => Get.find();
+class EntranceExamsController extends GetxController {
+  static EntranceExamsController get instance => Get.find();
 
-  ExamsController({TestRepository? testRepository})
+  EntranceExamsController({TestRepository? testRepository})
     : _testRepository = testRepository ?? TestRepository();
 
   final TestRepository _testRepository;

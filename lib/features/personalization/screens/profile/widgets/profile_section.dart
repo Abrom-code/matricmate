@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/status_badge.dart';
 import 'package:matricmate/features/personalization/controllers/profile_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/image_string.dart';
+import 'package:matricmate/utils/constants/app_images.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -57,7 +58,7 @@ class ProfileSection extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      _StatusBadge(status: user.status),
+                      StatusBadge(status: user.status),
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -201,66 +202,6 @@ class _StatusAvatar extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Inline status badge ──────────────────────────────────────────────────────
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-  final String status;
-
-  String get _label {
-    switch (status) {
-      case 'active':
-        return 'PREMIUM';
-      case 'pending':
-        return 'PENDING';
-      default:
-        return 'FREE';
-    }
-  }
-
-  Color get _bg {
-    switch (status) {
-      case 'active':
-        return const Color(0xFFD4F542);
-      case 'pending':
-        return const Color(0xFFFFD54F);
-      default:
-        return AppColors.grey;
-    }
-  }
-
-  Color get _fg {
-    switch (status) {
-      case 'active':
-        return const Color(0xFF2E5A00);
-      case 'pending':
-        return const Color(0xFF6B3A00);
-      default:
-        return AppColors.darkerGrey;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: _bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        _label,
-        style: TextStyle(
-          color: _fg,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.1,
-        ),
       ),
     );
   }

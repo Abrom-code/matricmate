@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/enums/payement_enum.dart';
+import 'package:matricmate/utils/enums/payment_enum.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class PayementDetail extends StatelessWidget {
-  const PayementDetail({super.key, required this.method});
+class PaymentDetail extends StatelessWidget {
+  const PaymentDetail({super.key, required this.method});
 
   final PaymentMethod method;
 

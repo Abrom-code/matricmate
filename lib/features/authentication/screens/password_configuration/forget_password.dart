@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
-import 'package:matricmate/features/authentication/controllers/login/forget_password_controller.dart';
+import 'package:matricmate/features/authentication/controllers/login/forgot_password_controller.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
-class ForgetPassword extends GetView<ForgetPasswordController> {
-  const ForgetPassword({super.key});
+class ForgetPasswordScreen extends GetView<ForgotPasswordController> {
+  const ForgetPasswordScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

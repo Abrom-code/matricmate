@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/features/personalization/screens/update/update_profile.dart';
 import 'package:matricmate/routes/app_routes.dart';

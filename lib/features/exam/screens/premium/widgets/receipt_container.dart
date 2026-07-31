@@ -4,10 +4,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class ReciptContainer extends StatelessWidget {
+class ReceiptContainer extends StatelessWidget {
   final XFile? file;
 
-  const ReciptContainer({super.key, this.file});
+  const ReceiptContainer({super.key, this.file});
 
   @override
   Widget build(BuildContext context) {

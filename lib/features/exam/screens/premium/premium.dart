@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/payment_tile.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/enums/payement_enum.dart';
+import 'package:matricmate/utils/enums/payment_enum.dart';
 
 class PremiumScreen extends StatelessWidget {
   const PremiumScreen({super.key});

@@ -4,18 +4,18 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/link_input_field.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/payement_detail.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/recipt_container.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/payment_detail.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/payment_tile.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/receipt_container.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/enums/payement_enum.dart';
+import 'package:matricmate/utils/enums/payment_enum.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class PayementScreen extends StatelessWidget {
+class PaymentScreen extends StatelessWidget {
   final PaymentMethod method;
-  const PayementScreen({super.key, required this.method});
+  const PaymentScreen({super.key, required this.method});
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +61,7 @@ class PayementScreen extends StatelessWidget {
               context: context,
               showIcon: false,
               isFeatured: method.isFeatured,
-              detail: PayementDetail(method: method),
+              detail: PaymentDetail(method: method),
             ),
             const SizedBox(height: AppSizes.spaceBtwItems),
 
@@ -77,15 +77,15 @@ class PayementScreen extends StatelessWidget {
               key: controller.paymentFormKey,
               child: Column(
                 children: [
-                  const LinkInputFiled(),
+                  const LinkInputField(),
                   const SizedBox(height: AppSizes.spaceBtwSections),
 
                   Obx(() {
                     final file = controller.receipt.value;
 
                     return GestureDetector(
-                      onTap: () => controller.pickRecipt(),
-                      child: ReciptContainer(file: file),
+                      onTap: () => controller.pickReceipt(),
+                      child: ReceiptContainer(file: file),
                     );
                   }),
                 ],

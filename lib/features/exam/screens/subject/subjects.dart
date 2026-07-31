@@ -7,7 +7,7 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -133,7 +133,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       ),
                     )
                   : const Icon(
-                      Icons.cloud_sync_outlined,
+                      Icons.sync_rounded,
                       size: 20,
                       color: AppColors.white,
                     ),

@@ -6,7 +6,7 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -15,15 +15,15 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class EntranceExams extends StatefulWidget {
-  const EntranceExams({super.key});
+class EntranceExamsScreen extends StatefulWidget {
+  const EntranceExamsScreen({super.key});
 
   @override
-  State<EntranceExams> createState() => _EntranceExamsState();
+  State<EntranceExamsScreen> createState() => _EntranceExamsScreenState();
 }
 
-class _EntranceExamsState extends State<EntranceExams> with RouteAware {
-  ExamsController get ctrl => ExamsController.instance;
+class _EntranceExamsScreenState extends State<EntranceExamsScreen> with RouteAware {
+  EntranceExamsController get ctrl => EntranceExamsController.instance;
 
   @override
   void didChangeDependencies() {
@@ -113,7 +113,7 @@ class _ExamList extends StatelessWidget {
   });
 
   final List<TestModel> tests;
-  final ExamsController controller;
+  final EntranceExamsController controller;
   final String label;
 
   @override

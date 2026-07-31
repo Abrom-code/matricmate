@@ -8,8 +8,8 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
-class ChangePassword extends GetView<ChangePasswordController> {
-  const ChangePassword({super.key});
+class ChangePasswordScreen extends GetView<ChangePasswordController> {
+  const ChangePasswordScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

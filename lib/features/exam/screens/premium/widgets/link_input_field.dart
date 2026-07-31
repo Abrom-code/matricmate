@@ -5,8 +5,8 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/validators/validators.dart';
 
-class LinkInputFiled extends StatelessWidget {
-  const LinkInputFiled({super.key});
+class LinkInputField extends StatelessWidget {
+  const LinkInputField({super.key});
 
   @override
   Widget build(BuildContext context) {

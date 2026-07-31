@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:matricmate/data/repositories/payment/payment_repository.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'package:matricmate/utils/enums/payement_enum.dart';
+import 'package:matricmate/utils/enums/payment_enum.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -39,7 +39,7 @@ class PremiumController extends GetxController {
     }
   }
 
-  Future<void> pickRecipt() async {
+  Future<void> pickReceipt() async {
     try {
       final picker = ImagePicker();
       final file = await picker.pickImage(source: ImageSource.gallery);

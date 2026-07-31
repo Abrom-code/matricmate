@@ -34,7 +34,7 @@ class SubjectsController extends GetxController {
 
   final RxString selectedStream = UserController.instance.user.value.stream.obs;
 
-  final RxList<PausedTestInfo> pausedTests = <PausedTestInfo>[].obs;
+  final RxList<PausedTestInfoModel> pausedTests = <PausedTestInfoModel>[].obs;
 
   @override
   void onInit() {
@@ -53,7 +53,7 @@ class SubjectsController extends GetxController {
     try {
       final rows = await DatabaseService.instance.loadAllInProgressResults();
       pausedTests.assignAll(
-        rows.map((r) => PausedTestInfo.fromMap(r)).toList(),
+        rows.map((r) => PausedTestInfoModel.fromMap(r)).toList(),
       );
     } catch (_) {
       pausedTests.clear();

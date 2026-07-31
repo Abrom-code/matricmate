@@ -89,7 +89,7 @@ class _PausedTestsScreenState extends State<PausedTestsScreen> {
           ),
           itemCount: tests.length + 1, // +1 for header
           itemBuilder: (_, i) {
-            if (i == 0) return _Header(count: tests.length, dark: dark);
+            if (i == 0) return const SizedBox();
             return Padding(
               padding: const EdgeInsets.only(top: AppSizes.spaceBtwItems),
               child: _PausedTestCard(info: tests[i - 1], dark: dark),
@@ -101,47 +101,11 @@ class _PausedTestsScreenState extends State<PausedTestsScreen> {
   }
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
-
-class _Header extends StatelessWidget {
-  const _Header({required this.count, required this.dark});
-  final int count;
-  final bool dark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.pending_actions_rounded,
-                  size: 14,
-                  color: AppColors.primary,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Card ──────────────────────────────────────────────────────────────────────
 
 class _PausedTestCard extends StatelessWidget {
   const _PausedTestCard({required this.info, required this.dark});
-  final PausedTestInfo info;
+  final PausedTestInfoModel info;
   final bool dark;
 
   String _typeLabel(String t) {

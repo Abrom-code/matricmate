@@ -16,15 +16,15 @@ import 'package:matricmate/bindings/exam/review_binding.dart';
 import 'package:matricmate/bindings/auth/signup_binding.dart';
 import 'package:matricmate/bindings/exam/test_binding.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
-import 'package:matricmate/features/authentication/screens/password_configration/forget_password.dart';
-import 'package:matricmate/features/authentication/screens/password_configration/reset_password.dart';
+import 'package:matricmate/features/authentication/screens/password_configuration/forget_password.dart';
+import 'package:matricmate/features/authentication/screens/password_configuration/reset_password.dart';
 import 'package:matricmate/features/authentication/screens/signup/signup.dart';
 import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
-import 'package:matricmate/features/exam/screens/chapter/widgets/grade_test.dart';
+import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
 import 'package:matricmate/features/exam/screens/entrance/entrance.dart';
-import 'package:matricmate/features/exam/screens/entrance/widgets/exam_list.dart';
+import 'package:matricmate/features/exam/screens/entrance/entrance_exams.dart';
 import 'package:matricmate/features/exam/screens/paused_tests/paused_tests_screen.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
@@ -37,10 +37,10 @@ import 'package:matricmate/features/personalization/screens/update/change_passwo
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/bindings/exam/premium_binding.dart';
+import 'package:matricmate/features/exam/screens/premium/payment.dart';
 import 'package:matricmate/features/exam/screens/premium/premium.dart';
-import 'package:matricmate/features/exam/screens/premium/payement.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
-import 'package:matricmate/utils/enums/payement_enum.dart';
+import 'package:matricmate/utils/enums/payment_enum.dart';
 
 class AppRoutes {
   static final pages = [
@@ -62,7 +62,7 @@ class AppRoutes {
     ),
     GetPage(
       name: Routes.gradeTests,
-      page: () => const GradeTestsPage(),
+      page: () => const GradeTestsScreen(),
       binding: GradeTestBinding(),
     ),
     GetPage(
@@ -109,18 +109,18 @@ class AppRoutes {
       binding: LoginBinding(),
     ),
     GetPage(
-      name: Routes.forgetPassword,
-      page: () => const ForgetPassword(),
+      name: Routes.forgotPassword,
+      page: () => const ForgetPasswordScreen(),
       binding: ForgotPasswordBinding(),
     ),
     GetPage(
       name: Routes.resetPassword,
-      page: () => const ResetPassword(),
+      page: () => const ResetPasswordScreen(),
       binding: ResetPasswordBinding(),
     ),
     GetPage(
       name: Routes.changePassword,
-      page: () => const ChangePassword(),
+      page: () => const ChangePasswordScreen(),
       binding: ChangePasswordBinding(),
     ),
 
@@ -131,7 +131,7 @@ class AppRoutes {
     ),
     GetPage(
       name: Routes.entranceExams,
-      page: () => const EntranceExams(),
+      page: () => const EntranceExamsScreen(),
       binding: EntranceExamsBinding(),
     ),
     GetPage(
@@ -141,7 +141,7 @@ class AppRoutes {
     ),
     GetPage(
       name: Routes.payment,
-      page: () => PayementScreen(method: Get.arguments as PaymentMethod),
+      page: () => PaymentScreen(method: Get.arguments as PaymentMethod),
       binding: PremiumBinding(),
     ),
     GetPage(

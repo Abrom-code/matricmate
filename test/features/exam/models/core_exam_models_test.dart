@@ -73,9 +73,9 @@ void main() {
       expect(bookmark.toMap()['user_id'], 'user-1');
     });
 
-    test('QuestionBlock identifies passage-backed question groups', () {
-      final passageBlock = QuestionBlock(passageId: 9, questions: []);
-      final standaloneBlock = QuestionBlock(questions: []);
+    test('QuestionBlockModel identifies passage-backed question groups', () {
+      final passageBlock = QuestionBlockModel(passageId: 9, questions: []);
+      final standaloneBlock = QuestionBlockModel(questions: []);
 
       expect(passageBlock.isPassage, isTrue);
       expect(standaloneBlock.isPassage, isFalse);

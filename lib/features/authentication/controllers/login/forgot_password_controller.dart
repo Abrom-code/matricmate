@@ -7,8 +7,8 @@ import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
-class ForgetPasswordController extends GetxController {
-  static ForgetPasswordController get instance => Get.find();
+class ForgotPasswordController extends GetxController {
+  static ForgotPasswordController get instance => Get.find();
   final AuthenticationRepository _authenticationRepository =
       AuthenticationRepository();
 

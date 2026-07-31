@@ -26,7 +26,7 @@ class QuestionController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isPassageLoading = false.obs;
   final RxList<QuestionModel> testQuestions = <QuestionModel>[].obs;
-  final RxList<QuestionBlock> blocks = <QuestionBlock>[].obs;
+  final RxList<QuestionBlockModel> blocks = <QuestionBlockModel>[].obs;
 
   // timer
   final RxInt remainingSeconds = 0.obs;
@@ -142,11 +142,11 @@ class QuestionController extends GetxController {
     }
   }
 
-  Future<List<QuestionBlock>> buildBlocks(List<QuestionModel> questions) async {
+  Future<List<QuestionBlockModel>> buildBlocks(List<QuestionModel> questions) async {
     try {
       isPassageLoading.value = true;
-      final List<QuestionBlock> newBlocks = [];
-      QuestionBlock? current;
+      final List<QuestionBlockModel> newBlocks = [];
+      QuestionBlockModel? current;
       int? lastPassageId;
       bool lastWasPassage = false;
 
@@ -165,7 +165,7 @@ class QuestionController extends GetxController {
             passage = await getPassage(q.passageId);
           }
 
-          current = QuestionBlock(
+          current = QuestionBlockModel(
             passageId: q.passageId,
             passage: passage,
             questions: [],

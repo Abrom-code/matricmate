@@ -3,16 +3,15 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/firebase_auth_exceptions.dart';
+import 'package:matricmate/utils/exceptions/firebase_exceptions.dart';
+import 'package:matricmate/utils/exceptions/format_exceptions.dart';
+import 'package:matricmate/utils/exceptions/platform_exceptions.dart';
+import 'package:matricmate/utils/exceptions/sqflite_exceptions.dart';
+import 'package:matricmate/utils/exceptions/supabase_exception.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'app_failure_model.dart';
-import 'firebase_auth_exceptions.dart';
-import 'firebase_exceptions.dart';
-import 'format_exceptions.dart';
-import 'platform_exceptions.dart';
-import 'sqflite_expcetions.dart';
-import 'supabase_exception.dart';
 
 class AppExceptionHandler {
   AppExceptionHandler._();

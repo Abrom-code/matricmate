@@ -6,7 +6,7 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/entrance/widgets/entrance_subject_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -129,7 +129,7 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
                       ),
                     )
                   : const Icon(
-                      Icons.cloud_sync_outlined,
+                      Icons.sync_rounded,
                       size: 20,
                       color: AppColors.white,
                     ),

@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:matricmate/features/exam/screens/result/result.dart';
+import 'package:matricmate/features/exam/controllers/result_controller.dart';
 
 class ResultBinding extends Bindings {
   @override

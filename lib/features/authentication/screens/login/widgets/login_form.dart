@@ -58,7 +58,7 @@ class LoginForm extends GetView<LoginController> {
             ],
           ),
           TextButton(
-            onPressed: () => Get.toNamed(Routes.forgetPassword),
+            onPressed: () => Get.toNamed(Routes.forgotPassword),
             child: const Text(AppTextStrings.forgetPassword),
           ),
           const SizedBox(height: AppSizes.spaceBtwSections),

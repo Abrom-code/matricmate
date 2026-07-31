@@ -5,7 +5,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/image_string.dart';
+import 'package:matricmate/utils/constants/app_images.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:url_launcher/url_launcher.dart';
 

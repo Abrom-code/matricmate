@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
-import 'package:matricmate/features/exam/models/result_model.dart';
+import 'package:matricmate/features/exam/controllers/result_controller.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/result_action_buttons.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/result_badge_circle.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -81,22 +81,5 @@ class ResultScreen extends GetView<ResultController> {
         ),
       ),
     );
-  }
-}
-
-class ResultController extends GetxController {
-  static ResultController get instance => Get.find();
-
-  late ResultModel result;
-
-  @override
-  void onInit() {
-    super.onInit();
-    final args = Get.arguments;
-    if (args == null || args is! Map || args['result'] is! ResultModel) {
-      Get.back();
-      return;
-    }
-    result = args['result'] as ResultModel;
   }
 }

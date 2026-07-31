@@ -4,7 +4,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/premium_bottom_sheet.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -13,14 +13,14 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class GradeTestsPage extends StatefulWidget {
-  const GradeTestsPage({super.key});
+class GradeTestsScreen extends StatefulWidget {
+  const GradeTestsScreen({super.key});
 
   @override
-  State<GradeTestsPage> createState() => _GradeTestsPageState();
+  State<GradeTestsScreen> createState() => _GradeTestsScreenState();
 }
 
-class _GradeTestsPageState extends State<GradeTestsPage> with RouteAware {
+class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
   GradeTestController get ctrl => GradeTestController.instance;
 
   @override

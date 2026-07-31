@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/payement_tile.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/payment_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/routes/app_routes.dart';
 

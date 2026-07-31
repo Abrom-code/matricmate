@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
-import 'package:matricmate/utils/constants/image_string.dart';
+import 'package:matricmate/utils/constants/app_images.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
 class AppDetail extends StatelessWidget {

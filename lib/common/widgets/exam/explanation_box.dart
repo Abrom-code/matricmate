@@ -98,12 +98,11 @@ class AppExplanationBox extends StatelessWidget {
                             ),
                           ),
                         ),
-                      if (!expanded)
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: AppColors.primary.withValues(alpha: 0.8),
-                          size: 20,
-                        ),
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.primary.withValues(alpha: 0.8),
+                        size: 20,
+                      ),
                       const SizedBox(width: 4),
                     ],
                   ),
@@ -113,72 +112,81 @@ class AppExplanationBox extends StatelessWidget {
           ),
 
           // ── Body ────────────────────────────────────────────────────
-          if (expanded) ...[
-            Divider(
-              height: 1,
-              color: AppColors.primary.withValues(alpha: 0.15),
-            ),
-            Obx(() {
-              final text = languageSelected.value == 'AM'
-                  ? explanationAm
-                  : explanationEn;
-              final baseStyle = GoogleFonts.lora(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                height: 1.75,
-                letterSpacing: 0.1,
-                color: dark
-                    ? AppColors.white.withValues(alpha: 0.85)
-                    : AppColors.darkerGrey,
-              );
-              return GestureDetector(
-                // Swipe left → Amharic, swipe right → English
-                onHorizontalDragEnd: (details) {
-                  final dx = details.primaryVelocity ?? 0;
-                  if (dx < -200 && languageSelected.value != 'AM') {
-                    onLanguageChange('AM');
-                  } else if (dx > 200 && languageSelected.value != 'EN') {
-                    onLanguageChange('EN');
-                  }
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Column(
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── Table-aware rendering ──────────────────────────
-                      if (BBTableParser.containsTable(text))
-                        ..._buildSegments(text, baseStyle)
-                      else
-                        Text.rich(RichTextParser.parse(text, baseStyle)),
-                      // ── Optional explanation image ─────────────────────
-                      if (explanationImageUrl != null &&
-                          explanationImageUrl!.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        ImageSection(imgUrl: explanationImageUrl),
-                      ],
-                      // ── Close button ───────────────────────────────────
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: GestureDetector(
-                          onTap: onToggle,
-                          child: Icon(
-                            Icons.keyboard_arrow_up_rounded,
-                            size: 20,
-                            color: AppColors.primary.withValues(alpha: 0.8),
-                          ),
-                        ),
+                      Divider(
+                        height: 1,
+                        color: AppColors.primary.withValues(alpha: 0.15),
                       ),
-                      const SizedBox(height: 4),
+                      Obx(() {
+                        final text = languageSelected.value == 'AM'
+                            ? explanationAm
+                            : explanationEn;
+                        final baseStyle = GoogleFonts.lora(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          height: 1.75,
+                          letterSpacing: 0.1,
+                          color: dark
+                              ? AppColors.white.withValues(alpha: 0.85)
+                              : AppColors.darkerGrey,
+                        );
+                        return GestureDetector(
+                          // Swipe left → Amharic, swipe right → English
+                          onHorizontalDragEnd: (details) {
+                            final dx = details.primaryVelocity ?? 0;
+                            if (dx < -200 && languageSelected.value != 'AM') {
+                              onLanguageChange('AM');
+                            } else if (dx > 200 && languageSelected.value != 'EN') {
+                              onLanguageChange('EN');
+                            }
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // ── Table-aware rendering ──────────────────────────
+                                if (BBTableParser.containsTable(text))
+                                  ..._buildSegments(text, baseStyle)
+                                else
+                                  Text.rich(RichTextParser.parse(text, baseStyle)),
+                                // ── Optional explanation image ─────────────────────
+                                if (explanationImageUrl != null &&
+                                    explanationImageUrl!.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  ImageSection(imgUrl: explanationImageUrl),
+                                ],
+                                // ── Close button ───────────────────────────────────
+                                const SizedBox(height: 8),
+                                Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: GestureDetector(
+                                    onTap: onToggle,
+                                    child: Icon(
+                                      Icons.keyboard_arrow_up_rounded,
+                                      size: 20,
+                                      color: AppColors.primary.withValues(alpha: 0.8),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
                     ],
-                  ),
-                ),
-              );
-            }),
-          ] else
-            const SizedBox(height: 4),
+                  )
+                : const SizedBox(height: 4),
+          ),
         ],
       ),
     );

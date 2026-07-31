@@ -48,7 +48,7 @@ class AppHelperFunctions {
         barrierDismissible: true,
         pageBuilder: (context, _, __) {
           return Scaffold(
-            backgroundColor: Colors.black,
+            backgroundColor: AppColors.black,
             body: SizedBox.expand(
               child: Stack(
                 children: [
@@ -76,7 +76,7 @@ class AppHelperFunctions {
                       child: IconButton(
                         icon: const Icon(
                           Icons.close,
-                          color: Colors.white,
+                          color: AppColors.white,
                           size: 30,
                         ),
                         onPressed: () => Navigator.pop(context),
@@ -123,14 +123,14 @@ class AppHelperFunctions {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.amberAccent.withValues(
+                      color: AppColors.secondary.withValues(
                         alpha: dark ? 0.2 : 0.12,
                       ),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.pause_rounded,
-                      color: AppColors.amberAccent,
+                      color: AppColors.secondary,
                       size: 28,
                     ),
                   ),
@@ -215,7 +215,7 @@ class AppHelperFunctions {
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                 ),
                                 textAlign: TextAlign.center,
                               ),

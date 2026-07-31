@@ -9,7 +9,7 @@ class PausedTestsButton extends StatelessWidget {
   const PausedTestsButton({super.key, required this.count});
   final int count;
 
-  static const _accent = AppColors.amberAccent;
+  static const _accent = AppColors.secondary;
 
   @override
   Widget build(BuildContext context) {

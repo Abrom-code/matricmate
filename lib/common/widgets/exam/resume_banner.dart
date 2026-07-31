@@ -31,7 +31,7 @@ class ResumeBanner extends StatelessWidget {
     final progress = total > 0 ? answered / total : 0.0;
     final pct = (progress * 100).round();
 
-    const accentColor = AppColors.amberAccent;
+    const accentColor = AppColors.secondary;
 
     return Material(
       color: cs.surfaceContainerHighest.withValues(alpha: 0.55),

@@ -11,14 +11,13 @@ import 'package:matricmate/utils/constants/sizes.dart';
 
 // ── Type colour palette (muted) ─────────────────────────────────────────────
 const _typeColors = {
-  'entrance': Color(0xFFE9A94A), // amber/gold
-  'model':    Color(0xFFE9A94A), // amber/gold
-  'chapter':  Color(0xFFE9A94A), // amber/gold
-  'grade':    Color(0xFFE9A94A), // amber/gold
+  'entrance': AppColors.secondary,
+  'model': AppColors.secondary,
+  'chapter': AppColors.secondary,
+  'grade': AppColors.secondary,
 };
 
-Color _colorFor(String type) =>
-    _typeColors[type] ?? const Color(0xFF636E72);
+Color _colorFor(String type) => _typeColors[type] ?? const Color(0xFF636E72);
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -65,10 +64,10 @@ class _PausedTestsScreenState extends State<PausedTestsScreen> {
         showBackArrow: true,
         title: Text(
           _title,
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall!
-              .copyWith(color: AppColors.white, fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+            color: AppColors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: Obx(() {
@@ -121,22 +120,13 @@ class _Header extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
                   Icons.pending_actions_rounded,
                   size: 14,
                   color: AppColors.primary,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '$count test${count == 1 ? '' : 's'} in progress',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
                 ),
               ],
             ),
@@ -180,9 +170,10 @@ class _PausedTestCard extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
         onTap: () => Get.dialog(
           ReadyDialog(
             qnCount: total,
@@ -190,29 +181,19 @@ class _PausedTestCard extends StatelessWidget {
             testId: draft.testId,
             id: -1,
             draft: draft,
-            examTitle:
-                info.testType == 'entrance' ? info.testTitle : null,
+            examTitle: info.testType == 'entrance' ? info.testTitle : null,
           ),
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: dark ? AppColors.darkCard : AppColors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: dark ? 0.15 : 0.06),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-            ],
-            border: Border(
-              left: BorderSide(color: accent.withValues(alpha: 0.55), width: 2.5),
-            ),
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: accent.withValues(alpha: 0.35)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // ── Circular progress ring ───────────────────────────
                 _CircularProgress(progress: progress, pct: pct, color: accent),
@@ -226,7 +207,10 @@ class _PausedTestCard extends StatelessWidget {
                       // Type badge + subject
                       Row(
                         children: [
-                          _TypeBadge(label: _typeLabel(info.testType), color: accent),
+                          _TypeBadge(
+                            label: _typeLabel(info.testType),
+                            color: accent,
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
@@ -473,10 +457,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 6),
           const Text(
             'No tests in progress right now.',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ],
       ),

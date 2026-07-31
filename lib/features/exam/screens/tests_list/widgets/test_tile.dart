@@ -3,7 +3,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-const _kResumeColor = AppColors.amberAccent;
+const _kResumeColor = AppColors.secondary;
 
 class TestTile extends StatelessWidget {
   const TestTile({

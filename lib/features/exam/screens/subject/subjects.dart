@@ -89,7 +89,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                     child: Container(
                       padding: const EdgeInsets.all(2),
                       decoration: const BoxDecoration(
-                        color: AppColors.amberAccent,
+                        color: AppColors.secondary,
                         shape: BoxShape.circle,
                       ),
                       constraints: const BoxConstraints(

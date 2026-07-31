@@ -29,19 +29,21 @@ class SyncingController extends GetxController {
 
   Future<void> syncEntranceExams() async {
     try {
+      entranceSyncing.value = true;
+      
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         ToastHelper.warning('No Internet!');
+        entranceSyncing.value = false;
         return;
       }
 
       // Don't run while a per-subject entrance download is already in progress
       if (SubjectsController.instance.entranceDownloadStep.isNotEmpty) {
         ToastHelper.warning('A download is already in progress. Please wait.');
+        entranceSyncing.value = false;
         return;
       }
-
-      entranceSyncing.value = true;
 
       final localSubjects = await _subjectRepo.getLocalSubjects();
 
@@ -104,16 +106,17 @@ class SyncingController extends GetxController {
 
   Future<bool> syncAll({bool showUiLoading = true}) async {
     try {
+      if (showUiLoading) {
+        refreshing.value = true;
+      }
+      
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         if (showUiLoading) {
           ToastHelper.warning('No Internet!');
+          refreshing.value = false;
         }
         return false;
-      }
-
-      if (showUiLoading) {
-        refreshing.value = true;
       }
 
       // Capture all timestamps BEFORE any network call

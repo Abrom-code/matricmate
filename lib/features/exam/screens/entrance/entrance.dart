@@ -19,23 +19,39 @@ class EntranceScreen extends StatefulWidget {
   State<EntranceScreen> createState() => _EntranceScreenState();
 }
 
-class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
+class _EntranceScreenState extends State<EntranceScreen> with RouteAware, SingleTickerProviderStateMixin {
   SubjectsController get ctrl => SubjectsController.instance;
+  late AnimationController _rotationController;
 
   @override
   void initState() {
     super.initState();
+    _rotationController = AnimationController(
+      duration: const Duration(milliseconds: 700),
+      vsync: this,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ctrl.loadPausedTests();
       if (mounted) {
         appRouteObserver.subscribe(this, ModalRoute.of(context)!);
       }
+      // Set up reaction for syncing state
+      final syncController = Get.find<SyncingController>();
+      ever(syncController.entranceSyncing, (bool syncing) {
+        if (syncing) {
+          _rotationController.repeat();
+        } else {
+          _rotationController.stop();
+          _rotationController.reset();
+        }
+      });
     });
   }
 
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
+    _rotationController.dispose();
     super.dispose();
   }
 
@@ -52,6 +68,38 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
         title: 'Entrance Exams',
         subtitle: 'Select a subject',
         actions: [
+          Obx(() {
+            final syncing = syncController.entranceSyncing.value;
+            return IconButton(
+              tooltip: syncing ? 'Sync in progress…' : 'Sync entrance exams',
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onPressed: syncing
+                  ? null
+                  : () => syncController.syncEntranceExams(),
+              icon: ClipRect(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: AnimatedBuilder(
+                    animation: _rotationController,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: _rotationController.value * 2 * 3.14159,
+                        child: child,
+                      );
+                    },
+                    child: const Icon(
+                      Icons.sync_rounded,
+                      size: 20,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
           // Paused tests (entrance + model only)
           Obx(() {
             final count = ctrl.pausedTests
@@ -104,35 +152,6 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
                   ),
                 ],
               ),
-            );
-          }),
-          Obx(() {
-            final syncing = syncController.entranceSyncing.value;
-            return IconButton(
-              tooltip: syncing ? 'Sync in progress…' : 'Sync entrance exams',
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              onPressed: syncing
-                  ? null
-                  : () => syncController.syncEntranceExams(),
-              icon: syncing
-                  ? const SizedBox(
-                      width: 24,
-                      height: 20,
-                      child: Center(
-                        child: AppPulsingDots(
-                          dotSize: 4,
-                          dotSpacing: 2,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    )
-                  : const Icon(
-                      Icons.sync_rounded,
-                      size: 20,
-                      color: AppColors.white,
-                    ),
             );
           }),
         ],

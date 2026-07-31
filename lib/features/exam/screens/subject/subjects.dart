@@ -22,12 +22,17 @@ class SubjectsScreen extends StatefulWidget {
   State<SubjectsScreen> createState() => _SubjectsScreenState();
 }
 
-class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
+class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware, SingleTickerProviderStateMixin {
   SubjectsController get ctrl => SubjectsController.instance;
+  late AnimationController _rotationController;
 
   @override
   void initState() {
     super.initState();
+    _rotationController = AnimationController(
+      duration: const Duration(milliseconds: 700),
+      vsync: this,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ctrl.loadPausedTests();
       if (mounted) {
@@ -39,6 +44,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
+    _rotationController.dispose();
     super.dispose();
   }
 
@@ -65,6 +71,42 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
           );
         }),
         actions: [
+          Obx(() {
+            final syncing = syncController.refreshing.value;
+            if (syncing) {
+              _rotationController.repeat();
+            } else {
+              _rotationController.stop();
+              _rotationController.reset();
+            }
+            return IconButton(
+              tooltip: 'Sync content',
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onPressed: syncing ? null : () => ctrl.syncAll(),
+              icon: ClipRect(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: AnimatedBuilder(
+                    animation: _rotationController,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: _rotationController.value * 2 * 3.14159,
+                        child: child,
+                      );
+                    },
+                    child: const Icon(
+                      Icons.sync_rounded,
+                      size: 20,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
           // Paused tests appbar button
           Obx(() {
             final count = ctrl.pausedTests.length;
@@ -110,33 +152,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                   ),
                 ],
               ),
-            );
-          }),
-          Obx(() {
-            final syncing = syncController.refreshing.value;
-            return IconButton(
-              tooltip: 'Sync content',
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              onPressed: syncing ? null : () => ctrl.syncAll(),
-              icon: syncing
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Center(
-                        child: AppPulsingDots(
-                          dotSize: 4,
-                          dotSpacing: 2,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    )
-                  : const Icon(
-                      Icons.sync_rounded,
-                      size: 20,
-                      color: AppColors.white,
-                    ),
             );
           }),
         ],

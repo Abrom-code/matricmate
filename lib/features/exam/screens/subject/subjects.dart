@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -22,17 +23,13 @@ class SubjectsScreen extends StatefulWidget {
   State<SubjectsScreen> createState() => _SubjectsScreenState();
 }
 
-class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware, SingleTickerProviderStateMixin {
+class _SubjectsScreenState extends State<SubjectsScreen>
+    with RouteAware {
   SubjectsController get ctrl => SubjectsController.instance;
-  late AnimationController _rotationController;
 
   @override
   void initState() {
     super.initState();
-    _rotationController = AnimationController(
-      duration: const Duration(milliseconds: 700),
-      vsync: this,
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ctrl.loadPausedTests();
       if (mounted) {
@@ -44,7 +41,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware, Single
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    _rotationController.dispose();
     super.dispose();
   }
 
@@ -73,38 +69,10 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware, Single
         actions: [
           Obx(() {
             final syncing = syncController.refreshing.value;
-            if (syncing) {
-              _rotationController.repeat();
-            } else {
-              _rotationController.stop();
-              _rotationController.reset();
-            }
-            return IconButton(
+            return SyncIconButton(
+              isSyncing: syncing,
               tooltip: 'Sync content',
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              onPressed: syncing ? null : () => ctrl.syncAll(),
-              icon: ClipRect(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: AnimatedBuilder(
-                    animation: _rotationController,
-                    builder: (context, child) {
-                      return Transform.rotate(
-                        angle: _rotationController.value * 2 * 3.14159,
-                        child: child,
-                      );
-                    },
-                    child: const Icon(
-                      Icons.sync_rounded,
-                      size: 20,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
-              ),
+              onPressed: () => ctrl.syncAll(),
             );
           }),
           // Paused tests appbar button

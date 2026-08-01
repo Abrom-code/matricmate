@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
@@ -19,39 +20,23 @@ class EntranceScreen extends StatefulWidget {
   State<EntranceScreen> createState() => _EntranceScreenState();
 }
 
-class _EntranceScreenState extends State<EntranceScreen> with RouteAware, SingleTickerProviderStateMixin {
+class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
   SubjectsController get ctrl => SubjectsController.instance;
-  late AnimationController _rotationController;
 
   @override
   void initState() {
     super.initState();
-    _rotationController = AnimationController(
-      duration: const Duration(milliseconds: 700),
-      vsync: this,
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ctrl.loadPausedTests();
       if (mounted) {
         appRouteObserver.subscribe(this, ModalRoute.of(context)!);
       }
-      // Set up reaction for syncing state
-      final syncController = Get.find<SyncingController>();
-      ever(syncController.entranceSyncing, (bool syncing) {
-        if (syncing) {
-          _rotationController.repeat();
-        } else {
-          _rotationController.stop();
-          _rotationController.reset();
-        }
-      });
     });
   }
 
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    _rotationController.dispose();
     super.dispose();
   }
 
@@ -70,34 +55,11 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware, Single
         actions: [
           Obx(() {
             final syncing = syncController.entranceSyncing.value;
-            return IconButton(
-              tooltip: syncing ? 'Sync in progress…' : 'Sync entrance exams',
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              onPressed: syncing
-                  ? null
-                  : () => syncController.syncEntranceExams(),
-              icon: ClipRect(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: AnimatedBuilder(
-                    animation: _rotationController,
-                    builder: (context, child) {
-                      return Transform.rotate(
-                        angle: _rotationController.value * 2 * 3.14159,
-                        child: child,
-                      );
-                    },
-                    child: const Icon(
-                      Icons.sync_rounded,
-                      size: 20,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
-              ),
+            return SyncIconButton(
+              isSyncing: syncing,
+              tooltip: 'Sync entrance exams',
+              tooltipSyncing: 'Sync in progress…',
+              onPressed: () => syncController.syncEntranceExams(),
             );
           }),
           // Paused tests (entrance + model only)
@@ -110,7 +72,7 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware, Single
               tooltip: '$count test${count == 1 ? '' : 's'} in progress',
               visualDensity: VisualDensity.compact,
               constraints: const BoxConstraints(),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.only(right: 8),
               onPressed: () => Get.toNamed(
                 Routes.pausedTests,
                 arguments: {

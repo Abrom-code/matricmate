@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
@@ -102,12 +103,12 @@ class _BookmarkScreenState extends State<BookmarkScreen>
             tooltip: _searchVisible ? 'Close search' : 'Search bookmarks',
             visualDensity: VisualDensity.compact,
             constraints: const BoxConstraints(),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.all(0),
             onPressed: _toggleSearch,
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Icon(
-                _searchVisible ? Icons.close : Icons.search,
+                _searchVisible ? Icons.close : Iconsax.search_normal_1_copy,
                 key: ValueKey(_searchVisible),
                 size: 20,
                 color: AppColors.white,

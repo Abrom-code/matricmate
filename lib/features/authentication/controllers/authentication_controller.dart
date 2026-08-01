@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/data/database/database_service.dart';
@@ -15,7 +16,14 @@ import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
-class AuthenticationController extends GetxController {
+/// GetStorage key that records the last time session validation ran.
+const _kLastSessionCheckKey = 'last_session_check_ms';
+
+/// Minimum gap between periodic session checks (12 hours).
+const _kSessionCheckInterval = Duration(hours: 12);
+
+class AuthenticationController extends GetxController
+    with WidgetsBindingObserver {
   static AuthenticationController get instance => Get.find();
 
   final authRepo = Get.find<AuthenticationRepository>();
@@ -30,9 +38,25 @@ class AuthenticationController extends GetxController {
 
   @override
   void onReady() {
+    WidgetsBinding.instance.addObserver(this);
     firebaseUser = Rx<User?>(authRepo.currentUser);
     firebaseUser.bindStream(authRepo.userChanges);
     _init();
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.onClose();
+  }
+
+  /// Fires when the app returns to the foreground.
+  /// Runs a session check if 12 h have elapsed and network is available.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_periodicSessionCheck());
+    }
   }
 
   /// Pre-loads local data then navigates to the appropriate screen.
@@ -197,14 +221,52 @@ class AuthenticationController extends GetxController {
           .map((s) => s.id)
           .toList();
       unawaited(RealtimeService.instance.start(downloadedIds, userId: uid));
+
+      // Periodic session check (12 h gap) — runs silently on first launch
+      // after login when we already have internet.
+      await _periodicSessionCheck();
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
+    }
+  }
+
+  /// Validates the session against Supabase at most once every 12 hours.
+  /// No-ops if offline, not logged in, or the interval hasn't elapsed.
+  /// If the device is no longer authorised, [fetchUserRecord] triggers logout.
+  Future<void> _periodicSessionCheck() async {
+    try {
+      // Must be logged in
+      if (authRepo.currentUser == null) return;
+
+      // Check interval
+      final lastMs = deviceStorage.read<int>(_kLastSessionCheckKey);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (lastMs != null &&
+          now - lastMs < _kSessionCheckInterval.inMilliseconds) {
+        return; // Too soon — skip
+      }
+
+      // Need internet
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) return;
+
+      // Run the check — fetchUserRecord handles device-mismatch logout
+      final ok = await UserController.instance.fetchUserRecord();
+
+      // Only update timestamp on success so a network failure doesn't
+      // reset the clock and delay the next real check.
+      if (ok) {
+        deviceStorage.write(_kLastSessionCheckKey, now);
+      }
+    } catch (_) {
+      // Non-fatal — never interrupt the user for a background check failure
     }
   }
 
   Future<void> logout() async {
     try {
       _initStarted = false;
+      deviceStorage.remove(_kLastSessionCheckKey);
       await Future.wait([
         authRepo.logout(),
         SyncingController.instance.clearSyncTimestamps(),

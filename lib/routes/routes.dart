@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/screens/loading/loading.dart';
-import 'package:matricmate/bindings/exam/bookmark_binding.dart';
 import 'package:matricmate/bindings/auth/change_password_binding.dart';
+import 'package:matricmate/bindings/exam/bookmark_binding.dart';
 import 'package:matricmate/bindings/exam/chapter_binding.dart';
 import 'package:matricmate/bindings/auth/email_verify_binding.dart';
 import 'package:matricmate/bindings/auth/forgot_password_binding.dart';
@@ -31,6 +31,7 @@ import 'package:matricmate/features/exam/screens/result/result.dart';
 import 'package:matricmate/features/exam/screens/result/review.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
+import 'package:matricmate/features/notifications/screens/notifications_screen.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
@@ -150,5 +151,9 @@ class AppRoutes {
       binding: PremiumBinding(),
     ),
     GetPage(name: Routes.pausedTests, page: () => const PausedTestsScreen()),
+    GetPage(
+      name: Routes.notifications,
+      page: () => const NotificationsScreen(),
+    ),
   ];
 }

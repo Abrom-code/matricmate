@@ -1,4 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
@@ -17,6 +19,10 @@ Future<void> main() async {
 
   // ThemeController must exist before any widget builds so the
   Get.put(ThemeController(), permanent: true);
+
+  // Register the top-level FCM background handler BEFORE Firebase.initializeApp.
+  // This is required — FCM background isolate cannot use closures.
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

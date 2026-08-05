@@ -41,6 +41,9 @@ class Routes {
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
 
+  // notifications
+  static const notifications = '/notifications';
+
   // loading
   static const loading = '/loading';
 }

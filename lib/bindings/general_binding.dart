@@ -9,6 +9,7 @@ import 'package:matricmate/features/authentication/controllers/login/login_contr
 import 'package:matricmate/features/authentication/controllers/signup/signup_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
+import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/personalization/controllers/change_password_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -26,6 +27,9 @@ class GeneralBinding extends Bindings {
     Get.put(AuthenticationController(), permanent: true);
     Get.put(UserController(), permanent: true);
     Get.put(SubjectsController(), permanent: true);
+    // Registered permanently so the bell badge in the appbar is reactive
+    // from the first screen — not only after the notifications route is opened.
+    Get.put(NotificationsController(), permanent: true);
 
     // ── Auth controllers (permanent — avoids TextEditingController
     //    disposed crash; these are lightweight and needed app-wide) ──

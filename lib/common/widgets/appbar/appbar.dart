@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 
+import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/device/device_utility.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -90,10 +92,8 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
         if (showNotification)
           Padding(
             padding: const EdgeInsets.only(right: 4),
-            child: IconButton(
-              tooltip: 'Notifications',
-              onPressed: onNotificationPressed ?? () {},
-              icon: const Icon(Icons.notifications_outlined, color: AppColors.white),
+            child: _NotificationBell(
+              onPressed: onNotificationPressed ?? () => Get.toNamed(Routes.notifications),
             ),
           ),
       ],
@@ -111,5 +111,63 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
     final ctx = Get.context;
     if (ctx != null) return Size.fromHeight(toolbarHeight(ctx));
     return Size.fromHeight(AppDeviceUtils.getAppBarHeight());
+  }
+}
+
+// ── Notification bell with reactive unread badge ─────────────────────────────
+
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      // Only read the controller if it's already registered — avoids crashing
+      // before the notifications route has been visited for the first time.
+      final count = Get.isRegistered<NotificationsController>()
+          ? NotificationsController.instance.unreadCount.value
+          : 0;
+
+      return IconButton(
+        tooltip: count > 0 ? '$count unread' : 'Notifications',
+        onPressed: onPressed,
+        icon: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              count > 0
+                  ? Icons.notifications_rounded
+                  : Icons.notifications_outlined,
+              color: AppColors.white,
+              size: 24,
+            ),
+            if (count > 0)
+              Positioned(
+                top: -4,
+                right: -6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade600,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 14),
+                  child: Text(
+                    count > 9 ? '9+' : '$count',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    });
   }
 }

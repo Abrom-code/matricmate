@@ -23,7 +23,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 8,
+      version: 9,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -112,6 +112,29 @@ class DatabaseService extends GetxController {
             await txn.execute('DROP TABLE results');
             await txn.execute('ALTER TABLE results_new RENAME TO results');
           });
+        }
+        if (oldVersion < 9) {
+          // Add the notifications table for users who were on DB versions 1–8
+          // where only DBschema.create() knew about this table.
+          // IF NOT EXISTS makes it a safe no-op on a fresh install.
+          try {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                type TEXT NOT NULL DEFAULT 'announcement',
+                payload TEXT,
+                is_read INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_notifications_user '
+              'ON notifications(user_id, created_at)',
+            );
+          } catch (_) {}
         }
       },
       // Ensure the column exists even on devices that somehow missed onUpgrade

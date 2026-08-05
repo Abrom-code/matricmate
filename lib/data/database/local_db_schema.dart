@@ -130,5 +130,22 @@ class DBschema {
     await db.execute(
       'CREATE INDEX idx_tests_subject_grade_chapter ON tests(subject_id, grade, chapter_id)',
     );
+
+    await db.execute('''
+      CREATE TABLE notifications (
+        id INTEGER PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'announcement',
+        payload TEXT,
+        is_read INTEGER DEFAULT 0,
+        created_at TEXT NOT NULL
+      );
+    ''');
+
+    await db.execute(
+      'CREATE INDEX idx_notifications_user ON notifications(user_id, created_at)',
+    );
   }
 }

@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
+import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/realtime_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
@@ -222,6 +223,11 @@ class AuthenticationController extends GetxController
           .toList();
       unawaited(RealtimeService.instance.start(downloadedIds, userId: uid));
 
+      // Initialise FCM — requests permission, registers token, sets up
+      // message listeners. Must run AFTER UserController.user is populated
+      // so the token is saved and stream topic is subscribed correctly.
+      unawaited(FcmService.instance.init());
+
       // Periodic session check (12 h gap) — runs silently on first launch
       // after login when we already have internet.
       await _periodicSessionCheck();
@@ -271,6 +277,7 @@ class AuthenticationController extends GetxController
         authRepo.logout(),
         SyncingController.instance.clearSyncTimestamps(),
         RealtimeService.instance.stop(),
+        FcmService.instance.unsubscribeAll(), // unregister topics on sign-out
       ]);
       Get.offAllNamed(Routes.signIn);
     } catch (e) {

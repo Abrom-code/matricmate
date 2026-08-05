@@ -55,9 +55,11 @@ dependencies:
   fluttertoast: ^9.0.0
   shared_preferences: ^2.3.2
   flutter_dotenv: ^5.1.2
+  flutter_local_notifications: ^22.2.0
 
   url_launcher: any
   google_fonts: ^6.2.1
+  firebase_messaging: ^16.4.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

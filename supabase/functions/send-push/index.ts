@@ -15,7 +15,6 @@
 //   { "event": "new_test", "test_id": 512, "subject_id": 7, "title": "...", "test_type": "entrance", ... }
 //   { "event": "payment_status", "user_id": "uuid", "status": "active" }
 
-import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -29,6 +28,21 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 // ── Google OAuth2 token for FCM HTTP v1 (service-account JWT flow) ─────────
 
+/** Base64url-encodes a Uint8Array without using spread (avoids stack overflow
+ *  on large buffers) and without relying on btoa's Latin-1 limitation. */
+function base64urlEncode(bytes: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+/** Safely encodes any JSON-serialisable object to base64url via UTF-8. */
+function encodeJsonBase64url(obj: unknown): string {
+  return base64urlEncode(new TextEncoder().encode(JSON.stringify(obj)));
+}
+
 async function getAccessToken(): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: "RS256", typ: "JWT" };
@@ -40,10 +54,7 @@ async function getAccessToken(): Promise<string> {
     iat: now,
   };
 
-  const encode = (obj: unknown) =>
-    btoa(JSON.stringify(obj)).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
-
-  const unsigned = `${encode(header)}.${encode(claim)}`;
+  const unsigned = `${encodeJsonBase64url(header)}.${encodeJsonBase64url(claim)}`;
 
   const key = await crypto.subtle.importKey(
     "pkcs8",
@@ -59,8 +70,8 @@ async function getAccessToken(): Promise<string> {
     new TextEncoder().encode(unsigned),
   );
 
-  const encodedSig = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
+  // Use the loop-based encoder to avoid stack overflow on large signatures.
+  const encodedSig = base64urlEncode(new Uint8Array(signature));
 
   const jwt = `${unsigned}.${encodedSig}`;
 
@@ -177,7 +188,18 @@ function buildNewTestNotificationCopy(
   }
 }
 
-async function handleNewTest(body: any) {
+interface NewTestBody {
+  test_id: number;
+  subject_id: number;
+  test_type: string;
+  title?: string;
+  grade?: number | string;
+  chapter_id?: number | string;
+  chapter?: string;
+  chapter_number?: number | string;
+}
+
+async function handleNewTest(body: NewTestBody) {
   // Guard against malformed trigger payloads.
   if (!body.test_id || !body.subject_id) {
     console.error("handleNewTest: missing test_id or subject_id", body);
@@ -262,7 +284,12 @@ function buildPaymentNotificationCopy(
   }
 }
 
-async function handlePaymentStatus(body: any) {
+interface PaymentStatusBody {
+  user_id: string;
+  status: string;
+}
+
+async function handlePaymentStatus(body: PaymentStatusBody) {
   const { data: user } = await supabase
     .from("users")
     .select("fcm_token")
@@ -291,16 +318,21 @@ async function handlePaymentStatus(body: any) {
 
 // ── Entry point ──────────────────────────────────────────────────────────
 
-serve(async (req) => {
+interface EventBody {
+  event: string;
+  [key: string]: unknown;
+}
+
+Deno.serve(async (req: Request) => {
   try {
-    const body = await req.json();
+    const body = await req.json() as EventBody;
 
     switch (body.event) {
       case "new_test":
-        await handleNewTest(body);
+        await handleNewTest(body as unknown as NewTestBody);
         break;
       case "payment_status":
-        await handlePaymentStatus(body);
+        await handlePaymentStatus(body as unknown as PaymentStatusBody);
         break;
       default:
         return new Response(JSON.stringify({ error: "unknown event" }), { status: 400 });

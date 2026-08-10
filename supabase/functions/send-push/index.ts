@@ -9,11 +9,33 @@
 //   FCM_PROJECT_ID            — e.g. "matricmate-a1bf6"
 //   SUPABASE_URL              — auto-provided by Supabase
 //   SUPABASE_SERVICE_ROLE_KEY — auto-provided by Supabase
+//   PUSH_WEBHOOK_SECRET       — shared secret required in the
+//                               `x-webhook-secret` request header
 //
 // Called by Postgres triggers (see sql/notifications_schema.sql) with a
 // body like:
 //   { "event": "new_test", "test_id": 512, "subject_id": 7, "title": "...", "test_type": "entrance", ... }
 //   { "event": "payment_status", "user_id": "uuid", "status": "active" }
+//   { "event": "announcement", "title": "...", "body": "...", "audience": "all" }
+//
+// ⚠️ BREAKING CHANGE — every caller must now send the header
+//        x-webhook-secret: <PUSH_WEBHOOK_SECRET>
+//    Any existing Postgres trigger that calls this function WILL START
+//    401-ing until it is updated to send the header. The function's original
+//    header comment references `sql/notifications_schema.sql`, which does not
+//    exist in the repository — if those triggers live only in the remote
+//    database, find them before deploying this:
+//
+//      SELECT p.proname, pg_get_functiondef(p.oid)
+//      FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+//      WHERE n.nspname = 'public'
+//        AND (p.prosrc ILIKE '%send-push%' OR p.prosrc ILIKE '%net.http_post%');
+//
+//    Why this gate exists: Deno.serve previously acted on ANY POST, and
+//    Supabase's default verify_jwt is satisfied by the anon key that ships
+//    inside the student APK. Anyone could forge
+//        {"event":"payment_status","user_id":"<any>","status":"active"}
+//    and grant themselves premium.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -316,6 +338,116 @@ async function handlePaymentStatus(body: PaymentStatusBody) {
   }
 }
 
+// ── Announcement ─────────────────────────────────────────────────────────
+
+interface AnnouncementBody {
+  title: string;
+  body: string;
+  audience: "all" | "stream" | "user";
+  target_stream?: string | null;
+  user_id?: string | null;
+  payload?: Record<string, unknown> | null;
+  created_by?: string | null;
+}
+
+/**
+ * Free-form announcements from the admin console.
+ *
+ * Maps an audience onto the primitives that already exist here — there is no
+ * new delivery mechanism, only a new way to address the existing ones:
+ *
+ *   all    -> user_id NULL, target_stream NULL   -> topic all_users
+ *   stream -> user_id NULL, target_stream set    -> topic stream_<name>
+ *   user   -> user_id set,  target_stream NULL   -> sendFcmToToken
+ *
+ * The inserted row deliberately uses a jsonb OBJECT for `payload` and a real
+ * BOOLEAN for `is_read`. The student app's AppNotification.toMap() emits
+ * payload as a JSON *string* and is_read as 0/1, which is SQLite-shaped and
+ * wrong for Postgres — do not reuse it for writes here.
+ */
+async function handleAnnouncement(body: AnnouncementBody) {
+  if (!body.title || !body.body) {
+    console.error("handleAnnouncement: missing title or body");
+    return { ok: false, error: "missing title or body" };
+  }
+
+  const audience = body.audience ?? "all";
+
+  let rowUserId: string | null = null;
+  let targetStream: string | null = null;
+  let topic: string | null = null;
+  let token: string | null = null;
+
+  if (audience === "stream") {
+    if (body.target_stream !== "natural" && body.target_stream !== "social") {
+      return { ok: false, error: "target_stream must be natural or social" };
+    }
+    targetStream = body.target_stream;
+    topic = `stream_${targetStream}`;
+  } else if (audience === "user") {
+    if (!body.user_id) {
+      return { ok: false, error: "user_id is required for audience 'user'" };
+    }
+    rowUserId = body.user_id;
+
+    const { data: user } = await supabase
+      .from("users")
+      .select("fcm_token")
+      .eq("id", body.user_id)
+      .single();
+
+    // No token is not an error — the row is still inserted so the student
+    // sees it in-app the next time they open the notifications screen.
+    token = user?.fcm_token ?? null;
+  } else {
+    topic = "all_users";
+  }
+
+  const { data: inserted, error: insertError } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: rowUserId,
+      title: body.title,
+      body: body.body,
+      type: "announcement",
+      target_stream: targetStream,
+      payload: body.payload ?? {},
+      is_read: false,
+      ...(body.created_by != null && { created_by: body.created_by }),
+    })
+    .select("id")
+    .single();
+
+  if (insertError) {
+    console.error("handleAnnouncement: insert failed", insertError);
+    return { ok: false, error: insertError.message };
+  }
+
+  // Every FCM data value must be a String. `type: "announcement"` routes the
+  // client's _handleTap default branch to Routes.notifications.
+  const data: Record<string, string> = {
+    type: "announcement",
+    notification_id: String(inserted?.id ?? ""),
+  };
+
+  let fcmSent = false;
+  try {
+    if (topic) {
+      await sendFcmToTopic(topic, { title: body.title, body: body.body }, data);
+      fcmSent = true;
+    } else if (token) {
+      await sendFcmToToken(token, { title: body.title, body: body.body }, data);
+      fcmSent = true;
+    }
+  } catch (e) {
+    // Log but do not throw — the row is already persisted, matching the
+    // behaviour of the two original handlers.
+    console.error("handleAnnouncement: FCM send failed", e);
+  }
+
+  return { ok: true, notification_id: inserted?.id ?? null, fcm_sent: fcmSent };
+}
+
 // ── Entry point ──────────────────────────────────────────────────────────
 
 interface EventBody {
@@ -324,6 +456,14 @@ interface EventBody {
 }
 
 Deno.serve(async (req: Request) => {
+  // Shared-secret gate — the very first statement, before the body is even
+  // read, so an unauthorised caller cannot trigger any work.
+  if (
+    req.headers.get("x-webhook-secret") !== Deno.env.get("PUSH_WEBHOOK_SECRET")
+  ) {
+    return new Response("unauthorized", { status: 401 });
+  }
+
   try {
     const body = await req.json() as EventBody;
 
@@ -334,6 +474,15 @@ Deno.serve(async (req: Request) => {
       case "payment_status":
         await handlePaymentStatus(body as unknown as PaymentStatusBody);
         break;
+      case "announcement": {
+        const result = await handleAnnouncement(
+          body as unknown as AnnouncementBody,
+        );
+        return new Response(JSON.stringify(result), {
+          status: result.ok ? 200 : 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
       default:
         return new Response(JSON.stringify({ error: "unknown event" }), { status: 400 });
     }

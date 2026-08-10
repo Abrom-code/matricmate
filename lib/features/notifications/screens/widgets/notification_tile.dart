@@ -12,7 +12,21 @@ class NotificationTile extends StatelessWidget {
   const NotificationTile({super.key, required this.notification});
   final AppNotification notification;
 
+  // ── Derived from type + payload ──────────────────────────────────────
+
+  /// Payment sub-status from payload: 'active' | 'rejected' | other.
+  String get _paymentStatus =>
+      notification.payload['status']?.toString() ?? '';
+
+  bool get _isApproved =>
+      notification.type == 'payment' && _paymentStatus == 'active';
+
+  bool get _isRejected =>
+      notification.type == 'payment' && _paymentStatus == 'rejected';
+
   IconData get _icon {
+    if (_isApproved) return Icons.check_circle_rounded;
+    if (_isRejected) return Icons.cancel_rounded;
     switch (notification.type) {
       case 'payment':
         return Icons.receipt_long_rounded;
@@ -23,19 +37,45 @@ class NotificationTile extends StatelessWidget {
     }
   }
 
+  Color _iconColor(bool dark) {
+    if (_isApproved) return Colors.green.shade600;
+    if (_isRejected) return Colors.red.shade600;
+    return AppColors.primary;
+  }
+
+  Color _iconBg(bool dark) {
+    if (_isApproved) return Colors.green.withValues(alpha: dark ? 0.2 : 0.12);
+    if (_isRejected) return Colors.red.withValues(alpha: dark ? 0.2 : 0.12);
+    return AppColors.primary.withValues(alpha: dark ? 0.2 : 0.1);
+  }
+
+  Color _borderColor(bool dark) {
+    if (notification.isRead) return Colors.transparent;
+    if (_isApproved) return Colors.green.withValues(alpha: 0.5);
+    if (_isRejected) return Colors.red.withValues(alpha: 0.5);
+    return AppColors.primary.withValues(alpha: 0.4);
+  }
+
+  // ── Tap routing ──────────────────────────────────────────────────────
+
   Future<void> _onTap() async {
     await NotificationsController.instance.markRead(notification.id);
 
     switch (notification.type) {
       case 'payment':
-        Get.toNamed(Routes.paymentVerification);
+        if (_isApproved) {
+          // Premium is active — go home so they can use it immediately.
+          Get.until((route) => route.isFirst);
+        } else {
+          // Rejected or pending — let them see the status / retry.
+          Get.toNamed(Routes.paymentVerification);
+        }
         break;
       case 'new_content':
         await NotificationTestOpener.open(notification.payload);
         break;
       default:
-        // Announcement — bring the user to the notifications list.
-        Get.toNamed(Routes.notifications);
+        // Announcement — stay on notifications list (already there).
         break;
     }
   }
@@ -51,11 +91,7 @@ class NotificationTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: dark ? AppColors.darkCard : AppColors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: notification.isRead
-                ? Colors.transparent
-                : AppColors.primary.withValues(alpha: 0.4),
-          ),
+          border: Border.all(color: _borderColor(dark), width: 1.5),
           boxShadow: dark
               ? []
               : [
@@ -69,27 +105,53 @@ class NotificationTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Icon ──────────────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.1),
+                color: _iconBg(dark),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(_icon, color: AppColors.primary, size: 20),
+              child: Icon(_icon, color: _iconColor(dark), size: 20),
             ),
+
             const SizedBox(width: 12),
+
+            // ── Content ───────────────────────────────────────────────
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    notification.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                  // Title row — with status badge for payment notifications
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notification.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      if (_isApproved)
+                        _StatusBadge(
+                          label: 'Approved',
+                          color: Colors.green.shade600,
+                          dark: dark,
+                        )
+                      else if (_isRejected)
+                        _StatusBadge(
+                          label: 'Rejected',
+                          color: Colors.red.shade600,
+                          dark: dark,
+                        ),
+                    ],
                   ),
+
                   const SizedBox(height: 4),
+
+                  // Body
                   Text(
                     notification.body,
                     style: const TextStyle(
@@ -97,7 +159,44 @@ class NotificationTile extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
+
+                  // Rejection reason (if present)
+                  if (_isRejected &&
+                      notification.payload['rejection_reason'] != null) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(
+                            alpha: dark ? 0.12 : 0.07),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline_rounded,
+                              size: 13,
+                              color: Colors.red.shade400),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              notification.payload['rejection_reason']
+                                  .toString(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.red.shade400,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 6),
+
+                  // Timestamp
                   Text(
                     _relativeTime(notification.createdAt),
                     style: const TextStyle(
@@ -108,14 +207,20 @@ class NotificationTile extends StatelessWidget {
                 ],
               ),
             ),
+
+            // ── Unread dot ────────────────────────────────────────────
             if (!notification.isRead) ...[
               const SizedBox(width: 8),
               Container(
                 width: 8,
                 height: 8,
                 margin: const EdgeInsets.only(top: 4),
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                decoration: BoxDecoration(
+                  color: _isApproved
+                      ? Colors.green.shade600
+                      : _isRejected
+                          ? Colors.red.shade600
+                          : AppColors.primary,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -127,8 +232,42 @@ class NotificationTile extends StatelessWidget {
   }
 }
 
-/// Returns a short relative-time string for notification timestamps.
-/// Falls back to absolute date for items older than 7 days.
+// ── Small status badge ────────────────────────────────────────────────────────
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({
+    required this.label,
+    required this.color,
+    required this.dark,
+  });
+
+  final String label;
+  final Color color;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: dark ? 0.2 : 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Relative time helper ──────────────────────────────────────────────────────
+
 String _relativeTime(DateTime dt) {
   final now = DateTime.now();
   final diff = now.difference(dt);

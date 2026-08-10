@@ -42,6 +42,10 @@ class LoginController extends GetxController {
   Future<void> emailAndPasswordLogin() async {
     try {
       if (!loginFormkey.currentState!.validate()) return;
+
+      // Show loading immediately so the button feels responsive.
+      isLogging.value = true;
+
       final emailText = email.text.trim();
       final passwordText = password.text.trim();
 
@@ -59,8 +63,6 @@ class LoginController extends GetxController {
         ToastHelper.warning('No Internet!');
         return;
       }
-
-      isLogging.value = true;
 
       await authRepo.loginUsingEmailAndPassword(emailText, passwordText);
 

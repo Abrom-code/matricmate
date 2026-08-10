@@ -309,6 +309,9 @@ function buildPaymentNotificationCopy(
 interface PaymentStatusBody {
   user_id: string;
   status: string;
+  title?: string;          // optional override from admin — uses default if absent
+  body?: string;           // optional override from admin — uses default if absent
+  rejection_reason?: string; // shown in-app notification payload
 }
 
 async function handlePaymentStatus(body: PaymentStatusBody) {
@@ -318,7 +321,16 @@ async function handlePaymentStatus(body: PaymentStatusBody) {
     .eq("id", body.user_id)
     .single();
 
-  const { title, notifBody } = buildPaymentNotificationCopy(body.status);
+  // Use admin-supplied copy if provided, otherwise fall back to defaults.
+  const defaults = buildPaymentNotificationCopy(body.status);
+  const title    = (body.title?.trim())  || defaults.title;
+  const notifBody = (body.body?.trim())  || defaults.notifBody;
+
+  // Build notification payload — include rejection reason if present.
+  const notifPayload: Record<string, unknown> = { status: body.status };
+  if (body.rejection_reason?.trim()) {
+    notifPayload.rejection_reason = body.rejection_reason.trim();
+  }
 
   await supabase.from("notifications").insert({
     user_id: body.user_id,
@@ -326,14 +338,21 @@ async function handlePaymentStatus(body: PaymentStatusBody) {
     body: notifBody,
     type: "payment",
     target_stream: null,
-    payload: { status: body.status },
+    payload: notifPayload,
   });
 
   if (user?.fcm_token) {
+    const data: Record<string, string> = {
+      type: "payment",
+      status: body.status,
+    };
+    if (body.rejection_reason?.trim()) {
+      data.rejection_reason = body.rejection_reason.trim();
+    }
     await sendFcmToToken(
       user.fcm_token,
       { title, body: notifBody },
-      { type: "payment", status: body.status },
+      data,
     );
   }
 }

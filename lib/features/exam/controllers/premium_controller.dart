@@ -95,13 +95,14 @@ class PremiumController extends GetxController {
         return;
       }
 
+      // Show loading immediately so the button feels responsive.
+      isUploading.value = true;
+
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         ToastHelper.warning('No Internet!');
         return;
       }
-
-      isUploading.value = true;
 
       final userId = _userController.user.value.id;
       if (userId.isEmpty) {
@@ -139,13 +140,14 @@ class PremiumController extends GetxController {
         return;
       }
 
+      // Show loading immediately so the button feels responsive.
+      isUploading.value = true;
+
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         ToastHelper.warning('No Internet!');
         return;
       }
-
-      isUploading.value = true;
 
       await _repo.cancelPayment(userId);
       await _userController.fetchUserRecord();

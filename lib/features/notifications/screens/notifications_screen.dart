@@ -20,7 +20,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    ctrl.loadNotifications(syncRemote: true);
+    // Run diagnose first so the console always shows DB state on open,
+    // then do the full sync load.
+    ctrl.diagnose().then((_) => ctrl.loadNotifications(syncRemote: true));
   }
 
   @override
@@ -44,16 +46,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: () => ctrl.loadNotifications(syncRemote: true),
+        onRefresh: () async {
+          await ctrl.diagnose();
+          await ctrl.loadNotifications(syncRemote: true);
+        },
         child: Obx(() {
           if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
-            return const AppCircularLoading(title: 'Loading notifications...');
+            return const AppCircularLoading(
+              title: 'Loading notifications...',
+            );
           }
 
           if (ctrl.notifications.isEmpty) {
             return ListView(
-              // ListView (not Center) so pull-to-refresh still works on an
-              // empty list.
               children: const [
                 SizedBox(height: 120),
                 Center(

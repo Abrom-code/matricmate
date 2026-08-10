@@ -15,6 +15,7 @@ class AppNotification {
   final String type; // 'announcement' | 'payment' | 'new_content'
   final Map<String, dynamic> payload;
   final bool isRead;
+  final bool isArchived;
   final DateTime createdAt;
 
   AppNotification({
@@ -25,6 +26,7 @@ class AppNotification {
     required this.type,
     required this.payload,
     required this.isRead,
+    this.isArchived = false,
     required this.createdAt,
   });
 

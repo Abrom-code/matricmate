@@ -25,6 +25,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     ctrl.diagnose().then((_) => ctrl.loadNotifications(syncRemote: true));
   }
 
+  void _confirmClearAll(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Clear all notifications?'),
+        content: const Text(
+          'This removes all notifications from your device. '
+          'They will reappear on next sync.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ctrl.deleteAll();
+            },
+            child: const Text(
+              'Clear all',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,13 +65,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         showBackArrow: true,
         actions: [
           Obx(() {
-            if (ctrl.unreadCount.value == 0) return const SizedBox.shrink();
-            return TextButton(
-              onPressed: ctrl.markAllRead,
-              child: const Text(
-                'Mark all read',
-                style: TextStyle(color: AppColors.white, fontSize: 12),
-              ),
+            if (ctrl.notifications.isEmpty) return const SizedBox.shrink();
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (ctrl.unreadCount.value > 0)
+                  TextButton(
+                    onPressed: ctrl.markAllRead,
+                    child: const Text(
+                      'Mark all read',
+                      style: TextStyle(color: AppColors.white, fontSize: 12),
+                    ),
+                  ),
+                IconButton(
+                  tooltip: 'Clear all',
+                  icon: const Icon(Icons.delete_sweep_rounded,
+                      color: AppColors.white, size: 22),
+                  onPressed: () => _confirmClearAll(context),
+                ),
+              ],
             );
           }),
         ],

@@ -217,6 +217,19 @@ class NotificationRepository {
     );
   }
 
+  /// Deletes a single notification from local SQLite only.
+  /// Notifications live in Supabase independently — this is a local-only dismiss.
+  Future<void> deleteLocal(int id) async {
+    final db = await _db.database;
+    await db.delete('notifications', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Deletes all notifications for [userId] from local SQLite.
+  Future<void> deleteAllLocal(String userId) async {
+    final db = await _db.database;
+    await db.delete('notifications', where: 'user_id = ?', whereArgs: [userId]);
+  }
+
   Future<void> saveFcmToken(String userId, String token) async {
     try {
       await _supabase.from('users').update({'fcm_token': token}).eq('id', userId);

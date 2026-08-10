@@ -80,12 +80,42 @@ class NotificationTile extends StatelessWidget {
     }
   }
 
+  void _onLongPress(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete notification'),
+        content: const Text('Remove this notification from your device?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              NotificationsController.instance.deleteOne(notification.id);
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
     return GestureDetector(
       onTap: _onTap,
+      onLongPress: () => _onLongPress(context),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(

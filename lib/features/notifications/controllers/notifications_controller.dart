@@ -85,6 +85,19 @@ class NotificationsController extends GetxController {
     await loadNotifications();
   }
 
+  /// Removes a single notification from local SQLite and refreshes the list.
+  Future<void> deleteOne(int id) async {
+    await _repo.deleteLocal(id);
+    await loadNotifications();
+  }
+
+  /// Removes all notifications for the current user from local SQLite.
+  Future<void> deleteAll() async {
+    if (_userId.isEmpty) return;
+    await _repo.deleteAllLocal(_userId);
+    await loadNotifications();
+  }
+
   // ── Diagnostic: call from notifications screen pull-to-refresh ──────
   /// Queries Supabase directly (bypasses SQLite) and prints every row found.
   /// Run in debug mode and watch the console to verify what's in the DB.

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
+import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/features/personalization/screens/update/update_profile.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -43,18 +44,23 @@ class AccountSettings extends StatelessWidget {
               onTap: () => Get.toNamed(Routes.changePassword),
             ),
             if (isInactive)
-              AppListTile(
-                icon: const Icon(
-                  Icons.workspace_premium,
-                  color: Colors.amber,
-                ),
-                title: 'Upgrade Premium',
-                trailing: const Icon(Icons.keyboard_arrow_right),
-                onTap: () => Get.bottomSheet(
-                  const PremiumBottomSheet(),
-                  isScrollControlled: true,
-                ),
-              ),
+              Obx(() {
+                final price =
+                    PaymentConfigService.instance.subscriptionPrice.value;
+                return AppListTile(
+                  icon: const Icon(
+                    Icons.workspace_premium,
+                    color: Colors.amber,
+                  ),
+                  title: 'Upgrade Premium',
+                  subtitle: '$price ETB / year',
+                  trailing: const Icon(Icons.keyboard_arrow_right),
+                  onTap: () => Get.bottomSheet(
+                    const PremiumBottomSheet(),
+                    isScrollControlled: true,
+                  ),
+                );
+              }),
             if (isPending)
               AppListTile(
                 icon: const Icon(Icons.loop),

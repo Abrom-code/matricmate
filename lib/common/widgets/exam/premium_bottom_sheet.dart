@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/tiles/tile.dart';
+import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -85,7 +86,7 @@ class PremiumBottomSheet extends StatelessWidget {
               const SizedBox(height: 20),
 
               /// BUTTON
-              Container(
+              Obx(() => Container(
                 width: double.infinity,
                 height: 55,
                 decoration: BoxDecoration(
@@ -103,12 +104,13 @@ class PremiumBottomSheet extends StatelessWidget {
                     ),
                   ),
                   onPressed: () => Get.offNamed(Routes.premium),
-                  child: const Text(
-                    'Premium (250 birr)',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  child: Text(
+                    'Premium (${PaymentConfigService.instance.subscriptionPrice.value} birr)',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
-              ),
+              )),
             ],
           ),
         ),

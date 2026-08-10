@@ -9,12 +9,14 @@ class AppListTile extends StatelessWidget {
     required this.icon,
     this.onTap,
     required this.title,
+    this.subtitle,
     this.trailing,
     this.isDense,
   });
   final Widget icon;
   final VoidCallback? onTap;
   final String title;
+  final String? subtitle;
   final Widget? trailing;
   final bool? isDense;
 
@@ -41,6 +43,15 @@ class AppListTile extends StatelessWidget {
             color: dark ? AppColors.grey : AppColors.darkerGrey,
           ),
         ),
+        subtitle: subtitle != null
+            ? Text(
+                subtitle!,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: dark ? AppColors.darkGrey : AppColors.darkGrey,
+                ),
+              )
+            : null,
         trailing: trailing,
         onTap: onTap,
       ),

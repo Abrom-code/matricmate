@@ -139,7 +139,7 @@ class TestTile extends StatelessWidget {
             border: Border.all(
               color: isInProgress
                   ? _kResumeColor.withValues(alpha: 0.35)
-                  : AppColors.primary.withValues(alpha: 0.18),
+                  : iconColor.withValues(alpha: 0.18),
             ),
             borderRadius: BorderRadius.circular(14),
           ),
@@ -156,7 +156,7 @@ class TestTile extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color: isInProgress ? _kResumeColor : AppColors.primary,
+                  color: isInProgress ? _kResumeColor : iconColor,
                   size: 20,
                 ),
               ),

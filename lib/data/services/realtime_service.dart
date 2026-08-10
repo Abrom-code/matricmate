@@ -358,10 +358,10 @@ class RealtimeService {
   Future<void> _showLocalBanner(AppNotification n) async {
     try {
       await _localNotifications.show(
-        n.id & 0x7FFFFFFF, // ensure valid int id
-        n.title,
-        n.body,
-        NotificationDetails(
+        id: n.id & 0x7FFFFFFF, // ensure valid int id
+        title: n.title,
+        body: n.body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             _kChannelId,
             _kChannelName,
@@ -370,7 +370,7 @@ class RealtimeService {
           ),
           iOS: const DarwinNotificationDetails(),
         ),
-        payload: n.type, // used for tap routing if needed
+        payload: n.type,
       );
     } catch (e) {
       debugPrint('[Realtime] failed to show local banner: $e');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/link_input_field.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payment_detail.dart';
@@ -10,22 +11,22 @@ import 'package:matricmate/features/exam/screens/premium/widgets/receipt_contain
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/enums/payment_enum.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PaymentScreen extends StatelessWidget {
-  final PaymentMethod method;
-  const PaymentScreen({super.key, required this.method});
+  final PaymentConfig payment;
+  const PaymentScreen({super.key, required this.payment});
 
   @override
   Widget build(BuildContext context) {
     final isDark = AppHelperFunctions.isDark(context);
     final controller = Get.find<PremiumController>();
+
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          '${method.title} - Payment',
+          '${payment.label} - Payment',
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
@@ -55,13 +56,17 @@ class PaymentScreen extends StatelessWidget {
               ],
             ),
             paymentTile(
-              title: method.title,
-              subtitle: method.subtitle,
-              icon: method.icon,
+              title: payment.label,
+              subtitle: payment.account.isNotEmpty
+                  ? payment.account.length < 15
+                      ? payment.account
+                      : '${payment.account.substring(0, 12)}...'
+                  : '',
+              icon: payment.icon,
               context: context,
               showIcon: false,
-              isFeatured: method.isFeatured,
-              detail: PaymentDetail(method: method),
+              isFeatured: payment.isFeatured,
+              detail: PaymentDetail(payment: payment),
             ),
             const SizedBox(height: AppSizes.spaceBtwItems),
 
@@ -79,10 +84,8 @@ class PaymentScreen extends StatelessWidget {
                 children: [
                   const LinkInputField(),
                   const SizedBox(height: AppSizes.spaceBtwSections),
-
                   Obx(() {
                     final file = controller.receipt.value;
-
                     return GestureDetector(
                       onTap: () => controller.pickReceipt(),
                       child: ReceiptContainer(file: file),

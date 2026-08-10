@@ -61,42 +61,48 @@ class PaymentRepository {
     }
   }
 
-  /// Cancel payment
+  /// Cancel payment — wipes the user's full receipt history and storage files,
+  /// but only reverts subscription_status to 'inactive' when the status is
+  /// still 'pending'. If an admin already approved ('active'), that stays
+  /// untouched — the admin owns that state.
   Future<void> cancelPayment(String userId) async {
     try {
       await ensureSupabaseAuth();
+
+      // 1. Collect all file paths so storage stays clean.
       final data = await _supabase
           .from('payment_receipts')
           .select('receipt_path')
           .eq('user_id', userId);
 
       if (data.isNotEmpty) {
-        final List<String> filesToDelete = data
-            .map((e) => e['receipt_path'].toString().trim())
+        final filesToDelete = data
+            .map((e) => e['receipt_path']?.toString().trim() ?? '')
+            .where((p) => p.isNotEmpty)
             .toList();
 
-        final List<FileObject> deletedFiles = await _supabase.storage
-            .from('receipts')
-            .remove(filesToDelete);
-
-        // Only treat it as an error if we tried to delete files but none succeeded
-        if (filesToDelete.isNotEmpty && deletedFiles.isEmpty) {
-          throw Exception('Failed to delete receipt files from storage');
+        if (filesToDelete.isNotEmpty) {
+          // Best-effort — a storage failure must not block the DB cleanup.
+          try {
+            await _supabase.storage.from('receipts').remove(filesToDelete);
+          } catch (_) {}
         }
       }
 
-      // Attempt DB row deletion
+      // 2. Delete every receipt row for this user.
       await _supabase
           .from('payment_receipts')
           .delete()
-          .eq('user_id', userId)
-          .select();
+          .eq('user_id', userId);
 
-      // Update user status
+      // 3. Revert to inactive only when the status is still 'pending'.
+      //    '.eq(subscription_status, pending)' means the UPDATE is a no-op
+      //    if admin already flipped it to 'active' — no accidental downgrade.
       await _supabase
           .from('users')
           .update({'subscription_status': 'inactive'})
-          .eq('id', userId);
+          .eq('id', userId)
+          .eq('subscription_status', 'pending');
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payment_tile.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/enums/payment_enum.dart';
 
 class PremiumScreen extends StatelessWidget {
   const PremiumScreen({super.key});
@@ -15,7 +16,8 @@ class PremiumScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = PremiumController.instance;
-    final methods = PaymentMethod.values;
+    final cfg = PaymentConfigService.instance;
+
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
@@ -30,31 +32,36 @@ class PremiumScreen extends StatelessWidget {
         builder: (context, _) {
           final isLandscape =
               MediaQuery.orientationOf(context) == Orientation.landscape;
+
           final content = SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Obx(() {
+                final price    = cfg.subscriptionPrice.value;
+                final methods  = cfg.methods.toList();
+                final selected = controller.selectedPayment.value;
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Total Amount Card
+                    // ── Total Amount Card ──────────────────────────
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Total Amount Due',
                             style: TextStyle(color: AppColors.white),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
-                            '250 ETB',
-                            style: TextStyle(
+                            '$price ETB',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
@@ -66,18 +73,31 @@ class PremiumScreen extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // Payment Options
-                    ...methods.map((method) {
-                      return paymentTile(
-                        title: method.title,
-                        subtitle: method.subtitle,
-                        icon: method.icon,
-                        isFeatured: method.isFeatured,
-                        selected: method == controller.selectedMethod.value,
-                        context: context,
-                        onTap: () => controller.selectedMethod.value = method,
-                      );
-                    }).toList(),
+                    // ── All payment methods from DB ─────────────────
+                    if (methods.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: AppCircularLoading(
+                          title: 'Loading payment methods...',
+                        ),
+                      )
+                    else
+                      ...methods.map((method) {
+                        return paymentTile(
+                          title: method.label,
+                          subtitle: method.account.isNotEmpty
+                              ? method.account.length < 15
+                                  ? method.account
+                                  : '${method.account.substring(0, 12)}...'
+                              : '',
+                          icon: method.icon,
+                          isFeatured: method.isFeatured,
+                          selected: selected == method,
+                          context: context,
+                          onTap: () =>
+                              controller.selectedPayment.value = method,
+                        );
+                      }),
                   ],
                 );
               }),
@@ -94,12 +114,13 @@ class PremiumScreen extends StatelessWidget {
         },
       ),
       bottomNavigationBar: Obx(() {
-      final isPending = UserController.instance.user.value.isPending;
+        final isPending  = UserController.instance.user.value.isPending;
+        final hasMethod  = controller.selectedPayment.value != null;
+
         return Container(
           padding: const EdgeInsets.all(AppSizes.md),
           child: SizedBox(
             width: double.infinity,
-
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -108,12 +129,14 @@ class PremiumScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: isPending
-                  ? () => Get.toNamed(Routes.paymentVerification)
-                  : () => Get.toNamed(
-                        Routes.payment,
-                        arguments: controller.selectedMethod.value,
-                      ),
+              onPressed: (!isPending && !hasMethod)
+                  ? null
+                  : isPending
+                      ? () => Get.toNamed(Routes.paymentVerification)
+                      : () => Get.toNamed(
+                            Routes.payment,
+                            arguments: controller.selectedPayment.value,
+                          ),
               child: Text(
                 isPending ? 'Check Status' : 'Continue to Payment',
                 style: const TextStyle(fontSize: 16, color: Colors.white),

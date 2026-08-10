@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -44,12 +44,6 @@ class RealtimeService {
   RealtimeChannel? _appConfigChannel;
   RealtimeChannel? _notificationsChannel;
   RealtimeChannel? _notificationReadsChannel;
-
-  // Local notifications — reuse the same channel id as FcmService so
-  // Realtime-triggered banners look identical to FCM-triggered ones.
-  static const _kChannelId = 'matricmate_default';
-  static const _kChannelName = 'General Notifications';
-  final _localNotifications = FlutterLocalNotificationsPlugin();
 
 
   /// Start listening. Safe to call multiple times — stops existing first.
@@ -352,29 +346,17 @@ class RealtimeService {
 
   // ── Local notification banner ─────────────────────────────────────────────
 
-  /// Shows an OS notification banner for a notification received via
-  /// Supabase Realtime. Reuses the same channel as FcmService so the
-  /// appearance is identical whether the push came from FCM or Realtime.
+  /// Delegates to [FcmService.showBanner] which uses the already-initialised
+  /// [FlutterLocalNotificationsPlugin] instance and the registered Android
+  /// channel. Creating a second plugin instance here would silently fail
+  /// because the channel is only created inside [FcmService.init].
   Future<void> _showLocalBanner(AppNotification n) async {
-    try {
-      await _localNotifications.show(
-        id: n.id & 0x7FFFFFFF, // ensure valid int id
-        title: n.title,
-        body: n.body,
-        notificationDetails: NotificationDetails(
-          android: AndroidNotificationDetails(
-            _kChannelId,
-            _kChannelName,
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-          iOS: const DarwinNotificationDetails(),
-        ),
-        payload: n.type,
-      );
-    } catch (e) {
-      debugPrint('[Realtime] failed to show local banner: $e');
-    }
+    await FcmService.instance.showBanner(
+      id: n.id,
+      title: n.title,
+      body: n.body,
+      payload: n.type,
+    );
   }
 
   // ── User channel ──────────────────────────────────────────────────────────

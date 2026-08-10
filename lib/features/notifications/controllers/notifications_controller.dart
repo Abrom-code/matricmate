@@ -19,6 +19,17 @@ class NotificationsController extends GetxController {
   String get _userId => UserController.instance.user.value.id;
   String get _userStream => UserController.instance.user.value.stream;
 
+  @override
+  void onInit() {
+    super.onInit();
+    // Load local notifications immediately so the bell badge is populated
+    // as soon as the controller registers — no network call needed.
+    // The full remote sync happens later in _backgroundRefresh.
+    ever(UserController.instance.user, (_) {
+      if (_userId.isNotEmpty) loadNotifications();
+    });
+  }
+
   /// Loads notifications. If [syncRemote] is true, pulls from Supabase first.
   /// Guards against empty userId — safe to call before user fully loads.
   Future<void> loadNotifications({bool syncRemote = false}) async {

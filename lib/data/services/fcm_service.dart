@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
@@ -97,9 +98,21 @@ class FcmService {
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen((m) => _handleTap(m.data));
 
-    // App was fully closed and launched by tapping a notification.
+    // App was fully closed and launched by tapping a FCM notification.
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) _handleTap(initialMessage.data);
+
+    // App was fully closed and launched by tapping a local notification
+    // (Realtime-delivered banner shown via showBanner).
+    final launchDetails = await _localNotifications.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp == true) {
+      final payload = launchDetails!.notificationResponse?.payload;
+      if (payload != null && payload.isNotEmpty) {
+        try {
+          _handleTap(Map<String, dynamic>.from(jsonDecode(payload)));
+        } catch (_) {}
+      }
+    }
   }
 
   Future<void> _saveTokenIfLoggedIn(String? token) async {
@@ -120,6 +133,40 @@ class FcmService {
     }
     await _messaging.subscribeToTopic(newTopic);
     _subscribedStreamTopic = newTopic;
+  }
+
+  /// Shows a local notification banner using this service's already-initialised
+  /// plugin instance. Called by [RealtimeService] so Supabase-inserted
+  /// notifications display the same OS banner as FCM-delivered ones.
+  Future<void> showBanner({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    try {
+      // Encode the payload as JSON so onDidReceiveNotificationResponse can
+      // decode it with jsonDecode — passing a raw type string would throw.
+      final encoded = jsonEncode({'type': payload ?? 'announcement'});
+      await _localNotifications.show(
+        id: id & 0x7FFFFFFF,
+        title: title,
+        body: body,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channel.id,
+            _channel.name,
+            channelDescription: _channel.description,
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: const DarwinNotificationDetails(),
+        ),
+        payload: encoded,
+      );
+    } catch (e) {
+      debugPrint('[FcmService] showBanner failed: $e');
+    }
   }
 
   Future<void> _onForegroundMessage(RemoteMessage message) async {

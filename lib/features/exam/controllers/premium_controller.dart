@@ -155,7 +155,9 @@ class PremiumController extends GetxController {
       receipt.value = null;
       urlFiledController.clear();
 
-      Get.back();
+      // Pop back all the way to home (subjects screen) so the user is not
+      // left on the premium / payment verification page after cancelling.
+      Get.until((route) => route.isFirst);
       ToastHelper.success('Payment cancelled');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);

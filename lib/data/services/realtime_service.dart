@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -43,6 +44,12 @@ class RealtimeService {
   RealtimeChannel? _appConfigChannel;
   RealtimeChannel? _notificationsChannel;
   RealtimeChannel? _notificationReadsChannel;
+
+  // Local notifications — reuse the same channel id as FcmService so
+  // Realtime-triggered banners look identical to FCM-triggered ones.
+  static const _kChannelId = 'matricmate_default';
+  static const _kChannelName = 'General Notifications';
+  final _localNotifications = FlutterLocalNotificationsPlugin();
 
 
   /// Start listening. Safe to call multiple times — stops existing first.
@@ -244,6 +251,10 @@ class RealtimeService {
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
 
+      // Show an OS notification banner so the user sees it immediately
+      // without needing an FCM push from a separate backend function.
+      await _showLocalBanner(n);
+
       // Refresh the controller so the bell badge + list update live.
       if (Get.isRegistered<NotificationsController>()) {
         await NotificationsController.instance.loadNotifications();
@@ -339,6 +350,33 @@ class RealtimeService {
     }
   }
 
+  // ── Local notification banner ─────────────────────────────────────────────
+
+  /// Shows an OS notification banner for a notification received via
+  /// Supabase Realtime. Reuses the same channel as FcmService so the
+  /// appearance is identical whether the push came from FCM or Realtime.
+  Future<void> _showLocalBanner(AppNotification n) async {
+    try {
+      await _localNotifications.show(
+        n.id & 0x7FFFFFFF, // ensure valid int id
+        n.title,
+        n.body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _kChannelId,
+            _kChannelName,
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: const DarwinNotificationDetails(),
+        ),
+        payload: n.type, // used for tap routing if needed
+      );
+    } catch (e) {
+      debugPrint('[Realtime] failed to show local banner: $e');
+    }
+  }
+
   // ── User channel ──────────────────────────────────────────────────────────
 
   void _startUserChannel(String userId) {
@@ -371,6 +409,7 @@ class RealtimeService {
       if (record.isEmpty) return;
 
       final updated = UserModel.fromJson(record);
+      final previous = UserController.instance.user.value;
 
       // 1. Persist to local SQLite so the status survives app restarts.
       final db = await DatabaseService.instance.database;
@@ -384,9 +423,46 @@ class RealtimeService {
       //    instantly: badge, banners, content gates, everything.
       UserController.instance.user.value = updated;
 
+      // 3. Notify the user in-app when the admin changes their status,
+      //    then lock / unlock the app accordingly.
+      if (previous.status != updated.status) {
+        _notifyStatusChange(updated);
+      }
+
       debugPrint('[Realtime] user status → ${updated.status}');
     } catch (e) {
       debugPrint('[Realtime] error updating user: $e');
+    }
+  }
+
+  void _notifyStatusChange(UserModel updated) {
+    if (updated.isActive) {
+      // Navigate home first, then show the snackbar so it's visible on the
+      // home screen instead of the payment/verification screen.
+      Get.offAllNamed(Routes.navigationMenu);
+      Get.snackbar(
+        '🎉 Account Activated',
+        'Your subscription is now active. Enjoy full access!',
+        duration: const Duration(seconds: 4),
+        snackPosition: SnackPosition.TOP,
+      );
+    } else if (updated.isPending) {
+      Get.snackbar(
+        '⏳ Payment Pending',
+        'Your payment is being verified. We\'ll notify you when it\'s confirmed.',
+        duration: const Duration(seconds: 4),
+        snackPosition: SnackPosition.TOP,
+      );
+    } else if (updated.isInactive) {
+      // Pop back to home (subjects screen) so the user sees the premium
+      // banner and can resubscribe. The banner is already reactive via Obx.
+      Get.until((route) => route.isFirst);
+      Get.snackbar(
+        '🔒 Subscription Ended',
+        'Your subscription has been deactivated. Renew to restore access.',
+        duration: const Duration(seconds: 5),
+        snackPosition: SnackPosition.TOP,
+      );
     }
   }
 }

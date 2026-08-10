@@ -136,63 +136,71 @@ class _SubjectsScreenState extends State<SubjectsScreen>
 
         return Stack(
           children: [
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSizes.defaultSpace),
-                child: Column(
-                  children: [
-                    if (isInactive)
-                      PremiumBanner(
-                        onTap: () => Get.bottomSheet(
-                          const PremiumBottomSheet(),
-                          isScrollControlled: true,
+            RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async {
+                await ctrl.loadLocalSubjects();
+                await ctrl.loadPausedTests();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSizes.defaultSpace),
+                  child: Column(
+                    children: [
+                      if (isInactive)
+                        PremiumBanner(
+                          onTap: () => Get.bottomSheet(
+                            const PremiumBottomSheet(),
+                            isScrollControlled: true,
+                          ),
                         ),
-                      ),
-                    if (isInactive)
-                      const SizedBox(height: AppSizes.spaceBtwItems),
-                    if (isPending) const PendingPaymentBanner(),
-                    if (isPending)
-                      const SizedBox(height: AppSizes.spaceBtwItems),
+                      if (isInactive)
+                        const SizedBox(height: AppSizes.spaceBtwItems),
+                      if (isPending) const PendingPaymentBanner(),
+                      if (isPending)
+                        const SizedBox(height: AppSizes.spaceBtwItems),
 
-                    GridLayout(
-                      itemCount: filteredSubjects.length,
-                      itemBuilder: (_, index) {
-                        final subject = filteredSubjects[index];
-                        return SubjectContainer(
-                          title: subject.name,
-                          image: AppHelperFunctions.getSubjectImage(
-                            subject.name,
-                          ),
-                          isDownloaded: subject.isDownloaded,
-                          onPressed: () =>
-                              ctrl.downloadSubject(subject.name, subject.id),
-                          onTap: () => subject.isDownloaded
-                              ? Get.toNamed(
-                                  Routes.chapter,
-                                  arguments: {
-                                    'title': subject.name,
-                                    'id': subject.id,
-                                  },
-                                )
-                              : null,
-                        );
-                      },
-                    ),
-                    if (filteredSubjects.isNotEmpty)
-                      const SizedBox(height: AppSizes.spaceBtwSections * 2),
-                    if (filteredSubjects.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.only(
-                          top: AppSizes.spaceBtwSections,
-                        ),
-                        child: Center(
-                          child: Text(
-                            'No subjects yet.\nTap the sync button to load your content.',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                      GridLayout(
+                        itemCount: filteredSubjects.length,
+                        itemBuilder: (_, index) {
+                          final subject = filteredSubjects[index];
+                          return SubjectContainer(
+                            title: subject.name,
+                            image: AppHelperFunctions.getSubjectImage(
+                              subject.name,
+                            ),
+                            isDownloaded: subject.isDownloaded,
+                            onPressed: () =>
+                                ctrl.downloadSubject(subject.name, subject.id),
+                            onTap: () => subject.isDownloaded
+                                ? Get.toNamed(
+                                    Routes.chapter,
+                                    arguments: {
+                                      'title': subject.name,
+                                      'id': subject.id,
+                                    },
+                                  )
+                                : null,
+                          );
+                        },
                       ),
-                  ],
+                      if (filteredSubjects.isNotEmpty)
+                        const SizedBox(height: AppSizes.spaceBtwSections * 2),
+                      if (filteredSubjects.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(
+                            top: AppSizes.spaceBtwSections,
+                          ),
+                          child: Center(
+                            child: Text(
+                              'No subjects yet.\nTap the sync button to load your content.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),

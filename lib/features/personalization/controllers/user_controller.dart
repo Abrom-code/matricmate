@@ -143,7 +143,16 @@ class UserController extends GetxController {
 
       if (current.isPending) {
         SnackbarHelper.warning('Progress', 'Your payment is still processing!');
+        return;
       }
+
+      // Status is inactive — payment was rejected or cancelled by admin.
+      // Pop back to home so the user sees the premium banner.
+      Get.until((route) => route.isFirst);
+      SnackbarHelper.warning(
+        'Payment Not Approved',
+        'Your payment was not approved. Please try again.',
+      );
     } finally {
       isCheckingPayment.value = false;
     }

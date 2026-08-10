@@ -9,7 +9,6 @@ import 'package:matricmate/features/notifications/models/notification_model.dart
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
-import 'dart:developer' as c;
 
 /// Must be a top-level (or static) function — required by the Flutter
 /// background isolate contract for FCM background messages.
@@ -80,8 +79,7 @@ class FcmService {
 
     // Register/refresh the token used for personal (payment) pushes.
     final token = await _messaging.getToken();
-    // TODO: Remove this line before production release.
-    c.log('🔑 FCM Token: $token');
+
     await _saveTokenIfLoggedIn(token);
     _messaging.onTokenRefresh.listen(_saveTokenIfLoggedIn);
 

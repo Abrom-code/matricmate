@@ -8,9 +8,11 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
+import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/data/services/realtime_service.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
+import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -222,6 +224,15 @@ class AuthenticationController extends GetxController
           .map((s) => s.id)
           .toList();
       unawaited(RealtimeService.instance.start(downloadedIds, userId: uid));
+
+      // Load payment config with auth — ensures RLS-protected app_config
+      // is readable. Runs after login so this always succeeds.
+      unawaited(PaymentConfigService.instance.load());
+
+      // Load notifications in background — populates bell badge + list.
+      unawaited(
+        NotificationsController.instance.loadNotifications(syncRemote: true),
+      );
 
       // Initialise FCM — requests permission, registers token, sets up
       // message listeners. Must run AFTER UserController.user is populated

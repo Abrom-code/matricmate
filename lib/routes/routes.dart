@@ -38,10 +38,10 @@ import 'package:matricmate/features/personalization/screens/update/change_passwo
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/bindings/exam/premium_binding.dart';
+import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/screens/premium/payment.dart';
 import 'package:matricmate/features/exam/screens/premium/premium.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
-import 'package:matricmate/utils/enums/payment_enum.dart';
 
 class AppRoutes {
   static final pages = [
@@ -142,7 +142,7 @@ class AppRoutes {
     ),
     GetPage(
       name: Routes.payment,
-      page: () => PaymentScreen(method: Get.arguments as PaymentMethod),
+      page: () => PaymentScreen(payment: Get.arguments as PaymentConfig),
       binding: PremiumBinding(),
     ),
     GetPage(

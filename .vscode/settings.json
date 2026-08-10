@@ -64,5 +64,6 @@
   "deno.suggest.imports.hosts": {
     "https://deno.land": true,
     "https://esm.sh": true
-  }
+  },
+  "cmake.sourceDirectory": "C:/Users/HP/Desktop/Flutter/matricmate/ios/linux"
 }

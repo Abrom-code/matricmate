@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
@@ -46,10 +47,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             },
             child: const Text(
               'Clear all',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -72,15 +70,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 if (ctrl.unreadCount.value > 0)
                   TextButton(
                     onPressed: ctrl.markAllRead,
-                    child: const Text(
-                      'Mark all read',
-                      style: TextStyle(color: AppColors.white, fontSize: 12),
+                    child: const Icon(
+                      Icons.done_all_rounded,
+                      color: AppColors.white,
+                      size: 22,
                     ),
                   ),
                 IconButton(
                   tooltip: 'Clear all',
-                  icon: const Icon(Icons.delete_sweep_rounded,
-                      color: AppColors.white, size: 22),
+                  icon: const Icon(
+                    Icons.delete_sweep_rounded,
+                    color: AppColors.white,
+                    size: 22,
+                  ),
                   onPressed: () => _confirmClearAll(context),
                 ),
               ],
@@ -96,9 +98,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         },
         child: Obx(() {
           if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
-            return const AppCircularLoading(
-              title: 'Loading notifications...',
-            );
+            return const AppCircularLoading(title: 'Loading notifications...');
           }
 
           if (ctrl.notifications.isEmpty) {

@@ -23,7 +23,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 9,
+      version: 10,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -133,6 +133,31 @@ class DatabaseService extends GetxController {
             await db.execute(
               'CREATE INDEX IF NOT EXISTS idx_notifications_user '
               'ON notifications(user_id, created_at)',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 10) {
+          // Add created_at to the user table so we can filter out notifications
+          // that were broadcast before this user signed up.
+          try {
+            await db.execute(
+              'ALTER TABLE user ADD COLUMN created_at TEXT',
+            );
+          } catch (_) {}
+          // Track which notifications the user has explicitly deleted so they
+          // are not re-inserted during the next remote sync.
+          try {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS notification_dismissals (
+                notification_id INTEGER NOT NULL,
+                user_id TEXT NOT NULL,
+                dismissed_at TEXT NOT NULL DEFAULT (datetime('now')),
+                PRIMARY KEY (notification_id, user_id)
+              )
+            ''');
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_dismissals_user '
+              'ON notification_dismissals(user_id)',
             );
           } catch (_) {}
         }

@@ -53,7 +53,8 @@ class NotificationsController extends GetxController {
 
       if (syncRemote) {
         try {
-          await _repo.syncFromRemote(_userId, _userStream);
+          final signupAt = UserController.instance.user.value.createdAt;
+          await _repo.syncFromRemote(_userId, _userStream, signupAt: signupAt);
         } catch (e) {
           debugPrint('[Notifications] syncFromRemote failed: $e');
         }

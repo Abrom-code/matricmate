@@ -30,33 +30,70 @@ class NotificationRepository {
   /// match their stream (or are global — target_stream IS NULL), and
   /// upserts them into local SQLite.
   ///
+  /// Only fetches notifications created on or after [signupAt] so a new user
+  /// doesn't see announcements that were sent before they registered.
+  ///
   /// Also fetches notification_reads for this user so is_read is correct
-  /// after a reinstall or device switch.
-  Future<void> syncFromRemote(String userId, String userStream) async {
+  /// after a reinstall or device switch. Dismissed notifications (recorded
+  /// in notification_dismissals) are excluded from the upsert so they don't
+  /// reappear after a sync.
+  Future<void> syncFromRemote(
+    String userId,
+    String userStream, {
+    DateTime? signupAt,
+  }) async {
     try {
-      debugPrint('[Notifications] syncFromRemote userId=$userId stream=$userStream');
+      debugPrint('[Notifications] syncFromRemote userId=$userId stream=$userStream signupAt=$signupAt');
 
-      final notifFutures = await Future.wait([
-        // Personal notifications for this user
-        _supabase
-            .from('notifications')
-            .select()
-            .eq('user_id', userId)
-            .order('created_at', ascending: false)
-            .limit(100),
-        // Broadcast notifications (user_id IS NULL)
-        _supabase
-            .from('notifications')
-            .select()
-            .isFilter('user_id', null)
-            .order('created_at', ascending: false)
-            .limit(100),
-        // Read receipts for this user
-        _supabase
-            .from('notification_reads')
-            .select('notification_id')
-            .eq('user_id', userId),
-      ]);
+      // Build the date filter string. If we have a signupAt, use it; otherwise
+      // fall back to fetching all (safe for existing users without the field).
+      final String? sinceIso = signupAt?.toUtc().toIso8601String();
+
+      // Fetch personal, broadcast, and read receipts in parallel.
+      // Apply the signup-date filter so pre-registration rows are never sent.
+      // The date filter (.gte) must come before .order/.limit (filter methods
+      // are not available on PostgrestTransformBuilder).
+      final readsQuery = _supabase
+          .from('notification_reads')
+          .select('notification_id')
+          .eq('user_id', userId);
+
+      final List<dynamic> notifFutures;
+      if (sinceIso != null) {
+        notifFutures = await Future.wait([
+          _supabase
+              .from('notifications')
+              .select()
+              .eq('user_id', userId)
+              .gte('created_at', sinceIso)
+              .order('created_at', ascending: false)
+              .limit(100),
+          _supabase
+              .from('notifications')
+              .select()
+              .isFilter('user_id', null)
+              .gte('created_at', sinceIso)
+              .order('created_at', ascending: false)
+              .limit(100),
+          readsQuery,
+        ]);
+      } else {
+        notifFutures = await Future.wait([
+          _supabase
+              .from('notifications')
+              .select()
+              .eq('user_id', userId)
+              .order('created_at', ascending: false)
+              .limit(100),
+          _supabase
+              .from('notifications')
+              .select()
+              .isFilter('user_id', null)
+              .order('created_at', ascending: false)
+              .limit(100),
+          readsQuery,
+        ]);
+      }
 
       final personalRows =
           List<Map<String, dynamic>>.from(notifFutures[0] as List);
@@ -90,6 +127,19 @@ class NotificationRepository {
           '(${personalRows.length} personal + ${broadcastRows.length} broadcast), '
           '${readRows.length} reads');
 
+      // Load dismissed IDs so we never re-insert what the user deleted.
+      final db = await _db.database;
+      final dismissedRows = await db.query(
+        'notification_dismissals',
+        columns: ['notification_id'],
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+      final dismissedIds = <int>{
+        for (final r in dismissedRows)
+          if (r['notification_id'] != null) r['notification_id'] as int,
+      };
+
       // Build read-id set
       final readIds = <int>{
         for (final r in readRows)
@@ -99,16 +149,20 @@ class NotificationRepository {
                 : int.tryParse(r['notification_id'].toString()) ?? -1),
       }..remove(-1);
 
-      // Upsert into local SQLite
-      final db = await _db.database;
+      // Upsert into local SQLite — skip dismissed rows entirely.
+      int skipped = 0;
       final batch = db.batch();
       for (final row in rows) {
-        final map = AppNotification.fromMap(row).toMap();
-        map['user_id'] = userId; // ensure local rows always have userId
         final id = (row['id'] is int
                 ? row['id'] as int
                 : int.tryParse(row['id'].toString())) ??
             0;
+        if (dismissedIds.contains(id)) {
+          skipped++;
+          continue;
+        }
+        final map = AppNotification.fromMap(row).toMap();
+        map['user_id'] = userId; // ensure local rows always have userId
         map['is_read'] = readIds.contains(id) ? 1 : 0;
         batch.insert(
           'notifications',
@@ -117,7 +171,9 @@ class NotificationRepository {
         );
       }
       await batch.commit(noResult: true);
-      debugPrint('[Notifications] upserted ${rows.length} rows to local DB');
+      debugPrint('[Notifications] upserted ${rows.length - skipped} rows to local DB'
+          '${skipped > 0 ? " ($skipped dismissed — skipped)" : ""}'
+      );
     } catch (e, st) {
       debugPrint('[Notifications] syncFromRemote failed: $e\n$st');
       throw AppExceptionHandler.handle(e);
@@ -217,17 +273,58 @@ class NotificationRepository {
     );
   }
 
-  /// Deletes a single notification from local SQLite only.
-  /// Notifications live in Supabase independently — this is a local-only dismiss.
+  /// Deletes a single notification from local SQLite and records it in
+  /// [notification_dismissals] so the next sync does not re-insert it.
   Future<void> deleteLocal(int id) async {
+    final uid = _currentUid;
     final db = await _db.database;
-    await db.delete('notifications', where: 'id = ?', whereArgs: [id]);
+
+    await db.transaction((txn) async {
+      await txn.delete('notifications', where: 'id = ?', whereArgs: [id]);
+      if (uid != null) {
+        await txn.insert(
+          'notification_dismissals',
+          {
+            'notification_id': id,
+            'user_id': uid,
+            'dismissed_at': DateTime.now().toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
-  /// Deletes all notifications for [userId] from local SQLite.
+  /// Deletes all notifications for [userId] from local SQLite and records
+  /// every deleted ID in [notification_dismissals] so they are not re-inserted.
   Future<void> deleteAllLocal(String userId) async {
     final db = await _db.database;
-    await db.delete('notifications', where: 'user_id = ?', whereArgs: [userId]);
+
+    // Collect all notification IDs for this user before deleting.
+    final existing = await db.query(
+      'notifications',
+      columns: ['id'],
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+
+    await db.transaction((txn) async {
+      await txn.delete('notifications', where: 'user_id = ?', whereArgs: [userId]);
+      final now = DateTime.now().toIso8601String();
+      for (final row in existing) {
+        final nid = row['id'];
+        if (nid == null) continue;
+        await txn.insert(
+          'notification_dismissals',
+          {
+            'notification_id': nid,
+            'user_id': userId,
+            'dismissed_at': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
   Future<void> saveFcmToken(String userId, String token) async {

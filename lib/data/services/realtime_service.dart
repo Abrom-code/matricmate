@@ -351,11 +351,13 @@ class RealtimeService {
   /// channel. Creating a second plugin instance here would silently fail
   /// because the channel is only created inside [FcmService.init].
   Future<void> _showLocalBanner(AppNotification n) async {
+    // Pass the full payload map (not just the type string) so tapping the
+    // banner can deep-link correctly — e.g. new_content needs test_id etc.
     await FcmService.instance.showBanner(
       id: n.id,
       title: n.title,
       body: n.body,
-      payload: n.type,
+      payload: {'type': n.type, ...n.payload},
     );
   }
 

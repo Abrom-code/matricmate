@@ -138,16 +138,21 @@ class FcmService {
   /// Shows a local notification banner using this service's already-initialised
   /// plugin instance. Called by [RealtimeService] so Supabase-inserted
   /// notifications display the same OS banner as FCM-delivered ones.
+  ///
+  /// [payload] should be the full notification data map (including `type`,
+  /// `test_id`, `subject_id`, etc.) so tapping the banner can deep-link
+  /// correctly via [_handleTap]. Passing only a type string would lose
+  /// all routing data for `new_content` notifications.
   Future<void> showBanner({
     required int id,
     required String title,
     required String body,
-    String? payload,
+    Map<String, dynamic>? payload,
   }) async {
     try {
-      // Encode the payload as JSON so onDidReceiveNotificationResponse can
-      // decode it with jsonDecode — passing a raw type string would throw.
-      final encoded = jsonEncode({'type': payload ?? 'announcement'});
+      // Encode the full payload map so onDidReceiveNotificationResponse can
+      // decode it and pass it to _handleTap with all routing fields intact.
+      final encoded = jsonEncode(payload ?? {'type': 'announcement'});
       await _localNotifications.show(
         id: id & 0x7FFFFFFF,
         title: title,

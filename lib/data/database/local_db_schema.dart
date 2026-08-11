@@ -11,7 +11,8 @@ class DBschema {
         last_name TEXT,
         email TEXT NOT NULL,
         stream TEXT,
-        subscription_status TEXT DEFAULT 'inactive'
+        subscription_status TEXT DEFAULT 'inactive',
+        created_at TEXT
       );
     ''');
 
@@ -146,6 +147,21 @@ class DBschema {
 
     await db.execute(
       'CREATE INDEX idx_notifications_user ON notifications(user_id, created_at)',
+    );
+
+    // Tracks notifications the user has explicitly deleted so they are not
+    // re-inserted during the next remote sync.
+    await db.execute('''
+      CREATE TABLE notification_dismissals (
+        notification_id INTEGER NOT NULL,
+        user_id TEXT NOT NULL,
+        dismissed_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (notification_id, user_id)
+      );
+    ''');
+
+    await db.execute(
+      'CREATE INDEX idx_dismissals_user ON notification_dismissals(user_id)',
     );
   }
 }

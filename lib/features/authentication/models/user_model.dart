@@ -9,6 +9,10 @@ class UserModel {
   /// subscription status: inactive | pending | active
   final String status;
 
+  /// When the user account was created. Used to filter out notifications that
+  /// were broadcast before this user signed up.
+  final DateTime? createdAt;
+
   UserModel({
     required this.id,
     required this.firstName,
@@ -17,6 +21,7 @@ class UserModel {
     required this.stream,
     this.password,
     this.status = 'inactive',
+    this.createdAt,
   });
 
   /// FROM JSON (Supabase → Dart)
@@ -28,6 +33,9 @@ class UserModel {
       email: json['email']?.toString() ?? '',
       stream: json['stream']?.toString() ?? '',
       status: json['subscription_status']?.toString() ?? 'inactive',
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
     );
   }
 
@@ -48,7 +56,17 @@ class UserModel {
   }
 
   // to local db
-  Map<String, dynamic> toMap() => toJson();
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'first_name': firstName,
+      'last_name': lastName,
+      'email': email,
+      'stream': stream,
+      'subscription_status': status,
+      'created_at': createdAt?.toIso8601String(),
+    };
+  }
 
   /// COPY WITH
   UserModel copyWith({
@@ -59,6 +77,7 @@ class UserModel {
     String? stream,
     String? password,
     String? status,
+    DateTime? createdAt,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -68,6 +87,7 @@ class UserModel {
       stream: stream ?? this.stream,
       password: password ?? this.password,
       status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 

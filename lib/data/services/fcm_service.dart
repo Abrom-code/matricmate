@@ -22,12 +22,14 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 ///
 /// Responsibilities:
 ///   1. Request permission, register/refresh the device's FCM token to
-///      Supabase (`users.fcm_token`) for personal pushes (payment updates).
-///   2. Subscribe the device to `all_users` + `stream_<natural|social>`
-///      topics so broadcast/new-content pushes can target by stream
-///      without per-user fan-out.
-///   3. Show a local notification banner when a push arrives in the
-///      foreground (FCM does this automatically in background/terminated).
+///      Supabase (`users.fcm_token`) for personal and stream-based pushes.
+///      The edge function queries users by stream column directly — no topic
+///      subscription is needed on the client side for stream delivery.
+///   2. Subscribe the device to the `all_users` topic for global broadcast
+///      announcements sent via the legacy topic path.
+///   3. Show an in-app snackbar when a payment/new_test push arrives in the
+///      foreground. Ignore announcement/new_content in the foreground —
+///      Supabase Realtime already handled those.
 ///   4. Route notification taps to the right screen — payment status,
 ///      the exact test via [NotificationTestOpener], or the notifications
 ///      list as a fallback.
@@ -47,7 +49,7 @@ class FcmService {
     importance: Importance.high,
   );
 
-  String? _subscribedStreamTopic;
+  String? _subscribedStreamTopic; // kept for unsubscribeAll backward compat
   Worker? _streamWatcher;
   bool _initialized = false;
 
@@ -82,16 +84,11 @@ class FcmService {
     await _saveTokenIfLoggedIn(token);
     _messaging.onTokenRefresh.listen(_saveTokenIfLoggedIn);
 
-    // Broadcast topic — everyone gets general announcements.
+    // all_users topic covers global announcements sent via topic (legacy path).
+    // Stream-specific pushes now use per-token fan-out in the edge function
+    // (queries users table by stream column directly), so no stream topic
+    // subscription is needed on the client side.
     await _messaging.subscribeToTopic('all_users');
-
-    // Stream topic — subscribe now, and keep in sync if the user changes
-    // their stream later (Edit Profile).
-    await _syncStreamTopic(UserController.instance.user.value.stream);
-    _streamWatcher = ever<dynamic>(
-      UserController.instance.user,
-      (user) => _syncStreamTopic(user.stream as String),
-    );
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen((m) => _handleTap(m.data));
@@ -118,19 +115,6 @@ class FcmService {
     final userId = UserController.instance.user.value.id;
     if (userId.isEmpty) return;
     await _repo.saveFcmToken(userId, token);
-  }
-
-  /// Keeps the device subscribed to exactly one stream topic at a time.
-  Future<void> _syncStreamTopic(String stream) async {
-    if (stream.isEmpty || stream == _subscribedStreamTopic) return;
-
-    final newTopic = 'stream_$stream'; // 'stream_natural' | 'stream_social'
-
-    if (_subscribedStreamTopic != null) {
-      await _messaging.unsubscribeFromTopic(_subscribedStreamTopic!);
-    }
-    await _messaging.subscribeToTopic(newTopic);
-    _subscribedStreamTopic = newTopic;
   }
 
   /// Shows a local notification banner using this service's already-initialised
@@ -173,10 +157,42 @@ class FcmService {
   }
 
   Future<void> _onForegroundMessage(RemoteMessage message) async {
+    final type = message.data['type']?.toString() ?? '';
+
+    // announcement and new_content are delivered via Supabase Realtime when
+    // the app is open — Realtime already inserted the row and updated the
+    // badge. Showing a second OS banner here would be a duplicate.
+    // Only process types that Realtime does NOT cover.
+    if (type == 'announcement' || type == 'new_content') return;
+
     final notification = message.notification;
 
-    // Show the OS notification banner. FCM suppresses this automatically
-    // in the foreground, so we do it manually via flutter_local_notifications.
+    // For payment_status and new_test: show an in-app snackbar so the user
+    // gets immediate feedback, then also show the OS banner (FCM suppresses
+    // it automatically in the foreground).
+    if (type == 'payment_status' || type == 'payment') {
+      final status = message.data['status']?.toString() ?? '';
+      final title = notification?.title ?? message.data['title']?.toString() ?? 'Payment Update';
+      final body  = notification?.body  ?? message.data['body']?.toString()  ?? '';
+      Get.snackbar(
+        title,
+        body,
+        duration: const Duration(seconds: 5),
+        snackPosition: SnackPosition.TOP,
+      );
+    } else if (type == 'new_test') {
+      final title = notification?.title ?? 'New Test Available';
+      final body  = notification?.body  ?? '';
+      Get.snackbar(
+        title,
+        body,
+        duration: const Duration(seconds: 4),
+        snackPosition: SnackPosition.TOP,
+      );
+    }
+
+    // Show the OS banner for all non-Realtime types. FCM suppresses it
+    // automatically in the foreground, so we do it manually here.
     if (notification != null) {
       await _localNotifications.show(
         id: message.hashCode,
@@ -194,23 +210,19 @@ class FcmService {
         payload: jsonEncode(message.data),
       );
     }
-
-    // Do NOT insert into SQLite here. RealtimeService._onNotificationInserted
-    // already handles persistence using the real Supabase row ID the moment
-    // the admin inserts the row. If we also insert here with a fake ID
-    // (messageId.hashCode) we get a duplicate in the list because the two
-    // IDs never match for ConflictAlgorithm.replace to deduplicate them.
-    //
-    // This handler's only job in the foreground is the OS banner above.
-    // The bell badge and list refresh happen via the Realtime callback.
   }
 
   void _handleTap(Map<String, dynamic> data) {
+    // 'payment_status' is the FCM data key sent by the edge function.
+    // 'payment' is the type stored in the notifications DB row.
+    // Both should navigate to the payment verification screen.
     switch (data['type']) {
       case 'payment':
+      case 'payment_status':
         Get.toNamed(Routes.paymentVerification);
         break;
       case 'new_content':
+      case 'new_test':
         NotificationTestOpener.open(data);
         break;
       default:
@@ -219,13 +231,9 @@ class FcmService {
   }
 
   /// Call on logout so a signed-out device stops receiving another user's
-  /// personal/stream notifications.
+  /// personal notifications.
   Future<void> unsubscribeAll() async {
     await _messaging.unsubscribeFromTopic('all_users');
-    if (_subscribedStreamTopic != null) {
-      await _messaging.unsubscribeFromTopic(_subscribedStreamTopic!);
-      _subscribedStreamTopic = null;
-    }
     _streamWatcher?.dispose();
     _streamWatcher = null;
     _initialized = false;

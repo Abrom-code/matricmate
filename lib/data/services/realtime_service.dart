@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
-import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -226,13 +225,19 @@ class RealtimeService {
       final userStream = UserController.instance.user.value.stream;
       final targetStream = record['target_stream']?.toString();
 
+      // DB stores stream as 'Natural' / 'Social'. The app may store it in
+      // either case depending on how profile was saved. Normalise both sides
+      // to lowercase for a case-insensitive match.
+      final normUserStream = userStream.toLowerCase();
+      final normTargetStream = targetStream?.toLowerCase();
+
       final isPersonal = rowUserId == userId;
       final isGlobalBroadcast = rowUserId == null && targetStream == null;
       final isStreamBroadcast =
           rowUserId == null &&
-          targetStream != null &&
-          userStream.isNotEmpty &&
-          targetStream == userStream;
+          normTargetStream != null &&
+          normUserStream.isNotEmpty &&
+          normTargetStream == normUserStream;
 
       if (!isPersonal && !isGlobalBroadcast && !isStreamBroadcast) return;
 
@@ -245,9 +250,10 @@ class RealtimeService {
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
 
-      // Show an OS notification banner so the user sees it immediately
-      // without needing an FCM push from a separate backend function.
-      await _showLocalBanner(n);
+      // The app is open — the user can already see the bell badge update
+      // and the notification list. Do NOT show an OS system notification
+      // here; that is the FCM path's job when the app is backgrounded.
+      // (Spec rule: Realtime = app is open → no OS notification.)
 
       // Refresh the controller so the bell badge + list update live.
       if (Get.isRegistered<NotificationsController>()) {
@@ -342,23 +348,6 @@ class RealtimeService {
     } catch (e) {
       debugPrint('[Realtime] error processing read receipt: $e');
     }
-  }
-
-  // ── Local notification banner ─────────────────────────────────────────────
-
-  /// Delegates to [FcmService.showBanner] which uses the already-initialised
-  /// [FlutterLocalNotificationsPlugin] instance and the registered Android
-  /// channel. Creating a second plugin instance here would silently fail
-  /// because the channel is only created inside [FcmService.init].
-  Future<void> _showLocalBanner(AppNotification n) async {
-    // Pass the full payload map (not just the type string) so tapping the
-    // banner can deep-link correctly — e.g. new_content needs test_id etc.
-    await FcmService.instance.showBanner(
-      id: n.id,
-      title: n.title,
-      body: n.body,
-      payload: {'type': n.type, ...n.payload},
-    );
   }
 
   // ── User channel ──────────────────────────────────────────────────────────

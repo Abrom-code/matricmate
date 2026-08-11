@@ -102,11 +102,13 @@ class NotificationRepository {
       final readRows =
           List<Map<String, dynamic>>.from(notifFutures[2] as List);
 
-      // Filter broadcasts: keep global (no target_stream) or stream-matching
+      // Filter broadcasts: keep global (no target_stream) or stream-matching.
+      // Normalise to lowercase so 'Natural' (DB) matches 'natural' (app).
       final broadcastRows = allBroadcasts.where((r) {
         final ts = r['target_stream']?.toString() ?? '';
         if (ts.isEmpty) return true;
-        return userStream.isNotEmpty && ts == userStream;
+        return userStream.isNotEmpty &&
+            ts.toLowerCase() == userStream.toLowerCase();
       }).toList();
 
       // Merge + deduplicate by id, sort newest first

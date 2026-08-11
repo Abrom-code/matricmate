@@ -5,8 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
-import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
-import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -176,8 +174,9 @@ class FcmService {
 
   Future<void> _onForegroundMessage(RemoteMessage message) async {
     final notification = message.notification;
-    final userId = UserController.instance.user.value.id;
 
+    // Show the OS notification banner. FCM suppresses this automatically
+    // in the foreground, so we do it manually via flutter_local_notifications.
     if (notification != null) {
       await _localNotifications.show(
         id: message.hashCode,
@@ -196,26 +195,14 @@ class FcmService {
       );
     }
 
-    if (userId.isNotEmpty) {
-      final n = AppNotification(
-        id:
-            message.messageId?.hashCode ??
-            DateTime.now().millisecondsSinceEpoch,
-        userId: userId,
-        title: notification?.title ?? message.data['title'] ?? 'Notification',
-        body: notification?.body ?? message.data['body'] ?? '',
-        type: message.data['type'] ?? 'announcement',
-        payload: message.data,
-        isRead: false,
-        createdAt: DateTime.now(),
-      );
-
-      if (Get.isRegistered<NotificationsController>()) {
-        await Get.find<NotificationsController>().insertFromPush(n);
-      } else {
-        await _repo.insertLocal(n);
-      }
-    }
+    // Do NOT insert into SQLite here. RealtimeService._onNotificationInserted
+    // already handles persistence using the real Supabase row ID the moment
+    // the admin inserts the row. If we also insert here with a fake ID
+    // (messageId.hashCode) we get a duplicate in the list because the two
+    // IDs never match for ConflictAlgorithm.replace to deduplicate them.
+    //
+    // This handler's only job in the foreground is the OS banner above.
+    // The bell badge and list refresh happen via the Realtime callback.
   }
 
   void _handleTap(Map<String, dynamic> data) {

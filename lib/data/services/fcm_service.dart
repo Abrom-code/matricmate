@@ -6,6 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
+import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 
@@ -13,9 +14,10 @@ import 'package:matricmate/routes/app_routes.dart';
 /// background isolate contract for FCM background messages.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // The OS shows the notification tray entry from the FCM "notification"
-  // payload automatically here — nothing to do unless you later want to
-  // persist data-only background messages to SQLite directly.
+  // FCM automatically shows the OS notification for messages that include a
+  // "notification" payload. For data-only messages there is no notification
+  // payload, so nothing more is needed here — the foreground handler and
+  // Realtime cover the in-app path when the app is open.
 }
 
 /// Wraps Firebase Cloud Messaging + flutter_local_notifications.
@@ -59,6 +61,15 @@ class FcmService {
 
     await _messaging.requestPermission(alert: true, badge: true, sound: true);
 
+    // iOS: show heads-up banner even when the app is in the foreground.
+    // Without this, FCM silently delivers the message on iOS but the OS
+    // never shows a visible alert while the app is open.
+    await _messaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
     await _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -78,17 +89,27 @@ class FcmService {
       },
     );
 
-    // Register/refresh the token used for personal (payment) pushes.
+    // Register/refresh the token used for personal and stream-based pushes.
     final token = await _messaging.getToken();
-
     await _saveTokenIfLoggedIn(token);
     _messaging.onTokenRefresh.listen(_saveTokenIfLoggedIn);
 
-    // all_users topic covers global announcements sent via topic (legacy path).
-    // Stream-specific pushes now use per-token fan-out in the edge function
-    // (queries users table by stream column directly), so no stream topic
-    // subscription is needed on the client side.
-    await _messaging.subscribeToTopic('all_users');
+    // Guard against the startup race: if init() ran before the user finished
+    // loading from SQLite, userId was empty and _saveTokenIfLoggedIn was a
+    // no-op. Watch for the first non-empty userId and retry exactly once.
+    if (UserController.instance.user.value.id.isEmpty) {
+      Worker? startupSaveWorker;
+      startupSaveWorker = ever(
+        UserController.instance.user,
+        (UserModel u) async {
+          if (u.id.isNotEmpty) {
+            startupSaveWorker?.dispose();
+            startupSaveWorker = null;
+            await _saveTokenIfLoggedIn(token);
+          }
+        },
+      );
+    }
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen((m) => _handleTap(m.data));
@@ -114,7 +135,15 @@ class FcmService {
     if (token == null) return;
     final userId = UserController.instance.user.value.id;
     if (userId.isEmpty) return;
+    debugPrint('[FcmService] saving FCM token for userId=$userId');
     await _repo.saveFcmToken(userId, token);
+  }
+
+  /// Call this after login/fetchUserRecord completes so the token is
+  /// persisted even if init() ran before the user was loaded.
+  Future<void> saveTokenForCurrentUser() async {
+    final token = await _messaging.getToken();
+    await _saveTokenIfLoggedIn(token);
   }
 
   /// Shows a local notification banner using this service's already-initialised
@@ -158,52 +187,55 @@ class FcmService {
 
   Future<void> _onForegroundMessage(RemoteMessage message) async {
     final type = message.data['type']?.toString() ?? '';
-
-    // announcement and new_content are delivered via Supabase Realtime when
-    // the app is open — Realtime already inserted the row and updated the
-    // badge. Showing a second OS banner here would be a duplicate.
-    // Only process types that Realtime does NOT cover.
-    if (type == 'announcement' || type == 'new_content') return;
-
     final notification = message.notification;
 
-    // For payment_status and new_test: show an in-app snackbar so the user
-    // gets immediate feedback, then also show the OS banner (FCM suppresses
-    // it automatically in the foreground).
-    if (type == 'payment_status' || type == 'payment') {
-      final status = message.data['status']?.toString() ?? '';
-      final title = notification?.title ?? message.data['title']?.toString() ?? 'Payment Update';
-      final body  = notification?.body  ?? message.data['body']?.toString()  ?? '';
-      Get.snackbar(
-        title,
-        body,
-        duration: const Duration(seconds: 5),
-        snackPosition: SnackPosition.TOP,
-      );
-    } else if (type == 'new_test') {
-      final title = notification?.title ?? 'New Test Available';
-      final body  = notification?.body  ?? '';
-      Get.snackbar(
-        title,
-        body,
-        duration: const Duration(seconds: 4),
-        snackPosition: SnackPosition.TOP,
-      );
+    // announcement and new_content: Supabase Realtime handles the OS banner
+    // when the app is open (via showBanner). FCM still delivers these in the
+    // foreground, but Realtime will have already shown the banner — skip the
+    // snackbar for these types to avoid duplicates.
+    if (type != 'announcement' && type != 'new_content') {
+      // For payment_status and new_test: show an in-app snackbar.
+      if (type == 'payment_status' || type == 'payment') {
+        final title = notification?.title ?? message.data['title']?.toString() ?? 'Payment Update';
+        final body  = notification?.body  ?? message.data['body']?.toString()  ?? '';
+        Get.snackbar(
+          title,
+          body,
+          duration: const Duration(seconds: 5),
+          snackPosition: SnackPosition.TOP,
+        );
+      } else if (type == 'new_test') {
+        final title = notification?.title ?? 'New Test Available';
+        final body  = notification?.body  ?? '';
+        Get.snackbar(
+          title,
+          body,
+          duration: const Duration(seconds: 4),
+          snackPosition: SnackPosition.TOP,
+        );
+      }
     }
 
-    // Show the OS banner for all non-Realtime types. FCM suppresses it
-    // automatically in the foreground, so we do it manually here.
-    if (notification != null) {
+    // Show the OS banner for all types. FCM suppresses it automatically in
+    // the foreground, so we do it manually here. For announcement/new_content
+    // Realtime will also call showBanner — if Realtime is connected the IDs
+    // may collide and the duplicate is silently dropped by the OS; if
+    // Realtime is not connected (reconnect gap) this ensures the banner still
+    // appears.
+    final title = notification?.title ?? message.data['title']?.toString();
+    final body  = notification?.body  ?? message.data['body']?.toString();
+    if (title != null && body != null) {
       await _localNotifications.show(
-        id: message.hashCode,
-        title: notification.title,
-        body: notification.body,
+        id: message.hashCode & 0x7FFFFFFF,
+        title: title,
+        body: body,
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             _channel.id,
             _channel.name,
             channelDescription: _channel.description,
             importance: Importance.high,
+            priority: Priority.high,
           ),
           iOS: const DarwinNotificationDetails(),
         ),

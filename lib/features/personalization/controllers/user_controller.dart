@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
+import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
@@ -107,6 +110,11 @@ class UserController extends GetxController {
 
       user.value = freshUser;
       await _userRepository.updateLocalUser(freshUser);
+
+      // Ensure the FCM token is saved to Supabase now that we have a confirmed
+      // userId. This covers the race where FcmService.init() ran before the
+      // user finished loading (token save was skipped because userId was empty).
+      unawaited(FcmService.instance.saveTokenForCurrentUser());
 
       // Start (or restart) the Realtime watch now that we know this device
       // is authorised. If the admin changes the device_id in Supabase,

@@ -124,31 +124,6 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
 
 // ── FCM senders ──────────────────────────────────────────────────────────
 
-async function sendFcmToTopic(
-  topic: string,
-  notification: { title: string; body: string },
-  data: Record<string, string>,
-) {
-  const accessToken = await getAccessToken();
-  const res = await fetch(
-    `https://fcm.googleapis.com/v1/projects/${FCM_PROJECT_ID}/messages:send`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: { topic, notification, data },
-      }),
-    },
-  );
-  if (!res.ok) {
-    const errText = await res.text();
-    console.error(`FCM topic send failed [${res.status}]:`, errText);
-  }
-}
-
 async function sendFcmToToken(
   token: string,
   notification: { title: string; body: string },
@@ -164,7 +139,28 @@ async function sendFcmToToken(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: { token, notification, data },
+        message: {
+          token,
+          notification,
+          data,
+          android: {
+            priority: "high",
+            notification: {
+              channel_id: "matricmate_default",
+              priority: "max",
+              default_sound: true,
+              default_vibrate_timings: true,
+            },
+          },
+          apns: {
+            payload: {
+              aps: {
+                sound: "default",
+                "content-available": 1,
+              },
+            },
+          },
+        },
       }),
     },
   );
@@ -174,7 +170,105 @@ async function sendFcmToToken(
   }
 }
 
-// ── Event handlers ──────────────────────────────────────────────────────
+/**
+ * Sends an FCM push to every user whose `stream` column matches [stream],
+ * or to ALL users when [stream] is null/undefined (global broadcast).
+ *
+ * This replaces topic-based delivery (stream_natural / stream_social /
+ * all_users), which only works if every student's app calls
+ * subscribeToTopic() — something we cannot rely on.
+ *
+ * Tokens are fetched directly from the `users` table and each message is
+ * sent individually. Failed/invalid tokens are logged but do not abort the
+ * rest of the fan-out.
+ *
+ * NOTE: stream value in the DB is whatever the admin/student saves —
+ * this function queries case-insensitively by lowercasing both sides
+ * using Postgres ilike, but the simplest approach is to query for both
+ * capitalisation variants or use ilike via a raw filter.
+ * We use .ilike() which is Postgres ILIKE — works regardless of case.
+ */
+async function sendFcmToStream(
+  stream: string | null,
+  notification: { title: string; body: string },
+  data: Record<string, string>,
+) {
+  let query = supabase
+    .from("users")
+    .select("fcm_token")
+    .not("fcm_token", "is", null);
+
+  if (stream) {
+    // Use ilike for case-insensitive match — covers 'natural', 'Natural', 'NATURAL'
+    query = query.ilike("stream", stream);
+  }
+
+  const { data: users, error } = await query;
+  if (error) {
+    console.error("sendFcmToStream: failed to fetch tokens", error);
+    return;
+  }
+
+  const tokens: string[] = (users ?? [])
+    .map((u: { fcm_token?: string | null }) => u.fcm_token ?? "")
+    .filter(Boolean);
+
+  console.log(`sendFcmToStream: stream=${stream ?? "all"} → ${tokens.length} token(s)`);
+
+  if (tokens.length === 0) return;
+
+  // Get the access token once and reuse it across all sends.
+  const accessToken = await getAccessToken();
+
+  const results = await Promise.allSettled(
+    tokens.map((token) =>
+      fetch(
+        `https://fcm.googleapis.com/v1/projects/${FCM_PROJECT_ID}/messages:send`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: {
+              token,
+              notification,
+              data,
+              android: {
+                priority: "high",
+                notification: {
+                  channel_id: "matricmate_default",
+                  priority: "max",
+                  default_sound: true,
+                  default_vibrate_timings: true,
+                },
+              },
+              apns: {
+                payload: {
+                  aps: {
+                    sound: "default",
+                    "content-available": 1,
+                  },
+                },
+              },
+            },
+          }),
+        },
+      ).then(async (res) => {
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error(`FCM token send failed [${res.status}] token=${token.slice(0, 20)}...:`, errText);
+        }
+      }),
+    ),
+  );
+
+  const failed = results.filter((r) => r.status === "rejected").length;
+  if (failed > 0) {
+    console.warn(`sendFcmToStream: ${failed}/${tokens.length} sends failed`);
+  }
+}
 
 function buildNewTestNotificationCopy(
   testType: string,
@@ -240,10 +334,6 @@ async function handleNewTest(body: NewTestBody) {
     ? null
     : (subject.is_natural ? "natural" : "social");
 
-  const topic = subject.is_common
-    ? "all_users"
-    : `stream_${targetStream}`;
-
   const { title, notifBody } = buildNewTestNotificationCopy(
     body.test_type,
     subject.name,
@@ -272,8 +362,10 @@ async function handleNewTest(body: NewTestBody) {
     payload,
   });
 
-  await sendFcmToTopic(
-    topic,
+  // Fan-out to individual tokens — topic subscription not required on client.
+  // null targetStream means common subject → send to all users.
+  await sendFcmToStream(
+    targetStream,
     { title, body: notifBody },
     { type: "new_content", ...payload },
   );
@@ -372,12 +464,11 @@ interface AnnouncementBody {
 /**
  * Free-form announcements from the admin console.
  *
- * Maps an audience onto the primitives that already exist here — there is no
- * new delivery mechanism, only a new way to address the existing ones:
+ * Delivery strategy — no FCM topic subscriptions required on the client:
  *
- *   all    -> user_id NULL, target_stream NULL   -> topic all_users
- *   stream -> user_id NULL, target_stream set    -> topic stream_<name>
- *   user   -> user_id set,  target_stream NULL   -> sendFcmToToken
+ *   all    -> user_id NULL, target_stream NULL   -> sendFcmToStream(null)   → all tokens
+ *   stream -> user_id NULL, target_stream set    -> sendFcmToStream(stream) → matching stream tokens
+ *   user   -> user_id set,  target_stream NULL   -> sendFcmToToken          → single token
  *
  * The inserted row deliberately uses a jsonb OBJECT for `payload` and a real
  * BOOLEAN for `is_read`. The student app's AppNotification.toMap() emits
@@ -394,7 +485,6 @@ async function handleAnnouncement(body: AnnouncementBody) {
 
   let rowUserId: string | null = null;
   let targetStream: string | null = null;
-  let topic: string | null = null;
   let token: string | null = null;
 
   if (audience === "stream") {
@@ -402,7 +492,7 @@ async function handleAnnouncement(body: AnnouncementBody) {
       return { ok: false, error: "target_stream must be natural or social" };
     }
     targetStream = body.target_stream;
-    topic = `stream_${targetStream}`;
+    // No topic — fan-out to individual tokens by stream column.
   } else if (audience === "user") {
     if (!body.user_id) {
       return { ok: false, error: "user_id is required for audience 'user'" };
@@ -418,9 +508,8 @@ async function handleAnnouncement(body: AnnouncementBody) {
     // No token is not an error — the row is still inserted so the student
     // sees it in-app the next time they open the notifications screen.
     token = user?.fcm_token ?? null;
-  } else {
-    topic = "all_users";
   }
+  // audience === "all": rowUserId and targetStream stay null — sendFcmToStream(null) fans out to everyone.
 
   const { data: inserted, error: insertError } = await supabase
     .from("notifications")
@@ -451,16 +540,20 @@ async function handleAnnouncement(body: AnnouncementBody) {
 
   let fcmSent = false;
   try {
-    if (topic) {
-      await sendFcmToTopic(topic, { title: body.title, body: body.body }, data);
-      fcmSent = true;
-    } else if (token) {
+    if (audience === "user" && token) {
+      // Single user — send directly to their token.
       await sendFcmToToken(token, { title: body.title, body: body.body }, data);
+      fcmSent = true;
+    } else if (audience === "stream") {
+      // Stream broadcast — fan-out to all tokens with matching stream column.
+      await sendFcmToStream(targetStream, { title: body.title, body: body.body }, data);
+      fcmSent = true;
+    } else {
+      // Global broadcast — fan-out to ALL tokens (stream = null means everyone).
+      await sendFcmToStream(null, { title: body.title, body: body.body }, data);
       fcmSent = true;
     }
   } catch (e) {
-    // Log but do not throw — the row is already persisted, matching the
-    // behaviour of the two original handlers.
     console.error("handleAnnouncement: FCM send failed", e);
   }
 

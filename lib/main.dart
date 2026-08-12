@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,22 @@ Future<void> main() async {
   // Register the top-level FCM background handler BEFORE Firebase.initializeApp.
   // This is required — FCM background isolate cannot use closures.
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // Create the Android notification channel unconditionally at startup.
+  // This must happen before any FCM message is received — including when the
+  // app is launched cold by tapping a push notification. Without this, Android
+  // drops messages that target 'matricmate_default' before the channel exists.
+  await FlutterLocalNotificationsPlugin()
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'matricmate_default',
+          'General Notifications',
+          description: 'Announcements, payment updates, and new exam alerts',
+          importance: Importance.high,
+        ),
+      );
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

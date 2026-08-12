@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -250,10 +251,20 @@ class RealtimeService {
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
 
-      // The app is open — the user can already see the bell badge update
-      // and the notification list. Do NOT show an OS system notification
-      // here; that is the FCM path's job when the app is backgrounded.
-      // (Spec rule: Realtime = app is open → no OS notification.)
+      // The app is open — show an OS banner via FcmService so the user gets
+      // a visible push notification regardless of notification type.
+      // FCM suppresses its own foreground delivery for announcement/new_content,
+      // so Realtime is responsible for showing the banner when the app is open.
+      try {
+        await FcmService.instance.showBanner(
+          id: n.id ?? DateTime.now().millisecondsSinceEpoch,
+          title: n.title,
+          body: n.body,
+          payload: record,
+        );
+      } catch (e) {
+        debugPrint('[Realtime] showBanner failed: $e');
+      }
 
       // Refresh the controller so the bell badge + list update live.
       if (Get.isRegistered<NotificationsController>()) {

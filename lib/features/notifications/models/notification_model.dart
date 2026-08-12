@@ -14,6 +14,7 @@ class AppNotification {
   final String body;
   final String type; // 'announcement' | 'payment' | 'new_content'
   final Map<String, dynamic> payload;
+  final String? targetStream; // null = global broadcast; 'natural'/'social' = stream-targeted
   final bool isRead;
   final bool isArchived;
   final DateTime createdAt;
@@ -25,6 +26,7 @@ class AppNotification {
     required this.body,
     required this.type,
     required this.payload,
+    this.targetStream,
     required this.isRead,
     this.isArchived = false,
     required this.createdAt,
@@ -50,6 +52,7 @@ class AppNotification {
       body: map['body']?.toString() ?? '',
       type: map['type']?.toString() ?? 'announcement',
       payload: parsedPayload,
+      targetStream: map['target_stream']?.toString(),
       isRead: map['is_read'] == true || map['is_read'] == 1,
       createdAt: map['created_at'] is String
           ? DateTime.tryParse(map['created_at'] as String) ?? DateTime.now()
@@ -65,6 +68,7 @@ class AppNotification {
       'body': body,
       'type': type,
       'payload': jsonEncode(payload),
+      'target_stream': targetStream,
       'is_read': isRead ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
     };
@@ -78,6 +82,7 @@ class AppNotification {
       body: body,
       type: type,
       payload: payload,
+      targetStream: targetStream,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt,
     );

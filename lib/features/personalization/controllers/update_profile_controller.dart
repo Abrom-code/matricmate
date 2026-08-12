@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
+import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -57,6 +60,11 @@ class UpdateProfileController extends GetxController {
 
       //  refresh local state only — no need to re-validate session
       await _userController.loadLocalUser();
+
+      // Re-save the FCM token so the edge function has the latest token
+      // for the user's (potentially new) stream. Fire-and-forget — a failure
+      // here must not surface as a profile-update error.
+      unawaited(FcmService.instance.saveTokenForCurrentUser());
 
       Get.back();
 

@@ -257,7 +257,7 @@ class RealtimeService {
       // so Realtime is responsible for showing the banner when the app is open.
       try {
         await FcmService.instance.showBanner(
-          id: n.id ?? DateTime.now().millisecondsSinceEpoch,
+          id: n.id,
           title: n.title,
           body: n.body,
           payload: record,

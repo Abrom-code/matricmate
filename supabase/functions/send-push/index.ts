@@ -153,10 +153,20 @@ async function sendFcmToToken(
             },
           },
           apns: {
+            headers: {
+              // apns-priority 10 = immediate delivery (required for visible alerts)
+              "apns-priority": "10",
+            },
             payload: {
               aps: {
+                alert: {
+                  title: notification.title,
+                  body: notification.body,
+                },
                 sound: "default",
-                "content-available": 1,
+                // NOTE: do NOT set content-available:1 here — that flag tells
+                // iOS to treat the push as silent/background-only, which
+                // suppresses the banner even when a notification object is present.
               },
             },
           },
@@ -245,10 +255,17 @@ async function sendFcmToStream(
                 },
               },
               apns: {
+                headers: {
+                  "apns-priority": "10",
+                },
                 payload: {
                   aps: {
+                    alert: {
+                      title: notification.title,
+                      body: notification.body,
+                    },
                     sound: "default",
-                    "content-available": 1,
+                    // No content-available — keeps it a visible push, not silent.
                   },
                 },
               },

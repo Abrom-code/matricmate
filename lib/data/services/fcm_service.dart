@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:matricmate/firebase_options.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -12,13 +14,83 @@ import 'package:matricmate/routes/app_routes.dart';
 
 /// Must be a top-level (or static) function — required by the Flutter
 /// background isolate contract for FCM background messages.
+///
+/// Runs in a **separate Dart isolate** (no GetX, no controllers, no Supabase).
+///
+/// ── How Android background delivery works ─────────────────────────────────
+/// When the app is killed/backgrounded and a FCM *notification message*
+/// (includes a `notification` object) arrives:
+///   1. The FCM Android SDK shows the OS banner automatically — no Dart
+///      code is needed for this step.
+///   2. The SDK then spawns this background isolate and calls this handler
+///      for any extra data processing (e.g. badge update, DB write).
+///
+/// For *data-only* messages (no `notification` key) step 1 is skipped, so
+/// we must show the banner ourselves via flutter_local_notifications.
+///
+/// ── What we do here ───────────────────────────────────────────────────────
+///   • Always: Firebase.initializeApp() with options (required in isolate).
+///   • Data-only only: create channel + show notification manually.
+///   • Notification messages: do nothing extra — FCM already showed it.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // FCM automatically shows the OS notification for messages that include a
-  // "notification" payload. For data-only messages there is no notification
-  // payload, so nothing more is needed here — the foreground handler and
-  // Realtime cover the in-app path when the app is open.
+  // Guard against [core/duplicate-app] if the isolate is reused.
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
+
+  // Only handle data-only messages manually.
+  // Notification messages are already shown by the FCM SDK — doing it again
+  // here would produce duplicate banners.
+  if (message.notification != null) return;
+
+  // ── Data-only message: show the OS banner manually ──────────────────────
+  const channel = AndroidNotificationChannel(
+    'matricmate_default',
+    'General Notifications',
+    description: 'Announcements, payment updates, and new exam alerts',
+    importance: Importance.high,
+  );
+
+  final plugin = FlutterLocalNotificationsPlugin();
+
+  await plugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  await plugin.initialize(
+    settings: const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(),
+    ),
+  );
+
+  final title = message.data['title']?.toString();
+  final body  = message.data['body']?.toString();
+
+  if (title != null && body != null) {
+    await plugin.show(
+      id: message.hashCode & 0x7FFFFFFF,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      payload: jsonEncode(message.data),
+    );
+  }
 }
+
 
 /// Wraps Firebase Cloud Messaging + flutter_local_notifications.
 ///
@@ -51,7 +123,6 @@ class FcmService {
     importance: Importance.high,
   );
 
-  String? _subscribedStreamTopic; // kept for unsubscribeAll backward compat
   Worker? _streamWatcher;
   bool _initialized = false;
 
@@ -94,6 +165,11 @@ class FcmService {
     await _saveTokenIfLoggedIn(token);
     _messaging.onTokenRefresh.listen(_saveTokenIfLoggedIn);
 
+    // Subscribe to FCM topics so the edge function can broadcast by topic
+    // ('all_users', 'natural', 'social') without needing to query every
+    // device's token individually.
+    await _subscribeToStreamTopics();
+
     // Guard against the startup race: if init() ran before the user finished
     // loading from SQLite, userId was empty and _saveTokenIfLoggedIn was a
     // no-op. Watch for the first non-empty userId and retry exactly once.
@@ -106,6 +182,7 @@ class FcmService {
             startupSaveWorker?.dispose();
             startupSaveWorker = null;
             await _saveTokenIfLoggedIn(token);
+            await _subscribeToStreamTopics();
           }
         },
       );
@@ -140,10 +217,12 @@ class FcmService {
   }
 
   /// Call this after login/fetchUserRecord completes so the token is
-  /// persisted even if init() ran before the user was loaded.
+  /// persisted even if init() ran before the user was loaded. Also
+  /// re-subscribes stream topics so a profile stream change takes effect.
   Future<void> saveTokenForCurrentUser() async {
     final token = await _messaging.getToken();
     await _saveTokenIfLoggedIn(token);
+    await _subscribeToStreamTopics();
   }
 
   /// Shows a local notification banner using this service's already-initialised
@@ -266,8 +345,29 @@ class FcmService {
   /// personal notifications.
   Future<void> unsubscribeAll() async {
     await _messaging.unsubscribeFromTopic('all_users');
+    await _messaging.unsubscribeFromTopic('natural');
+    await _messaging.unsubscribeFromTopic('social');
     _streamWatcher?.dispose();
     _streamWatcher = null;
     _initialized = false;
+  }
+
+  /// Subscribes to 'all_users' plus the user's stream topic ('natural' or
+  /// 'social'). Called at init and again after the user loads (startup race
+  /// guard) and after a stream change in Edit Profile.
+  Future<void> _subscribeToStreamTopics() async {
+    try {
+      await _messaging.subscribeToTopic('all_users');
+      final stream = UserController.instance.user.value.stream.toLowerCase();
+      if (stream == 'natural') {
+        await _messaging.subscribeToTopic('natural');
+        await _messaging.unsubscribeFromTopic('social');
+      } else if (stream == 'social') {
+        await _messaging.subscribeToTopic('social');
+        await _messaging.unsubscribeFromTopic('natural');
+      }
+    } catch (e) {
+      debugPrint('[FcmService] topic subscription failed: $e');
+    }
   }
 }

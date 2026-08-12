@@ -24,31 +24,6 @@ class NotificationTile extends StatelessWidget {
   bool get _isRejected =>
       notification.type == 'payment' && _paymentStatus == 'rejected';
 
-  IconData get _icon {
-    if (_isApproved) return Icons.check_circle_rounded;
-    if (_isRejected) return Icons.cancel_rounded;
-    switch (notification.type) {
-      case 'payment':
-        return Icons.receipt_long_rounded;
-      case 'new_content':
-        return Icons.menu_book_rounded;
-      default:
-        return Icons.campaign_rounded;
-    }
-  }
-
-  Color _iconColor(bool dark) {
-    if (_isApproved) return Colors.green.shade600;
-    if (_isRejected) return Colors.red.shade600;
-    return AppColors.primary;
-  }
-
-  Color _iconBg(bool dark) {
-    if (_isApproved) return Colors.green.withValues(alpha: dark ? 0.2 : 0.12);
-    if (_isRejected) return Colors.red.withValues(alpha: dark ? 0.2 : 0.12);
-    return AppColors.primary.withValues(alpha: dark ? 0.2 : 0.1);
-  }
-
   Color _borderColor(bool dark) {
     if (notification.isRead) return Colors.transparent;
     if (_isApproved) return Colors.green.withValues(alpha: 0.5);
@@ -135,18 +110,6 @@ class NotificationTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Icon ──────────────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: _iconBg(dark),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(_icon, color: _iconColor(dark), size: 20),
-            ),
-
-            const SizedBox(width: 12),
-
             // ── Content ───────────────────────────────────────────────
             Expanded(
               child: Column(

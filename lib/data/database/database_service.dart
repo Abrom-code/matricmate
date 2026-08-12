@@ -23,7 +23,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 10,
+      version: 11,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -126,6 +126,7 @@ class DatabaseService extends GetxController {
                 body TEXT NOT NULL,
                 type TEXT NOT NULL DEFAULT 'announcement',
                 payload TEXT,
+                target_stream TEXT,
                 is_read INTEGER DEFAULT 0,
                 created_at TEXT NOT NULL
               )
@@ -133,6 +134,14 @@ class DatabaseService extends GetxController {
             await db.execute(
               'CREATE INDEX IF NOT EXISTS idx_notifications_user '
               'ON notifications(user_id, created_at)',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 11) {
+          // Add target_stream column if upgrading from v9 where it was missing.
+          try {
+            await db.execute(
+              'ALTER TABLE notifications ADD COLUMN target_stream TEXT',
             );
           } catch (_) {}
         }
@@ -473,6 +482,8 @@ class DatabaseService extends GetxController {
 
       await db.transaction((txn) async {
         await txn.delete('bookmarks');
+        await txn.delete('notifications');
+        await txn.delete('notification_dismissals');
         await txn.delete('results');
         await txn.delete('questions');
         await txn.delete('passages');

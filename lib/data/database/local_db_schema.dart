@@ -140,6 +140,7 @@ class DBschema {
         body TEXT NOT NULL,
         type TEXT NOT NULL DEFAULT 'announcement',
         payload TEXT,
+        target_stream TEXT,
         is_read INTEGER DEFAULT 0,
         created_at TEXT NOT NULL
       );

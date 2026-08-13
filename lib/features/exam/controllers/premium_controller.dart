@@ -24,6 +24,9 @@ class PremiumController extends GetxController {
 
   final receipt = Rxn<XFile>();
   final isUploading = false.obs;
+  
+  final receiptCount = 0.obs;
+  bool get exceededUploadLimit => receiptCount.value >= 2;
 
   late final TextEditingController urlFiledController;
   late GlobalKey<FormState> paymentFormKey;
@@ -35,6 +38,8 @@ class PremiumController extends GetxController {
 
     // Pick the first available method once methods are loaded.
     _selectDefault();
+
+    _fetchReceiptCount();
 
     // Keep selection valid when the methods list changes (Realtime update).
     ever(_cfg.methods, (_) {
@@ -63,6 +68,13 @@ class PremiumController extends GetxController {
     // If list is still empty (loading), the `ever` above will pick it up.
   }
 
+  Future<void> _fetchReceiptCount() async {
+    final userId = _userController.user.value.id;
+    if (userId.isNotEmpty) {
+      receiptCount.value = await _repo.getReceiptCount(userId);
+    }
+  }
+
   Future<void> pasteFromClipboard() async {
     final data = await Clipboard.getData('text/plain');
     if (data?.text != null) {
@@ -83,6 +95,11 @@ class PremiumController extends GetxController {
   Future<void> completePayment() async {
     try {
       if (!paymentFormKey.currentState!.validate()) return;
+
+      if (exceededUploadLimit) {
+        Get.offNamed(Routes.contactAdmin);
+        return;
+      }
 
       if (receipt.value == null) {
         ToastHelper.warning('Please upload receipt!');
@@ -154,6 +171,7 @@ class PremiumController extends GetxController {
 
       receipt.value = null;
       urlFiledController.clear();
+      receiptCount.value = 0;
 
       // Pop back all the way to home (subjects screen) so the user is not
       // left on the premium / payment verification page after cancelling.

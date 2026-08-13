@@ -23,6 +23,7 @@ class Routes {
   static const premium = '/premium';
   static const payment = '/payment';
   static const paymentVerification = '/payment-verification';
+  static const contactAdmin = '/contact-admin';
 
   // analytics
   static const analytics = '/analytics';

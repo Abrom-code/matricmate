@@ -42,6 +42,7 @@ import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/screens/premium/payment.dart';
 import 'package:matricmate/features/exam/screens/premium/premium.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
+import 'package:matricmate/features/exam/screens/premium/contact_admin.dart';
 
 class AppRoutes {
   static final pages = [
@@ -149,6 +150,10 @@ class AppRoutes {
       name: Routes.paymentVerification,
       page: () => const PaymentVerificationScreen(),
       binding: PremiumBinding(),
+    ),
+    GetPage(
+      name: Routes.contactAdmin,
+      page: () => const ContactAdminScreen(),
     ),
     GetPage(name: Routes.pausedTests, page: () => const PausedTestsScreen()),
     GetPage(

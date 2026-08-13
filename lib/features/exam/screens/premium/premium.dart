@@ -133,10 +133,16 @@ class PremiumScreen extends StatelessWidget {
                   ? null
                   : isPending
                       ? () => Get.toNamed(Routes.paymentVerification)
-                      : () => Get.toNamed(
-                            Routes.payment,
-                            arguments: controller.selectedPayment.value,
-                          ),
+                      : () {
+                          if (controller.exceededUploadLimit) {
+                            Get.toNamed(Routes.contactAdmin);
+                          } else {
+                            Get.toNamed(
+                              Routes.payment,
+                              arguments: controller.selectedPayment.value,
+                            );
+                          }
+                        },
               child: Text(
                 isPending ? 'Check Status' : 'Continue to Payment',
                 style: const TextStyle(fontSize: 16, color: Colors.white),

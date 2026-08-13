@@ -7,6 +7,20 @@ import 'package:image_picker/image_picker.dart';
 class PaymentRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  /// Returns the number of receipt rows the user has uploaded.
+  Future<int> getReceiptCount(String userId) async {
+    try {
+      await ensureSupabaseAuth();
+      final data = await _supabase
+          .from('payment_receipts')
+          .select('id')
+          .eq('user_id', userId);
+      return data.length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   /// Upload receipt
   Future<Map<String, String>> uploadReceipt(XFile file, String userId) async {
     try {

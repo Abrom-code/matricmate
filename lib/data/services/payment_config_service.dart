@@ -92,6 +92,12 @@ class PaymentConfigService {
   /// Subscription price in ETB.
   final subscriptionPrice = 300.obs;
 
+  /// Telegram support link (loaded from app_config, falls back to hardcoded).
+  final telegramLink = 'https://t.me/matric_mate'.obs;
+
+  /// Share / invite link (loaded from app_config, falls back to empty).
+  final shareLink = ''.obs;
+
   bool _loaded = false;
   bool get isLoaded => _loaded;
 
@@ -142,6 +148,12 @@ class PaymentConfigService {
 
       case 'payment_extra_accounts':
         _accounts.remove('payment_extra_accounts');
+
+      case 'telegram_link':
+        telegramLink.value = 'https://t.me/matric_mate';
+
+      case 'share_link':
+        shareLink.value = '';
     }
 
     _rebuildMethods();
@@ -188,6 +200,14 @@ class PaymentConfigService {
       case 'subscription_price':
         final parsed = int.tryParse(value);
         if (parsed != null && parsed > 0) subscriptionPrice.value = parsed;
+
+      // Telegram support link
+      case 'telegram_link':
+        if (value.isNotEmpty) telegramLink.value = value;
+
+      // Share / invite link
+      case 'share_link':
+        shareLink.value = value;
     }
   }
 

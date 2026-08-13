@@ -139,7 +139,7 @@ class _SubjectsScreenState extends State<SubjectsScreen>
             RefreshIndicator(
               color: AppColors.primary,
               onRefresh: () async {
-                await ctrl.loadLocalSubjects();
+                await syncController.syncAll(showUiLoading: false);
                 await ctrl.loadPausedTests();
               },
               child: SingleChildScrollView(

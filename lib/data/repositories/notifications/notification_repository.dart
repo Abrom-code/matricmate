@@ -58,6 +58,11 @@ class NotificationRepository {
           .select('notification_id')
           .eq('user_id', userId);
 
+      final dismissalsQuery = _supabase
+          .from('notification_dismissals')
+          .select('notification_id')
+          .eq('user_id', userId);
+
       final List<dynamic> notifFutures;
       if (sinceIso != null) {
         notifFutures = await Future.wait([
@@ -76,6 +81,7 @@ class NotificationRepository {
               .order('created_at', ascending: false)
               .limit(100),
           readsQuery,
+          dismissalsQuery,
         ]);
       } else {
         notifFutures = await Future.wait([
@@ -92,6 +98,7 @@ class NotificationRepository {
               .order('created_at', ascending: false)
               .limit(100),
           readsQuery,
+          dismissalsQuery,
         ]);
       }
 
@@ -101,6 +108,8 @@ class NotificationRepository {
           List<Map<String, dynamic>>.from(notifFutures[1] as List);
       final readRows =
           List<Map<String, dynamic>>.from(notifFutures[2] as List);
+      final remoteDismissals =
+          List<Map<String, dynamic>>.from(notifFutures[3] as List);
 
       // Filter broadcasts: keep global (no target_stream) or stream-matching.
       // Normalise to lowercase so 'Natural' (DB) matches 'natural' (app).
@@ -129,18 +138,24 @@ class NotificationRepository {
           '(${personalRows.length} personal + ${broadcastRows.length} broadcast), '
           '${readRows.length} reads');
 
-      // Load dismissed IDs so we never re-insert what the user deleted.
+      // Load dismissed IDs from local fallback (in case remote insert failed)
+      // and combine with remote dismissals.
       final db = await _db.database;
-      final dismissedRows = await db.query(
+      final localDismissedRows = await db.query(
         'notification_dismissals',
         columns: ['notification_id'],
         where: 'user_id = ?',
         whereArgs: [userId],
       );
       final dismissedIds = <int>{
-        for (final r in dismissedRows)
+        for (final r in localDismissedRows)
           if (r['notification_id'] != null) r['notification_id'] as int,
-      };
+        for (final r in remoteDismissals)
+          if (r['notification_id'] != null)
+             (r['notification_id'] is int
+                ? r['notification_id'] as int
+                : int.tryParse(r['notification_id'].toString()) ?? -1),
+      }..remove(-1);
 
       // Build read-id set
       final readIds = <int>{
@@ -275,19 +290,21 @@ class NotificationRepository {
     );
   }
 
-  /// Deletes a single notification from local SQLite and records it in
-  /// [notification_dismissals] so the next sync does not re-insert it.
-  Future<void> deleteLocal(int id) async {
+  /// Deletes a single notification.
+  /// - Personal notifications: Deleted from Supabase `notifications` table.
+  /// - Broadcast notifications: Dismissal recorded in `notification_dismissals` table.
+  Future<void> deleteNotification(AppNotification n) async {
     final uid = _currentUid;
     final db = await _db.database;
 
+    // 1. Update local SQLite first for immediate UI response.
     await db.transaction((txn) async {
-      await txn.delete('notifications', where: 'id = ?', whereArgs: [id]);
+      await txn.delete('notifications', where: 'id = ?', whereArgs: [n.id]);
       if (uid != null) {
         await txn.insert(
           'notification_dismissals',
           {
-            'notification_id': id,
+            'notification_id': n.id,
             'user_id': uid,
             'dismissed_at': DateTime.now().toIso8601String(),
           },
@@ -295,31 +312,41 @@ class NotificationRepository {
         );
       }
     });
+
+    if (uid == null) return;
+
+    // 2. Sync to Supabase.
+    try {
+      await ensureSupabaseAuth();
+      if (n.userId == uid) {
+        // Personal notification: delete permanently from server.
+        await _supabase.from('notifications').delete().eq('id', n.id);
+      } else {
+        // Broadcast notification: track dismissal on server.
+        await _supabase.from('notification_dismissals').upsert(
+          {'notification_id': n.id, 'user_id': uid},
+          onConflict: 'notification_id,user_id',
+        );
+      }
+    } catch (_) {
+      // Best-effort. Local DB is updated so UI is correct.
+    }
   }
 
-  /// Deletes all notifications for [userId] from local SQLite and records
-  /// every deleted ID in [notification_dismissals] so they are not re-inserted.
-  Future<void> deleteAllLocal(String userId) async {
+  /// Deletes/dismisses all notifications for [userId].
+  Future<void> deleteAllNotifications(String userId, List<AppNotification> notifications) async {
     final db = await _db.database;
+    if (notifications.isEmpty) return;
 
-    // Collect all notification IDs for this user before deleting.
-    final existing = await db.query(
-      'notifications',
-      columns: ['id'],
-      where: 'user_id = ?',
-      whereArgs: [userId],
-    );
-
+    // 1. Local update
     await db.transaction((txn) async {
       await txn.delete('notifications', where: 'user_id = ?', whereArgs: [userId]);
       final now = DateTime.now().toIso8601String();
-      for (final row in existing) {
-        final nid = row['id'];
-        if (nid == null) continue;
+      for (final n in notifications) {
         await txn.insert(
           'notification_dismissals',
           {
-            'notification_id': nid,
+            'notification_id': n.id,
             'user_id': userId,
             'dismissed_at': now,
           },
@@ -327,6 +354,24 @@ class NotificationRepository {
         );
       }
     });
+
+    // 2. Server update
+    try {
+      await ensureSupabaseAuth();
+      final personalIds = notifications.where((n) => n.userId == userId).map((n) => n.id).toList();
+      final broadcastIds = notifications.where((n) => n.userId != userId).map((n) => n.id).toList();
+
+      if (personalIds.isNotEmpty) {
+        await _supabase.from('notifications').delete().inFilter('id', personalIds);
+      }
+      if (broadcastIds.isNotEmpty) {
+        final rows = broadcastIds.map((id) => {'notification_id': id, 'user_id': userId}).toList();
+        await _supabase.from('notification_dismissals').upsert(
+          rows,
+          onConflict: 'notification_id,user_id',
+        );
+      }
+    } catch (_) {}
   }
 
   Future<void> saveFcmToken(String userId, String token) async {

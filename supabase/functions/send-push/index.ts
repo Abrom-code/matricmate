@@ -147,7 +147,7 @@ async function sendFcmToToken(
             priority: "high",
             notification: {
               channel_id: "matricmate_default",
-              priority: "max",
+              notification_priority: "PRIORITY_MAX",
               default_sound: true,
               default_vibrate_timings: true,
             },
@@ -249,7 +249,7 @@ async function sendFcmToStream(
                 priority: "high",
                 notification: {
                   channel_id: "matricmate_default",
-                  priority: "max",
+                  notification_priority: "PRIORITY_MAX",
                   default_sound: true,
                   default_vibrate_timings: true,
                 },

@@ -88,14 +88,17 @@ class NotificationsController extends GetxController {
 
   /// Removes a single notification from local SQLite and refreshes the list.
   Future<void> deleteOne(int id) async {
-    await _repo.deleteLocal(id);
-    await loadNotifications();
+    final index = notifications.indexWhere((n) => n.id == id);
+    if (index != -1) {
+      await _repo.deleteNotification(notifications[index]);
+      await loadNotifications();
+    }
   }
 
   /// Removes all notifications for the current user from local SQLite.
   Future<void> deleteAll() async {
     if (_userId.isEmpty) return;
-    await _repo.deleteAllLocal(_userId);
+    await _repo.deleteAllNotifications(_userId, notifications.toList());
     await loadNotifications();
   }
 

@@ -23,10 +23,8 @@ Future<void> main() async {
   // ThemeController must exist before any widget builds so the
   Get.put(ThemeController(), permanent: true);
 
-  // Register the top-level FCM background handler BEFORE Firebase.initializeApp.
-  // This is required — FCM background isolate cannot use closures.
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
+  // Register the top-level FCM background handler.
+  // This must be after Firebase.initializeApp and cannot be an anonymous closure.
   // Create the Android notification channel unconditionally at startup.
   // This must happen before any FCM message is received — including when the
   // app is launched cold by tapping a push notification. Without this, Android
@@ -46,6 +44,8 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   ).then((FirebaseApp value) => Get.put(AuthenticationRepository()));
+
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Initialize Supabase
   await Supabase.initialize(

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
+import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -337,6 +338,11 @@ class FcmService {
         NotificationTestOpener.open(data);
         break;
       default:
+        // Trigger a remote sync so the pushed notification is in local SQLite
+        // by the time the notifications screen builds its list.
+        if (Get.isRegistered<NotificationsController>()) {
+          NotificationsController.instance.loadNotifications(syncRemote: true);
+        }
         Get.toNamed(Routes.notifications);
     }
   }

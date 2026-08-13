@@ -52,11 +52,11 @@ class NotificationTile extends StatelessWidget {
 
     switch (notification.type) {
       case 'payment':
-        return _TypeIconData(Icons.payment_rounded, AppColors.amberAccent);
+        return const _TypeIconData(Icons.payment_rounded, AppColors.amberAccent);
       case 'new_content':
-        return _TypeIconData(Icons.menu_book_rounded, AppColors.secondary);
+        return const _TypeIconData(Icons.menu_book_rounded, AppColors.secondary);
       default:
-        return _TypeIconData(Icons.campaign_rounded, AppColors.primary);
+        return const _TypeIconData(Icons.campaign_rounded, AppColors.primary);
     }
   }
 

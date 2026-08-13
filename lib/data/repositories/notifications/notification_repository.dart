@@ -58,11 +58,6 @@ class NotificationRepository {
           .select('notification_id')
           .eq('user_id', userId);
 
-      final dismissalsQuery = _supabase
-          .from('notification_dismissals')
-          .select('notification_id')
-          .eq('user_id', userId);
-
       final List<dynamic> notifFutures;
       if (sinceIso != null) {
         notifFutures = await Future.wait([
@@ -81,7 +76,6 @@ class NotificationRepository {
               .order('created_at', ascending: false)
               .limit(100),
           readsQuery,
-          dismissalsQuery,
         ]);
       } else {
         notifFutures = await Future.wait([
@@ -98,8 +92,20 @@ class NotificationRepository {
               .order('created_at', ascending: false)
               .limit(100),
           readsQuery,
-          dismissalsQuery,
         ]);
+      }
+
+      // Remote dismissals table may not exist yet — fetch separately so it
+      // doesn't take down the entire sync if the table is missing.
+      List<Map<String, dynamic>> remoteDismissals = [];
+      try {
+        final raw = await _supabase
+            .from('notification_dismissals')
+            .select('notification_id')
+            .eq('user_id', userId);
+        remoteDismissals = List<Map<String, dynamic>>.from(raw as List);
+      } catch (_) {
+        // Table doesn't exist on Supabase yet — local SQLite handles dismissals.
       }
 
       final personalRows =
@@ -108,8 +114,6 @@ class NotificationRepository {
           List<Map<String, dynamic>>.from(notifFutures[1] as List);
       final readRows =
           List<Map<String, dynamic>>.from(notifFutures[2] as List);
-      final remoteDismissals =
-          List<Map<String, dynamic>>.from(notifFutures[3] as List);
 
       // Filter broadcasts: keep global (no target_stream) or stream-matching.
       // Normalise to lowercase so 'Natural' (DB) matches 'natural' (app).

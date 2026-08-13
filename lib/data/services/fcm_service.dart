@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/firebase_options.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -127,6 +128,18 @@ class FcmService {
   Worker? _streamWatcher;
   bool _initialized = false;
 
+  /// Prevents stale launch notifications from triggering navigation on hot
+  /// restart. Android's getNotificationAppLaunchDetails() caches the result
+  /// until the activity is fully destroyed, so every hot restart would
+  /// re-navigate without this guard.
+  bool _shouldHandleLaunch(int hash) {
+    final storage = GetStorage();
+    final lastHash = storage.read<int>('_lastLaunchNotifHash');
+    if (lastHash == hash) return false;
+    storage.write('_lastLaunchNotifHash', hash);
+    return true;
+  }
+
   Future<void> init() async {
     if (_initialized) return;
     _initialized = true;
@@ -194,17 +207,27 @@ class FcmService {
 
     // App was fully closed and launched by tapping a FCM notification.
     final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) _handleTap(initialMessage.data);
+    if (initialMessage != null) {
+      if (_shouldHandleLaunch(initialMessage.data.hashCode)) {
+        _handleTap(initialMessage.data);
+      }
+    }
 
     // App was fully closed and launched by tapping a local notification
     // (Realtime-delivered banner shown via showBanner).
+    // getNotificationAppLaunchDetails() returns stale data on hot restart
+    // (Android caches it until the activity is destroyed), so we guard
+    // with _shouldHandleLaunch to prevent duplicate navigation.
     final launchDetails = await _localNotifications.getNotificationAppLaunchDetails();
     if (launchDetails?.didNotificationLaunchApp == true) {
       final payload = launchDetails!.notificationResponse?.payload;
       if (payload != null && payload.isNotEmpty) {
-        try {
-          _handleTap(Map<String, dynamic>.from(jsonDecode(payload)));
-        } catch (_) {}
+        final hash = payload.hashCode;
+        if (_shouldHandleLaunch(hash)) {
+          try {
+            _handleTap(Map<String, dynamic>.from(jsonDecode(payload)));
+          } catch (_) {}
+        }
       }
     }
   }

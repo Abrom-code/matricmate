@@ -287,6 +287,94 @@ async function sendFcmToStream(
   }
 }
 
+/**
+ * Sends an FCM push to every user whose `subscription_status` column matches
+ * [status] (e.g. 'active', 'inactive', 'pending').
+ *
+ * Works identically to sendFcmToStream but filters on a different column.
+ */
+async function sendFcmToStatus(
+  status: string,
+  notification: { title: string; body: string },
+  data: Record<string, string>,
+) {
+  const { data: users, error } = await supabase
+    .from("users")
+    .select("fcm_token")
+    .not("fcm_token", "is", null)
+    .ilike("subscription_status", status);
+
+  if (error) {
+    console.error("sendFcmToStatus: failed to fetch tokens", error);
+    return;
+  }
+
+  const tokens: string[] = (users ?? [])
+    .map((u: { fcm_token?: string | null }) => u.fcm_token ?? "")
+    .filter(Boolean);
+
+  console.log(`sendFcmToStatus: status=${status} → ${tokens.length} token(s)`);
+
+  if (tokens.length === 0) return;
+
+  const accessToken = await getAccessToken();
+
+  const results = await Promise.allSettled(
+    tokens.map((token) =>
+      fetch(
+        `https://fcm.googleapis.com/v1/projects/${FCM_PROJECT_ID}/messages:send`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: {
+              token,
+              notification,
+              data,
+              android: {
+                priority: "high",
+                notification: {
+                  channel_id: "matricmate_default",
+                  notification_priority: "PRIORITY_MAX",
+                  default_sound: true,
+                  default_vibrate_timings: true,
+                },
+              },
+              apns: {
+                headers: {
+                  "apns-priority": "10",
+                },
+                payload: {
+                  aps: {
+                    alert: {
+                      title: notification.title,
+                      body: notification.body,
+                    },
+                    sound: "default",
+                  },
+                },
+              },
+            },
+          }),
+        },
+      ).then(async (res) => {
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error(`FCM token send failed [${res.status}] token=${token.slice(0, 20)}...:`, errText);
+        }
+      }),
+    ),
+  );
+
+  const failed = results.filter((r) => r.status === "rejected").length;
+  if (failed > 0) {
+    console.warn(`sendFcmToStatus: ${failed}/${tokens.length} sends failed`);
+  }
+}
+
 function buildNewTestNotificationCopy(
   testType: string,
   subjectName: string,
@@ -471,8 +559,9 @@ async function handlePaymentStatus(body: PaymentStatusBody) {
 interface AnnouncementBody {
   title: string;
   body: string;
-  audience: "all" | "stream" | "user";
+  audience: "all" | "stream" | "user" | "status";
   target_stream?: string | null;
+  target_status?: string | null;
   user_id?: string | null;
   payload?: Record<string, unknown> | null;
   created_by?: string | null;
@@ -485,6 +574,7 @@ interface AnnouncementBody {
  *
  *   all    -> user_id NULL, target_stream NULL   -> sendFcmToStream(null)   → all tokens
  *   stream -> user_id NULL, target_stream set    -> sendFcmToStream(stream) → matching stream tokens
+ *   status -> user_id NULL, target_stream NULL   -> sendFcmToStatus(status) → matching status tokens
  *   user   -> user_id set,  target_stream NULL   -> sendFcmToToken          → single token
  *
  * The inserted row deliberately uses a jsonb OBJECT for `payload` and a real
@@ -511,6 +601,13 @@ async function handleAnnouncement(body: AnnouncementBody) {
     }
     targetStream = normalized;
     // No topic — fan-out to individual tokens by stream column.
+  } else if (audience === "status") {
+    const normalizedStatus = body.target_status?.toLowerCase() ?? "";
+    if (normalizedStatus !== "active" && normalizedStatus !== "inactive" && normalizedStatus !== "pending") {
+      return { ok: false, error: "target_status must be active, inactive, or pending" };
+    }
+    // Status-based: notification row is broadcast (user_id NULL), no target_stream.
+    // The student app shows it to everyone, but FCM only fans out to matching status.
   } else if (audience === "user") {
     if (!body.user_id) {
       return { ok: false, error: "user_id is required for audience 'user'" };
@@ -565,6 +662,11 @@ async function handleAnnouncement(body: AnnouncementBody) {
     } else if (audience === "stream") {
       // Stream broadcast — fan-out to all tokens with matching stream column.
       await sendFcmToStream(targetStream, { title: body.title, body: body.body }, data);
+      fcmSent = true;
+    } else if (audience === "status") {
+      // Status broadcast — fan-out to all tokens with matching subscription_status.
+      const normalizedStatus = body.target_status?.toLowerCase() ?? "";
+      await sendFcmToStatus(normalizedStatus, { title: body.title, body: body.body }, data);
       fcmSent = true;
     } else {
       // Global broadcast — fan-out to ALL tokens (stream = null means everyone).

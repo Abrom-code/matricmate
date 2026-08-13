@@ -16,6 +16,11 @@ class NotificationsController extends GetxController {
   final RxInt unreadCount = 0.obs;
   final RxBool isLoading = false.obs;
 
+  // ── Undo snapshots ──────────────────────────────────────────────────
+  AppNotification? _lastDeletedOne;
+  int? _lastDeletedOneIndex;
+  List<AppNotification>? _lastDeletedAll;
+
   String get _userId => UserController.instance.user.value.id;
   String get _userStream => UserController.instance.user.value.stream;
 
@@ -61,7 +66,7 @@ class NotificationsController extends GetxController {
       }
 
       notifications.assignAll(await _repo.getLocal(_userId));
-      unreadCount.value = await _repo.getUnreadCount(_userId);
+      _recalcUnread();
       debugPrint('[Notifications] loaded ${notifications.length} notifications, ${unreadCount.value} unread');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -71,14 +76,27 @@ class NotificationsController extends GetxController {
   }
 
   Future<void> markRead(int id) async {
+    // Optimistic: update in-memory list immediately.
+    final idx = notifications.indexWhere((n) => n.id == id);
+    if (idx != -1 && !notifications[idx].isRead) {
+      notifications[idx] = notifications[idx].copyWith(isRead: true);
+      notifications.refresh();
+      _recalcUnread();
+    }
     await _repo.markRead(id);
-    await loadNotifications();
   }
 
   Future<void> markAllRead() async {
     if (_userId.isEmpty) return;
+    // Optimistic: mark everything read in memory.
+    for (int i = 0; i < notifications.length; i++) {
+      if (!notifications[i].isRead) {
+        notifications[i] = notifications[i].copyWith(isRead: true);
+      }
+    }
+    notifications.refresh();
+    _recalcUnread();
     await _repo.markAllRead(_userId);
-    await loadNotifications();
   }
 
   Future<void> insertFromPush(AppNotification n) async {
@@ -86,23 +104,84 @@ class NotificationsController extends GetxController {
     await loadNotifications();
   }
 
-  /// Removes a single notification from local SQLite and refreshes the list.
+  // ── Optimistic single-delete with undo ──────────────────────────────
+
+  /// Removes a single notification optimistically (instant UI update).
+  /// Call [undoDeleteOne] to revert before the SnackBar timeout expires.
   Future<void> deleteOne(int id) async {
     final index = notifications.indexWhere((n) => n.id == id);
-    if (index != -1) {
-      await _repo.deleteNotification(notifications[index]);
-      await loadNotifications();
-    }
+    if (index == -1) return;
+
+    // Snapshot for undo.
+    _lastDeletedOne = notifications[index];
+    _lastDeletedOneIndex = index;
+
+    // Remove from in-memory list immediately.
+    notifications.removeAt(index);
+    _recalcUnread();
+
+    // Persist deletion in the background.
+    await _repo.deleteNotification(_lastDeletedOne!);
   }
 
-  /// Removes all notifications for the current user from local SQLite.
+  /// Restores the last single-deleted notification (called from "Undo" SnackBar).
+  Future<void> undoDeleteOne() async {
+    final item = _lastDeletedOne;
+    final index = _lastDeletedOneIndex;
+    if (item == null || index == null) return;
+
+    // Re-insert locally (repo will handle SQLite + clearing dismissal).
+    await _repo.insertLocal(item);
+
+    // Restore to in-memory list at the original position.
+    final clampedIndex = index.clamp(0, notifications.length);
+    notifications.insert(clampedIndex, item);
+    _recalcUnread();
+
+    _lastDeletedOne = null;
+    _lastDeletedOneIndex = null;
+  }
+
+  // ── Optimistic bulk-delete with undo ────────────────────────────────
+
+  /// Removes all notifications optimistically (instant UI update).
+  /// Call [undoDeleteAll] to revert before the SnackBar timeout expires.
   Future<void> deleteAll() async {
     if (_userId.isEmpty) return;
-    await _repo.deleteAllNotifications(_userId, notifications.toList());
-    await loadNotifications();
+
+    // Snapshot for undo.
+    _lastDeletedAll = notifications.toList();
+
+    // Clear in-memory list immediately.
+    notifications.clear();
+    _recalcUnread();
+
+    // Persist deletion in the background.
+    await _repo.deleteAllNotifications(_userId, _lastDeletedAll!);
   }
 
-  // ── Diagnostic: call from notifications screen pull-to-refresh ──────
+  /// Restores all deleted notifications (called from "Undo" SnackBar).
+  Future<void> undoDeleteAll() async {
+    final items = _lastDeletedAll;
+    if (items == null || items.isEmpty) return;
+
+    // Re-insert all locally.
+    for (final item in items) {
+      await _repo.insertLocal(item);
+    }
+
+    notifications.assignAll(items);
+    _recalcUnread();
+
+    _lastDeletedAll = null;
+  }
+
+  /// Recalculates unread count from the in-memory list.
+  void _recalcUnread() {
+    unreadCount.value = notifications.where((n) => !n.isRead).length;
+  }
+
+  // ── Diagnostic: call manually via debug console if needed ───────────
   /// Queries Supabase directly (bypasses SQLite) and prints every row found.
   /// Run in debug mode and watch the console to verify what's in the DB.
   Future<void> diagnose() async {

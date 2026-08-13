@@ -9,8 +9,17 @@ import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class NotificationTile extends StatelessWidget {
-  const NotificationTile({super.key, required this.notification});
+  const NotificationTile({
+    super.key,
+    required this.notification,
+    required this.onDismissed,
+  });
+
   final AppNotification notification;
+
+  /// Called after the swipe animation completes. The parent screen
+  /// should call `ctrl.deleteOne(id)` and show an undo SnackBar.
+  final VoidCallback onDismissed;
 
   // ── Derived from type + payload ──────────────────────────────────────
 
@@ -29,6 +38,26 @@ class NotificationTile extends StatelessWidget {
     if (_isApproved) return Colors.green.withValues(alpha: 0.5);
     if (_isRejected) return Colors.red.withValues(alpha: 0.5);
     return AppColors.primary.withValues(alpha: 0.4);
+  }
+
+  // ── Type icon ────────────────────────────────────────────────────────
+
+  _TypeIconData get _typeIcon {
+    if (_isApproved) {
+      return _TypeIconData(Icons.check_circle_rounded, Colors.green.shade600);
+    }
+    if (_isRejected) {
+      return _TypeIconData(Icons.cancel_rounded, Colors.red.shade600);
+    }
+
+    switch (notification.type) {
+      case 'payment':
+        return _TypeIconData(Icons.payment_rounded, AppColors.amberAccent);
+      case 'new_content':
+        return _TypeIconData(Icons.menu_book_rounded, AppColors.secondary);
+      default:
+        return _TypeIconData(Icons.campaign_rounded, AppColors.primary);
+    }
   }
 
   // ── Tap routing ──────────────────────────────────────────────────────
@@ -55,174 +84,191 @@ class NotificationTile extends StatelessWidget {
     }
   }
 
-  void _onLongPress(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete notification'),
-        content: const Text('Remove this notification from your device?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              NotificationsController.instance.deleteOne(notification.id);
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
+    final iconData = _typeIcon;
 
-    return GestureDetector(
-      onTap: _onTap,
-      onLongPress: () => _onLongPress(context),
-      child: Container(
-        padding: const EdgeInsets.all(14),
+    return Dismissible(
+      key: ValueKey(notification.id),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) => onDismissed(),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: dark ? AppColors.darkCard : AppColors.white,
+          color: Colors.red.shade400,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _borderColor(dark), width: 1.5),
-          boxShadow: dark
-              ? []
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Content ───────────────────────────────────────────────
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title row — with status badge for payment notifications
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          notification.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      if (_isApproved)
-                        _StatusBadge(
-                          label: 'Approved',
-                          color: Colors.green.shade600,
-                          dark: dark,
-                        )
-                      else if (_isRejected)
-                        _StatusBadge(
-                          label: 'Rejected',
-                          color: Colors.red.shade600,
-                          dark: dark,
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // Body
-                  Text(
-                    notification.body,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
+        child: const Icon(
+          Icons.delete_outline_rounded,
+          color: Colors.white,
+          size: 24,
+        ),
+      ),
+      child: GestureDetector(
+        onTap: _onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: dark ? AppColors.darkCard : AppColors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _borderColor(dark), width: 1.5),
+            boxShadow: dark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
-                  ),
+                  ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Type icon ──────────────────────────────────────────
+              Container(
+                width: 36,
+                height: 36,
+                margin: const EdgeInsets.only(right: 12, top: 2),
+                decoration: BoxDecoration(
+                  color: iconData.color.withValues(alpha: dark ? 0.15 : 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  iconData.icon,
+                  size: 18,
+                  color: iconData.color,
+                ),
+              ),
 
-                  // Rejection reason (if present)
-                  if (_isRejected &&
-                      notification.payload['rejection_reason'] != null) ...[
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withValues(
-                            alpha: dark ? 0.12 : 0.07),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.info_outline_rounded,
-                              size: 13,
-                              color: Colors.red.shade400),
-                          const SizedBox(width: 5),
-                          Expanded(
-                            child: Text(
-                              notification.payload['rejection_reason']
-                                  .toString(),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.red.shade400,
-                              ),
+              // ── Content ───────────────────────────────────────────
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title row — with status badge for payment notifications
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            notification.title,
+                            style: TextStyle(
+                              fontWeight: notification.isRead
+                                  ? FontWeight.w500
+                                  : FontWeight.w600,
+                              fontSize: 14,
                             ),
                           ),
-                        ],
+                        ),
+                        if (_isApproved)
+                          _StatusBadge(
+                            label: 'Approved',
+                            color: Colors.green.shade600,
+                            dark: dark,
+                          )
+                        else if (_isRejected)
+                          _StatusBadge(
+                            label: 'Rejected',
+                            color: Colors.red.shade600,
+                            dark: dark,
+                          ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    // Body
+                    Text(
+                      notification.body,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: notification.isRead
+                            ? AppColors.darkGrey
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+
+                    // Rejection reason (if present)
+                    if (_isRejected &&
+                        notification.payload['rejection_reason'] != null) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(
+                              alpha: dark ? 0.12 : 0.07),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.info_outline_rounded,
+                                size: 13,
+                                color: Colors.red.shade400),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: Text(
+                                notification.payload['rejection_reason']
+                                    .toString(),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.red.shade400,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 6),
+
+                    // Timestamp
+                    Text(
+                      _relativeTime(notification.createdAt),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.darkGrey,
                       ),
                     ),
                   ],
-
-                  const SizedBox(height: 6),
-
-                  // Timestamp
-                  Text(
-                    _relativeTime(notification.createdAt),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.darkGrey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Unread dot ────────────────────────────────────────────
-            if (!notification.isRead) ...[
-              const SizedBox(width: 8),
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(top: 4),
-                decoration: BoxDecoration(
-                  color: _isApproved
-                      ? Colors.green.shade600
-                      : _isRejected
-                          ? Colors.red.shade600
-                          : AppColors.primary,
-                  shape: BoxShape.circle,
                 ),
               ),
+
+              // ── Unread dot ────────────────────────────────────────
+              if (!notification.isRead) ...[
+                const SizedBox(width: 8),
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(top: 4),
+                  decoration: BoxDecoration(
+                    color: _isApproved
+                        ? Colors.green.shade600
+                        : _isRejected
+                            ? Colors.red.shade600
+                            : AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
   }
+}
+
+// ── Type icon helper ──────────────────────────────────────────────────────────
+
+class _TypeIconData {
+  final IconData icon;
+  final Color color;
+  const _TypeIconData(this.icon, this.color);
 }
 
 // ── Small status badge ────────────────────────────────────────────────────────
@@ -272,3 +318,4 @@ String _relativeTime(DateTime dt) {
   if (diff.inDays < 7) return '${diff.inDays}d ago';
   return AppFormatter.formatDate(dt.millisecondsSinceEpoch);
 }
+

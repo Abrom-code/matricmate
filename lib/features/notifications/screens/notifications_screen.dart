@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
+import 'package:matricmate/features/notifications/models/notification_model.dart';
+import 'package:matricmate/features/notifications/screens/widgets/notification_section_header.dart';
 import 'package:matricmate/features/notifications/screens/widgets/notification_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -20,7 +22,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    ctrl.diagnose().then((_) => ctrl.loadNotifications(syncRemote: true));
+    ctrl.loadNotifications(syncRemote: true);
+  }
+
+  // ── Delete helpers with undo SnackBars ──────────────────────────────
+
+  void _onTileDismissed(AppNotification notification) {
+    ctrl.deleteOne(notification.id);
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('Notification deleted'),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Undo',
+            textColor: AppColors.primary,
+            onPressed: () => ctrl.undoDeleteOne(),
+          ),
+        ),
+      );
   }
 
   void _confirmClearAll(BuildContext context) {
@@ -29,8 +51,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       builder: (_) => AlertDialog(
         title: const Text('Clear all notifications?'),
         content: const Text(
-          'This removes all notifications from your device. '
-          'They will reappear on next sync.',
+          'This removes all notifications from your device.',
         ),
         actions: [
           TextButton(
@@ -40,7 +61,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
+              final count = ctrl.notifications.length;
               ctrl.deleteAll();
+
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '$count notification${count == 1 ? '' : 's'} cleared',
+                    ),
+                    duration: const Duration(seconds: 4),
+                    action: SnackBarAction(
+                      label: 'Undo',
+                      textColor: AppColors.primary,
+                      onPressed: () => ctrl.undoDeleteAll(),
+                    ),
+                  ),
+                );
             },
             child: const Text(
               'Clear all',
@@ -50,6 +88,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ],
       ),
     );
+  }
+
+  // ── Date-grouped list builder ──────────────────────────────────────
+
+  /// Builds a flat list of widgets with section headers inserted
+  /// between date groups.
+  List<Widget> _buildGroupedList(List<AppNotification> items) {
+    final widgets = <Widget>[];
+    String? lastLabel;
+
+    for (final n in items) {
+      final label = NotificationSectionHeader.labelFor(n.createdAt);
+      if (label != lastLabel) {
+        widgets.add(NotificationSectionHeader(label: label));
+        lastLabel = label;
+      }
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+          child: NotificationTile(
+            notification: n,
+            onDismissed: () => _onTileDismissed(n),
+          ),
+        ),
+      );
+    }
+
+    return widgets;
   }
 
   @override
@@ -89,10 +155,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: () async {
-          await ctrl.diagnose();
-          await ctrl.loadNotifications(syncRemote: true);
-        },
+        onRefresh: () => ctrl.loadNotifications(syncRemote: true),
         child: Obx(() {
           if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
             return const AppCircularLoading(title: 'Loading notifications...');
@@ -120,16 +183,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             );
           }
 
-          return ListView.separated(
+          return ListView(
             padding: const EdgeInsets.all(AppSizes.defaultSpace),
-            itemCount: ctrl.notifications.length,
-            separatorBuilder: (_, __) =>
-                const SizedBox(height: AppSizes.spaceBtwItems),
-            itemBuilder: (_, i) =>
-                NotificationTile(notification: ctrl.notifications[i]),
+            children: _buildGroupedList(ctrl.notifications),
           );
         }),
       ),
     );
   }
 }
+

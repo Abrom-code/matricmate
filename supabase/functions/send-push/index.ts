@@ -505,10 +505,11 @@ async function handleAnnouncement(body: AnnouncementBody) {
   let token: string | null = null;
 
   if (audience === "stream") {
-    if (body.target_stream !== "natural" && body.target_stream !== "social") {
+    const normalized = body.target_stream?.toLowerCase() ?? "";
+    if (normalized !== "natural" && normalized !== "social") {
       return { ok: false, error: "target_stream must be natural or social" };
     }
-    targetStream = body.target_stream;
+    targetStream = normalized;
     // No topic — fan-out to individual tokens by stream column.
   } else if (audience === "user") {
     if (!body.user_id) {

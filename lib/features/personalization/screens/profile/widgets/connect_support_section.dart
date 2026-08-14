@@ -42,7 +42,7 @@ class ConnectSupportSection extends StatelessWidget {
               trailing: const Icon(Icons.keyboard_arrow_right),
               onTap: shareLink.isEmpty
                   ? null
-                  : () => SharePlus.instance.share(
+                  : () => Share.share(
                         'Check out MatricMate to prepare for your exams! $shareLink',
                       ),
             );

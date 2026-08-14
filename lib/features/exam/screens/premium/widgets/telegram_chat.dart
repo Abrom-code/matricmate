@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -22,7 +21,7 @@ class TelegramChatButton extends StatelessWidget {
         const SizedBox(height: 15),
         Align(
           alignment: Alignment.center,
-          child: Obx(() => OutlinedButton(
+          child: OutlinedButton(
             onPressed: () {
               openUrl(PaymentConfigService.instance.telegramLink.value);
             },
@@ -41,7 +40,7 @@ class TelegramChatButton extends StatelessWidget {
                 Text('Chat on Telegram', style: TextStyle(color: AppColors.primary)),
               ],
             ),
-          )),
+          ),
         ),
       ],
     );

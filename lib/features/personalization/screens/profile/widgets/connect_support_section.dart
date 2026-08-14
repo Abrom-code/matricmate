@@ -21,13 +21,13 @@ class ConnectSupportSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Obx(() => AppListTile(
+          AppListTile(
             icon: const Icon(Iconsax.send_1_copy, color: AppColors.primary),
             title: 'Join Telegram',
             trailing: const Icon(Icons.keyboard_arrow_right),
             onTap: () => AppHelperFunctions.openUrl(
                 PaymentConfigService.instance.telegramLink.value),
-          )),
+          ),
           AppListTile(
             icon: const Icon(Iconsax.star_1_copy, color: Colors.amber),
             title: 'Rate the App',
@@ -42,7 +42,7 @@ class ConnectSupportSection extends StatelessWidget {
               trailing: const Icon(Icons.keyboard_arrow_right),
               onTap: shareLink.isEmpty
                   ? null
-                  : () => Share.share(
+                  : () => SharePlus.instance.share(
                         'Check out MatricMate to prepare for your exams! $shareLink',
                       ),
             );

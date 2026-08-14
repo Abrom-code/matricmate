@@ -33,13 +33,17 @@ class PremiumScreen extends StatelessWidget {
           final isLandscape =
               MediaQuery.orientationOf(context) == Orientation.landscape;
 
-          final content = SingleChildScrollView(
-            child: Padding(
+          final content = RefreshIndicator(
+            onRefresh: () => controller.reloadPaymentConfig(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16.0),
               child: Obx(() {
-                final price    = cfg.subscriptionPrice.value;
-                final methods  = cfg.methods.toList();
+                final price = cfg.subscriptionPrice.value;
+                final methods = cfg.methods.toList();
                 final selected = controller.selectedPayment.value;
+                final isLoading = cfg.isLoading.value;
+                final hasError = cfg.hasError.value;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -74,11 +78,87 @@ class PremiumScreen extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     // ── All payment methods from DB ─────────────────
-                    if (methods.isEmpty)
+                    if (isLoading && methods.isEmpty)
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 32),
                         child: AppCircularLoading(
                           title: 'Loading payment methods...',
+                        ),
+                      )
+                    else if (hasError && methods.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              const Icon(
+                                Icons.wifi_off_rounded,
+                                size: 48,
+                                color: AppColors.grey,
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Unable to load payment methods',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Please check your internet connection.',
+                                style: TextStyle(
+                                  color: AppColors.darkGrey,
+                                  fontSize: 13,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              OutlinedButton.icon(
+                                onPressed: () => controller.reloadPaymentConfig(),
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (methods.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              const Icon(
+                                Icons.account_balance_wallet_outlined,
+                                size: 48,
+                                color: AppColors.grey,
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'No payment methods available',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Payment options are currently being updated.',
+                                style: TextStyle(
+                                  color: AppColors.darkGrey,
+                                  fontSize: 13,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              OutlinedButton.icon(
+                                onPressed: () => controller.reloadPaymentConfig(),
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Refresh'),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     else

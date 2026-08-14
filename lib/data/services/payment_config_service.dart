@@ -98,15 +98,23 @@ class PaymentConfigService {
   /// Share / invite link (loaded from app_config, falls back to empty).
   final shareLink = ''.obs;
 
-  bool _loaded = false;
-  bool get isLoaded => _loaded;
+  /// Reactive loading and error state
+  final isLoading = false.obs;
+  final hasError = false.obs;
+  final isLoaded = false.obs;
 
-  // ── Load from Supabase (called once at startup) ───────────────────────
-  Future<void> load() async {
+  // ── Load from Supabase (called at startup and when needed) ────────────
+  Future<void> load({bool force = false}) async {
+    if (isLoading.value && !force) return;
+
+    isLoading.value = true;
+    hasError.value = false;
+
     try {
       final rows = await Supabase.instance.client
           .from('app_config')
-          .select('key, value');
+          .select('key, value')
+          .timeout(const Duration(seconds: 10));
 
       debugPrint('[PaymentConfig] loaded ${rows.length} rows from app_config');
 
@@ -120,10 +128,14 @@ class PaymentConfigService {
       debugPrint(
         '[PaymentConfig] methods built: ${methods.map((m) => m.label).toList()}',
       );
-      _loaded = true;
+      isLoaded.value = true;
+      hasError.value = false;
     } catch (e, st) {
       // Log so the developer can see what went wrong.
       debugPrint('[PaymentConfig] load() failed: $e\n$st');
+      hasError.value = true;
+    } finally {
+      isLoading.value = false;
     }
   }
 

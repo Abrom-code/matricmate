@@ -36,6 +36,11 @@ class PremiumController extends GetxController {
     urlFiledController = TextEditingController();
     paymentFormKey = GlobalKey<FormState>();
 
+    // Load payment config if not yet loaded or empty
+    if (!_cfg.isLoaded.value || _cfg.methods.isEmpty) {
+      _cfg.load();
+    }
+
     // Pick the first available method once methods are loaded.
     _selectDefault();
 
@@ -58,6 +63,10 @@ class PremiumController extends GetxController {
     });
 
     super.onInit();
+  }
+
+  Future<void> reloadPaymentConfig() async {
+    await _cfg.load(force: true);
   }
 
   void _selectDefault() {

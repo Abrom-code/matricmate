@@ -53,8 +53,7 @@ class AuthenticationController extends GetxController
     super.onClose();
   }
 
-  /// Fires when the app returns to the foreground.
-  /// Runs a session check if 12 h have elapsed and network is available.
+  /// Runs session check on app resume if 12h have elapsed.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -63,13 +62,11 @@ class AuthenticationController extends GetxController
   }
 
   /// Pre-loads local data then navigates to the appropriate screen.
-  /// Only reads from SQLite — no network calls here, so it's instant.
   Future<void> _init() async {
     try {
       final user = authRepo.currentUser;
       if (user != null && user.emailVerified) {
-        // Load user record so UserController.user is populated before
-        // screenRedirect() decides where to navigate.
+        // Load user record before screenRedirect decides navigation
         await UserController.instance.loadLocalUser();
       }
     } catch (_) {}
@@ -92,8 +89,7 @@ class AuthenticationController extends GetxController
     // Reset so _runInitThenNavigate always runs fresh on each login.
     _initStarted = false;
 
-    // If we're not already on the loading screen, navigate there first
-    // so the splash is visible during init.
+    // Navigate to loading screen for init splash
     final currentRoute = Get.currentRoute;
     if (currentRoute != Routes.loading) {
       Get.offAllNamed(Routes.loading);
@@ -117,11 +113,8 @@ class AuthenticationController extends GetxController
 
       final isConnected = await NetworkManager.instance.isConnected();
 
-      // Step 1 — fetch user record (validates session, gets premium status).
-      // Wrapped independently so a mid-fetch connection drop cannot skip the
-      // local-subject load below (Step 2).
-      // Times out after _kVerifyTimeout — if the server is slow we don't
-      // block the user on the splash forever.
+      // Step 1 — fetch user record (validates session, gets premium status)
+      // Times out after verify timeout
       if (isConnected) {
         try {
           initStatus.value = 'Verifying account…';
@@ -132,26 +125,21 @@ class AuthenticationController extends GetxController
             await UserController.instance.loadLocalUser();
             networkFetchSucceeded = true;
           } else {
-            // fetchUserRecord returned false (e.g. session blocked) — fall
-            // back to whatever is cached locally.
+            // fetchUserRecord returned false — fall back to local cache
             await UserController.instance.loadLocalUser();
           }
         } catch (_) {
-          // Connection dropped or timed out mid-verify — fall back to local
-          // user record and continue.
+          // Connection dropped mid-verify — fall back to local
           await UserController.instance.loadLocalUser();
         }
       }
 
-      // Step 2 — load subjects from local DB.
-      // This MUST always run regardless of network outcome so the subjects
-      // screen never renders with an empty list after a mid-fetch dropout.
+      // Step 2 — load subjects from local DB (always runs regardless of network)
       initStatus.value = 'Loading subjects…';
       await SubjectsController.instance.loadLocalSubjects();
 
       if (isConnected && networkFetchSucceeded) {
-        // Step 3 — first login with no local subjects: fetch everything from
-        // remote. Times out after _kInitRemoteTimeout.
+        // Step 3 — first login with no local subjects: fetch from remote
         if (SubjectsController.instance.subjects.isEmpty) {
           try {
             await SubjectsController.instance
@@ -161,9 +149,7 @@ class AuthenticationController extends GetxController
             // Timed out or failed — subjects remain empty; user can retry later.
           }
         }
-        // Always refresh entrance counts from remote so the entrance screen
-        // shows correct numbers immediately — whether new user or returning.
-        // Times out after _kEntranceCountTimeout.
+        // Refresh entrance counts from remote
         try {
           initStatus.value = 'Loading exam info…';
           await SubjectsController.instance
@@ -173,9 +159,7 @@ class AuthenticationController extends GetxController
           // Timed out or failed — cached counts still shown.
         }
       } else if (isConnected && !networkFetchSucceeded) {
-        // Partial connectivity: network seemed available but the fetch failed
-        // (e.g. dropped mid-request). If subjects are empty, attempt a
-        // best-effort remote fetch with a timeout before navigating.
+        // Partial connectivity: attempt best-effort remote fetch
         if (SubjectsController.instance.subjects.isEmpty) {
           try {
             await SubjectsController.instance
@@ -191,8 +175,7 @@ class AuthenticationController extends GetxController
 
       initStatus.value = 'Almost done…';
     } catch (_) {
-      // Last-resort safety net: even if everything above threw, ensure
-      // subjects are loaded from local before navigating.
+      // Safety net: ensure subjects are loaded before navigating
       try {
         await SubjectsController.instance.loadLocalSubjects();
       } catch (_) {}
@@ -203,8 +186,7 @@ class AuthenticationController extends GetxController
     // Navigate to home — all subject/user data is ready at this point.
     Get.offAllNamed(Routes.navigationMenu);
 
-    // Background: entrance count refresh + full delta sync + realtime.
-    // None of these block the UI.
+    // Background: entrance counts, delta sync, realtime (non-blocking)
     unawaited(_backgroundRefresh());
   }
 
@@ -225,31 +207,25 @@ class AuthenticationController extends GetxController
           .toList();
       unawaited(RealtimeService.instance.start(downloadedIds, userId: uid));
 
-      // Load payment config with auth — ensures RLS-protected app_config
-      // is readable. Runs after login so this always succeeds.
+      // Load payment config with auth (RLS-protected)
       unawaited(PaymentConfigService.instance.load());
 
-      // Load notifications in background — populates bell badge + list.
+      // Load notifications in background
       unawaited(
         NotificationsController.instance.loadNotifications(syncRemote: true),
       );
 
-      // Initialise FCM — requests permission, registers token, sets up
-      // message listeners. Must run AFTER UserController.user is populated
-      // so the token is saved and stream topic is subscribed correctly.
+      // Initialise FCM after UserController.user is populated
       unawaited(FcmService.instance.init());
 
-      // Periodic session check (12 h gap) — runs silently on first launch
-      // after login when we already have internet.
+      // Periodic session check (12h gap)
       await _periodicSessionCheck();
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
   }
 
-  /// Validates the session against Supabase at most once every 12 hours.
-  /// No-ops if offline, not logged in, or the interval hasn't elapsed.
-  /// If the device is no longer authorised, [fetchUserRecord] triggers logout.
+  /// Validates session at most once every 12 hours. Triggers logout if device unauthorized.
   Future<void> _periodicSessionCheck() async {
     try {
       // Must be logged in
@@ -270,13 +246,12 @@ class AuthenticationController extends GetxController
       // Run the check — fetchUserRecord handles device-mismatch logout
       final ok = await UserController.instance.fetchUserRecord();
 
-      // Only update timestamp on success so a network failure doesn't
-      // reset the clock and delay the next real check.
+      // Only update timestamp on success
       if (ok) {
         deviceStorage.write(_kLastSessionCheckKey, now);
       }
     } catch (_) {
-      // Non-fatal — never interrupt the user for a background check failure
+      // Non-fatal — never interrupt user for background check failure
     }
   }
 

@@ -90,11 +90,9 @@ class SessionService {
     }
   }
 
-  // ── Realtime device-change watch ─────────────────────────────────────────
+  // ── Realtime device-change watch ───────────────────────────────────────
 
-  /// Subscribes to Realtime UPDATE events on this user's session row.
-  /// [onDeviceChanged] fires whenever the `device_id` stored in Supabase
-  /// no longer matches [currentDeviceId] — the caller should trigger logout.
+  /// Watches this user's session row; fires [onDeviceChanged] on device mismatch.
   void watchSession({
     required String uid,
     required String currentDeviceId,

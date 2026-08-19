@@ -12,33 +12,14 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Listens to Supabase Realtime for:
-///   1. Question/explanation edits on subjects the user has downloaded.
-///   2. User record updates (e.g. subscription_status: pending → active).
-///   3. App config changes (subscription price, payment accounts/holders).
-///   4. New / updated notifications for this user (personal + broadcasts).
-///   5. Notification read-receipt changes so read state syncs across devices.
-///
-/// Requires in Supabase:
-///   ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
-///   ALTER TABLE public.users REPLICA IDENTITY FULL;
-///   ALTER PUBLICATION supabase_realtime ADD TABLE public.app_config;
-///   ALTER TABLE public.app_config REPLICA IDENTITY FULL;
-///   ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
-///   ALTER TABLE public.notifications REPLICA IDENTITY FULL;
-///   ALTER PUBLICATION supabase_realtime ADD TABLE public.notification_reads;
-///   ALTER TABLE public.notification_reads REPLICA IDENTITY FULL;
-///
-/// Usage:
-///   RealtimeService.instance.start(downloadedSubjectIds, userId: uid);
-///   RealtimeService.instance.stop();   // on sign-out
+/// Listens to Supabase Realtime for question edits, user status, app config, and notifications.
 class RealtimeService {
   RealtimeService._();
   static final RealtimeService instance = RealtimeService._();
 
   final _supabase = Supabase.instance.client;
 
-  // Five separate channels so each can be removed independently.
+  // Separate channels for independent lifecycle management
   RealtimeChannel? _questionsChannel;
   RealtimeChannel? _userChannel;
   RealtimeChannel? _appConfigChannel;
@@ -47,8 +28,6 @@ class RealtimeService {
 
 
   /// Start listening. Safe to call multiple times — stops existing first.
-  /// [userId] is always required so the user status channel starts even
-  /// when the user has no downloaded subjects.
   Future<void> start(List<int> subjectIds, {required String userId}) async {
     await stop();
     _startQuestionChannel(subjectIds);
@@ -87,7 +66,7 @@ class RealtimeService {
     }
   }
 
-  // ── Questions channel ─────────────────────────────────────────────────────
+  // ── Questions channel ──────────────────────────────────────────────────
 
   void _startQuestionChannel(List<int> subjectIds) {
     if (subjectIds.isEmpty) return;
@@ -98,8 +77,7 @@ class RealtimeService {
           event: PostgresChangeEvent.update,
           schema: 'public',
           table: 'questions',
-          // Supabase Realtime only supports a single eq() filter, so we
-          // receive all question updates and filter by subject_id locally.
+          // Realtime only supports single eq() filter; filter by subject locally
           callback: (payload) => _onQuestionChanged(payload, subjectIds),
         )
         .subscribe((status, [error]) {
@@ -139,7 +117,7 @@ class RealtimeService {
     }
   }
 
-  // ── App-config channel ────────────────────────────────────────────────────
+  // ── App-config channel ─────────────────────────────────────────────────
 
   void _startAppConfigChannel() {
     _appConfigChannel = _supabase
@@ -161,7 +139,7 @@ class RealtimeService {
   void _onAppConfigChanged(PostgresChangePayload payload) {
     try {
       if (payload.eventType == PostgresChangeEvent.delete) {
-        // For DELETE, oldRecord has the key. Clear the entry and rebuild.
+        // DELETE: oldRecord has the key
         final record = payload.oldRecord;
         if (record.isEmpty) return;
         PaymentConfigService.instance.deleteKey(
@@ -169,7 +147,7 @@ class RealtimeService {
         );
         debugPrint('[Realtime] app_config deleted: ${record['key']}');
       } else {
-        // INSERT / UPDATE — newRecord has the new values.
+        // INSERT/UPDATE: newRecord has new values
         final record = payload.newRecord;
         if (record.isEmpty) return;
         PaymentConfigService.instance.applyRow(record);
@@ -180,16 +158,12 @@ class RealtimeService {
     }
   }
 
-  // ── Notifications channel ─────────────────────────────────────────────────
+  // ── Notifications channel ──────────────────────────────────────────────
 
   void _startNotificationsChannel(String userId) {
     if (userId.isEmpty) return;
 
-    // We listen to ALL inserts/updates on the notifications table and
-    // filter locally. Supabase Realtime only supports a single eq() filter
-    // per channel, but notifications can be either personal (user_id = uid)
-    // or broadcast (user_id IS NULL). Receiving all and discarding irrelevant
-    // ones is the simplest cross-version approach.
+    // Listen to all inserts/updates and filter locally (Realtime only supports single eq() filter)
     _notificationsChannel = _supabase
         .channel('notifications_$userId')
         .onPostgresChanges(
@@ -226,9 +200,7 @@ class RealtimeService {
       final userStream = UserController.instance.user.value.stream;
       final targetStream = record['target_stream']?.toString();
 
-      // DB stores stream as 'Natural' / 'Social'. The app may store it in
-      // either case depending on how profile was saved. Normalise both sides
-      // to lowercase for a case-insensitive match.
+      // Normalise both sides to lowercase for case-insensitive match
       final normUserStream = userStream.toLowerCase();
       final normTargetStream = targetStream?.toLowerCase();
 
@@ -251,10 +223,7 @@ class RealtimeService {
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
 
-      // The app is open — show an OS banner via FcmService so the user gets
-      // a visible push notification regardless of notification type.
-      // FCM suppresses its own foreground delivery for announcement/new_content,
-      // so Realtime is responsible for showing the banner when the app is open.
+      // Show OS banner for this notification
       try {
         await FcmService.instance.showBanner(
           id: n.id,
@@ -306,7 +275,7 @@ class RealtimeService {
     }
   }
 
-  // ── Notification reads channel ────────────────────────────────────────────
+  // ── Notification reads channel ─────────────────────────────────────────
 
   void _startNotificationReadsChannel(String userId) {
     if (userId.isEmpty) return;
@@ -361,7 +330,7 @@ class RealtimeService {
     }
   }
 
-  // ── User channel ──────────────────────────────────────────────────────────
+  // ── User channel ─────────────────────────────────────────────────────────
 
   void _startUserChannel(String userId) {
     if (userId.isEmpty) return;
@@ -395,7 +364,7 @@ class RealtimeService {
       final updated = UserModel.fromJson(record);
       final previous = UserController.instance.user.value;
 
-      // 1. Persist to local SQLite so the status survives app restarts.
+      // 1. Persist to local SQLite
       final db = await DatabaseService.instance.database;
       await db.insert(
         'user',
@@ -403,12 +372,10 @@ class RealtimeService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
-      // 2. Update the reactive value — every Obx watching user rebuilds
-      //    instantly: badge, banners, content gates, everything.
+      // 2. Update reactive value — triggers all Obx watchers
       UserController.instance.user.value = updated;
 
-      // 3. Notify the user in-app when the admin changes their status,
-      //    then lock / unlock the app accordingly.
+      // 3. Notify user on status change
       if (previous.status != updated.status) {
         _notifyStatusChange(updated);
       }
@@ -421,8 +388,7 @@ class RealtimeService {
 
   void _notifyStatusChange(UserModel updated) {
     if (updated.isActive) {
-      // Navigate home first, then show the snackbar so it's visible on the
-      // home screen instead of the payment/verification screen.
+      // Navigate home first so snackbar is visible there
       Get.offAllNamed(Routes.navigationMenu);
       Get.snackbar(
         '🎉 Account Activated',
@@ -438,8 +404,7 @@ class RealtimeService {
         snackPosition: SnackPosition.TOP,
       );
     } else if (updated.isInactive) {
-      // Pop back to home (subjects screen) so the user sees the premium
-      // banner and can resubscribe. The banner is already reactive via Obx.
+      // Pop to home so user sees premium banner
       Get.until((route) => route.isFirst);
       Get.snackbar(
         '🔒 Subscription Ended',

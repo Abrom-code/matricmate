@@ -10,7 +10,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Runs [task] while slowly ticking [onProgress] from [from] toward [to].
-/// When the task completes, [onProgress] is set to [to] exactly.
 Future<T> _withProgress<T>(
   Future<T> task,
   double from,
@@ -19,7 +18,7 @@ Future<T> _withProgress<T>(
 ) async {
   onProgress(from);
   double current = from;
-  // Tick every 120ms — moves ~70% of remaining gap each tick (ease-out feel)
+  // Tick every 120ms with ease-out feel
   final ticker = Timer.periodic(const Duration(milliseconds: 120), (_) {
     current += (to - current) * 0.12;
     onProgress(current.clamp(from, to - 0.01)); // never reach `to` early
@@ -36,7 +35,7 @@ class SyncRepository {
   final supabase = Supabase.instance.client;
   final DatabaseService _dbService = DatabaseService.instance;
 
-  // ── Shared subject batch (used only during subject sync) ─────────────────
+  // ── Shared subject batch (used only during subject sync) ───────────────
 
   Batch? _activeBatch;
 
@@ -66,8 +65,7 @@ class SyncRepository {
       final data = s.toMap();
       data['is_downloaded'] = localDownloadStatus;
       data['is_entrance_downloaded'] = localEntranceDownloaded;
-      // Preserve persisted remote counts — never overwrite them with 0
-      // from the Supabase subject row (which has no count fields).
+      // Preserve persisted remote counts — never overwrite with 0
       data['entrance_count'] = localEntranceCount;
       data['model_count'] = localModelCount;
       batch.update('subjects', data, where: 'id = ?', whereArgs: [s.id]);
@@ -88,10 +86,7 @@ class SyncRepository {
     }
   }
 
-  // ── Per-subject entrance download with progress ───────────────────────────
-  //
-  // [onStep] reports named steps so the UI can show a step-based progress bar.
-  // Steps: 'tests' → 'questions' → 'passages' → 'images' → 'done'
+  // Per-subject entrance download with progress. onStep reports named steps for UI progress bar.
 
   Future<void> downloadEntranceForSubject(
     int subjectId, {
@@ -183,9 +178,7 @@ class SyncRepository {
       throw AppExceptionHandler.handle(e);
     }
   }
-  //
-  // [since] = null  → full sync (first run)
-  // [since] = DateTime → only rows with updated_at > since
+  // Delta sync: since = null → full sync, since = DateTime → delta only
 
   Future<void> downloadEntranceTests(
     List<int> subjectIds, {
@@ -208,9 +201,7 @@ class SyncRepository {
 
       final tests = await testsQuery;
 
-      // 2. Fetch changed/new questions — either scoped to new test IDs (full
-      //    sync) or by updated_at (delta). This catches edits to existing
-      //    questions even when their test row didn't change.
+      // Fetch changed/new questions by delta or full scope
       List<dynamic> questionsData;
 
       if (sinceIso == null) {
@@ -222,9 +213,7 @@ class SyncRepository {
             .select('*, question_sections(title)')
             .inFilter('test_id', testIds);
       } else {
-        // Delta: fetch questions updated since last sync.
-        // We scope by subject_id and rely on updated_at to catch edits.
-        // No test_id filter needed — updated_at covers all changed rows.
+        // Delta: fetch questions updated since last sync
         if (tests.isEmpty) {
           // No new tests — just check for edited questions across these subjects
           questionsData = await supabase
@@ -233,8 +222,7 @@ class SyncRepository {
               .inFilter('subject_id', subjectIds)
               .gt('updated_at', sinceIso);
         } else {
-          // New tests arrived — fetch questions for those new tests
-          // PLUS any edited questions across all entrance subjects
+          // New tests + edited questions across entrance subjects
           final newTestIds = tests.map<int>((t) => t['id'] as int).toList();
           final results = await Future.wait([
             supabase
@@ -305,7 +293,7 @@ class SyncRepository {
     }
   }
 
-  // ── Delta sync: chapter content ───────────────────────────────────────────
+  // ── Delta sync: chapter content ─────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> getBySubjectId(
     String table,
@@ -325,9 +313,7 @@ class SyncRepository {
     }
 
     if (table == 'questions') {
-      // Fetch only questions that belong to chapter/grade tests by joining
-      // through the test_id so we never pull entrance/model questions here.
-      // 1. First get the relevant test IDs from the local DB.
+      // Fetch chapter/grade test questions by local test IDs
       final db = await _dbService.database;
       final testRows = await db.query(
         'tests',
@@ -367,9 +353,7 @@ class SyncRepository {
           .inFilter('id', passageIds);
     }
 
-    // Delta sync: always fetch passages that are not yet in the local DB
-    // (e.g. a passage that predates the last sync but was just referenced by a
-    // newly inserted question), PLUS any passages whose content was edited.
+    // Delta sync: fetch missing + edited passages
     final db = await _dbService.database;
     final localRows = await db.query(
       'passages',
@@ -380,8 +364,7 @@ class SyncRepository {
     final localIds = localRows.map((r) => r['id'] as int).toSet();
     final missingIds = passageIds.where((id) => !localIds.contains(id)).toList();
 
-    // Fetch missing passages (no updated_at filter — they just don't exist locally)
-    // and updated passages (updated_at > since) in one round-trip if possible.
+    // Fetch missing + updated passages in one round-trip if possible
     final sinceIso = since.toUtc().toIso8601String();
 
     if (missingIds.isEmpty) {
@@ -401,8 +384,7 @@ class SyncRepository {
           .inFilter('id', passageIds);
     }
 
-    // Mixed: some missing, some present. Fetch missing unconditionally +
-    // existing ones only if updated.
+    // Mixed: fetch missing unconditionally + existing if updated
     final existingIds = passageIds.where((id) => localIds.contains(id)).toList();
     final results = await Future.wait([
       supabase.from('passages').select().inFilter('id', missingIds),
@@ -420,7 +402,7 @@ class SyncRepository {
     return merged.values.toList();
   }
 
-  // ── Sanitization ──────────────────────────────────────────────────────────
+  // ── Sanitization ────────────────────────────────────────────────────────
 
   static const _knownColumns = <String, Set<String>>{
     'subjects': {'id', 'name', 'is_natural', 'is_common', 'is_downloaded'},

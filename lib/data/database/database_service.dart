@@ -80,9 +80,7 @@ class DatabaseService extends GetxController {
           } catch (_) {}
         }
         if (oldVersion < 8) {
-          // Recreate results table with a composite UNIQUE(user_id, test_id)
-          // instead of the old test_id UNIQUE which allowed one user's result
-          // to overwrite another's and caused cross-test paused-state bleed.
+          // Recreate results table with composite UNIQUE(user_id, test_id)
           await db.transaction((txn) async {
             await txn.execute('''
               CREATE TABLE results_new (
@@ -98,8 +96,7 @@ class DatabaseService extends GetxController {
                 UNIQUE(user_id, test_id)
               )
             ''');
-            // Copy existing rows; keep only the most recent per (user_id, test_id)
-            // in case of duplicate test_ids from the old schema.
+            // Copy existing rows; keep only most recent per (user_id, test_id)
             await txn.execute('''
               INSERT OR IGNORE INTO results_new
                 (user_id, test_id, testQuestions, selectedAnswers,
@@ -114,9 +111,7 @@ class DatabaseService extends GetxController {
           });
         }
         if (oldVersion < 9) {
-          // Add the notifications table for users who were on DB versions 1–8
-          // where only DBschema.create() knew about this table.
-          // IF NOT EXISTS makes it a safe no-op on a fresh install.
+          // Add notifications table for users upgrading from DB v1–8
           try {
             await db.execute('''
               CREATE TABLE IF NOT EXISTS notifications (
@@ -138,7 +133,7 @@ class DatabaseService extends GetxController {
           } catch (_) {}
         }
         if (oldVersion < 11) {
-          // Add target_stream column if upgrading from v9 where it was missing.
+          // Add target_stream column if upgrading from v9
           try {
             await db.execute(
               'ALTER TABLE notifications ADD COLUMN target_stream TEXT',
@@ -146,15 +141,13 @@ class DatabaseService extends GetxController {
           } catch (_) {}
         }
         if (oldVersion < 10) {
-          // Add created_at to the user table so we can filter out notifications
-          // that were broadcast before this user signed up.
+          // Add created_at to user table for notification filtering
           try {
             await db.execute(
               'ALTER TABLE user ADD COLUMN created_at TEXT',
             );
           } catch (_) {}
-          // Track which notifications the user has explicitly deleted so they
-          // are not re-inserted during the next remote sync.
+          // Track dismissed notifications to avoid re-inserting during sync
           try {
             await db.execute('''
               CREATE TABLE IF NOT EXISTS notification_dismissals (
@@ -171,7 +164,6 @@ class DatabaseService extends GetxController {
           } catch (_) {}
         }
       },
-      // Ensure the column exists even on devices that somehow missed onUpgrade
       onOpen: (db) async {},
     );
   }
@@ -360,11 +352,7 @@ class DatabaseService extends GetxController {
     }
   }
 
-  /// Returns the most recent in-progress draft (isCompleted = 0) for the
-  /// current user, joined with its test title and time for display.
-  ///
-  /// Pass [types] to restrict to specific test types (e.g. ['entrance', 'model']).
-  /// If [types] is null or empty, all types are included.
+  /// Returns most recent in-progress draft for the current user.
   Future<Map<String, dynamic>?> loadMostRecentInProgressResult({
     List<String>? types,
   }) async {
@@ -474,7 +462,7 @@ class DatabaseService extends GetxController {
     }
   }
 
-  /// DatabaseService.dart
+
 
   Future<void> clearAllData() async {
     try {
@@ -511,8 +499,6 @@ class DatabaseService extends GetxController {
   }
 
   /// Upserts a test result row, matching on (user_id, test_id).
-  /// Uses ConflictAlgorithm.replace so a draft can be overwritten by a
-  /// completed result and vice-versa for the same user+test combination.
   Future<void> saveResult(ResultModel result) async {
     try {
       final db = await instance.database;
@@ -526,8 +512,7 @@ class DatabaseService extends GetxController {
     }
   }
 
-  /// Returns every in-progress (isCompleted = 0) draft for the current user,
-  /// across ALL test types, joined with test + subject info for display.
+  /// Returns all in-progress drafts for the current user with test/subject info.
   Future<List<Map<String, dynamic>>> loadAllInProgressResults() async {
     try {
       final db = await database;

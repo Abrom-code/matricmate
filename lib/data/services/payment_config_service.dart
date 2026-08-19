@@ -6,8 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ── PaymentConfig
 
-/// A single payment method built entirely from `app_config` rows.
-/// Replaces the old hardcoded [PaymentMethod] enum for display purposes.
+/// A single payment method built from `app_config` rows.
 class PaymentConfig {
   const PaymentConfig({
     required this.key,
@@ -35,24 +34,16 @@ class PaymentConfig {
 
 // ── PaymentConfigService ──────────────────────────────────────────────────────
 
-/// Single source of truth for all payment config loaded from `app_config`.
-///
-/// • [methods]           — reactive list of every visible payment method
-///                         (built-ins that have a non-empty account + extras).
-///                         The UI only reads this one list — no enum, no split.
-/// • [subscriptionPrice] — reactive price in ETB.
-///
-/// Call [load()] once at startup. Realtime pushes call [applyRow()] per row.
+/// Single source of truth for payment config loaded from `app_config`.
 class PaymentConfigService {
   PaymentConfigService._();
   static final instance = PaymentConfigService._();
 
-  // ── Internal mutable state (built-ins keyed by DB key) ───────────────
+  // Internal mutable state (built-ins keyed by DB key)──
   final _accounts = <String, String>{};
   final _holders = <String, String>{};
 
-  // Built-in method definitions — order, label, icon, featured flag.
-  // A built-in is only included in [methods] when its account is non-empty.
+  // Built-in method definitions; only included when account is non-empty
   static const _builtIns = [
     _BuiltIn(
       key: 'payment_telebirr',
@@ -85,8 +76,8 @@ class PaymentConfigService {
     ),
   ];
 
-  // ── Public reactive state ─────────────────────────────────────────────
-  /// All currently active payment methods — rebuilt whenever any row changes.
+  // Public reactive state──
+  /// All currently active payment methods.
   final methods = <PaymentConfig>[].obs;
 
   /// Subscription price in ETB.
@@ -103,7 +94,7 @@ class PaymentConfigService {
   final hasError = false.obs;
   final isLoaded = false.obs;
 
-  // ── Load from Supabase (called at startup and when needed) ────────────
+  // Load from Supabase (called at startup and when needed)
   Future<void> load({bool force = false}) async {
     if (isLoading.value && !force) return;
 
@@ -131,7 +122,7 @@ class PaymentConfigService {
       isLoaded.value = true;
       hasError.value = false;
     } catch (e, st) {
-      // Log so the developer can see what went wrong.
+      // Log failure for debugging
       debugPrint('[PaymentConfig] load() failed: $e\n$st');
       hasError.value = true;
     } finally {
@@ -139,8 +130,7 @@ class PaymentConfigService {
     }
   }
 
-  /// Called by [RealtimeService] when a row is deleted from `app_config`.
-  /// Clears the cached value for that key and rebuilds [methods].
+  /// Called by RealtimeService when a row is deleted from `app_config`.
   void deleteKey(String key) {
     if (key.isEmpty) return;
     debugPrint('[PaymentConfig] deleteKey: $key');
@@ -180,12 +170,11 @@ class PaymentConfigService {
     _rebuildMethods();
   }
 
-  // ── Internal helpers ──────────────────────────────────────────────────
+  // Internal helpers
 
   void _applyToState(Map<String, dynamic> row) {
     final key = row['key']?.toString() ?? '';
-    // Guard against literal "EMPTY" string — Supabase dashboard shows
-    // empty strings as "EMPTY" visually, but the actual value is ''.
+    // Guard against literal "EMPTY" string from Supabase dashboard
     final raw = row['value']?.toString() ?? '';
     final value = (raw == 'EMPTY') ? '' : raw;
 
@@ -224,8 +213,6 @@ class PaymentConfigService {
   }
 
   /// Rebuilds [methods] from current state.
-  /// A built-in is included only if its account number is non-empty.
-  /// Extras from JSON are appended after built-ins.
   void _rebuildMethods() {
     final result = <PaymentConfig>[];
 
@@ -283,7 +270,7 @@ class PaymentConfigService {
   }
 }
 
-// ── Private helper ────────────────────────────────────────────────────────────
+// Private helper
 
 class _BuiltIn {
   const _BuiltIn({

@@ -61,9 +61,7 @@ class UpdateProfileController extends GetxController {
       //  refresh local state only — no need to re-validate session
       await _userController.loadLocalUser();
 
-      // Re-save the FCM token so the edge function has the latest token
-      // for the user's (potentially new) stream. Fire-and-forget — a failure
-      // here must not surface as a profile-update error.
+      // Re-save FCM token for the (potentially new) stream
       unawaited(FcmService.instance.saveTokenForCurrentUser());
 
       Get.back();

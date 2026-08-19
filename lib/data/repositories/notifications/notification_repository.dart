@@ -8,15 +8,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
-/// Mirrors the pattern used by SyncRepository/TestRepository elsewhere in
-/// the app: Supabase is the source of truth, SQLite is the local cache the
-/// UI actually reads from, so the bell/list stays accurate even offline.
-///
-/// Read state is tracked in `notification_reads` (per-user row) instead of
-/// the shared `is_read` boolean on the notifications row. The old approach
-/// meant the first person to open a broadcast marked it as read for every
-/// other user. This approach is per-user and works for both personal and
-/// broadcast notifications.
+/// Handles notification sync between Supabase and local SQLite with per-user read tracking.
 class NotificationRepository {
   NotificationRepository({DatabaseService? databaseService})
       : _db = databaseService ?? DatabaseService.instance;
@@ -26,17 +18,7 @@ class NotificationRepository {
 
   String? get _currentUid => FirebaseAuth.instance.currentUser?.uid;
 
-  /// Pulls this user's personal notifications PLUS any broadcast rows that
-  /// match their stream (or are global — target_stream IS NULL), and
-  /// upserts them into local SQLite.
-  ///
-  /// Only fetches notifications created on or after [signupAt] so a new user
-  /// doesn't see announcements that were sent before they registered.
-  ///
-  /// Also fetches notification_reads for this user so is_read is correct
-  /// after a reinstall or device switch. Dismissed notifications (recorded
-  /// in notification_dismissals) are excluded from the upsert so they don't
-  /// reappear after a sync.
+  /// Syncs notifications from Supabase to local SQLite, filtering by stream and signup date.
   Future<void> syncFromRemote(
     String userId,
     String userStream, {
@@ -45,14 +27,10 @@ class NotificationRepository {
     try {
       debugPrint('[Notifications] syncFromRemote userId=$userId stream=$userStream signupAt=$signupAt');
 
-      // Build the date filter string. If we have a signupAt, use it; otherwise
-      // fall back to fetching all (safe for existing users without the field).
+      // Build date filter for signup-based filtering
       final String? sinceIso = signupAt?.toUtc().toIso8601String();
 
-      // Fetch personal, broadcast, and read receipts in parallel.
-      // Apply the signup-date filter so pre-registration rows are never sent.
-      // The date filter (.gte) must come before .order/.limit (filter methods
-      // are not available on PostgrestTransformBuilder).
+      // Fetch personal, broadcast, and read receipts in parallel
       final readsQuery = _supabase
           .from('notification_reads')
           .select('notification_id')
@@ -95,8 +73,7 @@ class NotificationRepository {
         ]);
       }
 
-      // Remote dismissals table may not exist yet — fetch separately so it
-      // doesn't take down the entire sync if the table is missing.
+      // Remote dismissals fetch (may fail if table doesn't exist yet)
       List<Map<String, dynamic>> remoteDismissals = [];
       try {
         final raw = await _supabase
@@ -115,8 +92,7 @@ class NotificationRepository {
       final readRows =
           List<Map<String, dynamic>>.from(notifFutures[2] as List);
 
-      // Filter broadcasts: keep global (no target_stream) or stream-matching.
-      // Normalise to lowercase so 'Natural' (DB) matches 'natural' (app).
+      // Filter broadcasts: keep global or stream-matching (case-insensitive)
       final broadcastRows = allBroadcasts.where((r) {
         final ts = r['target_stream']?.toString() ?? '';
         if (ts.isEmpty) return true;
@@ -142,8 +118,7 @@ class NotificationRepository {
           '(${personalRows.length} personal + ${broadcastRows.length} broadcast), '
           '${readRows.length} reads');
 
-      // Load dismissed IDs from local fallback (in case remote insert failed)
-      // and combine with remote dismissals.
+      // Load dismissed IDs from local + remote
       final db = await _db.database;
       final localDismissedRows = await db.query(
         'notification_dismissals',
@@ -221,9 +196,7 @@ class NotificationRepository {
     return result.first['cnt'] as int? ?? 0;
   }
 
-  /// Marks a single notification as read locally and records it in
-  /// `notification_reads` so the state survives reinstalls and applies
-  /// per-user (broadcast notifications stay unread for everyone else).
+  /// Marks a notification as read locally and records it in `notification_reads`.
   Future<void> markRead(int notificationId) async {
     // 1. Update local SQLite immediately — UI reads from here.
     final db = await _db.database;
@@ -234,8 +207,7 @@ class NotificationRepository {
       whereArgs: [notificationId],
     );
 
-    // 2. Insert into notification_reads (PK = notification_id + user_id,
-    //    so this is idempotent).
+    // Insert into notification_reads (idempotent via PK)
     final uid = _currentUid;
     if (uid == null) return;
     try {
@@ -283,8 +255,7 @@ class NotificationRepository {
     }
   }
 
-  /// Inserts a notification locally immediately when a push arrives in the
-  /// foreground — the bell/list updates without waiting for the next sync.
+  /// Inserts a notification locally for immediate UI update.
   Future<void> insertLocal(AppNotification n) async {
     final db = await _db.database;
     await db.insert(
@@ -294,9 +265,7 @@ class NotificationRepository {
     );
   }
 
-  /// Deletes a single notification.
-  /// - Personal notifications: Deleted from Supabase `notifications` table.
-  /// - Broadcast notifications: Dismissal recorded in `notification_dismissals` table.
+  /// Deletes a notification (personal: from server, broadcast: records dismissal).
   Future<void> deleteNotification(AppNotification n) async {
     final uid = _currentUid;
     final db = await _db.database;

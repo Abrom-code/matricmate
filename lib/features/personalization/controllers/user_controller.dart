@@ -67,8 +67,7 @@ class UserController extends GetxController {
     try {
       AppFullScreenLoader.openLoadingDialog('Logging out...');
 
-      // Stop watching the session before signing out so we don't
-      // receive a stale change event during teardown.
+      // Stop session watch before signing out
       _sessionService.cancelWatch();
 
       await _authRepo.logout();
@@ -111,14 +110,10 @@ class UserController extends GetxController {
       user.value = freshUser;
       await _userRepository.updateLocalUser(freshUser);
 
-      // Ensure the FCM token is saved to Supabase now that we have a confirmed
-      // userId. This covers the race where FcmService.init() ran before the
-      // user finished loading (token save was skipped because userId was empty).
+      // Save FCM token now that userId is confirmed
       unawaited(FcmService.instance.saveTokenForCurrentUser());
 
-      // Start (or restart) the Realtime watch now that we know this device
-      // is authorised. If the admin changes the device_id in Supabase,
-      // this callback fires and the user is immediately logged out.
+      // Watch session — logout on device mismatch
       _sessionService.watchSession(
         uid: uid,
         currentDeviceId: deviceId,
@@ -154,8 +149,7 @@ class UserController extends GetxController {
         return;
       }
 
-      // Status is inactive — payment was rejected or cancelled by admin.
-      // Pop back to home so the user sees the premium banner.
+      // Inactive — pop to home so user sees premium banner
       Get.until((route) => route.isFirst);
       SnackbarHelper.warning(
         'Payment Not Approved',
@@ -193,9 +187,7 @@ class UserController extends GetxController {
   }
 }
 
-// ── Delete account dialog ─────────────────────────────────────────────────────
-// Self-contained StatefulWidget so the TextEditingController and local
-// visibility state are tied to the widget lifecycle — no leaks when dismissed.
+// Delete account dialog (self-contained StatefulWidget)
 
 class _DeleteAccountDialog extends StatefulWidget {
   const _DeleteAccountDialog();

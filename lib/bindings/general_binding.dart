@@ -17,7 +17,7 @@ import 'package:matricmate/utils/network_manager/network_manager.dart';
 class GeneralBinding extends Bindings {
   @override
   void dependencies() {
-    // ── Core services (permanent — never disposed) ──────────────────
+    // Core services (permanent — never disposed)──
     Get.put(NetworkManager(), permanent: true);
     Get.put(DatabaseService(), permanent: true);
     Get.put(NavigationController(), permanent: true);
@@ -27,17 +27,14 @@ class GeneralBinding extends Bindings {
     Get.put(AuthenticationController(), permanent: true);
     Get.put(UserController(), permanent: true);
     Get.put(SubjectsController(), permanent: true);
-    // Registered permanently so the bell badge in the appbar is reactive
-    // from the first screen — not only after the notifications route is opened.
+    // Permanent so bell badge is reactive from first screen
     Get.put(NotificationsController(), permanent: true);
 
-    // ── Auth controllers (permanent — avoids TextEditingController
-    //    disposed crash; these are lightweight and needed app-wide) ──
+    // Auth controllers (permanent — avoids disposed crash)
     Get.put(LoginController(), permanent: true);
     Get.put(SignupController(), permanent: true);
     Get.put(ForgotPasswordController(), permanent: true);
     Get.put(ChangePasswordController(), permanent: true);
-    // Note: VerifyEmailController and ResetPasswordController use
-    // Get.arguments in onInit so they stay as lazyPut in their bindings.
+    // VerifyEmail and ResetPassword use Get.arguments so they stay as lazyPut
   }
 }

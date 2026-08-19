@@ -1,4 +1,4 @@
-package com.example.matricmate
+package com.abopia.matricmate
 
 import android.app.Application
 import android.app.NotificationChannel

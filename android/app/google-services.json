@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:768230513418:android:5abff2955457e2a78178f3",
+        "android_client_info": {
+          "package_name": "com.abopia.matricmate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_MNqrCLJcvbyT28mXTWoeB7MNfFXEKvM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:768230513418:android:c86fc2d489f25b878178f3",
         "android_client_info": {
           "package_name": "com.example.matricmate"

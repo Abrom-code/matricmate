@@ -1,4 +1,4 @@
-package com.example.matricmate
+package com.abopia.matricmate
 
 import io.flutter.embedding.android.FlutterActivity
 

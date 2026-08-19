@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/entrance/entrance.dart';
@@ -7,7 +9,7 @@ import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 
-class NavigationController extends GetxController {
+class NavigationController extends GetxController with WidgetsBindingObserver {
   static NavigationController get instance => Get.find();
 
   final Rx<int> selectedIdx = 0.obs;
@@ -20,7 +22,11 @@ class NavigationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     pageController = PageController(initialPage: 0);
+
+    // Ensure notification permissions are requested on startup / main screen visit
+    unawaited(FcmService.instance.requestPermissionIfNeeded());
 
     // Ensure BookmarkController is registered before BookmarkScreen builds.
     if (!Get.isRegistered<BookmarkController>()) {
@@ -38,8 +44,16 @@ class NavigationController extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     pageController.dispose();
     super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(FcmService.instance.requestPermissionIfNeeded());
+    }
   }
 
   /// Called by the nav bar tap — animates the PageView.
@@ -51,11 +65,17 @@ class NavigationController extends GetxController {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+    if (index == 0) {
+      unawaited(FcmService.instance.requestPermissionIfNeeded());
+    }
   }
 
   /// Called when the user swipes — syncs the nav bar indicator.
   void onPageChanged(int index) {
     selectedIdx.value = index;
+    if (index == 0) {
+      unawaited(FcmService.instance.requestPermissionIfNeeded());
+    }
   }
 }
 

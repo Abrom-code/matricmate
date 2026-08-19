@@ -140,11 +140,63 @@ class FcmService {
     return true;
   }
 
+  bool _isRequestingPermission = false;
+  DateTime? _lastPermissionCheck;
+
+  /// Requests notification permissions if not already granted.
+  /// Can be called whenever the user opens the app, resumes, or visits the main screen.
+  Future<NotificationSettings?> requestPermissionIfNeeded() async {
+    if (_isRequestingPermission) return null;
+
+    // Cooldown guard to avoid looping when app loses and regains window focus
+    final now = DateTime.now();
+    if (_lastPermissionCheck != null &&
+        now.difference(_lastPermissionCheck!).inSeconds < 5) {
+      return null;
+    }
+
+    _isRequestingPermission = true;
+    _lastPermissionCheck = now;
+
+    try {
+      final settings = await _messaging.getNotificationSettings();
+      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+          settings.authorizationStatus != AuthorizationStatus.provisional) {
+        await _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >()
+            ?.requestNotificationsPermission();
+
+        final updated = await _messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+        if (updated.authorizationStatus == AuthorizationStatus.authorized ||
+            updated.authorizationStatus == AuthorizationStatus.provisional) {
+          final token = await _messaging.getToken();
+          await _saveTokenIfLoggedIn(token);
+          await _subscribeToStreamTopics();
+        }
+
+        return updated;
+      }
+      return settings;
+    } catch (e) {
+      debugPrint('[FcmService] requestPermissionIfNeeded error: $e');
+      return null;
+    } finally {
+      _isRequestingPermission = false;
+    }
+  }
+
   Future<void> init() async {
     if (_initialized) return;
     _initialized = true;
 
-    await _messaging.requestPermission(alert: true, badge: true, sound: true);
+    await requestPermissionIfNeeded();
 
     // iOS: show heads-up banner even when the app is in the foreground.
     // Without this, FCM silently delivers the message on iOS but the OS

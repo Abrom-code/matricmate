@@ -50,5 +50,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MatricMate requires access to your photo library to upload payment receipts for subscription verification.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MatricMate requires access to your camera to take photos of payment receipts for subscription verification.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

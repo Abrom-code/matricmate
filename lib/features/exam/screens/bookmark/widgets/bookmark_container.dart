@@ -92,8 +92,9 @@ class BookmarkContainer extends GetView<BookmarkController> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary
-                                      .withValues(alpha: dark ? 0.18 : 0.09),
+                                  color: AppColors.primary.withValues(
+                                    alpha: dark ? 0.18 : 0.09,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -128,15 +129,13 @@ class BookmarkContainer extends GetView<BookmarkController> {
 
                               // Delete icon
                               GestureDetector(
-                                onTap: () =>
-                                    AppHelperFunctions.showAppDialog(
+                                onTap: () => AppHelperFunctions.showAppDialog(
                                   context,
                                   'Remove bookmark?',
                                   'This question will be removed from your saved list.',
                                   () async {
                                     Get.back();
-                                    await controller
-                                        .removeFromBookmark(qn.id);
+                                    await controller.removeFromBookmark(qn.id);
                                     FocusManager.instance.primaryFocus
                                         ?.unfocus();
                                   },
@@ -175,7 +174,10 @@ class BookmarkContainer extends GetView<BookmarkController> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _TestTypePill(type: controller.testType(qn.testId), dark: dark),
+                              _TestTypePill(
+                                type: controller.testType(qn.testId),
+                                dark: dark,
+                              ),
 
                               // View link
                               const Row(

@@ -18,13 +18,12 @@ class PremiumController extends GetxController {
   final UserController _userController = Get.find<UserController>();
   final _cfg = PaymentConfigService.instance;
 
-  /// Currently selected payment method. Defaults to first available from DB,
-  /// or a placeholder until methods load.
+  /// Currently selected payment method.
   final selectedPayment = Rxn<PaymentConfig>();
 
   final receipt = Rxn<XFile>();
   final isUploading = false.obs;
-  
+
   final receiptCount = 0.obs;
   bool get exceededUploadLimit => receiptCount.value >= 2;
 
@@ -183,7 +182,6 @@ class PremiumController extends GetxController {
       receiptCount.value = 0;
 
       // Pop back all the way to home (subjects screen) so the user is not
-      // left on the premium / payment verification page after cancelling.
       Get.until((route) => route.isFirst);
       ToastHelper.success('Payment cancelled');
     } catch (e) {

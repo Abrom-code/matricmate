@@ -43,9 +43,7 @@ class TestRepository {
     }
   }
 
-  /// Returns the actual number of questions stored locally for a test.
-  /// Use this instead of [TestModel.questionCount] which comes from Supabase
-  /// and may be stale or incorrect.
+  /// Returns the actual count of questions stored locally for a test.
   Future<int> getActualQuestionCount(int testId) async {
     try {
       final db = await _dbService.database;

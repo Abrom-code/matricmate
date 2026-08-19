@@ -150,8 +150,7 @@ class DBschema {
       'CREATE INDEX idx_notifications_user ON notifications(user_id, created_at)',
     );
 
-    // Tracks notifications the user has explicitly deleted so they are not
-    // re-inserted during the next remote sync.
+    // Tracks dismissed notifications to prevent re-insertion on remote sync.
     await db.execute('''
       CREATE TABLE notification_dismissals (
         notification_id INTEGER NOT NULL,

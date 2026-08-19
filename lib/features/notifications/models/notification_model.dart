@@ -1,12 +1,6 @@
 import 'dart:convert';
 
-/// Local + remote representation of a row in the `notifications` table.
-///
-/// `type` drives both the icon shown in [NotificationTile] and the
-/// navigation behavior on tap:
-///   - 'payment'      → opens the payment verification screen
-///   - 'new_content'  → opens the exact test via [NotificationTestOpener]
-///   - 'announcement' → opens the notifications list (default/no-op)
+/// Local and remote model for the notifications table.
 class AppNotification {
   final int id;
   final String userId;
@@ -14,7 +8,8 @@ class AppNotification {
   final String body;
   final String type; // 'announcement' | 'payment' | 'new_content'
   final Map<String, dynamic> payload;
-  final String? targetStream; // null = global broadcast; 'natural'/'social' = stream-targeted
+  final String?
+  targetStream; // null = global broadcast; 'natural'/'social' = stream-targeted
   final bool isRead;
   final bool isArchived;
   final DateTime createdAt;
@@ -89,9 +84,7 @@ class AppNotification {
   }
 }
 
-/// Safely parses an id that may arrive as [int], [String], or [num].
-/// Supabase returns `bigint` columns as [String] in the Flutter client
-/// to avoid JavaScript precision loss; SQLite returns them as [int].
+/// Safely parses id from int, String, or num representations.
 int _parseInt(dynamic value) {
   if (value is int) return value;
   if (value is num) return value.toInt();

@@ -79,8 +79,7 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
   }
 }
 
-// ── Keep-alive wrapper ────────────────────────────────────────────────────────
-// Prevents PageView from disposing screens when swiping away from them.
+// Keep-alive wrapper: prevents PageView from disposing screens on swipe
 
 class _KeepAlivePage extends StatefulWidget {
   const _KeepAlivePage({required this.child});

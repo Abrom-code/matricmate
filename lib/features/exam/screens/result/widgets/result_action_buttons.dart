@@ -50,8 +50,9 @@ class ResultActionButtons extends StatelessWidget {
                   side: const BorderSide(color: AppColors.primary),
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.borderRadiusLg),
+                    borderRadius: BorderRadius.circular(
+                      AppSizes.borderRadiusLg,
+                    ),
                   ),
                 ),
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
@@ -74,8 +75,9 @@ class ResultActionButtons extends StatelessWidget {
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.borderRadiusLg),
+                    borderRadius: BorderRadius.circular(
+                      AppSizes.borderRadiusLg,
+                    ),
                     side: BorderSide(
                       color: AppColors.primary.withValues(alpha: 0.4),
                     ),

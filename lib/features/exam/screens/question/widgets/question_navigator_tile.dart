@@ -63,8 +63,8 @@ class QuestionNavigatorTile extends StatelessWidget {
               color: isDone || isSkipped
                   ? AppColors.white
                   : dark
-                      ? AppColors.white.withValues(alpha: 0.8)
-                      : AppColors.darkerGrey,
+                  ? AppColors.white.withValues(alpha: 0.8)
+                  : AppColors.darkerGrey,
               fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
               fontSize: 13,
             ),
@@ -99,10 +99,9 @@ class NavigatorLegendDot extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .labelSmall!
-              .copyWith(color: AppColors.darkGrey),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall!.copyWith(color: AppColors.darkGrey),
         ),
       ],
     );

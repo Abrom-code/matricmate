@@ -34,8 +34,7 @@ class TestModel {
   factory TestModel.fromMap(Map<String, dynamic> map) =>
       TestModel.fromJson(map);
 
-  /// Returns true if this test was created within the last 2 days.
-  /// Used to show a "NEW" badge on entrance / model test tiles.
+  /// Returns true if this test was created within the last 2 days for NEW badge.
   bool get isNew {
     final cutoff = DateTime.now().subtract(const Duration(days: 2));
     return createdAt.isAfter(cutoff);

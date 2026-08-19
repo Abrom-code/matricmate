@@ -46,7 +46,6 @@ class GradeTestController extends GetxController {
       final data = dbExams.map((e) => TestModel.fromMap(e)).toList();
 
       // Load flags and results in parallel before exposing the list,
-      // so the UI never shows "no questions" for a test that has them.
       await Future.wait([
         loadTestQuestionFlags(data),
         loadActualQuestionCounts(data),

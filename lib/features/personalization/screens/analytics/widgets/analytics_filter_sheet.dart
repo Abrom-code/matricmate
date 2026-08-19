@@ -15,46 +15,46 @@ class AnalyticsFilterSheet extends StatefulWidget {
 
 class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
   // Local selections — committed only when Apply is tapped
-  late String       _subject;
-  late String       _testType;
-  late TimeFilter   _time;
-  late GradeFilter  _grade;
+  late String _subject;
+  late String _testType;
+  late TimeFilter _time;
+  late GradeFilter _grade;
   late StreamFilter _stream;
-  late ScoreFilter  _score;
-  late TimedFilter  _timed;
+  late ScoreFilter _score;
+  late TimedFilter _timed;
 
   @override
   void initState() {
     super.initState();
-    final c     = widget.controller;
-    _subject    = c.selectedSubject.value;
-    _testType   = c.selectedTestType.value;
-    _time       = c.selectedTimeFilter.value;
-    _grade      = c.selectedGrade.value;
-    _stream     = c.selectedStream.value;
-    _score      = c.selectedScore.value;
-    _timed      = c.selectedTimed.value;
+    final c = widget.controller;
+    _subject = c.selectedSubject.value;
+    _testType = c.selectedTestType.value;
+    _time = c.selectedTimeFilter.value;
+    _grade = c.selectedGrade.value;
+    _stream = c.selectedStream.value;
+    _score = c.selectedScore.value;
+    _timed = c.selectedTimed.value;
   }
 
   void _reset() => setState(() {
     _subject = 'All Subjects';
     _testType = 'All Types';
-    _time    = TimeFilter.all;
-    _grade   = GradeFilter.all;
-    _stream  = StreamFilter.all;
-    _score   = ScoreFilter.all;
-    _timed   = TimedFilter.all;
+    _time = TimeFilter.all;
+    _grade = GradeFilter.all;
+    _stream = StreamFilter.all;
+    _score = ScoreFilter.all;
+    _timed = TimedFilter.all;
   });
 
   void _apply() {
     widget.controller.applyFilters(
-      subject:    _subject,
-      testType:   _testType,
+      subject: _subject,
+      testType: _testType,
       timeFilter: _time,
-      grade:      _grade,
-      stream:     _stream,
-      score:      _score,
-      timed:      _timed,
+      grade: _grade,
+      stream: _stream,
+      score: _score,
+      timed: _timed,
     );
     Get.back();
   }
@@ -65,14 +65,18 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
 
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: Container(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.88,
           ),
           decoration: BoxDecoration(
             color: dark ? AppColors.darkCard : AppColors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.lg)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppSizes.lg),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -93,7 +97,9 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
 
               // ── Header ──────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.defaultSpace),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.defaultSpace,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -105,7 +111,10 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                     ),
                     TextButton(
                       onPressed: _reset,
-                      child: const Text('Reset all', style: TextStyle(color: AppColors.primary)),
+                      child: const Text(
+                        'Reset all',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
                     ),
                   ],
                 ),
@@ -115,8 +124,10 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
               Flexible(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
-                    AppSizes.defaultSpace, AppSizes.sm,
-                    AppSizes.defaultSpace, AppSizes.md,
+                    AppSizes.defaultSpace,
+                    AppSizes.sm,
+                    AppSizes.defaultSpace,
+                    AppSizes.md,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,8 +216,10 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
               // ── Apply button ─────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  AppSizes.defaultSpace, 0,
-                  AppSizes.defaultSpace, AppSizes.defaultSpace,
+                  AppSizes.defaultSpace,
+                  0,
+                  AppSizes.defaultSpace,
+                  AppSizes.defaultSpace,
                 ),
                 child: SizedBox(
                   width: double.infinity,
@@ -216,13 +229,18 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                       foregroundColor: AppColors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.borderRadiusLg,
+                        ),
                       ),
                     ),
                     onPressed: _apply,
                     child: const Text(
                       'Apply Filters',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ),
@@ -237,38 +255,38 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
   // ── Label helpers ────────────────────────────────────────────────────────
 
   String _gradeLabel(GradeFilter g) => const {
-    GradeFilter.all:     'All grades',
-    GradeFilter.grade9:  'Grade 9',
+    GradeFilter.all: 'All grades',
+    GradeFilter.grade9: 'Grade 9',
     GradeFilter.grade10: 'Grade 10',
     GradeFilter.grade11: 'Grade 11',
     GradeFilter.grade12: 'Grade 12',
   }[g]!;
 
   String _streamLabel(StreamFilter s) => const {
-    StreamFilter.all:     'All streams',
+    StreamFilter.all: 'All streams',
     StreamFilter.natural: 'Natural',
-    StreamFilter.social:  'Social',
-    StreamFilter.common:  'Common',
+    StreamFilter.social: 'Social',
+    StreamFilter.common: 'Common',
   }[s]!;
 
   String _scoreLabel(ScoreFilter s) => const {
-    ScoreFilter.all:     'All scores',
-    ScoreFilter.poor:    'Poor  < 50%',
+    ScoreFilter.all: 'All scores',
+    ScoreFilter.poor: 'Poor  < 50%',
     ScoreFilter.average: 'Average 50–70%',
-    ScoreFilter.good:    'Good  ≥ 70%',
+    ScoreFilter.good: 'Good  ≥ 70%',
   }[s]!;
 
   String _timedLabel(TimedFilter t) => const {
-    TimedFilter.all:        'All formats',
-    TimedFilter.timedOnly:  'Timed only',
+    TimedFilter.all: 'All formats',
+    TimedFilter.timedOnly: 'Timed only',
     TimedFilter.untimeOnly: 'Untimed only',
   }[t]!;
 
   String _timeLabel(TimeFilter t) => const {
-    TimeFilter.all:          'All time',
-    TimeFilter.lastWeek:     'Last 7 days',
-    TimeFilter.lastMonth:    'Last 30 days',
-    TimeFilter.last3Months:  'Last 3 months',
+    TimeFilter.all: 'All time',
+    TimeFilter.lastWeek: 'Last 7 days',
+    TimeFilter.lastMonth: 'Last 30 days',
+    TimeFilter.last3Months: 'Last 3 months',
   }[t]!;
 }
 
@@ -283,36 +301,47 @@ class ActiveFilterRow extends StatelessWidget {
     final chips = <_DismissChip>[];
 
     if (controller.selectedSubject.value != 'All Subjects') {
-      chips.add(_DismissChip(
-        label: controller.selectedSubject.value,
-        onRemove: () => controller.applyFilters(subject: 'All Subjects'),
-      ));
+      chips.add(
+        _DismissChip(
+          label: controller.selectedSubject.value,
+          onRemove: () => controller.applyFilters(subject: 'All Subjects'),
+        ),
+      );
     }
     if (controller.selectedTestType.value != 'All Types') {
-      chips.add(_DismissChip(
-        label: controller.selectedTestType.value,
-        onRemove: () => controller.applyFilters(testType: 'All Types'),
-      ));
+      chips.add(
+        _DismissChip(
+          label: controller.selectedTestType.value,
+          onRemove: () => controller.applyFilters(testType: 'All Types'),
+        ),
+      );
     }
     if (controller.selectedGrade.value != GradeFilter.all) {
       final labels = {
-        GradeFilter.grade9: 'Grade 9', GradeFilter.grade10: 'Grade 10',
-        GradeFilter.grade11: 'Grade 11', GradeFilter.grade12: 'Grade 12',
+        GradeFilter.grade9: 'Grade 9',
+        GradeFilter.grade10: 'Grade 10',
+        GradeFilter.grade11: 'Grade 11',
+        GradeFilter.grade12: 'Grade 12',
       };
-      chips.add(_DismissChip(
-        label: labels[controller.selectedGrade.value]!,
-        onRemove: () => controller.applyFilters(grade: GradeFilter.all),
-      ));
+      chips.add(
+        _DismissChip(
+          label: labels[controller.selectedGrade.value]!,
+          onRemove: () => controller.applyFilters(grade: GradeFilter.all),
+        ),
+      );
     }
     if (controller.selectedStream.value != StreamFilter.all) {
       final labels = {
-        StreamFilter.natural: 'Natural', StreamFilter.social: 'Social',
+        StreamFilter.natural: 'Natural',
+        StreamFilter.social: 'Social',
         StreamFilter.common: 'Common',
       };
-      chips.add(_DismissChip(
-        label: labels[controller.selectedStream.value]!,
-        onRemove: () => controller.applyFilters(stream: StreamFilter.all),
-      ));
+      chips.add(
+        _DismissChip(
+          label: labels[controller.selectedStream.value]!,
+          onRemove: () => controller.applyFilters(stream: StreamFilter.all),
+        ),
+      );
     }
     if (controller.selectedScore.value != ScoreFilter.all) {
       final labels = {
@@ -320,17 +349,22 @@ class ActiveFilterRow extends StatelessWidget {
         ScoreFilter.average: 'Avg 50–70%',
         ScoreFilter.good: 'Good ≥ 70%',
       };
-      chips.add(_DismissChip(
-        label: labels[controller.selectedScore.value]!,
-        onRemove: () => controller.applyFilters(score: ScoreFilter.all),
-      ));
+      chips.add(
+        _DismissChip(
+          label: labels[controller.selectedScore.value]!,
+          onRemove: () => controller.applyFilters(score: ScoreFilter.all),
+        ),
+      );
     }
     if (controller.selectedTimed.value != TimedFilter.all) {
-      chips.add(_DismissChip(
-        label: controller.selectedTimed.value == TimedFilter.timedOnly
-            ? 'Timed only' : 'Untimed only',
-        onRemove: () => controller.applyFilters(timed: TimedFilter.all),
-      ));
+      chips.add(
+        _DismissChip(
+          label: controller.selectedTimed.value == TimedFilter.timedOnly
+              ? 'Timed only'
+              : 'Untimed only',
+          onRemove: () => controller.applyFilters(timed: TimedFilter.all),
+        ),
+      );
     }
     if (controller.selectedTimeFilter.value != TimeFilter.all) {
       final labels = {
@@ -338,10 +372,12 @@ class ActiveFilterRow extends StatelessWidget {
         TimeFilter.lastMonth: 'Last 30d',
         TimeFilter.last3Months: 'Last 3mo',
       };
-      chips.add(_DismissChip(
-        label: labels[controller.selectedTimeFilter.value]!,
-        onRemove: () => controller.applyFilters(timeFilter: TimeFilter.all),
-      ));
+      chips.add(
+        _DismissChip(
+          label: labels[controller.selectedTimeFilter.value]!,
+          onRemove: () => controller.applyFilters(timeFilter: TimeFilter.all),
+        ),
+      );
     }
 
     if (chips.isEmpty) return const SizedBox.shrink();
@@ -352,15 +388,21 @@ class ActiveFilterRow extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            ...chips.map((c) => Padding(
-              padding: const EdgeInsets.only(right: 6), child: c,
-            )),
+            ...chips.map(
+              (c) =>
+                  Padding(padding: const EdgeInsets.only(right: 6), child: c),
+            ),
             GestureDetector(
               onTap: controller.resetFilters,
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                child: Text('Clear all',
-                  style: TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w600),
+                child: Text(
+                  'Clear all',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -388,9 +430,19 @@ class _DismissChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(width: 4),
-          GestureDetector(onTap: onRemove, child: const Icon(Icons.close, size: 14, color: AppColors.primary)),
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(Icons.close, size: 14, color: AppColors.primary),
+          ),
         ],
       ),
     );
@@ -414,8 +466,10 @@ class _FilterSection extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: const TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w700,
-              letterSpacing: 1.2, color: AppColors.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: AppSizes.sm),
@@ -444,7 +498,10 @@ class _ChipGroup<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return const Text('No options', style: TextStyle(fontSize: 12, color: AppColors.textSecondary));
+      return const Text(
+        'No options',
+        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+      );
     }
     return Wrap(
       spacing: 8,
@@ -457,10 +514,14 @@ class _ChipGroup<T> extends StatelessWidget {
             duration: const Duration(milliseconds: 130),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: isSel ? AppColors.primary : AppColors.primary.withValues(alpha: 0.07),
+              color: isSel
+                  ? AppColors.primary
+                  : AppColors.primary.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSel ? AppColors.primary : AppColors.primary.withValues(alpha: 0.25),
+                color: isSel
+                    ? AppColors.primary
+                    : AppColors.primary.withValues(alpha: 0.25),
               ),
             ),
             child: Text(

@@ -29,10 +29,9 @@ class ReviewContainer extends GetView<ReviewController> {
         // ── Header ───────────────────────────────────────────────────
         headerLeft: Text(
           '${qn.questionOrder} of ${result.testQuestions.length}',
-          style: Theme.of(context)
-              .textTheme
-              .labelMedium!
-              .apply(fontSizeDelta: 3),
+          style: Theme.of(
+            context,
+          ).textTheme.labelMedium!.apply(fontSizeDelta: 3),
         ),
         headerRight: result.selectedAnswers[qn.id] == null
             ? CorrectCheckButton(
@@ -43,12 +42,12 @@ class ReviewContainer extends GetView<ReviewController> {
                 text: 'Not Answered',
               )
             : result.selectedAnswers[qn.id] == qn.correctOptionIndex
-                ? const CorrectCheckButton()
-                : const CorrectCheckButton(
-                    color: Colors.red,
-                    icon: Iconsax.close_circle_copy,
-                    text: 'Incorrect',
-                  ),
+            ? const CorrectCheckButton()
+            : const CorrectCheckButton(
+                color: Colors.red,
+                icon: Iconsax.close_circle_copy,
+                text: 'Incorrect',
+              ),
         // ── Passage ──────────────────────────────────────────────────
         passageTitle: passage?.title,
         passageContent: passage?.content,

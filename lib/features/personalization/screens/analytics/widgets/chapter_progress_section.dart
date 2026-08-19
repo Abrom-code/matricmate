@@ -9,8 +9,7 @@ class ChapterProgressSection extends StatefulWidget {
   final AnalyticsController controller;
 
   @override
-  State<ChapterProgressSection> createState() =>
-      _ChapterProgressSectionState();
+  State<ChapterProgressSection> createState() => _ChapterProgressSectionState();
 }
 
 class _ChapterProgressSectionState extends State<ChapterProgressSection> {
@@ -22,8 +21,9 @@ class _ChapterProgressSectionState extends State<ChapterProgressSection> {
     final dark = AppHelperFunctions.isDark(context);
     final chapters = widget.controller.chapterStats;
     final hasMore = chapters.length > _previewCount;
-    final visibleChapters =
-        _expanded ? chapters : chapters.take(_previewCount).toList();
+    final visibleChapters = _expanded
+        ? chapters
+        : chapters.take(_previewCount).toList();
 
     return Container(
       padding: const EdgeInsets.all(AppSizes.md),
@@ -48,9 +48,9 @@ class _ChapterProgressSectionState extends State<ChapterProgressSection> {
             children: [
               Text(
                 'Chapter progress',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               if (hasMore)
                 Text(
@@ -85,8 +85,7 @@ class _ChapterProgressSectionState extends State<ChapterProgressSection> {
                 itemCount: visibleChapters.length,
                 separatorBuilder: (_, __) =>
                     const Divider(height: 24, thickness: 0.5),
-                itemBuilder: (_, i) =>
-                    _ChapterRow(stat: visibleChapters[i]),
+                itemBuilder: (_, i) => _ChapterRow(stat: visibleChapters[i]),
               ),
             ),
 
@@ -143,8 +142,10 @@ class _ChapterRow extends StatelessWidget {
     final pct = (stat.score ?? 0.0).clamp(0.0, 100.0);
 
     Color barColor = AppColors.primary;
-    if (pct < 50) barColor = AppColors.error;
-    else if (pct < 70) barColor = AppColors.warning;
+    if (pct < 50)
+      barColor = AppColors.error;
+    else if (pct < 70)
+      barColor = AppColors.warning;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +157,9 @@ class _ChapterRow extends StatelessWidget {
               child: Text(
                 stat.title,
                 style: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w500),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -173,7 +176,9 @@ class _ChapterRow extends StatelessWidget {
                 : const Text(
                     '—',
                     style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 13),
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
           ],
         ),

@@ -1,21 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-/// Parses a lightweight tag format into a [TextSpan] tree.
-///
-/// Supported tags:
-///   [b]bold[/b]
-///   [i]italic[/i]
-///   [u]underline[/u]
-///   [s]strikethrough[/s]
-///   [bi]bold + italic[/bi]
-///   [sup]superscript[/sup]  — rendered as smaller raised text
-///   [sub]subscript[/sub]    — rendered as smaller lowered text
-///   [h]highlight[/h]        — yellow background
-///   [c=#RRGGBB]color[/c]    — e.g. [c=#FF0000]red[/c]
-///
-/// All other text is rendered with the provided [baseStyle].
-/// Tags can be nested.
+/// Parses lightweight markup tags ([b], [i], [u], [c=...], etc.) into a [TextSpan] tree.
 class RichTextParser {
   RichTextParser._();
 
@@ -24,8 +10,7 @@ class RichTextParser {
     r'\[([a-z]+(?:=#[0-9a-fA-F]{3,8})?)\]|\[/([a-z]+)\]',
   );
 
-  /// Parses [text] and returns a [TextSpan] with [baseStyle] applied to
-  /// plain segments. Inline tags override specific style properties.
+  /// Parses [text] into styled [TextSpan] with [baseStyle] fallback.
   static TextSpan parse(String text, TextStyle baseStyle) {
     // Normalize literal "\n" (two chars from DB/JSON) to real newlines
     final normalized = text.replaceAll(r'\n', '\n');
@@ -40,10 +25,7 @@ class RichTextParser {
     required TextStyle baseStyle,
     TextAlign textAlign = TextAlign.start,
   }) {
-    return Text.rich(
-      parse(text, baseStyle),
-      textAlign: textAlign,
-    );
+    return Text.rich(parse(text, baseStyle), textAlign: textAlign);
   }
 
   // ── Core recursive parser ─────────────────────────────────────────────────
@@ -62,7 +44,9 @@ class RichTextParser {
 
       // plain text before this tag
       if (match.start > cursor) {
-        out.add(TextSpan(text: text.substring(cursor, match.start), style: style));
+        out.add(
+          TextSpan(text: text.substring(cursor, match.start), style: style),
+        );
       }
 
       final openTag = match.group(1);
@@ -89,15 +73,17 @@ class RichTextParser {
           // Superscript / subscript via WidgetSpan
           final List<InlineSpan> innerSpans = [];
           _parse(inner, 0, inner.length, newStyle, innerSpans);
-          out.add(WidgetSpan(
-            alignment: tagName == 'sup'
-                ? PlaceholderAlignment.top
-                : PlaceholderAlignment.bottom,
-            child: Transform.translate(
-              offset: Offset(0, tagName == 'sup' ? -4 : 4),
-              child: Text.rich(TextSpan(children: innerSpans)),
+          out.add(
+            WidgetSpan(
+              alignment: tagName == 'sup'
+                  ? PlaceholderAlignment.top
+                  : PlaceholderAlignment.bottom,
+              child: Transform.translate(
+                offset: Offset(0, tagName == 'sup' ? -4 : 4),
+                child: Text.rich(TextSpan(children: innerSpans)),
+              ),
             ),
-          ));
+          );
         } else {
           // Regular inline span — recurse for nesting
           final List<InlineSpan> innerSpans = [];
@@ -106,8 +92,7 @@ class RichTextParser {
         }
 
         cursor = closeIdx + closePattern.length;
-        // Skip remaining iterations that fall inside the consumed range
-        // by adjusting start via the outer loop (handled by cursor check).
+        // Skip iterations falling inside the consumed range
       } else if (closeTag != null) {
         // Orphan close tag — skip
         cursor = match.end;
@@ -163,11 +148,7 @@ class RichTextParser {
     return base;
   }
 
-  /// Returns the appropriate bold text color based on the base text color.
-  ///
-  /// If the surrounding text is already dark (light mode), bold pops with
-  /// near-black. If it is light (dark mode), bold pops with pure white.
-  /// This keeps bold visually distinct without needing a BuildContext.
+  /// Returns high-contrast bold text color based on brightness.
   static Color _boldColor(TextStyle base) {
     final baseColor = base.color ?? AppColors.darkerGrey;
     // Use perceived luminance: values above 0.5 = light text = dark mode

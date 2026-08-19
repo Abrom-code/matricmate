@@ -1,8 +1,6 @@
 import 'package:matricmate/features/exam/models/result_model.dart';
 
-/// A single in-progress (paused) test draft, enriched with display info
-/// (title, time, type, subject name) pulled in via a join so the paused
-/// list screen doesn't need extra round-trips per item.
+/// Metadata for a paused test draft enriched with test and subject info.
 class PausedTestInfoModel {
   final ResultModel result;
   final String testTitle;

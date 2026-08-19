@@ -26,7 +26,6 @@ class RealtimeService {
   RealtimeChannel? _notificationsChannel;
   RealtimeChannel? _notificationReadsChannel;
 
-
   /// Start listening. Safe to call multiple times — stops existing first.
   Future<void> start(List<int> subjectIds, {required String userId}) async {
     await stop();
@@ -194,8 +193,7 @@ class RealtimeService {
       final record = payload.newRecord;
       if (record.isEmpty) return;
 
-      // Accept personal notifications for this user, or broadcast
-      // notifications (user_id is null).
+      // Accept personal or broadcast notifications (user_id is null)
       final rowUserId = record['user_id']?.toString();
       final userStream = UserController.instance.user.value.stream;
       final targetStream = record['target_stream']?.toString();
@@ -217,11 +215,10 @@ class RealtimeService {
       // Store with this user's id so local queries work correctly.
       final n = AppNotification.fromMap({...record, 'user_id': userId});
       final db = await DatabaseService.instance.database;
-      await db.insert(
-        'notifications',
-        {...n.toMap(), 'is_read': 0},
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+      await db.insert('notifications', {
+        ...n.toMap(),
+        'is_read': 0,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
       // Show OS banner for this notification
       try {

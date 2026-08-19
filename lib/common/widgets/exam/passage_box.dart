@@ -7,18 +7,11 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// A reusable collapsible passage/comprehension box.
-///
-/// Behaviour (mirrors [AppExplanationBox]):
-///   • Tap anywhere on the collapsed box  → opens it.
-///   • Tap the header row while expanded  → closes it.
-///   • Tap inside the body text           → absorbed (does NOT close).
-///
-/// State is managed internally so no toggle callback is needed from the
-/// parent. Pass [initiallyExpanded] to control the default open state.
 class AppPassageBox extends StatefulWidget {
   const AppPassageBox({
     super.key,
     this.title,
+
     /// The passage text. Pass `null` while still loading — a spinner is shown.
     this.content,
     this.initiallyExpanded = false,
@@ -54,12 +47,10 @@ class _AppPassageBoxState extends State<AppPassageBox> {
     final bgColor = dark
         ? AppColors.primary.withValues(alpha: 0.10)
         : AppColors.primary.withValues(alpha: 0.06);
-    final borderColor =
-        AppColors.primary.withValues(alpha: dark ? 0.30 : 0.25);
+    final borderColor = AppColors.primary.withValues(alpha: dark ? 0.30 : 0.25);
 
     return GestureDetector(
       // Collapsed: tap anywhere → open.
-      // Expanded:  this outer tap is blocked by the header's own detector.
       onTap: _expanded ? null : _toggle,
       child: Container(
         width: double.infinity,
@@ -88,12 +79,11 @@ class _AppPassageBoxState extends State<AppPassageBox> {
                     Expanded(
                       child: Text(
                         displayTitle,
-                        style:
-                            Theme.of(context).textTheme.labelSmall!.copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                     Icon(

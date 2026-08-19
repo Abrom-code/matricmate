@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 
-/// SignupController is registered permanently in GeneralBinding.
-/// This binding is intentionally empty.
+/// Controller is registered permanently in GeneralBinding; this binding is empty.
 class SignupBinding extends Bindings {
   @override
   void dependencies() {}

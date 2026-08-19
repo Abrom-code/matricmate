@@ -5,9 +5,7 @@ import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
-/// A reusable "resume in-progress test" banner.
-///
-/// Tapping it opens the [ReadyDialog] so the user can resume their paused test.
+/// Reusable banner prompting to resume paused test.
 class ResumeBanner extends StatelessWidget {
   const ResumeBanner({
     super.key,
@@ -141,9 +139,7 @@ class ResumeBanner extends StatelessWidget {
             ),
 
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sm,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
               child: Icon(
                 Icons.chevron_right_rounded,
                 color: cs.onSurface.withValues(alpha: 0.35),

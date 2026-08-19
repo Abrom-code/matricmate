@@ -32,16 +32,19 @@ class SubjectPerformanceSection extends StatelessWidget {
         children: [
           Text(
             'Performance by subject',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSizes.spaceBtwItems),
           if (stats.isEmpty)
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
-                child: Text('No data yet', style: TextStyle(color: AppColors.textSecondary)),
+                child: Text(
+                  'No data yet',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
               ),
             )
           else
@@ -49,7 +52,8 @@ class SubjectPerformanceSection extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: stats.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSizes.spaceBtwItems),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: AppSizes.spaceBtwItems),
               itemBuilder: (_, i) => _SubjectBar(stat: stats[i]),
             ),
         ],

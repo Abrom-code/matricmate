@@ -50,9 +50,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Clear all notifications?'),
-        content: const Text(
-          'This removes all notifications from your device.',
-        ),
+        content: const Text('This removes all notifications from your device.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -92,8 +90,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   // ── Date-grouped list builder ──────────────────────────────────────
 
-  /// Builds a flat list of widgets with section headers inserted
-  /// between date groups.
+  /// Builds list of notifications grouped by date headers.
   List<Widget> _buildGroupedList(List<AppNotification> items) {
     final widgets = <Widget>[];
     String? lastLabel;
@@ -192,4 +189,3 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 }
-

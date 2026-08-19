@@ -15,19 +15,16 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6C757D);
   static const Color textWhite = Colors.white;
 
-  // Background Colors
-  // Light scaffold: warm off-white — cards sit on this as elevated white surfaces
+  // Light scaffold: warm off-white background
   static const Color light = Color(0xFFF2F3F5);
   // Dark scaffold: near-black base — deepest layer
   static const Color dark = Color(0xFF0F0F0F);
   static const Color primaryBackground = Color(0xFFF3F5FF);
 
-  // Surface / Card Colors
-  // Light: pure white cards pop off the off-white scaffold
+  // Light surface: pure white cards
   static const Color lightContainer = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFEDF0ED);
-  // Dark depth layers — each step is visibly lighter than the one below
-  // Scaffold base:  #0F0F0F  (set in AppTheme)
+  // Dark depth layers: each step lifts off the background
   static const Color darkCard = Color(0xFF1E1E1E); // cards on scaffold
   static const Color darkSurface = Color(
     0xFF272727,

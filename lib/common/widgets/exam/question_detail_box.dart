@@ -14,20 +14,7 @@ import 'package:matricmate/utils/helpers/bb_table_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
-/// A reusable question detail card used on both the bookmark detail screen
-/// and the exam review screen.
-///
-/// It renders:
-///  - A configurable header row (slot for left and right widgets)
-///  - Collapsible passage section (if the question has a passage)
-///  - Question text via [QuestionSection]
-///  - Optional image
-///  - Choice buttons with correct/wrong highlighting
-///  - Collapsible [AppExplanationBox] with EN/AM toggle
-///
-/// The caller is responsible for managing reactive state (isExpanded,
-/// isPassageExpanded, passages, languageSelected) and passing simple
-/// snapshots + callbacks down — keeping this widget stateless and reusable.
+/// Reusable question detail card for bookmarks and review screens.
 class QuestionDetailBox extends StatelessWidget {
   const QuestionDetailBox({
     super.key,
@@ -51,12 +38,10 @@ class QuestionDetailBox extends StatelessWidget {
 
   final QuestionModel question;
 
-  /// Widget shown on the left side of the header row (e.g. subject chip or
-  /// question-number text).
+  /// Widget shown on left side of header row.
   final Widget headerLeft;
 
-  /// Widget shown on the right side of the header row (e.g. result badge or
-  /// "Answer shown" label).
+  /// Widget shown on right side of header row.
   final Widget headerRight;
 
   // Passage
@@ -67,8 +52,7 @@ class QuestionDetailBox extends StatelessWidget {
   final bool passageExpanded;
   final VoidCallback? onPassageToggle;
 
-  /// The index that was selected by the user, or [question.correctOptionIndex]
-  /// when always showing the answer (bookmark mode).
+  /// User-selected index or correct option index.
   final int selectedAnswerIndex;
 
   // Explanation
@@ -165,8 +149,7 @@ class _PassageSection extends StatelessWidget {
 
   final bool dark;
 
-  /// Display title for the passage toggle button. Falls back to
-  /// 'Reading Passage' when null or empty.
+  /// Title for passage toggle button.
   final String? title;
 
   /// Passage body text. Pass `null` while loading to show a spinner.
@@ -176,8 +159,9 @@ class _PassageSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayTitle =
-        (title != null && title!.isNotEmpty) ? title! : 'Reading Passage';
+    final displayTitle = (title != null && title!.isNotEmpty)
+        ? title!
+        : 'Reading Passage';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,10 +195,9 @@ class _PassageSection extends StatelessWidget {
                 Expanded(
                   child: Text(
                     displayTitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelLarge!
-                        .copyWith(color: AppColors.primary),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelLarge!.copyWith(color: AppColors.primary),
                   ),
                 ),
                 Icon(
@@ -266,9 +249,6 @@ class _PassageSection extends StatelessWidget {
 // ── Shared rich-content renderer ─────────────────────────────────────────────
 
 /// Renders [text] that may contain BBCode tags and/or [table] blocks.
-///
-/// - No table → single [Text.rich] (zero overhead).
-/// - Has table(s) → [Column] of interleaved [Text.rich] + [BBTableWidget].
 class _RichContent extends StatelessWidget {
   const _RichContent({required this.text, required this.style});
 

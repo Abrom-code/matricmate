@@ -76,7 +76,6 @@ class PaymentConfigService {
     ),
   ];
 
-  // Public reactive state──
   /// All currently active payment methods.
   final methods = <PaymentConfig>[].obs;
 

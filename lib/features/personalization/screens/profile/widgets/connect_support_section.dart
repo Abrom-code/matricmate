@@ -26,7 +26,8 @@ class ConnectSupportSection extends StatelessWidget {
             title: 'Join Telegram',
             trailing: const Icon(Icons.keyboard_arrow_right),
             onTap: () => AppHelperFunctions.openUrl(
-                PaymentConfigService.instance.telegramLink.value),
+              PaymentConfigService.instance.telegramLink.value,
+            ),
           ),
           AppListTile(
             icon: const Icon(Iconsax.star_1_copy, color: Colors.amber),
@@ -43,8 +44,8 @@ class ConnectSupportSection extends StatelessWidget {
               onTap: shareLink.isEmpty
                   ? null
                   : () => Share.share(
-                        'Check out MatricMate to prepare for your exams! $shareLink',
-                      ),
+                      'Check out MatricMate to prepare for your exams! $shareLink',
+                    ),
             );
           }),
         ],

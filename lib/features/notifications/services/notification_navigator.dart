@@ -14,25 +14,7 @@ import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
 
-/// Handles "tap a push notification (or in-app notification row) → land on
-/// the exact test's ReadyDialog", the same way tapping a TestTile does.
-///
-/// Because opening a test requires the right list controller
-/// (ChapterTestController / GradeTestController / ExamsController) to
-/// finish loading first, this navigates to the matching list screen with
-/// the right arguments, waits for that controller's isLoading to flip to
-/// false, finds the test by id, then opens ReadyDialog exactly as the
-/// tiles in exam_list.dart / chapter_test.dart / grade_test.dart do.
-///
-/// Expected payload keys (set by the Supabase Edge Function / trigger):
-///   type        : 'chapter' | 'grade' | 'entrance' | 'model'
-///   test_id     : the test's numeric id
-///   subject_id  : parent subject id
-///   subject     : subject display name
-///   grade       : (chapter/grade only)
-///   chapter_id  : (chapter only)
-///   chapter     : (chapter only) chapter title
-///   chapter_number : (chapter only)
+/// Handles deep-linking from notifications directly to the target test dialog.
 class NotificationTestOpener {
   NotificationTestOpener._();
 
@@ -189,9 +171,7 @@ class NotificationTestOpener {
     );
   }
 
-  /// Controllers registered via a screen's `binding:` aren't instantly
-  /// available the moment Get.to() returns — poll briefly until Get.find
-  /// succeeds (bounded so a broken deep link can't hang forever).
+  /// Bounded poll for lazy controller registration after navigation.
   static Future<T?> _waitForController<T>(T Function() find) async {
     for (int i = 0; i < 20; i++) {
       try {

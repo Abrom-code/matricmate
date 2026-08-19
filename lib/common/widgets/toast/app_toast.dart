@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:matricmate/utils/constants/snackbar_colors.dart';
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Public API
-// ═════════════════════════════════════════════════════════════════════════════
+// Public API for toast notifications
 
 /// Variant drives the accent color and icon.
 enum ToastVariant { success, error, warning, info }
@@ -15,8 +13,6 @@ enum ToastVariant { success, error, warning, info }
 enum ToastPosition { bottomCenter, bottomLeft, bottomRight, topCenter }
 
 /// Public entry-point. Call from anywhere:
-///   AppToast.success('Saved', message: 'Changes saved successfully');
-///   AppToast.error('Failed');
 class AppToast {
   AppToast._();
 
@@ -27,16 +23,15 @@ class AppToast {
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 4),
     ToastPosition position = ToastPosition.bottomCenter,
-  }) =>
-      _show(
-        title,
-        message: message,
-        variant: ToastVariant.success,
-        actionLabel: actionLabel,
-        onAction: onAction,
-        duration: duration,
-        position: position,
-      );
+  }) => _show(
+    title,
+    message: message,
+    variant: ToastVariant.success,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    duration: duration,
+    position: position,
+  );
 
   static void error(
     String title, {
@@ -46,16 +41,15 @@ class AppToast {
     // Errors linger longer and never auto-dismiss when null is passed
     Duration? duration = const Duration(seconds: 7),
     ToastPosition position = ToastPosition.bottomCenter,
-  }) =>
-      _show(
-        title,
-        message: message,
-        variant: ToastVariant.error,
-        actionLabel: actionLabel,
-        onAction: onAction,
-        duration: duration,
-        position: position,
-      );
+  }) => _show(
+    title,
+    message: message,
+    variant: ToastVariant.error,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    duration: duration,
+    position: position,
+  );
 
   static void warning(
     String title, {
@@ -64,16 +58,15 @@ class AppToast {
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 5),
     ToastPosition position = ToastPosition.bottomCenter,
-  }) =>
-      _show(
-        title,
-        message: message,
-        variant: ToastVariant.warning,
-        actionLabel: actionLabel,
-        onAction: onAction,
-        duration: duration,
-        position: position,
-      );
+  }) => _show(
+    title,
+    message: message,
+    variant: ToastVariant.warning,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    duration: duration,
+    position: position,
+  );
 
   static void info(
     String title, {
@@ -82,16 +75,15 @@ class AppToast {
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 4),
     ToastPosition position = ToastPosition.bottomCenter,
-  }) =>
-      _show(
-        title,
-        message: message,
-        variant: ToastVariant.info,
-        actionLabel: actionLabel,
-        onAction: onAction,
-        duration: duration,
-        position: position,
-      );
+  }) => _show(
+    title,
+    message: message,
+    variant: ToastVariant.info,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    duration: duration,
+    position: position,
+  );
 
   static void _show(
     String title, {
@@ -120,15 +112,9 @@ class AppToast {
   static void dismissAll() => ToastOverlay.instance.dismissAll();
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Overlay host widget — insert once at the app root via builder:
-// ═════════════════════════════════════════════════════════════════════════════
+// Overlay host widget — insert at app root
 
-/// Wrap around your app's child in `GetMaterialApp(builder:)`.
-/// This inserts the overlay layer and wires up the manager.
-///
-/// Usage in app.dart:
-///   builder: (context, child) => ToastHost(child: child ?? const SizedBox()),
+/// Root wrapper widget that hosts the floating toast overlay.
 class ToastHost extends StatefulWidget {
   const ToastHost({super.key, required this.child});
   final Widget child;
@@ -177,9 +163,7 @@ class _ToastHostState extends State<ToastHost> {
   }
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Overlay manager (singleton)
-// ═════════════════════════════════════════════════════════════════════════════
+// Overlay manager singleton
 
 class ToastOverlay {
   ToastOverlay._();
@@ -225,9 +209,7 @@ class ToastOverlay {
   }
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Internal data model
-// ═════════════════════════════════════════════════════════════════════════════
+// Internal toast data model
 
 class _ToastItem {
   _ToastItem({
@@ -260,8 +242,7 @@ class _ToastItem {
   void pauseTimer() => _autoDismissTimer?.cancel();
 
   void resumeTimer(VoidCallback onDone) {
-    // Simplified resume: restart with remaining ~half — full remaining-time
-    // tracking adds complexity; for mobile this is fine.
+    // Simplified timer resume for animated toasts
     if (duration == null) return;
     _autoDismissTimer = Timer(
       Duration(milliseconds: (duration!.inMilliseconds * 0.5).round()),
@@ -272,9 +253,7 @@ class _ToastItem {
   void _cancelTimer() => _autoDismissTimer?.cancel();
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Stack layout widget
-// ═════════════════════════════════════════════════════════════════════════════
+// Stack layout widget for toast overlays
 
 class _ToastStack extends StatelessWidget {
   const _ToastStack({required this.items});
@@ -352,8 +331,9 @@ class _ToastGroup extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 400),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            verticalDirection:
-                isTop ? VerticalDirection.down : VerticalDirection.up,
+            verticalDirection: isTop
+                ? VerticalDirection.down
+                : VerticalDirection.up,
             children: [
               for (int i = 0; i < items.length; i++) ...[
                 if (i > 0) const SizedBox(height: 8),
@@ -361,8 +341,7 @@ class _ToastGroup extends StatelessWidget {
                   key: ValueKey(items[i].id),
                   item: items[i],
                   slideFromTop: isTop,
-                  onDismiss: () =>
-                      ToastOverlay.instance._dismiss(items[i].id),
+                  onDismiss: () => ToastOverlay.instance._dismiss(items[i].id),
                 ),
               ],
             ],
@@ -373,9 +352,7 @@ class _ToastGroup extends StatelessWidget {
   }
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
 // Individual toast widget
-// ═════════════════════════════════════════════════════════════════════════════
 
 class _ToastWidget extends StatefulWidget {
   const _ToastWidget({
@@ -412,14 +389,18 @@ class _ToastWidgetState extends State<_ToastWidget>
       duration: const Duration(milliseconds: 240),
     );
 
-    _fadeAnim = CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOut)
-        .drive(Tween(begin: 0.0, end: 1.0));
+    _fadeAnim = CurvedAnimation(
+      parent: _enterCtrl,
+      curve: Curves.easeOut,
+    ).drive(Tween(begin: 0.0, end: 1.0));
 
-    final slideBegin =
-        widget.slideFromTop ? const Offset(0, -0.25) : const Offset(0, 0.25);
-    _slideAnim =
-        CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOutCubic)
-            .drive(Tween(begin: slideBegin, end: Offset.zero));
+    final slideBegin = widget.slideFromTop
+        ? const Offset(0, -0.25)
+        : const Offset(0, 0.25);
+    _slideAnim = CurvedAnimation(
+      parent: _enterCtrl,
+      curve: Curves.easeOutCubic,
+    ).drive(Tween(begin: slideBegin, end: Offset.zero));
 
     // ── Progress bar animation ────────────────────────────────────────
     final duration = widget.item.duration;
@@ -462,8 +443,8 @@ class _ToastWidgetState extends State<_ToastWidget>
     if (_dismissed) return;
     final remaining = _progressCtrl.value;
     if (remaining <= 0) return;
-    final remainingMs =
-        (widget.item.duration!.inMilliseconds * remaining).round();
+    final remainingMs = (widget.item.duration!.inMilliseconds * remaining)
+        .round();
     _progressCtrl.animateTo(
       0.0,
       duration: Duration(milliseconds: remainingMs),
@@ -516,9 +497,7 @@ class _ToastWidgetState extends State<_ToastWidget>
   }
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Toast card (visual)
-// ═════════════════════════════════════════════════════════════════════════════
+// Toast card visual widget
 
 class _ToastCard extends StatelessWidget {
   const _ToastCard({

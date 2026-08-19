@@ -14,8 +14,7 @@ class AnalyticsSummaryGrid extends StatelessWidget {
     final isLandscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
     return GridView.count(
-      // Landscape: 4 cards in a single row — no wasted horizontal space.
-      // Portrait: 2×2 grid as before.
+      // Responsive layout: 4 cards inline for landscape, 2x2 grid for portrait
       crossAxisCount: isLandscape ? 4 : 2,
       crossAxisSpacing: AppSizes.spaceBtwItems,
       mainAxisSpacing: AppSizes.spaceBtwItems,

@@ -59,8 +59,8 @@ class PaymentScreen extends StatelessWidget {
               title: payment.label,
               subtitle: payment.account.isNotEmpty
                   ? payment.account.length < 15
-                      ? payment.account
-                      : '${payment.account.substring(0, 12)}...'
+                        ? payment.account
+                        : '${payment.account.substring(0, 12)}...'
                   : '',
               icon: payment.icon,
               context: context,

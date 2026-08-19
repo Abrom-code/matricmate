@@ -8,10 +8,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-/// Parses the year and code from an entrance exam title.
-/// Titles follow the pattern: first number = year, last number = code.
-/// e.g. "2023 Physics 4" → (year: 2023, code: 4)
-/// Returns null for either value if not found.
+/// Parses year and code from entrance exam title (e.g. "2023 Physics 4").
 ({int? year, int? code}) _parseEntranceTitle(String title) {
   final numbers = RegExp(
     r'\d+',
@@ -131,8 +128,7 @@ class ReadyDialog extends StatelessWidget {
                     const SizedBox(height: AppSizes.spaceBtwItems),
                   ],
 
-                  // ── Action buttons ────────────────────────────────────
-                  // Resume (only when draft exists)
+                  // Resume button (shown when in-progress draft exists)
                   if (hasDraft) ...[
                     Divider(color: AppColors.darkGrey.withValues(alpha: 0.15)),
 

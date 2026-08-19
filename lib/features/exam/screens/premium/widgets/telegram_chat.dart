@@ -37,7 +37,10 @@ class TelegramChatButton extends StatelessWidget {
               children: [
                 Icon(Icons.telegram, size: 25, color: Colors.blue),
                 SizedBox(width: 10),
-                Text('Chat on Telegram', style: TextStyle(color: AppColors.primary)),
+                Text(
+                  'Chat on Telegram',
+                  style: TextStyle(color: AppColors.primary),
+                ),
               ],
             ),
           ),

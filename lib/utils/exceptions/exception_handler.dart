@@ -161,8 +161,7 @@ class AppExceptionHandler {
     }
   }
 
-  /// Catches errors that wrap a SocketException inside a ClientException
-  /// or other wrapper types from the http/dio stack.
+  /// Detects wrapped SocketExceptions from http/dio clients.
   static bool _isNetworkError(Object e) {
     final s = e.toString().toLowerCase();
     return s.contains('socketexception') ||

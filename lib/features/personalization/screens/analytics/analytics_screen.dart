@@ -48,10 +48,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               : '';
           return Text(
             label,
-            style: const TextStyle(
-              color: AppColors.darkGrey,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: AppColors.darkGrey, fontSize: 12),
           );
         }),
         actions: [
@@ -107,8 +104,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             builder: (context, constraints) {
               final isLandscape =
                   MediaQuery.orientationOf(context) == Orientation.landscape;
-              // In landscape, cap content width and center it so charts and
-              // cards don't stretch across the entire wide screen.
+              // Center and constrain content width in landscape
               final content = SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(AppSizes.defaultSpace),

@@ -18,10 +18,7 @@ class AppCircularLoading extends StatelessWidget {
           const SizedBox(height: AppSizes.spaceBtwItems),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.darkGrey,
-            ),
+            style: const TextStyle(fontSize: 13, color: AppColors.darkGrey),
           ),
         ],
       ),
@@ -79,8 +76,8 @@ class _AppPulsingDotsState extends State<AppPulsingDots>
             final opacity = t < 0.4
                 ? (t / 0.4)
                 : t < 0.8
-                    ? 1.0 - ((t - 0.4) / 0.4)
-                    : 0.0;
+                ? 1.0 - ((t - 0.4) / 0.4)
+                : 0.0;
             return Container(
               margin: EdgeInsets.symmetric(horizontal: widget.dotSpacing),
               width: widget.dotSize,

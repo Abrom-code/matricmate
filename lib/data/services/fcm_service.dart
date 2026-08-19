@@ -14,8 +14,7 @@ import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 
-/// Top-level FCM background handler — runs in a separate isolate.
-/// Shows local notification for data-only messages; notification messages are handled by FCM SDK.
+/// Top-level FCM background handler for isolate message processing.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Guard against duplicate-app if isolate is reused
@@ -40,7 +39,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   await plugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(channel);
 
   await plugin.initialize(
@@ -51,7 +51,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   );
 
   final title = message.data['title']?.toString();
-  final body  = message.data['body']?.toString();
+  final body = message.data['body']?.toString();
 
   if (title != null && body != null) {
     await plugin.show(
@@ -72,7 +72,6 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     );
   }
 }
-
 
 /// Wraps FCM + flutter_local_notifications for token management, foreground banners, and tap routing.
 class FcmService {
@@ -197,17 +196,16 @@ class FcmService {
     // Startup race guard: retry token save once userId loads
     if (UserController.instance.user.value.id.isEmpty) {
       Worker? startupSaveWorker;
-      startupSaveWorker = ever(
-        UserController.instance.user,
-        (UserModel u) async {
-          if (u.id.isNotEmpty) {
-            startupSaveWorker?.dispose();
-            startupSaveWorker = null;
-            await _saveTokenIfLoggedIn(token);
-            await _subscribeToStreamTopics();
-          }
-        },
-      );
+      startupSaveWorker = ever(UserController.instance.user, (
+        UserModel u,
+      ) async {
+        if (u.id.isNotEmpty) {
+          startupSaveWorker?.dispose();
+          startupSaveWorker = null;
+          await _saveTokenIfLoggedIn(token);
+          await _subscribeToStreamTopics();
+        }
+      });
     }
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
@@ -222,7 +220,8 @@ class FcmService {
     }
 
     // App cold-launched by tapping a local notification (Realtime banner)
-    final launchDetails = await _localNotifications.getNotificationAppLaunchDetails();
+    final launchDetails = await _localNotifications
+        .getNotificationAppLaunchDetails();
     if (launchDetails?.didNotificationLaunchApp == true) {
       final payload = launchDetails!.notificationResponse?.payload;
       if (payload != null && payload.isNotEmpty) {
@@ -290,8 +289,12 @@ class FcmService {
     if (type != 'announcement' && type != 'new_content') {
       // Show in-app snackbar for payment/test notifications
       if (type == 'payment_status' || type == 'payment') {
-        final title = notification?.title ?? message.data['title']?.toString() ?? 'Payment Update';
-        final body  = notification?.body  ?? message.data['body']?.toString()  ?? '';
+        final title =
+            notification?.title ??
+            message.data['title']?.toString() ??
+            'Payment Update';
+        final body =
+            notification?.body ?? message.data['body']?.toString() ?? '';
         Get.snackbar(
           title,
           body,
@@ -300,7 +303,7 @@ class FcmService {
         );
       } else if (type == 'new_test') {
         final title = notification?.title ?? 'New Test Available';
-        final body  = notification?.body  ?? '';
+        final body = notification?.body ?? '';
         Get.snackbar(
           title,
           body,
@@ -312,7 +315,7 @@ class FcmService {
 
     // Show OS banner manually — FCM suppresses it in foreground
     final title = notification?.title ?? message.data['title']?.toString();
-    final body  = notification?.body  ?? message.data['body']?.toString();
+    final body = notification?.body ?? message.data['body']?.toString();
     if (title != null && body != null) {
       await _localNotifications.show(
         id: message.hashCode & 0x7FFFFFFF,

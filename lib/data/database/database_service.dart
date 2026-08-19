@@ -33,7 +33,9 @@ class DatabaseService extends GetxController {
             'ALTER TABLE questions ADD COLUMN section_id INTEGER',
             'ALTER TABLE questions ADD COLUMN section_title TEXT',
           ]) {
-            try { await db.execute(sql); } catch (_) {}
+            try {
+              await db.execute(sql);
+            } catch (_) {}
           }
         }
         if (oldVersion < 4) {
@@ -143,9 +145,7 @@ class DatabaseService extends GetxController {
         if (oldVersion < 10) {
           // Add created_at to user table for notification filtering
           try {
-            await db.execute(
-              'ALTER TABLE user ADD COLUMN created_at TEXT',
-            );
+            await db.execute('ALTER TABLE user ADD COLUMN created_at TEXT');
           } catch (_) {}
           // Track dismissed notifications to avoid re-inserting during sync
           try {
@@ -171,7 +171,7 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getUser() async {
     try {
       final db = await database;
-      return db.query('user');
+      return await db.query('user');
     } catch (e) {
       rethrow;
     }
@@ -181,7 +181,7 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getSubjects() async {
     try {
       final db = await database;
-      return db.query('subjects');
+      return await db.query('subjects');
     } catch (e) {
       rethrow;
     }
@@ -190,7 +190,7 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getChapters() async {
     try {
       final db = await database;
-      return db.query('chapters');
+      return await db.query('chapters');
     } catch (e) {
       rethrow;
     }
@@ -199,7 +199,7 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getQuestions() async {
     try {
       final db = await database;
-      return db.query('questions');
+      return await db.query('questions');
     } catch (e) {
       rethrow;
     }
@@ -208,7 +208,9 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getDownloadedSubjects() async {
     try {
       final db = await database;
-      return db.rawQuery('SELECT * FROM subjects WHERE is_downloaded = 1');
+      return await db.rawQuery(
+        'SELECT * FROM subjects WHERE is_downloaded = 1',
+      );
     } catch (e) {
       rethrow;
     }
@@ -218,7 +220,7 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getSubjectChapters(int subjectId) async {
     try {
       final db = await database;
-      return db.rawQuery('SELECT * FROM chapters WHERE subject_id =?', [
+      return await db.rawQuery('SELECT * FROM chapters WHERE subject_id =?', [
         subjectId,
       ]);
     } catch (e) {
@@ -254,7 +256,7 @@ class DatabaseService extends GetxController {
         args.add(chapterId);
       }
 
-      return db.rawQuery(query, args);
+      return await db.rawQuery(query, args);
     } catch (e) {
       rethrow;
     }
@@ -266,7 +268,7 @@ class DatabaseService extends GetxController {
   ) async {
     try {
       final db = await database;
-      return db.rawQuery(
+      return await db.rawQuery(
         'SELECT * FROM questions WHERE subject_id = (SELECT id FROM subjects WHERE name = ?)',
         [subject],
       );
@@ -280,7 +282,11 @@ class DatabaseService extends GetxController {
     try {
       final db = await database;
 
-      return db.query('tests', where: 'subject_id = ?', whereArgs: [subjectId]);
+      return await db.query(
+        'tests',
+        where: 'subject_id = ?',
+        whereArgs: [subjectId],
+      );
     } catch (e) {
       rethrow;
     }
@@ -291,7 +297,7 @@ class DatabaseService extends GetxController {
     try {
       final db = await database;
 
-      return db.query(
+      return await db.query(
         'questions',
         where: 'test_id = ?',
         whereArgs: [testId],
@@ -369,8 +375,7 @@ class DatabaseService extends GetxController {
         args = [userId, ...types];
       }
 
-      final rows = await db.rawQuery(
-        '''
+      final rows = await db.rawQuery('''
         SELECT r.*, t.title AS test_title, t.time AS test_time, t.id AS t_id
         FROM results r
         JOIN tests t ON r.test_id = t.id
@@ -378,9 +383,7 @@ class DatabaseService extends GetxController {
         $typeFilter
         ORDER BY r.rowid DESC
         LIMIT 1
-        ''',
-        args,
-      );
+        ''', args);
       if (rows.isEmpty) return null;
       return rows.first;
     } catch (e) {
@@ -461,8 +464,6 @@ class DatabaseService extends GetxController {
       rethrow;
     }
   }
-
-
 
   Future<void> clearAllData() async {
     try {

@@ -20,14 +20,16 @@ class WeakestAreasCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: dark ? 0.12 : 0.06),
         borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
-        border: Border.all(
-          color: AppColors.error.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 22),
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.error,
+            size: 22,
+          ),
           const SizedBox(width: AppSizes.sm),
           Expanded(
             child: Column(
@@ -49,7 +51,9 @@ class WeakestAreasCard extends StatelessWidget {
                       '${area.name}  ${area.avgScore.toStringAsFixed(0)}%',
                       style: TextStyle(
                         fontSize: 13,
-                        color: dark ? AppColors.white.withValues(alpha: 0.7) : AppColors.darkerGrey,
+                        color: dark
+                            ? AppColors.white.withValues(alpha: 0.7)
+                            : AppColors.darkerGrey,
                       ),
                     ),
                   ),

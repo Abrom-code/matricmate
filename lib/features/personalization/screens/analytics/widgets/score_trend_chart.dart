@@ -32,9 +32,9 @@ class ScoreTrendChart extends StatelessWidget {
         children: [
           Text(
             'Score trend',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSizes.spaceBtwItems),
           SizedBox(
@@ -58,15 +58,24 @@ class ScoreTrendChart extends StatelessWidget {
             children: [
               Text(
                 points.isNotEmpty ? 'TEST 1' : '',
-                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                ),
               ),
               Text(
                 points.length > 2 ? 'LAST ${points.length} TESTS' : '',
-                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                ),
               ),
               Text(
                 points.isNotEmpty ? 'TEST ${points.length}' : '',
-                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -90,7 +99,10 @@ class _LinePainter extends CustomPainter {
 
     Offset toOffset(TrendPoint p) {
       final x = p.index / (points.length - 1) * size.width;
-      final y = size.height - ((p.score - minScore) / range * (size.height * 0.85) + size.height * 0.05);
+      final y =
+          size.height -
+          ((p.score - minScore) / range * (size.height * 0.85) +
+              size.height * 0.05);
       return Offset(x, y);
     }
 

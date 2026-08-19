@@ -42,12 +42,12 @@ class EntranceSubjectTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
           onTap: isDownloaded && total > 0
               ? () => Get.toNamed(
-                    Routes.entranceExams,
-                    arguments: {
-                      'subject_id': subject.id,
-                      'subject': subject.name,
-                    },
-                  )
+                  Routes.entranceExams,
+                  arguments: {
+                    'subject_id': subject.id,
+                    'subject': subject.name,
+                  },
+                )
               : null,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -89,10 +89,9 @@ class EntranceSubjectTile extends StatelessWidget {
                     children: [
                       Text(
                         subject.name,
-                        style:
-                            Theme.of(context).textTheme.titleSmall!.copyWith(
-                                  color: AppColors.primary,
-                                ),
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                       const SizedBox(height: 3),
                       Text(

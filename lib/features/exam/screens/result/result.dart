@@ -21,10 +21,9 @@ class ResultScreen extends GetView<ResultController> {
       appBar: Appbar(
         title: Text(
           'Your Result',
-          style: Theme.of(context)
-              .textTheme
-              .headlineMedium!
-              .apply(color: AppColors.white),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineMedium!.apply(color: AppColors.white),
         ),
         centerTitle: true,
       ),
@@ -40,8 +39,10 @@ class ResultScreen extends GetView<ResultController> {
               final scoreText = Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('TEST RESULT',
-                      style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'TEST RESULT',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: AppSizes.spaceBtwItems / 2),
                   Text(
                     '${result.correctAnswers}/${result.testQuestions.length}',

@@ -16,7 +16,6 @@ class PremiumBottomSheet extends StatelessWidget {
 
     return ConstrainedBox(
       // Cap at 90 % of screen height so the sheet is always fully visible,
-      // even in landscape where the screen is short.
       constraints: BoxConstraints(maxHeight: screenHeight * 0.90),
       child: Container(
         decoration: BoxDecoration(
@@ -86,38 +85,41 @@ class PremiumBottomSheet extends StatelessWidget {
               const SizedBox(height: 20),
 
               /// BUTTON
-              Obx(() => Container(
-                width: double.infinity,
-                height: 55,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.green, AppColors.primary, Colors.green],
+              Obx(
+                () => Container(
+                  width: double.infinity,
+                  height: 55,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.green, AppColors.primary, Colors.green],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () => Get.offNamed(Routes.premium),
+                    child: Text(
+                      'Premium (${PaymentConfigService.instance.subscriptionPrice.value} birr)',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  onPressed: () => Get.offNamed(Routes.premium),
-                  child: Text(
-                    'Premium (${PaymentConfigService.instance.subscriptionPrice.value} birr)',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
                 ),
-              )),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-
 
   /// FEATURE TILE
   static Widget _featureTile(

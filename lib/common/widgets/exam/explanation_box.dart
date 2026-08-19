@@ -9,12 +9,6 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// A reusable collapsible explanation box used on both the question screen
-/// and the review screen.
-///
-/// - Tap anywhere on the box to expand/collapse.
-/// - Language toggle pill is only visible when expanded.
-/// - [languageSelected] is an [RxString] so it reactively rebuilds.
-/// - [onLanguageChange] switches the language without collapsing the box.
 class AppExplanationBox extends StatelessWidget {
   const AppExplanationBox({
     super.key,
@@ -85,7 +79,6 @@ class AppExplanationBox extends StatelessWidget {
                   Row(
                     children: [
                       // language toggle — absorbs its tap so it doesn't
-                      // bubble up and trigger the outer toggle
                       if (expanded)
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
@@ -143,7 +136,8 @@ class AppExplanationBox extends StatelessWidget {
                             final dx = details.primaryVelocity ?? 0;
                             if (dx < -200 && languageSelected.value != 'AM') {
                               onLanguageChange('AM');
-                            } else if (dx > 200 && languageSelected.value != 'EN') {
+                            } else if (dx > 200 &&
+                                languageSelected.value != 'EN') {
                               onLanguageChange('EN');
                             }
                           },
@@ -157,7 +151,9 @@ class AppExplanationBox extends StatelessWidget {
                                 if (BBTableParser.containsTable(text))
                                   ..._buildSegments(text, baseStyle)
                                 else
-                                  Text.rich(RichTextParser.parse(text, baseStyle)),
+                                  Text.rich(
+                                    RichTextParser.parse(text, baseStyle),
+                                  ),
                                 // ── Optional explanation image ─────────────────────
                                 if (explanationImageUrl != null &&
                                     explanationImageUrl!.isNotEmpty) ...[
@@ -173,7 +169,9 @@ class AppExplanationBox extends StatelessWidget {
                                     child: Icon(
                                       Icons.keyboard_arrow_up_rounded,
                                       size: 20,
-                                      color: AppColors.primary.withValues(alpha: 0.8),
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.8,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -196,8 +194,6 @@ class AppExplanationBox extends StatelessWidget {
 // ── Segment renderer helper ───────────────────────────────────────────────────
 
 /// Converts BBTableParser segments into a flat list of widgets for use inside
-/// a [Column]. Plain-text segments go through [RichTextParser]; table segments
-/// are rendered by [BBTableWidget].
 List<Widget> _buildSegments(String text, TextStyle baseStyle) {
   final segments = BBTableParser.splitSegments(text);
   final widgets = <Widget>[];

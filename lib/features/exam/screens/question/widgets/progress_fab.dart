@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-/// FAB that shows a progress ring around a grid icon.
-/// [onPressed] opens the question navigator sheet.
+/// Floating action button with progress ring opening question navigator.
 class ProgressFab extends StatelessWidget {
   const ProgressFab({
     super.key,
@@ -78,7 +77,10 @@ class ProgressRingPainter extends CustomPainter {
     );
 
     canvas.drawArc(
-      rect, -1.5708, 6.2832, false,
+      rect,
+      -1.5708,
+      6.2832,
+      false,
       Paint()
         ..color = trackColor
         ..style = PaintingStyle.stroke
@@ -88,7 +90,10 @@ class ProgressRingPainter extends CustomPainter {
 
     if (progress > 0) {
       canvas.drawArc(
-        rect, -1.5708, 6.2832 * progress, false,
+        rect,
+        -1.5708,
+        6.2832 * progress,
+        false,
         Paint()
           ..color = ringColor
           ..style = PaintingStyle.stroke

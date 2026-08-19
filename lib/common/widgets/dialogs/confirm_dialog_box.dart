@@ -98,9 +98,7 @@ class AppDialogBoxes {
 
           Obx(
             () => ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(88, 50),
-              ),
+              style: ElevatedButton.styleFrom(minimumSize: const Size(88, 50)),
               onPressed: ctrl.isUpdating.value || ctrl.trials.value <= 0
                   ? null
                   : () async {

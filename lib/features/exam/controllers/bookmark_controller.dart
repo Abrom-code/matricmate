@@ -35,8 +35,7 @@ class BookmarkController extends GetxController {
   // testId → type string cache (populated during loadBookmarks)
   final Map<int, String> _testTypeCache = {};
 
-  /// Returns the display label for a question's test type.
-  /// Falls back to 'Unknown' if the test isn't cached yet.
+  /// Returns display label for question test type.
   String testType(int testId) => _testTypeCache[testId] ?? 'Unknown';
 
   void toggleExpanded(int qnId) {

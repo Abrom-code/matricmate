@@ -15,7 +15,9 @@ class ContactAdminScreen extends StatelessWidget {
         showBackArrow: true,
         title: Text(
           'Contact Admin',
-          style: Theme.of(context).textTheme.headlineSmall!.apply(color: AppColors.white),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
       body: SingleChildScrollView(
@@ -25,23 +27,23 @@ class ContactAdminScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              
+
               const Icon(
                 Icons.warning_amber_rounded,
                 size: 80,
                 color: Colors.amber,
               ),
-              
+
               const SizedBox(height: AppSizes.spaceBtwItems),
-              
+
               Text(
                 'Upload Limit Reached',
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: AppSizes.spaceBtwItems),
-              
+
               const Text(
                 'You have reached the maximum number of receipt upload attempts. Please contact our support team to verify your payment or reset your upload limit.',
                 textAlign: TextAlign.center,
@@ -51,13 +53,13 @@ class ContactAdminScreen extends StatelessWidget {
                   height: 1.5,
                 ),
               ),
-              
+
               const SizedBox(height: AppSizes.spaceBtwSections),
-              
+
               const TelegramChatButton(),
-              
+
               const SizedBox(height: AppSizes.spaceBtwSections),
-              
+
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(

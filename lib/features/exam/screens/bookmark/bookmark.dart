@@ -49,9 +49,7 @@ class _BookmarkScreenState extends State<BookmarkScreen>
     super.dispose();
   }
 
-  /// Called when a new route is pushed ON TOP of the navigation menu
-  /// (e.g. user taps a subject → chapter screen opens).
-  /// Collapse search immediately so focus isn't restored when they pop back.
+  /// Collapses search bar when a new route is pushed over navigation menu.
   @override
   void didPushNext() {
     if (_searchVisible) {

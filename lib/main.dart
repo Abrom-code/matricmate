@@ -26,7 +26,8 @@ Future<void> main() async {
   // Create Android notification channel before any FCM message arrives
   await FlutterLocalNotificationsPlugin()
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(
         const AndroidNotificationChannel(
           'matricmate_default',

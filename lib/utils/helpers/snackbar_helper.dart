@@ -1,7 +1,6 @@
 import 'package:matricmate/common/widgets/toast/app_toast.dart';
 
-/// Thin shim — delegates to [AppToast] so existing call sites need no changes.
-/// For new code prefer calling [AppToast] directly.
+/// Thin shim delegating to [AppToast] for snackbars and banners.
 class SnackbarHelper {
   SnackbarHelper._();
 

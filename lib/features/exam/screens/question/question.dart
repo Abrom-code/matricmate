@@ -22,8 +22,7 @@ class QuestionScreen extends StatefulWidget {
 }
 
 class _QuestionScreenState extends State<QuestionScreen> {
-  /// Outer scroll controller — shared with PassageContainer so it can scroll
-  /// the page to the bottom of the passage after expansion.
+  /// Outer scroll controller shared with PassageContainer.
   final ScrollController _scrollController = ScrollController();
 
   void _openSheet(BuildContext context, QuestionController ctrl) {
@@ -101,8 +100,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                 final hasPassage = currentQ?.passageId != null;
                 final sectionTitle =
                     (currentQ?.sectionTitle?.trim().isNotEmpty == true)
-                        ? currentQ!.sectionTitle!.trim()
-                        : null;
+                    ? currentQ!.sectionTitle!.trim()
+                    : null;
                 if (hasPassage) {
                   return PassageLayoutCtrl(controller: controller);
                 }
@@ -116,19 +115,21 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     return Text(
                       counterText,
                       style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                            color: AppColors.primary,
-                          ),
+                        color: AppColors.primary,
+                      ),
                     );
                   }
 
-                  return Obx(() => Text(
-                        '$counterText (${controller.formattedTime(controller.remainingSeconds.value)})',
-                        style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                              color: controller.remainingSeconds.value < 300
-                                  ? Colors.amber
-                                  : AppColors.primary,
-                            ),
-                      ));
+                  return Obx(
+                    () => Text(
+                      '$counterText (${controller.formattedTime(controller.remainingSeconds.value)})',
+                      style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                        color: controller.remainingSeconds.value < 300
+                            ? Colors.amber
+                            : AppColors.primary,
+                      ),
+                    ),
+                  );
                 }
 
                 final timerColor = controller.remainingSeconds.value < 300
@@ -143,24 +144,22 @@ class _QuestionScreenState extends State<QuestionScreen> {
                         sectionTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(ctx)
-                            .textTheme
-                            .titleMedium!
-                            .copyWith(color: AppColors.primary),
+                        style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                     if (controller.isTimed) ...[
                       const SizedBox(width: AppSizes.xs),
-                      Obx(() => Text(
-                            '(${controller.formattedTime(controller.remainingSeconds.value)})',
-                            style: Theme.of(ctx)
-                                .textTheme
-                                .labelMedium!
-                                .copyWith(
-                                  color: timerColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          )),
+                      Obx(
+                        () => Text(
+                          '(${controller.formattedTime(controller.remainingSeconds.value)})',
+                          style: Theme.of(ctx).textTheme.labelMedium!.copyWith(
+                            color: timerColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                 );
@@ -174,7 +173,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   return IconButton(
                     onPressed: isSaved
                         ? () =>
-                            bookmarkController.removeFromBookmark(currentQ.id)
+                              bookmarkController.removeFromBookmark(currentQ.id)
                         : () => bookmarkController.addToBookmark(currentQ.id),
                     icon: Icon(
                       isSaved
@@ -188,7 +187,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
             backgroundColor: Colors.transparent,
           ),
 
-          body: (controller.isLoading.value || controller.isPassageLoading.value)
+          body:
+              (controller.isLoading.value || controller.isPassageLoading.value)
               ? const AppCircularLoading()
               : SingleChildScrollView(
                   controller: _scrollController,

@@ -30,7 +30,7 @@ class SyncingController extends GetxController {
   Future<void> syncEntranceExams() async {
     try {
       entranceSyncing.value = true;
-      
+
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         ToastHelper.warning('No Internet!');
@@ -62,7 +62,10 @@ class SyncingController extends GetxController {
           .toList();
 
       if (downloadedIds.isNotEmpty) {
-        await _syncRepository.downloadEntranceTests(downloadedIds, since: since);
+        await _syncRepository.downloadEntranceTests(
+          downloadedIds,
+          since: since,
+        );
 
         // Mark subjects that now have entrance tests as downloaded
         final db = await DatabaseService.instance.database;
@@ -83,7 +86,6 @@ class SyncingController extends GetxController {
       }
 
       // Always refresh counts for ALL subjects (downloaded or not) so
-      // the tile numbers stay current regardless of download status.
       final dbSubjects = await _subjectRepo.getLocalSubjects();
       SubjectsController.instance.subjects.assignAll(
         dbSubjects.map((e) => SubjectModel.fromMap(e)).toList(),
@@ -92,7 +94,9 @@ class SyncingController extends GetxController {
 
       ToastHelper.success(
         downloadedIds.isNotEmpty
-            ? (since == null ? 'Entrance exams loaded!' : 'Entrance exams updated!')
+            ? (since == null
+                  ? 'Entrance exams loaded!'
+                  : 'Entrance exams updated!')
             : 'Exam counts refreshed!',
       );
     } catch (e) {
@@ -109,7 +113,7 @@ class SyncingController extends GetxController {
       if (showUiLoading) {
         refreshing.value = true;
       }
-      
+
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         if (showUiLoading) {
@@ -131,7 +135,7 @@ class SyncingController extends GetxController {
       final sinceSubjects = results[0] as DateTime?;
       final sinceEntrance = results[1] as DateTime?;
       final sinceChapters = results[2] as DateTime?;
-      final isValidUser   = results[3] as bool;
+      final isValidUser = results[3] as bool;
 
       // Sync subjects (delta)
       await syncSubjects(since: sinceSubjects);
@@ -144,24 +148,30 @@ class SyncingController extends GetxController {
           .toList();
 
       // Only sync entrance/model tests for subjects the user explicitly
-      // downloaded — not all subjects. This prevents re-downloading
-      // entrance content for subjects the user hasn't asked for.
       final entranceDownloadedIds = localSubjects
           .where((s) => s['is_entrance_downloaded'] == 1)
           .map((s) => s['id'] as int)
           .toList();
 
       if (isValidUser && downloadedIds.isNotEmpty) {
-        final futures = <Future>[_syncChapterContent(downloadedIds, since: sinceChapters)];
+        final futures = <Future>[
+          _syncChapterContent(downloadedIds, since: sinceChapters),
+        ];
         if (entranceDownloadedIds.isNotEmpty) {
-          futures.add(_syncRepository.downloadEntranceTests(
-              entranceDownloadedIds, since: sinceEntrance));
+          futures.add(
+            _syncRepository.downloadEntranceTests(
+              entranceDownloadedIds,
+              since: sinceEntrance,
+            ),
+          );
         }
         await Future.wait(futures);
         await SyncPrefs.saveChaptersSync(syncStarted);
       } else if (entranceDownloadedIds.isNotEmpty) {
         await _syncRepository.downloadEntranceTests(
-            entranceDownloadedIds, since: sinceEntrance);
+          entranceDownloadedIds,
+          since: sinceEntrance,
+        );
       }
 
       if (entranceDownloadedIds.isNotEmpty) {
@@ -169,8 +179,6 @@ class SyncingController extends GetxController {
       }
 
       // Reload subjects from SQLite to reflect any flag changes from syncSubjects().
-      // loadLocalSubjects will automatically re-apply remote entrance counts
-      // via refreshEntranceCountsFromRemote in the background.
       await SubjectsController.instance.loadLocalSubjects();
       return true;
     } catch (e) {
@@ -186,14 +194,14 @@ class SyncingController extends GetxController {
     List<String> downloadedIds, {
     DateTime? since,
   }) async {
-    // On first sync: fetch chapters too. On delta: chapters rarely change,
-    // but we still check so new chapters added to a subject are picked up.
+    // Sync chapters for newly added content
     final fetchChapters = since == null;
 
     final futures = <Future>[
       // Only sync chapter/grade tests — entrance & model are handled separately
       _syncRepository.getBySubjectId(
-        'tests', downloadedIds,
+        'tests',
+        downloadedIds,
         since: since,
         typeFilter: ['chapter', 'grade'],
       ),
@@ -205,7 +213,9 @@ class SyncingController extends GetxController {
 
     final fetched = await Future.wait(futures);
 
-    final tests = (fetched[0] as List).map((e) => TestModel.fromJson(e)).toList();
+    final tests = (fetched[0] as List)
+        .map((e) => TestModel.fromJson(e))
+        .toList();
     final rawQuestions = fetched[1] as List;
     final chapters = fetchChapters
         ? (fetched[2] as List).map((e) => ChapterModel.fromJson(e)).toList()
@@ -222,7 +232,8 @@ class SyncingController extends GetxController {
       if (model.imageUrl != null && model.imageUrl!.isNotEmpty) {
         imageUrls.add(model.imageUrl!);
       }
-      if (model.explanationImageUrl != null && model.explanationImageUrl!.isNotEmpty) {
+      if (model.explanationImageUrl != null &&
+          model.explanationImageUrl!.isNotEmpty) {
         imageUrls.add(model.explanationImageUrl!);
       }
       return model;
@@ -237,16 +248,25 @@ class SyncingController extends GetxController {
     final batch = db.batch();
 
     for (final c in chapters) {
-      batch.insert('chapters', c.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert(
+        'chapters',
+        c.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
     for (final t in tests) {
-      batch.insert('tests', SyncRepository.sanitizeTest(t.toMap()),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert(
+        'tests',
+        SyncRepository.sanitizeTest(t.toMap()),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
     for (final q in questions) {
-      batch.insert('questions', q.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert(
+        'questions',
+        q.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
 
     await Future.wait([
@@ -266,8 +286,7 @@ class SyncingController extends GetxController {
         .map((e) => SubjectModel.fromJson(e))
         .toList();
 
-    // On delta sync, remote only contains changed rows — skip delete check.
-    // On full sync (since == null), also remove subjects deleted from remote.
+    // Check remote deletions during full sync
     if (since == null) {
       final remoteIds = remote.map((e) => e.id).toSet();
       for (final local in localSubjects) {
@@ -316,8 +335,11 @@ class SyncingController extends GetxController {
     final db = await DatabaseService.instance.database;
     final batch = db.batch();
     for (final p in remote) {
-      batch.insert('passages', SyncRepository.sanitizePassage(p.toMap()),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert(
+        'passages',
+        SyncRepository.sanitizePassage(p.toMap()),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
     await batch.commit(noResult: true);
   }

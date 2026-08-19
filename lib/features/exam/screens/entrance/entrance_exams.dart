@@ -22,7 +22,8 @@ class EntranceExamsScreen extends StatefulWidget {
   State<EntranceExamsScreen> createState() => _EntranceExamsScreenState();
 }
 
-class _EntranceExamsScreenState extends State<EntranceExamsScreen> with RouteAware {
+class _EntranceExamsScreenState extends State<EntranceExamsScreen>
+    with RouteAware {
   EntranceExamsController get ctrl => EntranceExamsController.instance;
 
   @override
@@ -142,7 +143,8 @@ class _ExamList extends StatelessWidget {
             // Subscribe to testResults so tile rebuilds reactively.
             final _ = controller.testResults[test.id];
 
-            final canAccess = isActive || ((isInactive || isPending) && index < 2);
+            final canAccess =
+                isActive || ((isInactive || isPending) && index < 2);
 
             return TestTile(
               icon: canAccess ? Iconsax.message_question_copy : Icons.lock,
@@ -152,8 +154,8 @@ class _ExamList extends StatelessWidget {
               correctAnswers: controller.getCorrectAnswers(test.id),
               isInProgress: controller.isInProgress(test.id),
               testName: test.title,
-              questionCount: controller.testQuestionCounts[test.id] ??
-                  test.questionCount,
+              questionCount:
+                  controller.testQuestionCounts[test.id] ?? test.questionCount,
               timeMinutes: test.time,
               isNew: test.isNew,
               onTap: () {

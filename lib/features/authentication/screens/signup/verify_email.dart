@@ -106,7 +106,9 @@ class VerifyEmailScreen extends GetView<VerifyEmailController> {
                           ? null
                           : controller.sendEmailVerification,
                       child: isResending
-                          ? const AppCircularButtonLoading(color: AppColors.primary)
+                          ? const AppCircularButtonLoading(
+                              color: AppColors.primary,
+                            )
                           : const Text(AppTextStrings.resendEmail),
                     ),
                   );

@@ -7,18 +7,7 @@ class NetworkManager extends GetxController {
 
   final Connectivity _connectivity = Connectivity();
 
-  /// Returns true if the device has an active network interface AND can reach the internet.
-  /// This combines:
-  /// 1. Quick network interface check (WiFi/mobile) via connectivity_plus
-  /// 2. Actual internet reachability check via HTTP request
-  ///
-  /// This dual approach ensures reliability on both emulators and physical devices.
-  /// - On physical devices: Usually fast as connectivity_plus is reliable
-  /// - On emulators: Falls back to actual reachability check if connectivity_plus fails
-  ///
-  /// If this returns false, show "No Internet" and stop.
-  /// If this returns true but a remote call fails, let the exception handler
-  /// show the error — do not do a second check.
+  /// Returns true if device has an active network interface and internet access.
   Future<bool> isConnected() async {
     try {
       // First, quick check for network interface availability
@@ -31,8 +20,7 @@ class NetworkManager extends GetxController {
         return false;
       }
 
-      // Second, verify actual internet reachability
-      // This is the key fix for emulator issues
+      // Verify actual internet reachability via HTTP request
       final hasInternetAccess = await _checkInternetReachability();
 
       return hasInternetAccess;
@@ -41,9 +29,7 @@ class NetworkManager extends GetxController {
     }
   }
 
-  /// Performs actual internet reachability check by making a simple HTTP request.
-  /// Uses reliable endpoints that should be accessible from most networks.
-  /// Timeout is set to 5 seconds to avoid long waits on slow networks.
+  /// Performs internet reachability check via lightweight HTTP request.
   Future<bool> _checkInternetReachability() async {
     try {
       // Try multiple reliable endpoints in case one is down
@@ -73,9 +59,7 @@ class NetworkManager extends GetxController {
     }
   }
 
-  /// Quick check for network interface only (no actual internet reachability).
-  /// Use this when you need instant feedback and will handle network errors separately.
-  /// Returns true if device has WiFi/mobile enabled, regardless of actual internet access.
+  /// Quick interface-only connectivity check (WiFi / Mobile).
   Future<bool> hasNetworkInterface() async {
     try {
       final result = await _connectivity.checkConnectivity();

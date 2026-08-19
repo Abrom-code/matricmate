@@ -74,9 +74,7 @@ class _ImageSectionState extends State<ImageSection> {
                 color: AppColors.grey.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Center(
-                child: AppPulsingDots(),
-              ),
+              child: const Center(child: AppPulsingDots()),
             );
           }
 
@@ -114,8 +112,7 @@ class _ImageSectionState extends State<ImageSection> {
             );
           }
 
-          // SUCCESS — fill full width, cap height so very tall images
-          // don't push answer choices off screen.
+          // Scale image to full width with capped max height
           return ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Stack(

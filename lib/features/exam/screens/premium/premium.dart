@@ -115,7 +115,8 @@ class PremiumScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 16),
                               OutlinedButton.icon(
-                                onPressed: () => controller.reloadPaymentConfig(),
+                                onPressed: () =>
+                                    controller.reloadPaymentConfig(),
                                 icon: const Icon(Icons.refresh),
                                 label: const Text('Retry'),
                               ),
@@ -153,7 +154,8 @@ class PremiumScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 16),
                               OutlinedButton.icon(
-                                onPressed: () => controller.reloadPaymentConfig(),
+                                onPressed: () =>
+                                    controller.reloadPaymentConfig(),
                                 icon: const Icon(Icons.refresh),
                                 label: const Text('Refresh'),
                               ),
@@ -167,8 +169,8 @@ class PremiumScreen extends StatelessWidget {
                           title: method.label,
                           subtitle: method.account.isNotEmpty
                               ? method.account.length < 15
-                                  ? method.account
-                                  : '${method.account.substring(0, 12)}...'
+                                    ? method.account
+                                    : '${method.account.substring(0, 12)}...'
                               : '',
                           icon: method.icon,
                           isFeatured: method.isFeatured,
@@ -194,8 +196,8 @@ class PremiumScreen extends StatelessWidget {
         },
       ),
       bottomNavigationBar: Obx(() {
-        final isPending  = UserController.instance.user.value.isPending;
-        final hasMethod  = controller.selectedPayment.value != null;
+        final isPending = UserController.instance.user.value.isPending;
+        final hasMethod = controller.selectedPayment.value != null;
 
         return Container(
           padding: const EdgeInsets.all(AppSizes.md),
@@ -212,17 +214,17 @@ class PremiumScreen extends StatelessWidget {
               onPressed: (!isPending && !hasMethod)
                   ? null
                   : isPending
-                      ? () => Get.toNamed(Routes.paymentVerification)
-                      : () {
-                          if (controller.exceededUploadLimit) {
-                            Get.toNamed(Routes.contactAdmin);
-                          } else {
-                            Get.toNamed(
-                              Routes.payment,
-                              arguments: controller.selectedPayment.value,
-                            );
-                          }
-                        },
+                  ? () => Get.toNamed(Routes.paymentVerification)
+                  : () {
+                      if (controller.exceededUploadLimit) {
+                        Get.toNamed(Routes.contactAdmin);
+                      } else {
+                        Get.toNamed(
+                          Routes.payment,
+                          arguments: controller.selectedPayment.value,
+                        );
+                      }
+                    },
               child: Text(
                 isPending ? 'Check Status' : 'Continue to Payment',
                 style: const TextStyle(fontSize: 16, color: Colors.white),

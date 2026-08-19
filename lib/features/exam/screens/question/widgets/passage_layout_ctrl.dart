@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-/// Shown in the appbar when the current question has a passage.
-/// Tapping it toggles the passage panel (show / hide).
+/// Appbar action toggle for questions with an associated passage.
 class PassageLayoutCtrl extends StatelessWidget {
   const PassageLayoutCtrl({super.key, required this.controller});
 
@@ -32,9 +31,9 @@ class PassageLayoutCtrl extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  color: AppColors.primary,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium!.copyWith(color: AppColors.primary),
               ),
             ),
             const SizedBox(width: 4),

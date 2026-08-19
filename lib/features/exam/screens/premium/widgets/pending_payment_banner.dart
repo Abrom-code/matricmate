@@ -18,9 +18,7 @@ class PendingPaymentBanner extends StatelessWidget {
     final subtitleColor = dark
         ? const Color(0xFF8E8E93)
         : const Color(0xFF6C6C70);
-    final iconBg = dark
-        ? const Color(0xFF2C2C2E)
-        : const Color(0xFFE5E5EA);
+    final iconBg = dark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA);
 
     return GestureDetector(
       onTap: () => Get.toNamed(Routes.paymentVerification),
@@ -61,10 +59,7 @@ class PendingPaymentBanner extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: const Color(0xFFFF9F0A),
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: bg,
-                        width: 2,
-                      ),
+                      border: Border.all(color: bg, width: 2),
                     ),
                   ),
                 ),
@@ -105,9 +100,7 @@ class PendingPaymentBanner extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
-                color: dark
-                    ? const Color(0xFF2C2C2E)
-                    : const Color(0xFFE5E5EA),
+                color: dark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

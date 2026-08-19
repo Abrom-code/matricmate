@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-/// Sticky-style date group header for the notifications list.
-///
-/// Displays labels like "Today", "Yesterday", "This Week", "Earlier"
-/// to visually separate notification groups by date.
+/// Date group header for notifications (Today, Yesterday, etc.).
 class NotificationSectionHeader extends StatelessWidget {
   const NotificationSectionHeader({super.key, required this.label});
   final String label;
@@ -31,8 +28,9 @@ class NotificationSectionHeader extends StatelessWidget {
           Expanded(
             child: Container(
               height: 1,
-              color: (dark ? AppColors.darkGrey : AppColors.grey)
-                  .withValues(alpha: 0.4),
+              color: (dark ? AppColors.darkGrey : AppColors.grey).withValues(
+                alpha: 0.4,
+              ),
             ),
           ),
         ],
@@ -40,8 +38,7 @@ class NotificationSectionHeader extends StatelessWidget {
     );
   }
 
-  /// Groups a list of notifications by date bucket and returns the label
-  /// for a given [DateTime].
+  /// Returns formatted date group label for a given DateTime.
   static String labelFor(DateTime dt) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

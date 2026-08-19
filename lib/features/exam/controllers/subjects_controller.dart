@@ -38,16 +38,13 @@ class SubjectsController extends GetxController {
 
   @override
   void onInit() {
-    // Don't call loadLocalSubjects() here — AuthenticationController._init()
-    // calls it before navigating, so data is already loaded by the time
-    // any screen using this controller is built.
+    // Data is preloaded by AuthenticationController._init()
     ever(UserController.instance.user, (user) {
       selectedStream.value = user.stream;
     });
 
     super.onInit();
   }
-
 
   Future<void> loadPausedTests() async {
     try {
@@ -60,8 +57,6 @@ class SubjectsController extends GetxController {
     }
   }
 
-
-
   /// LOCAL ONLY (startup)
   Future<void> loadLocalSubjects() async {
     try {
@@ -73,16 +68,13 @@ class SubjectsController extends GetxController {
         dbSubjects.map((e) => SubjectModel.fromMap(e)).toList(),
       );
       // loadTestNumbers reads persisted entrance_count/model_count from the
-      // subjects table — no network call needed on restart.
       await loadTestNumbers(subjects);
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// Called on first launch when local DB is empty.
-  /// Fetches subjects from remote + their entrance counts, then returns.
-  /// This is the only awaited network call during startup.
+  /// Initial remote fetch when local SQLite database is empty.
   Future<void> initFromRemote() async {
     try {
       isLoading.value = true;
@@ -108,7 +100,6 @@ class SubjectsController extends GetxController {
           }),
         );
         // Remote counts are fetched by the caller (_runInitThenNavigate)
-        // via refreshEntranceCountsFromRemote — no need to duplicate here.
       }
     } catch (_) {
       // Non-fatal
@@ -193,8 +184,7 @@ class SubjectsController extends GetxController {
     }
   }
 
-  /// Fetches entrance/model counts from Supabase, updates in-memory maps,
-  /// and persists the counts to SQLite so they survive app restarts.
+  /// Refreshes entrance/model counts from remote and persists to SQLite.
   Future<void> refreshEntranceCountsFromRemote() async {
     try {
       final current = subjects.toList();
@@ -214,7 +204,6 @@ class SubjectsController extends GetxController {
         final remoteEntrance = entry.value['entrance'] ?? 0;
         final remoteModel = entry.value['model'] ?? 0;
         // Take whichever is higher — preserves locally-downloaded counts
-        // if the remote query returns a lower number for any reason.
         final newEntrance = remoteEntrance > (entranceTestNumbers[sid] ?? 0)
             ? remoteEntrance
             : (entranceTestNumbers[sid] ?? 0);
@@ -241,15 +230,12 @@ class SubjectsController extends GetxController {
   Future<void> loadTestNumbers(List<SubjectModel> subjects) async {
     try {
       // Read persisted counts from subjects table.
-      // entrance_count/model_count are written by refreshEntranceCountsFromRemote
-      // and survive restarts — no network needed here.
       for (final s in subjects) {
         entranceTestNumbers[s.id] = s.entranceCount;
         modelTestNumbers[s.id] = s.modelCount;
       }
 
       // If ANY subject has 0 for both counts (never fetched or new subject
-      // added), fetch from remote in the background for all zero subjects.
       final zeroSubjects = subjects
           .where(
             (s) =>

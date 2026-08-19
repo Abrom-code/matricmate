@@ -1,14 +1,4 @@
-/// BBTableParser
-///
-/// Parses [table][row][cell]...[/cell][/row][/table] blocks from
-/// explanation / question text that comes from Supabase.
-///
-/// Design constraints:
-///  - No nested tables.
-///  - No cell attributes.
-///  - First [row] is always the header row.
-///  - Language-agnostic — cell content is passed through as-is.
-///  - Graceful degradation: malformed / unclosed tags → treated as plain text.
+/// Parses [table][row][cell]...[/cell][/row][/table] BBCode blocks from text.
 class BBTableParser {
   BBTableParser._();
 
@@ -40,13 +30,7 @@ class BBTableParser {
   /// Returns `true` if [text] contains at least one [table] block.
   static bool containsTable(String text) => _tableBlockRe.hasMatch(text);
 
-  /// Parses all [table] blocks in [text].
-  ///
-  /// Returns a list of tables; each table is a `List<List<String>>`
-  /// (rows of cell-content strings). Cell content retains any inner
-  /// BBCode tags (e.g. [b]) so the caller can pass them to RichTextParser.
-  ///
-  /// Malformed / unclosed tags produce an empty list for that table.
+  /// Parses all [table] blocks in text into row/cell string lists.
   static List<List<List<String>>> parseTables(String text) {
     final tables = <List<List<String>>>[];
 
@@ -70,21 +54,7 @@ class BBTableParser {
     return tables;
   }
 
-  /// Returns a list of [_TextOrTable] segments representing the text split
-  /// around all [table] blocks, in order.
-  ///
-  /// Use [splitSegments] to interleave plain-text and table data so the UI
-  /// can render them in sequence:
-  ///
-  /// ```dart
-  /// for (final seg in BBTableParser.splitSegments(text)) {
-  ///   if (seg.isTable) {
-  ///     BBTableWidget(rows: seg.tableRows!)
-  ///   } else {
-  ///     Text.rich(RichTextParser.parse(seg.text!, baseStyle))
-  ///   }
-  /// }
-  /// ```
+  /// Splits text into interleaved plain-text and table segments.
   static List<BBSegment> splitSegments(String text) {
     final segments = <BBSegment>[];
     int cursor = 0;
@@ -121,22 +91,16 @@ class BBTableParser {
     return segments;
   }
 
-  /// Strips all [table]...[/table] blocks from [text] and returns the
-  /// remaining string (trimmed). Useful if you want just the surrounding text.
+  /// Strips all table blocks from text and returns trimmed string.
   static String stripTables(String text) =>
       text.replaceAll(_tableBlockRe, '').trim();
 }
 
 // ── Segment model ─────────────────────────────────────────────────────────────
 
-/// Represents either a plain-text chunk or a parsed table within a larger
-/// explanation string.
+/// Represents a plain-text chunk or parsed table segment.
 class BBSegment {
-  BBSegment._({
-    required this.isTable,
-    this.text,
-    this.tableRows,
-  });
+  BBSegment._({required this.isTable, this.text, this.tableRows});
 
   factory BBSegment.text(String text) =>
       BBSegment._(isTable: false, text: text);

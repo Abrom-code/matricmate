@@ -93,7 +93,9 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
           Padding(
             padding: const EdgeInsets.only(right: 4),
             child: _NotificationBell(
-              onPressed: onNotificationPressed ?? () => Get.toNamed(Routes.notifications),
+              onPressed:
+                  onNotificationPressed ??
+                  () => Get.toNamed(Routes.notifications),
             ),
           ),
       ],
@@ -106,8 +108,7 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize {
-    // preferredSize is called before build() — read orientation from
-    // Get.context so the Scaffold allocates the right amount of space.
+    // Read orientation from Get.context before build
     final ctx = Get.context;
     if (ctx != null) return Size.fromHeight(toolbarHeight(ctx));
     return Size.fromHeight(AppDeviceUtils.getAppBarHeight());
@@ -123,8 +124,7 @@ class _NotificationBell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // Only read the controller if it's already registered — avoids crashing
-      // before the notifications route has been visited for the first time.
+      // Only read controller if registered to avoid unhandled crash
       final count = Get.isRegistered<NotificationsController>()
           ? NotificationsController.instance.unreadCount.value
           : 0;
@@ -147,12 +147,18 @@ class _NotificationBell extends StatelessWidget {
                 top: -4,
                 right: -6,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.shade600,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  constraints: const BoxConstraints(minWidth: 16, minHeight: 14),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 14,
+                  ),
                   child: Text(
                     count > 9 ? '9+' : '$count',
                     style: const TextStyle(

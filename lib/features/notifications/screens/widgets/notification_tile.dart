@@ -17,15 +17,13 @@ class NotificationTile extends StatelessWidget {
 
   final AppNotification notification;
 
-  /// Called after the swipe animation completes. The parent screen
-  /// should call `ctrl.deleteOne(id)` and show an undo SnackBar.
+  /// Callback fired on dismissal swipe completion.
   final VoidCallback onDismissed;
 
   // ── Derived from type + payload ──────────────────────────────────────
 
   /// Payment sub-status from payload: 'active' | 'rejected' | other.
-  String get _paymentStatus =>
-      notification.payload['status']?.toString() ?? '';
+  String get _paymentStatus => notification.payload['status']?.toString() ?? '';
 
   bool get _isApproved =>
       notification.type == 'payment' && _paymentStatus == 'active';
@@ -52,9 +50,15 @@ class NotificationTile extends StatelessWidget {
 
     switch (notification.type) {
       case 'payment':
-        return const _TypeIconData(Icons.payment_rounded, AppColors.amberAccent);
+        return const _TypeIconData(
+          Icons.payment_rounded,
+          AppColors.amberAccent,
+        );
       case 'new_content':
-        return const _TypeIconData(Icons.menu_book_rounded, AppColors.secondary);
+        return const _TypeIconData(
+          Icons.menu_book_rounded,
+          AppColors.secondary,
+        );
       default:
         return const _TypeIconData(Icons.campaign_rounded, AppColors.primary);
     }
@@ -136,11 +140,7 @@ class NotificationTile extends StatelessWidget {
                   color: iconData.color.withValues(alpha: dark ? 0.15 : 0.10),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  iconData.icon,
-                  size: 18,
-                  color: iconData.color,
-                ),
+                child: Icon(iconData.icon, size: 18, color: iconData.color),
               ),
 
               // ── Content ───────────────────────────────────────────
@@ -196,18 +196,23 @@ class NotificationTile extends StatelessWidget {
                       const SizedBox(height: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.withValues(
-                              alpha: dark ? 0.12 : 0.07),
+                            alpha: dark ? 0.12 : 0.07,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.info_outline_rounded,
-                                size: 13,
-                                color: Colors.red.shade400),
+                            Icon(
+                              Icons.info_outline_rounded,
+                              size: 13,
+                              color: Colors.red.shade400,
+                            ),
                             const SizedBox(width: 5),
                             Expanded(
                               child: Text(
@@ -249,8 +254,8 @@ class NotificationTile extends StatelessWidget {
                     color: _isApproved
                         ? Colors.green.shade600
                         : _isRejected
-                            ? Colors.red.shade600
-                            : AppColors.primary,
+                        ? Colors.red.shade600
+                        : AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -318,4 +323,3 @@ String _relativeTime(DateTime dt) {
   if (diff.inDays < 7) return '${diff.inDays}d ago';
   return AppFormatter.formatDate(dt.millisecondsSinceEpoch);
 }
-

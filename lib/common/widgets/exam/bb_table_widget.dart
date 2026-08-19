@@ -4,13 +4,6 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// Renders a parsed BBCode table as a Flutter [Table] widget.
-///
-/// - First row is treated as the header: bold text, teal-tinted background.
-/// - Body rows have alternating-subtle background and grey dividers.
-/// - Wraps in a [SingleChildScrollView] (horizontal) to prevent overflow on
-///   narrow screens.
-/// - Cell content is passed through [RichTextParser] so inline tags like
-///   [b], [i], [c=…] still work inside cells.
 class BBTableWidget extends StatelessWidget {
   const BBTableWidget({super.key, required this.rows, this.baseStyle});
 
@@ -18,7 +11,6 @@ class BBTableWidget extends StatelessWidget {
   final List<List<String>> rows;
 
   /// Optional override for the body text style. When null the widget derives
-  /// a sensible default from the current [Theme].
   final TextStyle? baseStyle;
 
   @override
@@ -82,7 +74,6 @@ class BBTableWidget extends StatelessWidget {
                 : Colors.transparent,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             // Constrains each cell to a max width so long text wraps,
-            // while still shrinking to fit shorter content.
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 150),
               child: Text.rich(RichTextParser.parse(content, style)),
@@ -103,8 +94,6 @@ class BBTableWidget extends StatelessWidget {
         child: Table(
           border: tableBorder,
           // IntrinsicColumnWidth sizes each column to its content,
-          // but maxWidth caps it so overly long text wraps rather than
-          // stretching the column indefinitely.
           defaultColumnWidth: const IntrinsicColumnWidth(),
           children: tableRows,
         ),

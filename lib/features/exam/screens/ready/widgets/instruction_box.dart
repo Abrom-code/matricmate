@@ -15,9 +15,7 @@ class InstructionBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.defaultSpace / 1.5),
       decoration: BoxDecoration(
-        color: dark
-            ? AppColors.darkSurface
-            : AppColors.lightCard,
+        color: dark ? AppColors.darkSurface : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppSizes.md),
       ),
       child: Row(

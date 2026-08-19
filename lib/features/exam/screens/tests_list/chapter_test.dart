@@ -52,9 +52,9 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
         showBackArrow: true,
         title: Text(
           '$subject ${chapter.isNotEmpty ? '- $chapter' : ''}'.toUpperCase(),
-          style: Theme.of(context).textTheme.titleSmall!.apply(
-                color: AppColors.white,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall!.apply(color: AppColors.white),
         ),
       ),
       body: Padding(
@@ -83,15 +83,13 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
               final time = test.time;
 
               return Padding(
-                padding:
-                    const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+                padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
                 child: Obx(() {
                   final isInactive =
                       UserController.instance.user.value.isInactive;
                   final isPending =
                       UserController.instance.user.value.isPending;
-                  final isActive =
-                      UserController.instance.user.value.isActive;
+                  final isActive = UserController.instance.user.value.isActive;
 
                   final _ = ctrl.testResults[test.id];
 
@@ -103,8 +101,7 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                     icon: canAccess
                         ? Iconsax.message_question_copy
                         : Icons.lock,
-                    iconColor:
-                        canAccess ? AppColors.primary : Colors.amber,
+                    iconColor: canAccess ? AppColors.primary : Colors.amber,
                     currentStep: ctrl.getCurrentStep(test.id),
                     maxStep: ctrl.getMaxStep(test.id),
                     correctAnswers: ctrl.getCorrectAnswers(test.id),
@@ -113,8 +110,10 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                     timeMinutes: time,
                     onTap: () {
                       if (isInactive && index >= 3) {
-                        Get.bottomSheet(const PremiumBottomSheet(),
-                            isScrollControlled: true);
+                        Get.bottomSheet(
+                          const PremiumBottomSheet(),
+                          isScrollControlled: true,
+                        );
                         return;
                       }
                       if (isPending && index >= 3) {
@@ -125,15 +124,17 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                         ToastHelper.info('Has no questions');
                         return;
                       }
-                      Get.dialog(ReadyDialog(
-                        qnCount: qnCount,
-                        time: time,
-                        testId: test.id,
-                        id: 1,
-                        draft: ctrl.isInProgress(test.id)
-                            ? ctrl.testResults[test.id]
-                            : null,
-                      ));
+                      Get.dialog(
+                        ReadyDialog(
+                          qnCount: qnCount,
+                          time: time,
+                          testId: test.id,
+                          id: 1,
+                          draft: ctrl.isInProgress(test.id)
+                              ? ctrl.testResults[test.id]
+                              : null,
+                        ),
+                      );
                     },
                   );
                 }),

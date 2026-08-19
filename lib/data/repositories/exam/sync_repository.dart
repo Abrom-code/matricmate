@@ -49,8 +49,11 @@ class SyncRepository {
 
   Future<void> insertBatch(String table, Map<String, dynamic> value) async {
     final batch = await _getBatch();
-    batch.insert(table, _sanitizeFor(table, value),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    batch.insert(
+      table,
+      _sanitizeFor(table, value),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> updateBatch(
@@ -97,23 +100,30 @@ class SyncRepository {
 
       // Step 1 — fetch tests (0.0 → 0.15)
       final tests = await _withProgress(
-        supabase.from('tests').select()
-            .eq('subject_id', subjectId)
-            .inFilter('type', ['entrance', 'model']),
-        0.0, 0.15,
+        supabase.from('tests').select().eq('subject_id', subjectId).inFilter(
+          'type',
+          ['entrance', 'model'],
+        ),
+        0.0,
+        0.15,
         (p) => onStep('Fetching tests…', p),
       );
 
-      if (tests.isEmpty) { onStep('Done', 1.0); return; }
+      if (tests.isEmpty) {
+        onStep('Done', 1.0);
+        return;
+      }
 
       final testIds = tests.map<int>((t) => t['id'] as int).toList();
 
       // Step 2 — fetch questions (0.15 → 0.50)
       final questionsData = await _withProgress(
-        supabase.from('questions')
+        supabase
+            .from('questions')
             .select('*, question_sections(title)')
             .inFilter('test_id', testIds),
-        0.15, 0.50,
+        0.15,
+        0.50,
         (p) => onStep('Fetching questions…', p),
       );
 
@@ -127,7 +137,8 @@ class SyncRepository {
         if (question.imageUrl != null && question.imageUrl!.isNotEmpty) {
           imgUrls.add(question.imageUrl!);
         }
-        if (question.explanationImageUrl != null && question.explanationImageUrl!.isNotEmpty) {
+        if (question.explanationImageUrl != null &&
+            question.explanationImageUrl!.isNotEmpty) {
           imgUrls.add(question.explanationImageUrl!);
         }
       }
@@ -136,9 +147,12 @@ class SyncRepository {
       List<dynamic> passageData = [];
       if (passageIds.isNotEmpty) {
         passageData = await _withProgress(
-          supabase.from('passages').select()
+          supabase
+              .from('passages')
+              .select()
               .inFilter('id', passageIds.toList()),
-          0.50, 0.65,
+          0.50,
+          0.65,
           (p) => onStep('Fetching passages…', p),
         );
       }
@@ -147,20 +161,30 @@ class SyncRepository {
       onStep('Saving to device…', 0.65);
       final batch = db.batch();
       for (var t in tests) {
-        batch.insert('tests', _sanitizeFor('tests', t),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'tests',
+          _sanitizeFor('tests', t),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
       for (final q in questions) {
-        batch.insert('questions', q.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'questions',
+          q.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
       for (var p in passageData) {
-        batch.insert('passages', _sanitizeFor('passages', p),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'passages',
+          _sanitizeFor('passages', p),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
       await _withProgress(
         batch.commit(noResult: true),
-        0.65, 0.80,
+        0.65,
+        0.80,
         (p) => onStep('Saving to device…', p),
       );
 
@@ -168,7 +192,8 @@ class SyncRepository {
       if (imgUrls.isNotEmpty) {
         await _withProgress(
           AppHelperFunctions.downloadImages(imgUrls),
-          0.80, 1.0,
+          0.80,
+          1.0,
           (p) => onStep('Downloading images…', p),
         );
       }
@@ -258,7 +283,8 @@ class SyncRepository {
         if (question.imageUrl != null && question.imageUrl!.isNotEmpty) {
           imgUrls.add(question.imageUrl!);
         }
-        if (question.explanationImageUrl != null && question.explanationImageUrl!.isNotEmpty) {
+        if (question.explanationImageUrl != null &&
+            question.explanationImageUrl!.isNotEmpty) {
           imgUrls.add(question.explanationImageUrl!);
         }
       }
@@ -270,18 +296,27 @@ class SyncRepository {
 
       final batch = db.batch();
       for (var t in tests) {
-        batch.insert('tests', _sanitizeFor('tests', t),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'tests',
+          _sanitizeFor('tests', t),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
       for (final q in questions) {
-        batch.insert('questions', q.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'questions',
+          q.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
 
       final passageData = await passageFuture;
       for (var p in passageData) {
-        batch.insert('passages', _sanitizeFor('passages', p),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'passages',
+          _sanitizeFor('passages', p),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
 
       await Future.wait([
@@ -362,7 +397,9 @@ class SyncRepository {
       whereArgs: passageIds,
     );
     final localIds = localRows.map((r) => r['id'] as int).toSet();
-    final missingIds = passageIds.where((id) => !localIds.contains(id)).toList();
+    final missingIds = passageIds
+        .where((id) => !localIds.contains(id))
+        .toList();
 
     // Fetch missing + updated passages in one round-trip if possible
     final sinceIso = since.toUtc().toIso8601String();
@@ -385,7 +422,9 @@ class SyncRepository {
     }
 
     // Mixed: fetch missing unconditionally + existing if updated
-    final existingIds = passageIds.where((id) => localIds.contains(id)).toList();
+    final existingIds = passageIds
+        .where((id) => localIds.contains(id))
+        .toList();
     final results = await Future.wait([
       supabase.from('passages').select().inFilter('id', missingIds),
       supabase
@@ -408,15 +447,34 @@ class SyncRepository {
     'subjects': {'id', 'name', 'is_natural', 'is_common', 'is_downloaded'},
     'chapters': {'id', 'subject_id', 'grade', 'chapter_number', 'title'},
     'tests': {
-      'id', 'subject_id', 'grade', 'chapter_id',
-      'title', 'type', 'question_count', 'time', 'created_at',
+      'id',
+      'subject_id',
+      'grade',
+      'chapter_id',
+      'title',
+      'type',
+      'question_count',
+      'time',
+      'created_at',
     },
     'passages': {'id', 'content', 'title', 'image_url'},
     'questions': {
-      'id', 'subject_id', 'grade', 'chapter_id', 'test_id', 'passage_id',
-      'question_text', 'image_url', 'options', 'correct_option_index',
-      'explanation_en', 'explanation_am', 'explanation_image_url',
-      'question_order', 'section_id', 'section_title',
+      'id',
+      'subject_id',
+      'grade',
+      'chapter_id',
+      'test_id',
+      'passage_id',
+      'question_text',
+      'image_url',
+      'options',
+      'correct_option_index',
+      'explanation_en',
+      'explanation_am',
+      'explanation_image_url',
+      'question_order',
+      'section_id',
+      'section_title',
     },
   };
 

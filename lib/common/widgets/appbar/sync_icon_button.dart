@@ -3,13 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
 /// A reusable appbar sync button that spins while [isSyncing] is true.
-///
-/// Usage:
-///   SyncIconButton(
-///     isSyncing: syncController.refreshing.value,
-///     tooltip: 'Sync content',
-///     onPressed: () => ctrl.syncAll(),
-///   )
 class SyncIconButton extends StatefulWidget {
   const SyncIconButton({
     super.key,

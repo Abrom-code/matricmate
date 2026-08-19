@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-/// Wraps the standard [Appbar] and adds an optional static [subtitle] line
-/// below the title. Shape, colour, and height are identical to [Appbar].
+/// Wraps standard [Appbar] with optional subtitle.
 class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
   const ModernAppbar({
     super.key,
@@ -44,9 +43,7 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-/// Same as [ModernAppbar] but accepts a [WidgetBuilder] for the subtitle so
-/// reactive widgets (e.g. [Obx]) can be placed there without rebuilding the
-/// whole bar.
+/// ModernAppbar accepting a [WidgetBuilder] for reactive subtitles.
 class ModernAppbarWithBuilder extends StatelessWidget
     implements PreferredSizeWidget {
   const ModernAppbarWithBuilder({
@@ -116,10 +113,7 @@ class _TitleColumn extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        if (subtitle != null) ...[
-          const SizedBox(height: 1),
-          subtitle!,
-        ],
+        if (subtitle != null) ...[const SizedBox(height: 1), subtitle!],
       ],
     );
   }

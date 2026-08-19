@@ -8,7 +8,7 @@ class ProfileController extends GetxController {
   final DatabaseService _databaseService = DatabaseService.instance;
 
   final completedTest = 0.obs;
-  final avgScorePct   = 0.0.obs;
+  final avgScorePct = 0.0.obs;
   final bookmarkCount = 0.obs;
 
   @override
@@ -20,12 +20,12 @@ class ProfileController extends GetxController {
   Future<void> loadStats() async {
     completedTest.value = await _databaseService.getCompletedTests();
     bookmarkCount.value = await _loadBookmarkCount();
-    avgScorePct.value   = await _loadAvgScore();
+    avgScorePct.value = await _loadAvgScore();
   }
 
   Future<int> _loadBookmarkCount() async {
     try {
-      final db     = await _databaseService.database;
+      final db = await _databaseService.database;
       final userId = await _getUserId();
       if (userId.isEmpty) return 0;
       final r = await db.rawQuery(
@@ -40,7 +40,7 @@ class ProfileController extends GetxController {
 
   Future<double> _loadAvgScore() async {
     try {
-      final db     = await _databaseService.database;
+      final db = await _databaseService.database;
       final userId = await _getUserId();
       if (userId.isEmpty) return 0.0;
       final rows = await db.rawQuery(
@@ -48,7 +48,7 @@ class ProfileController extends GetxController {
         [userId],
       );
       int correct = 0;
-      int total   = 0;
+      int total = 0;
       for (final row in rows) {
         correct += (row['correctAnswers'] as int? ?? 0);
         try {

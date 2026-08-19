@@ -56,10 +56,12 @@ class QuestionSection extends StatelessWidget {
         // Prepend "N. " to the very first text segment only
         final textSpan = numberPrepended || qnNumber == null
             ? RichTextParser.parse(seg.text!, baseStyle)
-            : TextSpan(children: [
-                TextSpan(text: '$qnNumber. ', style: numberStyle),
-                RichTextParser.parse(seg.text!, baseStyle),
-              ]);
+            : TextSpan(
+                children: [
+                  TextSpan(text: '$qnNumber. ', style: numberStyle),
+                  RichTextParser.parse(seg.text!, baseStyle),
+                ],
+              );
         numberPrepended = true;
         widgets.add(Text.rich(textSpan, textAlign: TextAlign.left));
       }

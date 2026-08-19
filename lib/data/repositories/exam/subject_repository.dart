@@ -43,19 +43,19 @@ class SubjectRepository {
       // Step 1 — chapters (0.0 → 0.15)
       final chapters = await _withProgress(
         supabase.from('chapters').select().eq('subject_id', subjectId),
-        0.0, 0.15,
+        0.0,
+        0.15,
         (p) => onStep('Fetching chapters…', p),
       );
 
-      // Step 2 — tests (chapter/grade only — entrance & model are downloaded
-      //           separately from the entrance screen) (0.15 → 0.28)
+      // Step 2 — fetch chapter/grade tests (0.15 → 0.28)
       final tests = await _withProgress(
-        supabase
-            .from('tests')
-            .select()
-            .eq('subject_id', subjectId)
-            .inFilter('type', ['chapter', 'grade']),
-        0.15, 0.28,
+        supabase.from('tests').select().eq('subject_id', subjectId).inFilter(
+          'type',
+          ['chapter', 'grade'],
+        ),
+        0.15,
+        0.28,
         (p) => onStep('Fetching tests…', p),
       );
 
@@ -68,7 +68,8 @@ class SubjectRepository {
                   .from('questions')
                   .select('*, question_sections(title)')
                   .inFilter('test_id', testIds),
-              0.28, 0.62,
+              0.28,
+              0.62,
               (p) => onStep('Fetching questions…', p),
             );
 
@@ -82,7 +83,8 @@ class SubjectRepository {
         if (question.imageUrl != null && question.imageUrl!.isNotEmpty) {
           imgUrls.add(question.imageUrl!);
         }
-        if (question.explanationImageUrl != null && question.explanationImageUrl!.isNotEmpty) {
+        if (question.explanationImageUrl != null &&
+            question.explanationImageUrl!.isNotEmpty) {
           imgUrls.add(question.explanationImageUrl!);
         }
       }
@@ -91,8 +93,12 @@ class SubjectRepository {
       List<dynamic> passageData = [];
       if (passageIds.isNotEmpty) {
         passageData = await _withProgress(
-          supabase.from('passages').select().inFilter('id', passageIds.toList()),
-          0.62, 0.74,
+          supabase
+              .from('passages')
+              .select()
+              .inFilter('id', passageIds.toList()),
+          0.62,
+          0.74,
           (p) => onStep('Fetching passages…', p),
         );
       }
@@ -100,24 +106,37 @@ class SubjectRepository {
       // Step 5 — write to SQLite (0.74 → 0.86)
       final batch = db.batch();
       for (var ch in chapters) {
-        batch.insert('chapters', _sanitizeFor('chapters', ch),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'chapters',
+          _sanitizeFor('chapters', ch),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
       for (var t in tests) {
-        batch.insert('tests', _sanitizeFor('tests', t),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'tests',
+          _sanitizeFor('tests', t),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
       for (final q in questions) {
-        batch.insert('questions', q.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'questions',
+          q.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
       for (var p in passageData) {
-        batch.insert('passages', _sanitizeFor('passages', p),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+          'passages',
+          _sanitizeFor('passages', p),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
       await _withProgress(
         batch.commit(noResult: true),
-        0.74, 0.86,
+        0.74,
+        0.86,
         (p) => onStep('Saving to device…', p),
       );
 
@@ -125,7 +144,8 @@ class SubjectRepository {
       if (imgUrls.isNotEmpty) {
         await _withProgress(
           AppHelperFunctions.downloadImages(imgUrls),
-          0.86, 1.0,
+          0.86,
+          1.0,
           (p) => onStep('Downloading images…', p),
         );
       }
@@ -136,23 +156,38 @@ class SubjectRepository {
     }
   }
 
-  /// Converts a Supabase response map to a SQLite-safe map:
-  /// - bool  → 0/1  (SQLite has no boolean type)
-  /// - DateTime → ISO string
-  /// - List/Map (JSONB) → jsonEncoded string
-  /// - Everything else passed through unchanged
+  /// Converts a Supabase response map to a SQLite-safe map.
   static const _knownColumns = <String, Set<String>>{
     'chapters': {'id', 'subject_id', 'grade', 'chapter_number', 'title'},
     'tests': {
-      'id', 'subject_id', 'grade', 'chapter_id',
-      'title', 'type', 'question_count', 'time', 'created_at',
+      'id',
+      'subject_id',
+      'grade',
+      'chapter_id',
+      'title',
+      'type',
+      'question_count',
+      'time',
+      'created_at',
     },
     'passages': {'id', 'content', 'title', 'image_url'},
     'questions': {
-      'id', 'subject_id', 'grade', 'chapter_id', 'test_id', 'passage_id',
-      'question_text', 'image_url', 'options', 'correct_option_index',
-      'explanation_en', 'explanation_am', 'explanation_image_url',
-      'question_order', 'section_id', 'section_title',
+      'id',
+      'subject_id',
+      'grade',
+      'chapter_id',
+      'test_id',
+      'passage_id',
+      'question_text',
+      'image_url',
+      'options',
+      'correct_option_index',
+      'explanation_en',
+      'explanation_am',
+      'explanation_image_url',
+      'question_order',
+      'section_id',
+      'section_title',
     },
   };
 
@@ -162,7 +197,6 @@ class SubjectRepository {
     if (value is List || value is Map) return jsonEncode(value);
     return value;
   }
-
 
   static Map<String, dynamic> _sanitizeFor(
     String table,
@@ -177,7 +211,9 @@ class SubjectRepository {
   }
 
   //get supabase subject
-  Future<List<Map<String, dynamic>>> getSupabaseSubjects({DateTime? since}) async {
+  Future<List<Map<String, dynamic>>> getSupabaseSubjects({
+    DateTime? since,
+  }) async {
     try {
       var q = supabase.from('subjects').select();
       if (since != null) {
@@ -197,9 +233,7 @@ class SubjectRepository {
     }
   }
 
-  /// Fetches entrance/model test counts from Supabase for all subjects at once.
-  /// Returns a map of subjectId → {'entrance': n, 'model': n}.
-  /// Only fetches the count — no questions downloaded.
+  /// Fetches entrance/model test counts from Supabase for all subjects.
   Future<Map<int, Map<String, int>>> remoteEntranceTestCounts(
     List<int> subjectIds,
   ) async {
@@ -235,23 +269,21 @@ class SubjectRepository {
         whereArgs: [subject.id],
         limit: 1,
       );
-      final isDownloaded =
-          existing.isNotEmpty ? (existing.first['is_downloaded'] as int? ?? 0) : 0;
-      final isEntranceDownloaded =
-          existing.isNotEmpty ? (existing.first['is_entrance_downloaded'] as int? ?? 0) : 0;
+      final isDownloaded = existing.isNotEmpty
+          ? (existing.first['is_downloaded'] as int? ?? 0)
+          : 0;
+      final isEntranceDownloaded = existing.isNotEmpty
+          ? (existing.first['is_entrance_downloaded'] as int? ?? 0)
+          : 0;
 
-      await db.insert(
-        'subjects',
-        {
-          'id': subject.id,
-          'name': subject.name,
-          'is_natural': subject.isNatural ? 1 : 0,
-          'is_common': subject.isCommon ? 1 : 0,
-          'is_downloaded': isDownloaded,
-          'is_entrance_downloaded': isEntranceDownloaded,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('subjects', {
+        'id': subject.id,
+        'name': subject.name,
+        'is_natural': subject.isNatural ? 1 : 0,
+        'is_common': subject.isCommon ? 1 : 0,
+        'is_downloaded': isDownloaded,
+        'is_entrance_downloaded': isEntranceDownloaded,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -271,6 +303,7 @@ class SubjectRepository {
       throw AppExceptionHandler.handle(e);
     }
   }
+
   Future<void> updateIsDownloaded(String subject) async {
     try {
       final db = await _dbService.database;

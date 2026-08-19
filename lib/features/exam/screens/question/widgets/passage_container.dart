@@ -15,9 +15,7 @@ class PassageContainer extends StatelessWidget {
 
   final QuestionController controller;
 
-  /// The page-level ScrollController. When the user scrolls the passage
-  /// text to its bottom edge and keeps dragging, the overscroll is piped
-  /// here so the page scrolls down to the question/options.
+  /// Page scroll controller receiving forwarded passage overscroll.
   final ScrollController outerScrollController;
 
   @override
@@ -25,8 +23,7 @@ class PassageContainer extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
 
     return Obx(() {
-      final block =
-          controller.blocks[controller.currentBlockIndex.value];
+      final block = controller.blocks[controller.currentBlockIndex.value];
       final expanded = controller.isFullScreenPassage.value;
       final hidden = controller.isPassageHidden.value;
 
@@ -46,9 +43,7 @@ class PassageContainer extends StatelessWidget {
         decoration: BoxDecoration(
           color: dark ? AppColors.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.25),
-          ),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
           boxShadow: [
             BoxShadow(
               color: dark
@@ -78,38 +73,32 @@ class PassageContainer extends StatelessWidget {
                 duration: const Duration(milliseconds: 280),
                 curve: Curves.easeInOut,
                 constraints: BoxConstraints(maxHeight: contentMaxHeight),
-                // NotificationListener intercepts OverscrollNotification from
-                // the inner scroll.  When the user drags past the bottom of
-                // the passage text, the overscroll amount is forwarded to the
-                // outer page scroll so the question becomes visible — no
-                // manual tap or collapse needed.
+                // Forwards inner passage overscroll to outer page scroll
                 child: NotificationListener<OverscrollNotification>(
                   onNotification: (notification) {
                     if (outerScrollController.hasClients) {
                       final current = outerScrollController.offset;
-                      final max = outerScrollController.position.maxScrollExtent;
-                      
+                      final max =
+                          outerScrollController.position.maxScrollExtent;
+
                       // overscroll > 0  → user dragged past the bottom edge
                       if (notification.overscroll > 0) {
-                        final target =
-                            (current + notification.overscroll).clamp(0.0, max);
+                        final target = (current + notification.overscroll)
+                            .clamp(0.0, max);
                         outerScrollController.jumpTo(target);
                       }
                       // overscroll < 0  → user dragged past the top edge
                       else if (notification.overscroll < 0) {
-                        final target =
-                            (current + notification.overscroll).clamp(0.0, max);
+                        final target = (current + notification.overscroll)
+                            .clamp(0.0, max);
                         outerScrollController.jumpTo(target);
                       }
                     }
-                    // Return false so the notification keeps bubbling; this
-                    // avoids suppressing any other handlers up the tree.
+                    // Allow notification to bubble to other listeners
                     return false;
                   },
                   child: SingleChildScrollView(
-                    // ClampingScrollPhysics: no bounce animation at the edges,
-                    // which means the OverscrollNotification is fired cleanly
-                    // with the full attempted-but-blocked delta.
+                    // Clamping physics enables clean edge overscroll notifications
                     physics: const ClampingScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(
                       AppSizes.md,
@@ -117,16 +106,17 @@ class PassageContainer extends StatelessWidget {
                       AppSizes.md,
                       AppSizes.md,
                     ),
-                    child: Obx(() => RichTextParser.widget(
-                          block.passage?.content ?? 'Loading...',
-                          baseStyle: TextStyle(
-                            fontSize: 15 * controller.textScale.value,
-                            fontWeight: FontWeight.w400,
-                            height: 1.75,
-                            color:
-                                dark ? AppColors.grey : AppColors.darkerGrey,
-                          ),
-                        )),
+                    child: Obx(
+                      () => RichTextParser.widget(
+                        block.passage?.content ?? 'Loading...',
+                        baseStyle: TextStyle(
+                          fontSize: 15 * controller.textScale.value,
+                          fontWeight: FontWeight.w400,
+                          height: 1.75,
+                          color: dark ? AppColors.grey : AppColors.darkerGrey,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -207,7 +197,8 @@ class _PassageHeader extends StatelessWidget {
           // expand / collapse
           GestureDetector(
             onTap: hidden
-                ? controller.togglePassage      // unhide
+                ? controller
+                      .togglePassage // unhide
                 : controller.togglePassageSize, // expand ↔ collapse
             child: Icon(
               hidden

@@ -27,16 +27,13 @@ class NotificationsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Load local notifications immediately so the bell badge is populated
-    // as soon as the controller registers — no network call needed.
-    // The full remote sync happens later in _backgroundRefresh.
+    // Load local notifications immediately for responsive bell badge
     ever(UserController.instance.user, (_) {
       if (_userId.isNotEmpty) loadNotifications();
     });
   }
 
-  /// Loads notifications. If [syncRemote] is true, pulls from Supabase first.
-  /// Guards against empty userId — safe to call before user fully loads.
+  /// Loads notifications from local SQLite and optionally syncs from remote.
   Future<void> loadNotifications({bool syncRemote = false}) async {
     // Wait up to 3 s for userId to be populated if called too early.
     if (_userId.isEmpty) {
@@ -48,13 +45,17 @@ class NotificationsController extends GetxController {
     }
 
     if (_userId.isEmpty) {
-      debugPrint('[Notifications] userId still empty after wait — aborting load');
+      debugPrint(
+        '[Notifications] userId still empty after wait — aborting load',
+      );
       return;
     }
 
     try {
       isLoading.value = true;
-      debugPrint('[Notifications] loadNotifications userId=$_userId syncRemote=$syncRemote');
+      debugPrint(
+        '[Notifications] loadNotifications userId=$_userId syncRemote=$syncRemote',
+      );
 
       if (syncRemote) {
         try {
@@ -67,7 +68,9 @@ class NotificationsController extends GetxController {
 
       notifications.assignAll(await _repo.getLocal(_userId));
       _recalcUnread();
-      debugPrint('[Notifications] loaded ${notifications.length} notifications, ${unreadCount.value} unread');
+      debugPrint(
+        '[Notifications] loaded ${notifications.length} notifications, ${unreadCount.value} unread',
+      );
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -106,8 +109,7 @@ class NotificationsController extends GetxController {
 
   // ── Optimistic single-delete with undo ──────────────────────────────
 
-  /// Removes a single notification optimistically (instant UI update).
-  /// Call [undoDeleteOne] to revert before the SnackBar timeout expires.
+  /// Optimistically deletes a single notification with undo capability.
   Future<void> deleteOne(int id) async {
     final index = notifications.indexWhere((n) => n.id == id);
     if (index == -1) return;
@@ -144,8 +146,7 @@ class NotificationsController extends GetxController {
 
   // ── Optimistic bulk-delete with undo ────────────────────────────────
 
-  /// Removes all notifications optimistically (instant UI update).
-  /// Call [undoDeleteAll] to revert before the SnackBar timeout expires.
+  /// Optimistically deletes all notifications with undo capability.
   Future<void> deleteAll() async {
     if (_userId.isEmpty) return;
 
@@ -181,9 +182,7 @@ class NotificationsController extends GetxController {
     unreadCount.value = notifications.where((n) => !n.isRead).length;
   }
 
-  // ── Diagnostic: call manually via debug console if needed ───────────
-  /// Queries Supabase directly (bypasses SQLite) and prints every row found.
-  /// Run in debug mode and watch the console to verify what's in the DB.
+  /// Diagnostic query directly from Supabase for debugging.
   Future<void> diagnose() async {
     debugPrint('══════════════ [Notifications Diagnose] ══════════════');
     debugPrint('userId  = $_userId');
@@ -208,8 +207,10 @@ class NotificationsController extends GetxController {
 
       debugPrint('Total rows in notifications (limit 20): ${all.length}');
       for (final r in all) {
-        debugPrint('  id=${r['id']} user_id=${r['user_id']} '
-            'title=${r['title']} type=${r['type']}');
+        debugPrint(
+          '  id=${r['id']} user_id=${r['user_id']} '
+          'title=${r['title']} type=${r['type']}',
+        );
       }
 
       // 2. Rows for this user specifically
@@ -229,7 +230,6 @@ class NotificationsController extends GetxController {
       // 4. Local SQLite count
       final local = await _repo.getLocal(_userId);
       debugPrint('Local SQLite rows for this user: ${local.length}');
-
     } catch (e, st) {
       debugPrint('ERROR during diagnose: $e\n$st');
     }

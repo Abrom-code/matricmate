@@ -48,10 +48,8 @@ class QuestionController extends GetxController {
   late int time;
   late int ctrlId;
 
-  /// Set to true after a successful submit so onClose and any pending
-  /// fire-and-forget draft saves don't overwrite the completed result.
+  /// Flag indicating submission is complete to prevent draft overwrites.
   bool _isSubmitted = false;
-
 
   /// Pauses the timer without cancelling it (used when the exit dialog is open).
   bool _timerPaused = false;
@@ -71,11 +69,9 @@ class QuestionController extends GetxController {
 
     if (isTimed) {
       // If resuming a timed draft, start from where the timer was saved.
-      // Fall back to the full time if no saved seconds (new exam or untimed draft).
-      final savedSeconds =
-          (draft != null && draft.remainingSeconds > 0)
-              ? draft.remainingSeconds
-              : null;
+      final savedSeconds = (draft != null && draft.remainingSeconds > 0)
+          ? draft.remainingSeconds
+          : null;
       startTimerFromSeconds(savedSeconds ?? time * 60);
     }
 
@@ -103,10 +99,8 @@ class QuestionController extends GetxController {
         blocks.assignAll(await buildBlocks(testQuestions));
 
         // Restore draft answers and jump to the last answered question.
-        // Only restore isChecked from in-progress drafts — completed results
-        // have selectedAnswers too, but restoring isChecked for them would
-        // shade all questions green on a fresh start.
-        if (draft != null && draft.selectedAnswers.isNotEmpty &&
+        if (draft != null &&
+            draft.selectedAnswers.isNotEmpty &&
             !draft.isCompleted) {
           selectedAnswers.assignAll(draft.selectedAnswers);
 
@@ -117,7 +111,6 @@ class QuestionController extends GetxController {
             }
           }
           // In practice mode every selected answer was checked — fill any
-          // gap left by the draft/checkAnswer timing.
           if (!isExamMode) {
             for (final qId in draft.selectedAnswers.keys) {
               isChecked[qId] = true;
@@ -142,7 +135,9 @@ class QuestionController extends GetxController {
     }
   }
 
-  Future<List<QuestionBlockModel>> buildBlocks(List<QuestionModel> questions) async {
+  Future<List<QuestionBlockModel>> buildBlocks(
+    List<QuestionModel> questions,
+  ) async {
     try {
       isPassageLoading.value = true;
       final List<QuestionBlockModel> newBlocks = [];
@@ -216,8 +211,7 @@ class QuestionController extends GetxController {
     }
   }
 
-  /// Called before navigating to the result screen so onClose and any
-  /// pending fire-and-forget draft saves don't overwrite the completed result.
+  /// Marks submission finished before navigating to results.
   void markSubmitted() {
     _isSubmitted = true;
   }
@@ -273,18 +267,14 @@ class QuestionController extends GetxController {
   void selectAnswer(int questionId, int optionIndex) {
     if (isChecked[questionId] == true) return;
     selectedAnswers[questionId] = optionIndex;
-    // In practice mode checkAnswer() is called right after this by the UI,
-    // so pre-mark it here so the draft is consistent if saved immediately.
+    // Pre-mark checked state in practice mode for draft consistency
     if (!isExamMode) {
       isChecked[questionId] = true;
     }
     _saveDraft();
   }
 
-  /// Saves the current in-progress state as a draft (isCompleted = false).
-  /// Overwrites any previous draft for the same test.
-  /// No-ops if the test has already been submitted (guards against in-flight
-  /// saves racing with the final completed result write).
+  /// Saves in-progress state as draft if not already submitted.
   void _saveDraft() {
     if (_isSubmitted) return; // already submitted — never overwrite
     final draft = ResultModel(
@@ -299,11 +289,14 @@ class QuestionController extends GetxController {
       ),
       remainingSeconds: isTimed ? remainingSeconds.value : 0,
     );
-    _repo.saveResult(draft).then((_) {
-      // Draft saved successfully.
-    }).catchError((e) {
-      ToastHelper.error('Draft save failed: $e');
-    });
+    _repo
+        .saveResult(draft)
+        .then((_) {
+          // Draft saved successfully.
+        })
+        .catchError((e) {
+          ToastHelper.error('Draft save failed: $e');
+        });
   }
 
   bool isBookmarked(int questionId) =>
@@ -355,18 +348,16 @@ class QuestionController extends GetxController {
       ticksSinceLastSave++;
 
       // Save draft every 30 seconds so remaining time stays current
-      // even if the user hasn't answered a question.
-      // Only write if at least one answer exists — avoids overwriting a
-      // previous paused draft when the user starts fresh and idles.
-      if (ticksSinceLastSave >= 30 && testQuestions.isNotEmpty && selectedAnswers.isNotEmpty) {
+      if (ticksSinceLastSave >= 30 &&
+          testQuestions.isNotEmpty &&
+          selectedAnswers.isNotEmpty) {
         ticksSinceLastSave = 0;
         _saveDraft();
       }
     });
   }
 
-  /// True while the exit confirmation dialog is visible.
-  /// Prevents double-opening the dialog from PopScope + appbar button.
+  /// True while exit confirmation dialog is visible.
   bool _exitDialogOpen = false;
 
   /// Pauses the timer (dialog open). Does not cancel it.
@@ -404,12 +395,10 @@ class QuestionController extends GetxController {
   @override
   void onClose() {
     _timer?.cancel();
-    // Only save draft on exit if not already submitted — prevents overwriting
-    // a completed result (isCompleted=true) with a draft (isCompleted=false).
-    // Also require at least one answered question: if the user opened a fresh
-    // start and left immediately without touching anything, the existing draft
-    // (from a previous paused session) must be preserved.
-    if (testQuestions.isNotEmpty && !_isSubmitted && selectedAnswers.isNotEmpty) {
+    // Save draft on exit if active and not yet submitted
+    if (testQuestions.isNotEmpty &&
+        !_isSubmitted &&
+        selectedAnswers.isNotEmpty) {
       _saveDraft();
     }
     super.onClose();

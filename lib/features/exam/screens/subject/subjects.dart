@@ -23,8 +23,7 @@ class SubjectsScreen extends StatefulWidget {
   State<SubjectsScreen> createState() => _SubjectsScreenState();
 }
 
-class _SubjectsScreenState extends State<SubjectsScreen>
-    with RouteAware {
+class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
   SubjectsController get ctrl => SubjectsController.instance;
 
   @override

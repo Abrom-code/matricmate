@@ -9,9 +9,7 @@ class PremiumBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
-    // ── Theme tokens ──────────────────────────────────────────────────
-    // Dark:  near-black card, gold accent
-    // Light: warm off-white card with a gold tint, same accent
+    // Theme tokens: dark/light surface with gold accent
     final cardBg = dark
         ? const LinearGradient(
             colors: [Color(0xFF141414), Color(0xFF1E1E1E)],

@@ -42,10 +42,7 @@ class AppTextFormFieldTheme {
     prefixIconColor: Colors.grey,
     suffixIconColor: Colors.grey,
     labelStyle: const TextStyle().copyWith(fontSize: 14, color: Colors.white),
-    hintStyle: const TextStyle().copyWith(
-      fontSize: 14,
-      color: Colors.white54,
-    ),
+    hintStyle: const TextStyle().copyWith(fontSize: 14, color: Colors.white54),
     floatingLabelStyle: const TextStyle().copyWith(
       color: Colors.white.withValues(alpha: 0.8),
     ),

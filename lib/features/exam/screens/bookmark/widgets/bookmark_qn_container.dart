@@ -19,9 +19,9 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
         showBackArrow: true,
         title: Text(
           'Bookmarked Question',
-          style: Theme.of(context).textTheme.headlineSmall!.apply(
-                color: AppColors.white,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
       body: SingleChildScrollView(

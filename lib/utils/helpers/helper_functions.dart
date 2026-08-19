@@ -23,8 +23,7 @@ class AppHelperFunctions {
   static Future<void> downloadImages(Set<String> urls) async {
     if (urls.isEmpty) return;
     final cache = DefaultCacheManager();
-    // Download all images concurrently. Individual failures are swallowed so
-    // a single bad/missing URL doesn't abort the entire subject download.
+    // Download images concurrently; individual failures are ignored
     await Future.wait(
       urls.map((url) async {
         try {

@@ -17,10 +17,9 @@ class LinkInputField extends StatelessWidget {
       controller: controller.urlFiledController,
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
       style: const TextStyle(fontSize: 14),
-      validator: (value) =>
-          (value == null || value.trim().isEmpty)
-              ? null
-              : AppValidator.isValidUrl(value),
+      validator: (value) => (value == null || value.trim().isEmpty)
+          ? null
+          : AppValidator.isValidUrl(value),
       decoration: InputDecoration(
         hintText: 'https://transaction...',
         hintStyle: Theme.of(context).textTheme.labelMedium,

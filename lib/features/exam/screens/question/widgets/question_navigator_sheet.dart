@@ -20,8 +20,7 @@ class QuestionNavigatorSheet extends StatelessWidget {
         MediaQuery.orientationOf(context) == Orientation.landscape;
 
     return DraggableScrollableSheet(
-      // In landscape the screen is short, so open closer to full height
-      // and allow it to expand further.
+      // Expand closer to full height in landscape mode
       initialChildSize: isLandscape ? 0.85 : 0.55,
       minChildSize: isLandscape ? 0.60 : 0.35,
       maxChildSize: isLandscape ? 0.95 : 0.90,
@@ -58,18 +57,21 @@ class QuestionNavigatorSheet extends StatelessWidget {
                 children: [
                   Text(
                     'Questions',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Row(
                     children: [
                       const NavigatorLegendDot(
-                          color: AppColors.success, label: 'Done'),
+                        color: AppColors.success,
+                        label: 'Done',
+                      ),
                       const SizedBox(width: AppSizes.sm),
                       const NavigatorLegendDot(
-                          color: Colors.amber, label: 'Skipped'),
+                        color: Colors.amber,
+                        label: 'Skipped',
+                      ),
                       const SizedBox(width: AppSizes.sm),
                       NavigatorLegendDot(
                         color: AppColors.darkGrey.withValues(alpha: 0.35),
@@ -97,8 +99,7 @@ class QuestionNavigatorSheet extends StatelessWidget {
                   return GridView.builder(
                     controller: scrollCtrl,
                     padding: const EdgeInsets.all(AppSizes.defaultSpace),
-                    gridDelegate:
-                        SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossCount,
                       crossAxisSpacing: AppSizes.xs,
                       mainAxisSpacing: AppSizes.xs,
@@ -117,8 +118,8 @@ class QuestionNavigatorSheet extends StatelessWidget {
                 for (int i = 0; i < questions.length; i++) {
                   final label =
                       (questions[i].sectionTitle?.trim().isNotEmpty == true)
-                          ? questions[i].sectionTitle!.trim()
-                          : '—';
+                      ? questions[i].sectionTitle!.trim()
+                      : '—';
                   sections.putIfAbsent(label, () => []).add(i);
                 }
 
@@ -139,9 +140,7 @@ class QuestionNavigatorSheet extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   entry.key,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall!
+                                  style: Theme.of(context).textTheme.titleSmall!
                                       .copyWith(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w700,
@@ -150,9 +149,7 @@ class QuestionNavigatorSheet extends StatelessWidget {
                               ),
                               Text(
                                 '${entry.value.length} questions',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall!
+                                style: Theme.of(context).textTheme.labelSmall!
                                     .copyWith(color: AppColors.darkGrey),
                               ),
                             ],
@@ -166,10 +163,10 @@ class QuestionNavigatorSheet extends StatelessWidget {
                         sliver: SliverGrid(
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossCount,
-                            crossAxisSpacing: AppSizes.xs,
-                            mainAxisSpacing: AppSizes.xs,
-                          ),
+                                crossAxisCount: crossCount,
+                                crossAxisSpacing: AppSizes.xs,
+                                mainAxisSpacing: AppSizes.xs,
+                              ),
                           delegate: SliverChildBuilderDelegate(
                             (_, j) => QuestionNavigatorTile(
                               index: entry.value[j],

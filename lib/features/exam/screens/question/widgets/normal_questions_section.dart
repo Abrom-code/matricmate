@@ -22,8 +22,7 @@ class ExamQuestionSection extends GetView<QuestionController> {
 
   // ── shared submit helper ────────────────────────────────────────────────────
   Future<void> _submitResult(BuildContext context, QuestionModel q) async {
-    // In exam mode, mark every unanswered question as checked now so the
-    // result screen can compute the score properly.
+    // In exam mode, mark unanswered questions as checked for score calculation
     if (controller.isExamMode) {
       for (final tq in controller.testQuestions) {
         controller.checkAnswer(tq.id);
@@ -234,7 +233,10 @@ class ExamQuestionSection extends GetView<QuestionController> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              QuestionSection(qnNumber: q.questionOrder, examQn: q.questionText),
+              QuestionSection(
+                qnNumber: q.questionOrder,
+                examQn: q.questionText,
+              ),
               const SizedBox(height: AppSizes.spaceBtwItems),
               if (q.imageUrl != null) ImageSection(imgUrl: q.imageUrl),
               if (q.imageUrl != null)
@@ -271,11 +273,7 @@ class ExamQuestionSection extends GetView<QuestionController> {
             const SizedBox(width: AppSizes.defaultSpace),
 
             // Right: options + nav buttons (independently scrollable)
-            Expanded(
-              child: SingleChildScrollView(
-                child: optionsColumn,
-              ),
-            ),
+            Expanded(child: SingleChildScrollView(child: optionsColumn)),
           ],
         );
       }),

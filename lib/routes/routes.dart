@@ -151,10 +151,7 @@ class AppRoutes {
       page: () => const PaymentVerificationScreen(),
       binding: PremiumBinding(),
     ),
-    GetPage(
-      name: Routes.contactAdmin,
-      page: () => const ContactAdminScreen(),
-    ),
+    GetPage(name: Routes.contactAdmin, page: () => const ContactAdminScreen()),
     GetPage(name: Routes.pausedTests, page: () => const PausedTestsScreen()),
     GetPage(
       name: Routes.notifications,

@@ -9,8 +9,7 @@ class UserModel {
   /// subscription status: inactive | pending | active
   final String status;
 
-  /// When the user account was created. Used to filter out notifications that
-  /// were broadcast before this user signed up.
+  /// Account creation timestamp used for notification filtering.
   final DateTime? createdAt;
 
   UserModel({

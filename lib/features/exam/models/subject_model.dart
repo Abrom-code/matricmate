@@ -3,8 +3,7 @@ class SubjectModel {
   String name;
   bool isNatural, isCommon, isDownloaded, isEntranceDownloaded;
 
-  /// Cached remote counts — persisted to SQLite so they survive app restarts
-  /// without a network call.
+  /// Cached remote counts persisted to SQLite.
   int entranceCount;
   int modelCount;
 

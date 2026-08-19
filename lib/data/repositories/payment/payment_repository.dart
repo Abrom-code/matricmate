@@ -75,10 +75,7 @@ class PaymentRepository {
     }
   }
 
-  /// Cancel payment — wipes the user's full receipt history and storage files,
-  /// but only reverts subscription_status to 'inactive' when the status is
-  /// still 'pending'. If an admin already approved ('active'), that stays
-  /// untouched — the admin owns that state.
+  /// Cancels payment receipt and resets status to inactive if still pending.
   Future<void> cancelPayment(String userId) async {
     try {
       await ensureSupabaseAuth();
@@ -104,14 +101,9 @@ class PaymentRepository {
       }
 
       // 2. Delete every receipt row for this user.
-      await _supabase
-          .from('payment_receipts')
-          .delete()
-          .eq('user_id', userId);
+      await _supabase.from('payment_receipts').delete().eq('user_id', userId);
 
-      // 3. Revert to inactive only when the status is still 'pending'.
-      //    '.eq(subscription_status, pending)' means the UPDATE is a no-op
-      //    if admin already flipped it to 'active' — no accidental downgrade.
+      // 3. Revert to inactive only when status is still pending
       await _supabase
           .from('users')
           .update({'subscription_status': 'inactive'})

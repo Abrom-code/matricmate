@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-/// Small pill button that replaces the old full-width resume banner.
-/// Shows how many tests are paused; tapping opens the full list.
+/// Pill button displaying count of paused tests; opens paused list.
 class PausedTestsButton extends StatelessWidget {
   const PausedTestsButton({super.key, required this.count});
   final int count;

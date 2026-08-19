@@ -55,7 +55,8 @@ class QuestionModel {
       imageUrl: map['image_url']?.toString(),
       sectionId: map['section_id'],
       // Handles both SQLite flat column and Supabase nested relation
-      sectionTitle: map['section_title']?.toString() ??
+      sectionTitle:
+          map['section_title']?.toString() ??
           (map['question_sections'] is Map
               ? map['question_sections']['title']?.toString()
               : null),

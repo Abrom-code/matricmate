@@ -40,7 +40,11 @@ class AnalyticsContainer extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.task_alt_outlined, color: Colors.green, size: 28),
+                  const Icon(
+                    Icons.task_alt_outlined,
+                    color: Colors.green,
+                    size: 28,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     '$value',

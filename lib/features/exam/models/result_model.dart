@@ -11,12 +11,10 @@ class ResultModel {
   /// `true` = final submitted result; `false` = in-progress draft.
   final bool isCompleted;
 
-  /// Question IDs whose answers were revealed (practice mode checked state).
-  /// Empty for exam-mode sessions and completed results.
+  /// Question IDs with answers revealed in practice mode.
   final Set<int> checkedQuestions;
 
-  /// Remaining seconds on the timer when the draft was saved.
-  /// 0 for untimed or completed results.
+  /// Remaining countdown seconds when draft was saved.
   final int remainingSeconds;
 
   ResultModel({
@@ -50,8 +48,9 @@ class ResultModel {
     if (map['checkedQuestions'] != null) {
       try {
         checked = Set<int>.from(
-          (jsonDecode(map['checkedQuestions'] as String) as List)
-              .map((e) => (e as num).toInt()),
+          (jsonDecode(map['checkedQuestions'] as String) as List).map(
+            (e) => (e as num).toInt(),
+          ),
         );
       } catch (_) {}
     }
@@ -60,15 +59,15 @@ class ResultModel {
       testQuestions: map['testQuestions'] == null
           ? []
           : List<QuestionModel>.from(
-              jsonDecode(map['testQuestions'])
-                  .map((q) => QuestionModel.fromMap(q)),
+              jsonDecode(
+                map['testQuestions'],
+              ).map((q) => QuestionModel.fromMap(q)),
             ),
       selectedAnswers: map['selectedAnswers'] == null
           ? {}
-          : Map<String, dynamic>.from(
-              jsonDecode(map['selectedAnswers']),
-            ).map((key, value) =>
-                MapEntry(int.parse(key), (value as num).toInt())),
+          : Map<String, dynamic>.from(jsonDecode(map['selectedAnswers'])).map(
+              (key, value) => MapEntry(int.parse(key), (value as num).toInt()),
+            ),
       correctAnswers: map['correctAnswers'] ?? 0,
       testId: map['test_id'],
       userId: map['user_id'],

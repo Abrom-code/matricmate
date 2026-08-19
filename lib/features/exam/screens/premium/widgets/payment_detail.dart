@@ -12,9 +12,9 @@ class PaymentDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark   = AppHelperFunctions.isDark(context);
-    final number   = payment.account;
-    final name     = payment.holder;
+    final isDark = AppHelperFunctions.isDark(context);
+    final number = payment.account;
+    final name = payment.holder;
 
     return Padding(
       padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
@@ -48,17 +48,14 @@ class PaymentDetail extends StatelessWidget {
                           name,
                           style: TextStyle(
                             fontSize: 11,
-                            color: isDark
-                                ? AppColors.grey
-                                : AppColors.darkGrey,
+                            color: isDark ? AppColors.grey : AppColors.darkGrey,
                           ),
                         ),
                     ],
                   ),
                   const SizedBox(width: 5),
                   InkWell(
-                    onTap: () =>
-                        Clipboard.setData(ClipboardData(text: number)),
+                    onTap: () => Clipboard.setData(ClipboardData(text: number)),
                     child: const CircleAvatar(
                       radius: 13,
                       backgroundColor: Colors.transparent,

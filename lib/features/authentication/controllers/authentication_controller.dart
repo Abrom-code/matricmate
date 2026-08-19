@@ -113,8 +113,7 @@ class AuthenticationController extends GetxController
 
       final isConnected = await NetworkManager.instance.isConnected();
 
-      // Step 1 — fetch user record (validates session, gets premium status)
-      // Times out after verify timeout
+      // Step 1 — fetch user record (validates session and premium status)
       if (isConnected) {
         try {
           initStatus.value = 'Verifying account…';
@@ -142,9 +141,9 @@ class AuthenticationController extends GetxController
         // Step 3 — first login with no local subjects: fetch from remote
         if (SubjectsController.instance.subjects.isEmpty) {
           try {
-            await SubjectsController.instance
-                .initFromRemote()
-                .timeout(AppTimeouts.initFromRemote);
+            await SubjectsController.instance.initFromRemote().timeout(
+              AppTimeouts.initFromRemote,
+            );
           } catch (_) {
             // Timed out or failed — subjects remain empty; user can retry later.
           }
@@ -162,9 +161,9 @@ class AuthenticationController extends GetxController
         // Partial connectivity: attempt best-effort remote fetch
         if (SubjectsController.instance.subjects.isEmpty) {
           try {
-            await SubjectsController.instance
-                .initFromRemote()
-                .timeout(AppTimeouts.initFromRemote);
+            await SubjectsController.instance.initFromRemote().timeout(
+              AppTimeouts.initFromRemote,
+            );
             // Reload after remote fetch so subjects list is populated.
             await SubjectsController.instance.loadLocalSubjects();
           } catch (_) {

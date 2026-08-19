@@ -51,11 +51,10 @@ class LoginController extends GetxController {
 
       if (rememberMe.value) {
         await _secureStorage.write(key: 'saved_email', value: emailText);
-        await _secureStorage.write(key: 'saved_password', value: passwordText);
       } else {
         await _secureStorage.delete(key: 'saved_email');
-        await _secureStorage.delete(key: 'saved_password');
       }
+      await _secureStorage.delete(key: 'saved_password');
 
       // Network check
       final isConnected = await NetworkManager.instance.isConnected();
@@ -89,7 +88,12 @@ class LoginController extends GetxController {
             return;
           }
 
-          await SessionService().updateDevice(uid, deviceId, trials.value - 1);
+          final updated =
+              await SessionService().updateDevice(uid, deviceId, trials.value - 1);
+          if (!updated) {
+            isUpdating.value = false;
+            return;
+          }
 
           await authRepo.loginUsingEmailAndPassword(emailText, passwordText);
 
@@ -112,10 +116,8 @@ class LoginController extends GetxController {
 
   Future<void> loadCredentials() async {
     final savedEmail = await _secureStorage.read(key: 'saved_email');
-    final savedPassword = await _secureStorage.read(key: 'saved_password');
-    if (savedEmail != null && savedPassword != null) {
+    if (savedEmail != null && savedEmail.isNotEmpty) {
       email.text = savedEmail;
-      password.text = savedPassword;
       rememberMe.value = true;
     }
   }

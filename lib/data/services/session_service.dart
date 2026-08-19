@@ -68,17 +68,19 @@ class SessionService {
     }
   }
 
-  Future<void> updateDevice(String uid, String deviceId, int trial) async {
+  Future<bool> updateDevice(String uid, String deviceId, int trial) async {
     try {
       await _supabase
           .from('user_sessions')
           .update({'device_id': deviceId, 'trial': trial})
           .eq('firebase_uid', uid);
+      return true;
     } catch (e) {
       SnackbarHelper.error(
         'Device Update Failed',
         'Could not update your device. Please try again.',
       );
+      return false;
     }
   }
 

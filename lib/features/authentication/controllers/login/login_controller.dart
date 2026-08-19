@@ -88,8 +88,11 @@ class LoginController extends GetxController {
             return;
           }
 
-          final updated =
-              await SessionService().updateDevice(uid, deviceId, trials.value - 1);
+          final updated = await SessionService().updateDevice(
+            uid,
+            deviceId,
+            trials.value - 1,
+          );
           if (!updated) {
             isUpdating.value = false;
             return;

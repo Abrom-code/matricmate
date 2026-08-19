@@ -4,12 +4,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/data/services/realtime_service.dart';
+import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
@@ -18,6 +21,7 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 /// GetStorage key that records the last time session validation ran.
 const _kLastSessionCheckKey = 'last_session_check_ms';

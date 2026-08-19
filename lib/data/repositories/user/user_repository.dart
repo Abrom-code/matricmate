@@ -15,12 +15,22 @@ class UserRepository {
 
   Future<UserModel?> getLocalUser() async {
     final db = await databaseService.database;
+    final uid = _uid;
 
-    final result = await db.query('user', limit: 1);
+    final result = uid != null
+        ? await db.query('user', where: 'id = ?', whereArgs: [uid], limit: 1)
+        : await db.query('user', limit: 1);
 
     if (result.isEmpty) return null;
 
     return UserModel.fromMap(result.first);
+  }
+
+  Future<void> clearLocalUser() async {
+    try {
+      final db = await databaseService.database;
+      await db.delete('user');
+    } catch (_) {}
   }
 
   Future<void> saveUserRecord(UserModel user) async {

@@ -256,16 +256,36 @@ class AuthenticationController extends GetxController
 
   Future<void> logout() async {
     try {
+      AppFullScreenLoader.openLoadingDialog('Logging out...');
       _initStarted = false;
       deviceStorage.remove(_kLastSessionCheckKey);
+
+      if (Get.isRegistered<UserController>()) {
+        UserController.instance.cancelSessionWatch();
+        UserController.instance.user.value = UserModel.empty();
+      }
+
+      await userRepo.clearLocalUser();
+
       await Future.wait([
         authRepo.logout(),
         SyncingController.instance.clearSyncTimestamps(),
         RealtimeService.instance.stop(),
-        FcmService.instance.unsubscribeAll(), // unregister topics on sign-out
+        FcmService.instance.unsubscribeAll(),
       ]);
+
+      try {
+        await Supabase.instance.client.auth.signOut();
+      } catch (_) {}
+
+      if (Get.isRegistered<NavigationController>()) {
+        Get.find<NavigationController>().selectedIdx.value = 0;
+      }
+
+      AppFullScreenLoader.stopLoading();
       Get.offAllNamed(Routes.signIn);
     } catch (e) {
+      AppFullScreenLoader.stopLoading();
       throw AppExceptionHandler.handle(e);
     }
   }

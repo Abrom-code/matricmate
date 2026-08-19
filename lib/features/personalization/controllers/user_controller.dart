@@ -63,25 +63,10 @@ class UserController extends GetxController {
     }
   }
 
+  void cancelSessionWatch() => _sessionService.cancelWatch();
+
   Future<void> logOut() async {
-    try {
-      AppFullScreenLoader.openLoadingDialog('Logging out...');
-
-      // Stop session watch before signing out
-      _sessionService.cancelWatch();
-
-      await _authRepo.logout();
-
-      user.value = UserModel.empty();
-
-      AppFullScreenLoader.stopLoading();
-      final nav = Get.find<NavigationController>();
-      nav.selectedIdx.value = 0;
-      Get.offAllNamed(Routes.signIn);
-    } catch (e) {
-      AppFullScreenLoader.stopLoading();
-      AppExceptionHandler.handleResponse(e);
-    }
+    await AuthenticationController.instance.logout();
   }
 
   Future<bool> fetchUserRecord() async {

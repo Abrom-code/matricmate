@@ -7,6 +7,9 @@ final RouteObserver<ModalRoute<void>> appRouteObserver =
 class Routes {
   // exam
   static const home = '/';
+  static const subjectDetail = '/subject-detail';
+  static const studyPractice = '/study-practice';
+  static const mockExams = '/mock-exams';
   static const bookmark = '/bookmark';
   static const chapter = '/chapter';
   static const gradeTests = '/gradeTests';

@@ -12,6 +12,7 @@ import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.
 import 'package:matricmate/features/exam/screens/subject/widgets/paused_test_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_header.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -142,18 +143,11 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                             image: AppHelperFunctions.getSubjectImage(
                               subject.name,
                             ),
-                            isDownloaded: subject.isDownloaded,
+                            isDownloaded: subject.isDownloaded || subject.isEntranceDownloaded,
                             onPressed: () =>
                                 ctrl.downloadSubject(subject.name, subject.id),
-                            onTap: () => subject.isDownloaded
-                                ? Get.toNamed(
-                                    Routes.chapter,
-                                    arguments: {
-                                      'title': subject.name,
-                                      'id': subject.id,
-                                    },
-                                  )
-                                : null,
+                            onTap: () =>
+                                SubjectModeModal.show(context, subject),
                           );
                         },
                       ),

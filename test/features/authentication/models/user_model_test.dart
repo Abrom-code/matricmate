@@ -14,7 +14,7 @@ void main() {
     );
 
     test('serializes the fields persisted locally and remotely', () {
-      expect(user.toMap(), {
+      expect(user.toJson(), {
         'id': 'user-1',
         'first_name': 'Abel',
         'last_name': 'Tesfaye',
@@ -22,6 +22,9 @@ void main() {
         'stream': 'Natural',
         'subscription_status': 'active',
       });
+      expect(user.toMap()['id'], 'user-1');
+      expect(user.toMap()['first_name'], 'Abel');
+      expect(user.toMap()['subscription_status'], 'active');
     });
 
     test('uses safe defaults for missing remote fields', () {

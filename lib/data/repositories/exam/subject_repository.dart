@@ -48,12 +48,9 @@ class SubjectRepository {
         (p) => onStep('Fetching chapters…', p),
       );
 
-      // Step 2 — fetch chapter/grade tests (0.15 → 0.28)
+      // Step 2 — fetch all tests (chapter, grade, entrance, model) (0.15 → 0.28)
       final tests = await _withProgress(
-        supabase.from('tests').select().eq('subject_id', subjectId).inFilter(
-          'type',
-          ['chapter', 'grade'],
-        ),
+        supabase.from('tests').select().eq('subject_id', subjectId),
         0.15,
         0.28,
         (p) => onStep('Fetching tests…', p),
@@ -310,7 +307,7 @@ class SubjectRepository {
 
       await db.update(
         'subjects',
-        {'is_downloaded': 1},
+        {'is_downloaded': 1, 'is_entrance_downloaded': 1},
         where: 'name = ?',
         whereArgs: [subject],
       );

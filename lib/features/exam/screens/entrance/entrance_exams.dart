@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class EntranceExamsScreen extends StatefulWidget {
@@ -77,36 +77,80 @@ class _EntranceExamsScreenState extends State<EntranceExamsScreen>
             ),
           ),
         ),
-        title: Text(
-          subject,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 18.5,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.4,
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              subject,
+              style: const TextStyle(
+                color: AppColors.white,
+                fontSize: 18.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const Text(
+              'Entrance & Model Exams',
+              style: TextStyle(
+                color: Color(0xFFD1FAE5),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
-        bottom: TabBar(
-          controller: tabCtrl.tabController,
-          tabAlignment: TabAlignment.fill,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-            color: AppColors.white,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(46),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: TabBar(
+              controller: tabCtrl.tabController,
+              indicator: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: const Color(0xFF00382E),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelColor: AppColors.white,
+              unselectedLabelColor: AppColors.white.withValues(alpha: 0.75),
+              labelPadding: EdgeInsets.zero,
+              tabs: tabCtrl.tabs.map((t) {
+                return Tab(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(
+                        t['label'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 13,
-            color: AppColors.white,
-          ),
-          indicatorColor: AppColors.white,
-          dividerColor: Colors.transparent,
-          tabs: tabCtrl.tabs.map((t) => Tab(text: t['label'])).toList(),
         ),
       ),
       body: Obx(() {
         if (ctrl.isLoading.value) {
-          return const AppCircularLoading(title: 'Loading...');
+          return const AppCircularLoading(title: 'Loading exams...');
         }
 
         return TabBarView(
@@ -117,7 +161,11 @@ class _EntranceExamsScreenState extends State<EntranceExamsScreen>
               controller: ctrl,
               label: 'Entrance',
             ),
-            _ExamList(tests: ctrl.modelTests, controller: ctrl, label: 'Model'),
+            _ExamList(
+              tests: ctrl.modelTests,
+              controller: ctrl,
+              label: 'Model',
+            ),
           ],
         );
       }),
@@ -140,22 +188,106 @@ class _ExamList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
+
     if (tests.isEmpty) {
-      return Center(child: Text('No $label Exams Found'));
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.primary
+                      .withValues(alpha: dark ? 0.15 : 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.assignment_outlined,
+                  size: 40,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No $label Exams Available',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Check back soon or sync on the home screen to refresh.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.5,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     final isLandscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
 
     final list = ListView.builder(
-      padding: const EdgeInsets.all(AppSizes.defaultSpace),
-      itemCount: tests.length,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
+      itemCount: tests.length + 1,
       itemBuilder: (context, index) {
-        final test = tests[index];
+        // Top count header
+        if (index == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12, left: 2, right: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$label Papers',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(
+                      alpha: dark ? 0.2 : 0.1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${tests.length} tests available',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final test = tests[index - 1];
         final hasQn = controller.testHasQuestions[test.id] ?? false;
+        final testIndex = index - 1;
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+          padding: const EdgeInsets.only(bottom: 12),
           child: Obx(() {
             final isInactive = UserController.instance.user.value.isInactive;
             final isPending = UserController.instance.user.value.isPending;
@@ -165,7 +297,7 @@ class _ExamList extends StatelessWidget {
             final _ = controller.testResults[test.id];
 
             final canAccess =
-                isActive || ((isInactive || isPending) && index < 2);
+                isActive || ((isInactive || isPending) && testIndex < 2);
 
             return TestTile(
               icon: canAccess ? Iconsax.message_question_copy : Icons.lock,
@@ -180,19 +312,19 @@ class _ExamList extends StatelessWidget {
               timeMinutes: test.time,
               isNew: test.isNew,
               onTap: () {
-                if (isInactive && index >= 2) {
+                if (isInactive && testIndex >= 2) {
                   Get.bottomSheet(
                     const PremiumBottomSheet(),
                     isScrollControlled: true,
                   );
                   return;
                 }
-                if (isPending && index >= 2) {
+                if (isPending && testIndex >= 2) {
                   Get.toNamed(Routes.paymentVerification);
                   return;
                 }
                 if (!hasQn) {
-                  ToastHelper.info('No questions added!');
+                  ToastHelper.info('No questions added yet!');
                   return;
                 }
                 Get.dialog(

@@ -30,6 +30,8 @@ import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
 import 'package:matricmate/features/exam/screens/result/review.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
+import 'package:matricmate/bindings/exam/subject_detail_binding.dart';
+import 'package:matricmate/features/exam/screens/subject/subject_detail_screen.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/notifications/screens/notifications_screen.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
@@ -52,6 +54,21 @@ class AppRoutes {
     // main
     GetPage(name: Routes.navigationMenu, page: () => const NavigationMenu()),
     GetPage(name: Routes.home, page: () => const SubjectsScreen()),
+    GetPage(
+      name: Routes.subjectDetail,
+      page: () => const SubjectDetailScreen(),
+      binding: SubjectDetailBinding(),
+    ),
+    GetPage(
+      name: Routes.studyPractice,
+      page: () => const ChapterScreen(),
+      binding: ChapterBinding(),
+    ),
+    GetPage(
+      name: Routes.mockExams,
+      page: () => const EntranceExamsScreen(),
+      binding: EntranceExamsBinding(),
+    ),
     GetPage(
       name: Routes.bookmark,
       page: () => BookmarkScreen(),

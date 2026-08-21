@@ -28,7 +28,7 @@ void main() {
 
       expect(find.text('Telebirr'), findsOneWidget);
       expect(find.text('RECOMMENDED'), findsOneWidget);
-      expect(find.byIcon(Icons.radio_button_checked), findsOneWidget);
+      expect(find.byIcon(Icons.check), findsOneWidget);
       await tester.tap(find.text('Telebirr'));
       expect(taps, 1);
     },

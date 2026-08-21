@@ -12,7 +12,6 @@ import 'package:matricmate/features/personalization/screens/analytics/widgets/te
 import 'package:matricmate/features/personalization/screens/analytics/widgets/weakest_areas_card.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -143,7 +142,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               // Center and constrain content width in landscape
               final content = SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.paddingOf(context).bottom + 100,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -169,7 +173,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(height: 14),
 
                     WeakestAreasCard(controller: controller),
-                    const SizedBox(height: AppSizes.spaceBtwSections),
                   ],
                 ),
               );

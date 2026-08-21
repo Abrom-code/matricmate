@@ -42,7 +42,6 @@ dependencies:
   firebase_core: ^4.6.0
   firebase_auth: ^6.3.0
   connectivity_plus: ^7.1.0
-  firebase_storage: ^13.4.6
   smooth_page_indicator: ^2.0.1
   sqflite: ^2.4.2
   path: ^1.9.1

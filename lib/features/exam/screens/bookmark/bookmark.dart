@@ -200,7 +200,12 @@ class _BookmarkScreenState extends State<BookmarkScreen>
                       return const Center(child: Text('No bookmark found'));
                     }
                     return ListView.separated(
-                      padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
+                      padding: EdgeInsets.fromLTRB(
+                        AppSizes.defaultSpace / 2,
+                        AppSizes.defaultSpace / 2,
+                        AppSizes.defaultSpace / 2,
+                        MediaQuery.paddingOf(context).bottom + 100,
+                      ),
                       itemCount: filtered.length,
                       separatorBuilder: (_, __) =>
                           const SizedBox(height: AppSizes.spaceBtwItems),
@@ -210,7 +215,6 @@ class _BookmarkScreenState extends State<BookmarkScreen>
                   }).toList(),
                 ),
               ),
-              const SizedBox(height: AppSizes.spaceBtwSections * 2),
             ],
           ),
         );

@@ -8,7 +8,6 @@ import 'package:matricmate/features/personalization/screens/profile/widgets/acco
 import 'package:matricmate/features/personalization/screens/profile/widgets/connect_support_section.dart';
 import 'package:matricmate/features/personalization/screens/profile/widgets/profile_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -58,7 +57,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             MediaQuery.orientationOf(context) == Orientation.landscape;
         final content = SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              MediaQuery.paddingOf(context).bottom + 100,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -135,8 +139,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-
-                const SizedBox(height: AppSizes.spaceBtwSections),
               ],
             ),
           ),

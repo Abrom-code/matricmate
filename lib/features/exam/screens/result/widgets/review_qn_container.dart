@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/exam/question_detail_box.dart';
 import 'package:matricmate/features/exam/controllers/review_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -27,26 +26,37 @@ class ReviewContainer extends GetView<ReviewController> {
         question: qn,
         selectedAnswerIndex: selectedAnswer,
         // ── Header ───────────────────────────────────────────────────
-        headerLeft: Text(
-          '${qn.questionOrder} of ${result.testQuestions.length}',
-          style: Theme.of(
-            context,
-          ).textTheme.labelMedium!.apply(fontSizeDelta: 3),
+        headerLeft: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'Q${qn.questionOrder} of ${result.testQuestions.length}',
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
+          ),
         ),
         headerRight: result.selectedAnswers[qn.id] == null
-            ? CorrectCheckButton(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.darkGrey
-                    : AppColors.darkerGrey,
-                icon: Iconsax.timer_1_copy,
-                text: 'Not Answered',
+            ? const CorrectCheckButton(
+                color: Color(0xFFF59E0B),
+                icon: Icons.timer_outlined,
+                text: 'Skipped',
               )
             : result.selectedAnswers[qn.id] == qn.correctOptionIndex
-            ? const CorrectCheckButton()
+            ? const CorrectCheckButton(
+                color: Color(0xFF10B981),
+                icon: Icons.check_circle_rounded,
+                text: 'Correct',
+              )
             : const CorrectCheckButton(
-                color: Colors.red,
-                icon: Iconsax.close_circle_copy,
-                text: 'Incorrect',
+                color: Color(0xFFEF4444),
+                icon: Icons.cancel_rounded,
+                text: 'Wrong',
               ),
         // ── Passage ──────────────────────────────────────────────────
         passageTitle: passage?.title,

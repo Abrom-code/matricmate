@@ -25,7 +25,9 @@ class PremiumController extends GetxController {
   final isUploading = false.obs;
 
   final receiptCount = 0.obs;
-  bool get exceededUploadLimit => receiptCount.value >= 2;
+  bool get exceededUploadLimit =>
+      _userController.user.value.exceededUploadLimit ||
+      receiptCount.value >= 2;
 
   late final TextEditingController urlFiledController;
   late GlobalKey<FormState> paymentFormKey;
@@ -34,6 +36,8 @@ class PremiumController extends GetxController {
   void onInit() {
     urlFiledController = TextEditingController();
     paymentFormKey = GlobalKey<FormState>();
+
+    receiptCount.value = _userController.user.value.receiptUploadCount;
 
     // Load payment config if not yet loaded or empty
     if (!_cfg.isLoaded.value || _cfg.methods.isEmpty) {
@@ -44,6 +48,11 @@ class PremiumController extends GetxController {
     _selectDefault();
 
     _fetchReceiptCount();
+
+    // Sync receiptCount whenever user model updates (e.g. Realtime admin reset)
+    ever(_userController.user, (user) {
+      receiptCount.value = user.receiptUploadCount;
+    });
 
     // Keep selection valid when the methods list changes (Realtime update).
     ever(_cfg.methods, (_) {
@@ -77,9 +86,10 @@ class PremiumController extends GetxController {
   }
 
   Future<void> _fetchReceiptCount() async {
-    final userId = _userController.user.value.id;
-    if (userId.isNotEmpty) {
-      receiptCount.value = await _repo.getReceiptCount(userId);
+    final user = _userController.user.value;
+    receiptCount.value = user.receiptUploadCount;
+    if (user.id.isNotEmpty) {
+      receiptCount.value = await _repo.getReceiptCount(user.id);
     }
   }
 

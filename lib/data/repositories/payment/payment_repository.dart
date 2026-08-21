@@ -7,18 +7,45 @@ import 'package:image_picker/image_picker.dart';
 class PaymentRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  /// Returns the number of receipt rows the user has uploaded.
+  /// Returns the number of receipt upload attempts from the users table.
   Future<int> getReceiptCount(String userId) async {
     try {
       await ensureSupabaseAuth();
       final data = await _supabase
-          .from('payment_receipts')
-          .select('id')
-          .eq('user_id', userId);
-      return data.length;
+          .from('users')
+          .select('receipt_upload_count')
+          .eq('id', userId)
+          .maybeSingle();
+      return (data?['receipt_upload_count'] as num?)?.toInt() ?? 0;
     } catch (_) {
       return 0;
     }
+  }
+
+  /// Increments receipt_upload_count for the given user in Supabase.
+  Future<void> incrementReceiptUploadCount(String userId) async {
+    try {
+      await ensureSupabaseAuth();
+      try {
+        await _supabase.rpc(
+          'increment_receipt_upload_count',
+          params: {'p_user_id': userId},
+        );
+      } catch (_) {
+        // Fallback: direct update if RPC is not yet created in Supabase
+        final data = await _supabase
+            .from('users')
+            .select('receipt_upload_count')
+            .eq('id', userId)
+            .maybeSingle();
+        final current =
+            (data?['receipt_upload_count'] as num?)?.toInt() ?? 0;
+        await _supabase
+            .from('users')
+            .update({'receipt_upload_count': current + 1})
+            .eq('id', userId);
+      }
+    } catch (_) {}
   }
 
   /// Upload receipt
@@ -57,6 +84,8 @@ class PaymentRepository {
         'payment_method': paymentMethod,
         'verification_url': verificationUrl,
       });
+
+      await incrementReceiptUploadCount(userId);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -103,10 +132,13 @@ class PaymentRepository {
       // 2. Delete every receipt row for this user.
       await _supabase.from('payment_receipts').delete().eq('user_id', userId);
 
-      // 3. Revert to inactive only when status is still pending
+      // 3. Revert to inactive and reset upload count only when status is still pending
       await _supabase
           .from('users')
-          .update({'subscription_status': 'inactive'})
+          .update({
+            'subscription_status': 'inactive',
+            'receipt_upload_count': 0,
+          })
           .eq('id', userId)
           .eq('subscription_status', 'pending');
     } catch (e) {

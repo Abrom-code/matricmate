@@ -67,13 +67,16 @@ class PaymentRepository {
     }
   }
 
-  /// Save payment
+  /// Save payment receipt with chosen plan details
   Future<void> savePaymentReceipt({
     required String userId,
     required String receiptPath,
     required String receiptUrl,
     required String paymentMethod,
     required String verificationUrl,
+    String? planKey,
+    int? planDurationMonths,
+    num? amount,
   }) async {
     try {
       await ensureSupabaseAuth();
@@ -83,6 +86,10 @@ class PaymentRepository {
         'receipt_url': receiptUrl,
         'payment_method': paymentMethod,
         'verification_url': verificationUrl,
+        if (planKey != null) 'plan_key': planKey,
+        if (planDurationMonths != null)
+          'plan_duration_months': planDurationMonths,
+        if (amount != null) 'amount': amount,
       });
 
       await incrementReceiptUploadCount(userId);

@@ -79,8 +79,17 @@ class PaymentConfigService {
   /// All currently active payment methods.
   final methods = <PaymentConfig>[].obs;
 
-  /// Subscription price in ETB.
-  final subscriptionPrice = 300.obs;
+  /// Dynamic plan prices in ETB loaded from `app_config` (keyed by plan key e.g. '1_year').
+  final planPrices = <String, int>{}.obs;
+
+  /// Returns the price for a plan, using dynamic app_config price if present,
+  /// falling back to the plan's defaultPrice.
+  int getPriceForPlan(String planKey, int defaultPrice) {
+    return planPrices[planKey] ?? defaultPrice;
+  }
+
+  /// Subscription price for the featured (1 year) plan in ETB (convenience).
+  int get subscriptionPrice => planPrices['1_year'] ?? 250;
 
   /// Telegram support link (loaded from app_config, falls back to hardcoded).
   final telegramLink = 'https://t.me/matric_mate'.obs;
@@ -155,6 +164,17 @@ class PaymentConfigService {
 
       case 'share_link':
         shareLink.value = '';
+
+      case 'plan_price_6_months':
+        planPrices.remove('6_months');
+      case 'plan_price_1_year':
+        planPrices.remove('1_year');
+      case 'plan_price_2_years':
+        planPrices.remove('2_years');
+      case 'plan_price_3_years':
+        planPrices.remove('3_years');
+      case 'plan_price_4_years':
+        planPrices.remove('4_years');
     }
 
     _rebuildMethods();
@@ -196,10 +216,33 @@ class PaymentConfigService {
       case 'payment_extra_accounts':
         _accounts['payment_extra_accounts'] = value;
 
-      // Subscription price
+      // Plan prices
+      case 'plan_price_6_months':
+        final parsed = int.tryParse(value);
+        if (parsed != null && parsed > 0) planPrices['6_months'] = parsed;
+
+      case 'plan_price_1_year':
+        final parsed = int.tryParse(value);
+        if (parsed != null && parsed > 0) planPrices['1_year'] = parsed;
+
+      case 'plan_price_2_years':
+        final parsed = int.tryParse(value);
+        if (parsed != null && parsed > 0) planPrices['2_years'] = parsed;
+
+      case 'plan_price_3_years':
+        final parsed = int.tryParse(value);
+        if (parsed != null && parsed > 0) planPrices['3_years'] = parsed;
+
+      case 'plan_price_4_years':
+        final parsed = int.tryParse(value);
+        if (parsed != null && parsed > 0) planPrices['4_years'] = parsed;
+
+      // Legacy subscription price fallback
       case 'subscription_price':
         final parsed = int.tryParse(value);
-        if (parsed != null && parsed > 0) subscriptionPrice.value = parsed;
+        if (parsed != null && parsed > 0 && !planPrices.containsKey('1_year')) {
+          planPrices['1_year'] = parsed;
+        }
 
       // Telegram support link
       case 'telegram_link':

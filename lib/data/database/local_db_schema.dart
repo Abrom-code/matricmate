@@ -13,7 +13,9 @@ class DBschema {
         stream TEXT,
         subscription_status TEXT DEFAULT 'inactive',
         created_at TEXT,
-        receipt_upload_count INTEGER DEFAULT 0
+        receipt_upload_count INTEGER DEFAULT 0,
+        subscription_plan TEXT,
+        subscription_expires_at TEXT
       );
     ''');
 

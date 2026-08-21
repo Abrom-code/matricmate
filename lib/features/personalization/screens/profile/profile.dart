@@ -43,7 +43,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final fullName = UserController.instance.user.value.fullName.trim();
           return Text(
             fullName,
-            style: const TextStyle(color: AppColors.darkGrey, fontSize: 12),
+            style: const TextStyle(
+              color: Color(0xFFD1FAE5),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
           );
         }),
       ),

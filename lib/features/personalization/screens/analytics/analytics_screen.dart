@@ -48,7 +48,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               : '';
           return Text(
             label,
-            style: const TextStyle(color: AppColors.darkGrey, fontSize: 12),
+            style: const TextStyle(
+              color: Color(0xFFD1FAE5),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
           );
         }),
         actions: [

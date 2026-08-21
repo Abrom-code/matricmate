@@ -55,15 +55,36 @@ class _EntranceExamsScreenState extends State<EntranceExamsScreen>
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: Appbar.toolbarHeight(context),
-        leading: IconButton(
-          onPressed: Get.back,
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.white),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            onPressed: Get.back,
+            tooltip: 'Back',
+            icon: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 16,
+                  color: AppColors.white,
+                ),
+              ),
+            ),
+          ),
         ),
         title: Text(
           subject,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall!.apply(color: AppColors.white),
+          style: const TextStyle(
+            color: AppColors.white,
+            fontSize: 18.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
+          ),
         ),
         bottom: TabBar(
           controller: tabCtrl.tabController,

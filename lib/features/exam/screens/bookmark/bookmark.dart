@@ -93,7 +93,11 @@ class _BookmarkScreenState extends State<BookmarkScreen>
           final count = ctrl.bookmarkedQuestions.length;
           return Text(
             '$count ${count == 1 ? 'item' : 'items'} saved',
-            style: const TextStyle(color: AppColors.white, fontSize: 12),
+            style: const TextStyle(
+              color: Color(0xFFD1FAE5),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
           );
         }),
         actions: [

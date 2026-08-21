@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-/// Wraps standard [Appbar] with optional subtitle.
+/// Wraps standard [Appbar] with crisp typography and optional subtitle.
 class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
   const ModernAppbar({
     super.key,
@@ -87,9 +87,10 @@ class ModernAppbarWithBuilder extends StatelessWidget
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
 const _subtitleStyle = TextStyle(
-  color: Colors.white70,
-  fontSize: 12,
-  fontWeight: FontWeight.w400,
+  color: Color(0xFFD1FAE5), // soft emerald tint on teal
+  fontSize: 11.5,
+  fontWeight: FontWeight.w500,
+  letterSpacing: 0.2,
 );
 
 /// Title + optional subtitle stacked in a left-aligned column.
@@ -109,11 +110,15 @@ class _TitleColumn extends StatelessWidget {
           title,
           style: const TextStyle(
             color: AppColors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontSize: 18.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
           ),
         ),
-        if (subtitle != null) ...[const SizedBox(height: 1), subtitle!],
+        if (subtitle != null) ...[
+          const SizedBox(height: 1.5),
+          subtitle!,
+        ],
       ],
     );
   }

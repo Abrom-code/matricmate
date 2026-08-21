@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter/services.dart';
-
+import 'package:get/get.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/device/device_utility.dart';
-import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 /// Compact toolbar height used in landscape to save vertical space.
 const double _kLandscapeToolbarHeight = 40.0;
@@ -24,6 +22,7 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
     this.leadingIconColor = AppColors.white,
     this.showNotification = false,
     this.onNotificationPressed,
+    this.bottom,
   });
 
   final Widget? title;
@@ -36,6 +35,7 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
   final Color leadingIconColor;
   final bool showNotification;
   final VoidCallback? onNotificationPressed;
+  final PreferredSizeWidget? bottom;
 
   /// Returns the correct toolbar height for the current orientation.
   static double toolbarHeight(BuildContext context) {
@@ -46,8 +46,8 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool dark = AppHelperFunctions.isDark(context);
     final double height = toolbarHeight(context);
+    final isPrimaryBg = backgroundColor == AppColors.primary;
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -59,31 +59,63 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
 
       /// Status bar style
-      systemOverlayStyle: SystemUiOverlayStyle.light,
+      systemOverlayStyle: isPrimaryBg
+          ? SystemUiOverlayStyle.light
+          : (Theme.of(context).brightness == Brightness.dark
+              ? SystemUiOverlayStyle.light
+              : SystemUiOverlayStyle.dark),
 
       /// Leading (Back or Custom Icon)
       leading: showBackArrow
-          ? IconButton(
-              onPressed: Get.back,
-              icon: Icon(Icons.arrow_back_ios_new, color: leadingIconColor),
+          ? Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: IconButton(
+                onPressed: Get.back,
+                tooltip: 'Back',
+                icon: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: isPrimaryBg
+                        ? AppColors.white.withValues(alpha: 0.15)
+                        : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 16,
+                      color: leadingIconColor,
+                    ),
+                  ),
+                ),
+              ),
             )
           : leadingIcon != null
-          ? IconButton(
-              onPressed: leadingOnPressed,
-              icon: Icon(leadingIcon, color: leadingIconColor),
-            )
-          : null,
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: IconButton(
+                    onPressed: leadingOnPressed,
+                    icon: Icon(leadingIcon, color: leadingIconColor, size: 20),
+                  ),
+                )
+              : null,
 
       /// Title
       title: title,
       centerTitle: centerTitle,
-      titleSpacing: 8,
+      titleSpacing: showBackArrow || leadingIcon != null ? 4 : 16,
 
       /// Title Style (if using Text widget)
       titleTextStyle: TextStyle(
         fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: dark ? AppColors.white : AppColors.black,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+        color: isPrimaryBg
+            ? AppColors.white
+            : (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.white
+                : AppColors.textPrimary),
       ),
 
       /// Actions
@@ -91,27 +123,37 @@ class Appbar extends StatelessWidget implements PreferredSizeWidget {
         if (actions != null) ...actions!,
         if (showNotification)
           Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: const EdgeInsets.only(right: 6),
             child: _NotificationBell(
-              onPressed:
-                  onNotificationPressed ??
+              onPressed: onNotificationPressed ??
                   () => Get.toNamed(Routes.notifications),
             ),
           ),
       ],
       actionsPadding: const EdgeInsets.symmetric(horizontal: 4),
 
-      /// Icon Theme (affects actions icons too)
-      iconTheme: const IconThemeData(color: AppColors.white),
+      /// Icon Theme
+      iconTheme: IconThemeData(
+        color: isPrimaryBg
+            ? AppColors.white
+            : (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.white
+                : AppColors.textPrimary),
+        size: 22,
+      ),
+
+      bottom: bottom,
     );
   }
 
   @override
   Size get preferredSize {
-    // Read orientation from Get.context before build
     final ctx = Get.context;
-    if (ctx != null) return Size.fromHeight(toolbarHeight(ctx));
-    return Size.fromHeight(AppDeviceUtils.getAppBarHeight());
+    final baseHeight = ctx != null
+        ? toolbarHeight(ctx)
+        : AppDeviceUtils.getAppBarHeight();
+    final bottomHeight = bottom?.preferredSize.height ?? 0.0;
+    return Size.fromHeight(baseHeight + bottomHeight);
   }
 }
 
@@ -124,36 +166,56 @@ class _NotificationBell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // Only read controller if registered to avoid unhandled crash
       final count = Get.isRegistered<NotificationsController>()
           ? NotificationsController.instance.unreadCount.value
           : 0;
 
       return IconButton(
-        tooltip: count > 0 ? '$count unread' : 'Notifications',
+        tooltip: count > 0 ? '$count unread notifications' : 'Notifications',
         onPressed: onPressed,
         icon: Stack(
           clipBehavior: Clip.none,
           children: [
-            Icon(
-              count > 0
-                  ? Icons.notifications_rounded
-                  : Icons.notifications_outlined,
-              color: AppColors.white,
-              size: 24,
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(
+                  count > 0
+                      ? Icons.notifications_rounded
+                      : Icons.notifications_outlined,
+                  color: AppColors.white,
+                  size: 20,
+                ),
+              ),
             ),
             if (count > 0)
               Positioned(
-                top: -4,
-                right: -6,
+                top: -2,
+                right: -2,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 4,
-                    vertical: 1,
+                    vertical: 1.5,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade600,
-                    borderRadius: BorderRadius.circular(8),
+                    color: const Color(0xFFEF4444),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
                   constraints: const BoxConstraints(
                     minWidth: 16,
@@ -164,8 +226,8 @@ class _NotificationBell extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
                     ),
                     textAlign: TextAlign.center,
                   ),

@@ -63,7 +63,11 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               '${stream[0].toUpperCase()}${stream.substring(1)} stream';
           return Text(
             label,
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
+            style: const TextStyle(
+              color: Color(0xFFD1FAE5),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
           );
         }),
         actions: [

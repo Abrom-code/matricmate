@@ -13,45 +13,106 @@ class ResultBadgeCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final examBadge = ExamBadgeHelper.getBadge(ratio);
+    final percentage = (ratio * 100).round();
 
-    return Container(
-      width: 200,
-      height: 200,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(150),
-        color: dark ? AppColors.darkCard : AppColors.lightCard,
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 10,
-            right: 30,
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(70),
-                color: Colors.yellow,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 170,
+          height: 170,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: dark ? AppColors.darkCard : AppColors.white,
+            boxShadow: [
+              BoxShadow(
+                color: examBadge.color.withValues(alpha: dark ? 0.35 : 0.2),
+                blurRadius: 28,
+                offset: const Offset(0, 8),
               ),
+            ],
+            border: Border.all(
+              color: examBadge.color.withValues(alpha: 0.3),
+              width: 2,
             ),
           ),
-          Positioned(
-            bottom: 20,
-            left: 10,
-            child: Container(
-              width: 15,
-              height: 15,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                color: Colors.greenAccent,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Circular progress track
+              SizedBox(
+                width: 148,
+                height: 148,
+                child: CircularProgressIndicator(
+                  value: ratio.clamp(0.0, 1.0),
+                  strokeWidth: 8,
+                  backgroundColor: dark
+                      ? AppColors.darkSurface
+                      : const Color(0xFFE2E8F0),
+                  valueColor: AlwaysStoppedAnimation<Color>(examBadge.color),
+                  strokeCap: StrokeCap.round,
+                ),
               ),
+
+              // Center content: icon + percentage
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    examBadge.icon,
+                    color: examBadge.color,
+                    size: 46,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$percentage%',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                      color: dark ? AppColors.textWhite : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Badge label pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: BoxDecoration(
+            color: examBadge.color.withValues(alpha: dark ? 0.22 : 0.12),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: examBadge.color.withValues(alpha: 0.4),
+              width: 1.2,
             ),
           ),
-          Center(
-            child: Icon(examBadge.icon, color: examBadge.color, size: 100),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                examBadge.icon,
+                color: examBadge.color,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                examBadge.label,
+                style: TextStyle(
+                  color: examBadge.color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -72,20 +72,20 @@ class ChoiceButton extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 9),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           splashColor: AppColors.primary.withValues(alpha: 0.08),
           highlightColor: AppColors.primary.withValues(alpha: 0.04),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 13),
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: borderColor,
                 width: isSelected || (isChecked && (isCorrect || isSelected))
@@ -99,8 +99,8 @@ class ChoiceButton extends StatelessWidget {
                       : (dark
                             ? Colors.black.withValues(alpha: 0.15)
                             : const Color(0x08000000)),
-                  blurRadius: isSelected ? 10 : 4,
-                  offset: const Offset(0, 2),
+                  blurRadius: isSelected ? 8 : 3,
+                  offset: const Offset(0, 1.5),
                 ),
               ],
             ),
@@ -110,14 +110,14 @@ class ChoiceButton extends StatelessWidget {
                 // Circular Option Badge
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  width: 30,
-                  height: 30,
+                  width: 26,
+                  height: 26,
                   decoration: BoxDecoration(
                     color: badgeBgColor,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: badgeBorderColor,
-                      width: 1.5,
+                      width: 1.4,
                     ),
                   ),
                   child: Center(
@@ -126,26 +126,26 @@ class ChoiceButton extends StatelessWidget {
                       style: TextStyle(
                         color: badgeTextColor,
                         fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                        fontSize: 12,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
 
                 // Option Content
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 3),
+                    padding: const EdgeInsets.only(top: 1.5),
                     child: Text.rich(
                       RichTextParser.parse(
                         optionTxt,
                         TextStyle(
-                          fontSize: 15.5,
+                          fontSize: 15,
                           fontWeight: isSelected
                               ? FontWeight.w500
                               : FontWeight.w400,
-                          height: 1.5,
+                          height: 1.45,
                           letterSpacing: 0.1,
                           color: dark
                               ? AppColors.textWhite

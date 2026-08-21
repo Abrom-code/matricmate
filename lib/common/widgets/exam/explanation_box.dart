@@ -78,7 +78,7 @@ class AppExplanationBox extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      // language toggle — absorbs its tap so it doesn't
+                      // language toggle when expanded
                       if (expanded)
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
@@ -90,12 +90,13 @@ class AppExplanationBox extends StatelessWidget {
                               onTap: onLanguageChange,
                             ),
                           ),
+                        )
+                      else
+                        Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: AppColors.primary.withValues(alpha: 0.8),
+                          size: 20,
                         ),
-                      Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: AppColors.primary.withValues(alpha: 0.8),
-                        size: 20,
-                      ),
                       const SizedBox(width: 4),
                     ],
                   ),

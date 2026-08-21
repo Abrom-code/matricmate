@@ -184,6 +184,21 @@ class SubjectsController extends GetxController {
     }
   }
 
+  /// REMOVE / DELETE SUBJECT DOWNLOAD FROM DEVICE
+  Future<void> deleteSubject(SubjectModel subject) async {
+    try {
+      isLoading.value = true;
+      await _repo.deleteSubject(subject.id);
+      await loadLocalSubjects();
+      await loadPausedTests();
+      ToastHelper.success('${subject.name} removed from device');
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   /// Refreshes entrance/model counts from remote and persists to SQLite.
   Future<void> refreshEntranceCountsFromRemote() async {
     try {

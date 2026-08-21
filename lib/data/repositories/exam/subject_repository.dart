@@ -324,4 +324,74 @@ class SubjectRepository {
       throw AppExceptionHandler.handle(e);
     }
   }
+
+  /// Delete all downloaded content (chapters, tests, questions, passages, images) for a subject
+  Future<void> deleteSubject(int subjectId) async {
+    try {
+      final db = await _dbService.database;
+
+      // 1. Collect image URLs to evict from disk cache
+      final questionImageRows = await db.rawQuery(
+        'SELECT image_url, explanation_image_url FROM questions WHERE subject_id = ?',
+        [subjectId],
+      );
+      final Set<String> imageUrls = {};
+      for (final row in questionImageRows) {
+        final img = row['image_url'] as String?;
+        if (img != null && img.isNotEmpty) imageUrls.add(img);
+        final expImg = row['explanation_image_url'] as String?;
+        if (expImg != null && expImg.isNotEmpty) imageUrls.add(expImg);
+      }
+
+      // 2. Perform transactional deletion of questions, tests, chapters, results, and reset flags
+      await db.transaction((txn) async {
+        final testRows = await txn.query(
+          'tests',
+          columns: ['id'],
+          where: 'subject_id = ?',
+          whereArgs: [subjectId],
+        );
+        final testIds = testRows.map((r) => r['id'] as int).toList();
+
+        if (testIds.isNotEmpty) {
+          final placeholders = testIds.map((_) => '?').join(',');
+          await txn.delete(
+            'results',
+            where: 'test_id IN ($placeholders)',
+            whereArgs: testIds,
+          );
+        }
+
+        await txn.delete(
+          'questions',
+          where: 'subject_id = ?',
+          whereArgs: [subjectId],
+        );
+        await txn.delete(
+          'tests',
+          where: 'subject_id = ?',
+          whereArgs: [subjectId],
+        );
+        await txn.delete(
+          'chapters',
+          where: 'subject_id = ?',
+          whereArgs: [subjectId],
+        );
+
+        await txn.update(
+          'subjects',
+          {'is_downloaded': 0, 'is_entrance_downloaded': 0},
+          where: 'id = ?',
+          whereArgs: [subjectId],
+        );
+      });
+
+      // 3. Evict images from cache
+      if (imageUrls.isNotEmpty) {
+        await AppHelperFunctions.removeCachedImages(imageUrls);
+      }
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
 }

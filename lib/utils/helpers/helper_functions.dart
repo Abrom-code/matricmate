@@ -35,6 +35,20 @@ class AppHelperFunctions {
     );
   }
 
+  static Future<void> removeCachedImages(Set<String> urls) async {
+    if (urls.isEmpty) return;
+    final cache = DefaultCacheManager();
+    await Future.wait(
+      urls.map((url) async {
+        try {
+          await cache.removeFile(url);
+        } catch (e) {
+          debugPrint('Image cache eviction failed for $url: $e');
+        }
+      }),
+    );
+  }
+
   static Future<void> showImageZoom(
     BuildContext context,
     String imageUrl, {

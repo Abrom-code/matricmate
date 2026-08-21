@@ -353,8 +353,7 @@ class SyncRepository {
       final testRows = await db.query(
         'tests',
         columns: ['id'],
-        where:
-            'subject_id IN (${ids.map((_) => '?').join(',')}) AND type IN (\'chapter\', \'grade\')',
+        where: 'subject_id IN (${ids.map((_) => '?').join(',')})',
         whereArgs: ids,
       );
       if (testRows.isEmpty) return [];

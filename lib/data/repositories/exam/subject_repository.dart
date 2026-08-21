@@ -40,31 +40,64 @@ class SubjectRepository {
     try {
       final db = await _dbService.database;
 
-      // Step 1 — Fetch chapters, tests, and questions all in parallel (0.05 → 0.60)
-      onStep('Fetching content…', 0.05);
-      final fetched = await _withProgress(
+      // Step 1 — Fetch chapters and tests in parallel (0.05 → 0.20)
+      onStep('Fetching chapters and tests…', 0.05);
+      final metaResults = await _withProgress(
         Future.wait([
           supabase.from('chapters').select().eq('subject_id', subjectId),
           supabase.from('tests').select().eq('subject_id', subjectId),
-          supabase
-              .from('questions')
-              .select('*, question_sections(title)')
-              .eq('subject_id', subjectId),
         ]),
         0.05,
-        0.60,
+        0.20,
         (p) => onStep('Fetching subject data…', p),
       );
 
-      final chapters = fetched[0] as List;
-      final tests = fetched[1] as List;
-      final questionsData = fetched[2] as List;
+      final chapters = metaResults[0] as List;
+      final tests = metaResults[1] as List;
+      final testIds = tests.map<int>((t) => t['id'] as int).toList();
+
+      // Step 2 — Fetch questions for ALL tests in parallel chunks (0.20 → 0.65)
+      final List<dynamic> questionsData = [];
+      if (testIds.isNotEmpty) {
+        final List<List<int>> chunks = [];
+        const chunkSize = 20;
+        for (var i = 0; i < testIds.length; i += chunkSize) {
+          chunks.add(
+            testIds.sublist(
+              i,
+              i + chunkSize > testIds.length ? testIds.length : i + chunkSize,
+            ),
+          );
+        }
+
+        final chunkResults = await _withProgress(
+          Future.wait(
+            chunks.map(
+              (chunk) => supabase
+                  .from('questions')
+                  .select('*, question_sections(title)')
+                  .inFilter('test_id', chunk),
+            ),
+          ),
+          0.20,
+          0.65,
+          (p) => onStep('Fetching questions…', p),
+        );
+
+        for (final list in chunkResults) {
+          questionsData.addAll(list as List);
+        }
+      }
 
       final Set<int> passageIds = {};
       final Set<String> imgUrls = {};
       final List<QuestionModel> questions = [];
       for (var q in questionsData) {
-        final question = QuestionModel.fromMap(q);
+        final map = Map<String, dynamic>.from(q as Map);
+        if (map['subject_id'] == null || map['subject_id'] == 0) {
+          map['subject_id'] = subjectId;
+        }
+        final question = QuestionModel.fromMap(map);
         questions.add(question);
         if (question.passageId != null) passageIds.add(question.passageId!);
         if (question.imageUrl != null && question.imageUrl!.isNotEmpty) {

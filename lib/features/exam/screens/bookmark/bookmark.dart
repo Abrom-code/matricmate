@@ -22,7 +22,6 @@ class _BookmarkScreenState extends State<BookmarkScreen>
   final _searchController = TextEditingController();
   final _searchFocus = FocusNode();
   bool _searchVisible = false;
-  int _selectedSubjectIndex = 0;
 
   BookmarkController get ctrl => BookmarkController.instance;
 
@@ -88,7 +87,6 @@ class _BookmarkScreenState extends State<BookmarkScreen>
     final dark = AppHelperFunctions.isDark(context);
 
     return Scaffold(
-      backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: ModernAppbarWithBuilder(
         title: 'Bookmarks',
         subtitleBuilder: (_) => Obx(() {
@@ -119,7 +117,6 @@ class _BookmarkScreenState extends State<BookmarkScreen>
               ),
             ),
           ),
-          const SizedBox(width: 8),
         ],
       ),
       body: Obx(() {
@@ -128,224 +125,96 @@ class _BookmarkScreenState extends State<BookmarkScreen>
         }
 
         final tabs = ctrl.subjects;
-        if (_selectedSubjectIndex >= tabs.length) {
-          _selectedSubjectIndex = 0;
-        }
 
-        final selectedSubject = tabs.isNotEmpty
-            ? tabs[_selectedSubjectIndex]
-            : 'All';
-        final filtered = ctrl.getBySubject(selectedSubject);
-
-        return Column(
-          children: [
-            // ── Animated search bar ─────────────────────────────────
-            AnimatedSize(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: _searchVisible
-                  ? _SearchBar(
-                      controller: _searchController,
-                      focusNode: _searchFocus,
-                      dark: dark,
-                      onChanged: (v) => ctrl.searchQuery.value = v,
-                      onClear: _clearSearch,
-                    )
-                  : const SizedBox.shrink(),
-            ),
-
-            // ── Tab bar chips ───────────────────────────────────────
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: dark ? AppColors.darkCard : AppColors.white,
-                border: Border(
-                  bottom: BorderSide(
-                    color: dark
-                        ? AppColors.darkBorder
-                        : const Color(0xFFE2E8F0),
-                  ),
-                ),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: List.generate(tabs.length, (i) {
-                    final t = tabs[i];
-                    final count = ctrl.getBySubject(t).length;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _buildSubjectTabChip(
-                        label: t,
-                        count: count,
-                        isSelected: _selectedSubjectIndex == i,
-                        onTap: () {
-                          setState(() {
-                            _selectedSubjectIndex = i;
-                          });
-                        },
+        return DefaultTabController(
+          key: ValueKey(tabs.length),
+          length: tabs.length,
+          child: Column(
+            children: [
+              // ── Animated search bar ─────────────────────────────────
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: _searchVisible
+                    ? _SearchBar(
+                        controller: _searchController,
+                        focusNode: _searchFocus,
                         dark: dark,
-                      ),
-                    );
-                  }),
+                        onChanged: (v) => ctrl.searchQuery.value = v,
+                        onClear: _clearSearch,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+
+              // ── Tab bar ─────────────────────────────────────────────
+              Container(
+                color: dark ? AppColors.darkCard : AppColors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSizes.sm,
+                ),
+                child: TabBar(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.defaultSpace / 2,
+                  ),
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  indicatorPadding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 0,
+                  ),
+                  indicator: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.primary.withValues(
+                      alpha: dark ? 0.25 : 0.12,
+                    ),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.35),
+                      width: 1,
+                    ),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: dark
+                      ? AppColors.darkGrey
+                      : AppColors.textSecondary,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 14),
+                  tabs: tabs.map((t) => Tab(text: t)).toList(),
                 ),
               ),
-            ),
 
-            // ── Tab content ─────────────────────────────────────────
-            Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(
-                                  alpha: dark ? 0.2 : 0.08,
-                                ),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.bookmark_border_rounded,
-                                  size: 36,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No bookmarks found',
-                              style: TextStyle(
-                                fontSize: 16.5,
-                                fontWeight: FontWeight.w700,
-                                color: dark
-                                    ? AppColors.textWhite
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Save questions during practice to review them anytime here.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: dark
-                                    ? AppColors.darkGrey
-                                    : AppColors.textSecondary,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              // ── Tab content ─────────────────────────────────────────
+              Expanded(
+                child: TabBarView(
+                  children: tabs.map((subject) {
+                    final filtered = ctrl.getBySubject(subject);
+                    if (filtered.isEmpty) {
+                      return const Center(child: Text('No bookmark found'));
+                    }
+                    return ListView.separated(
+                      padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
                       itemCount: filtered.length,
                       separatorBuilder: (_, __) =>
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSizes.spaceBtwItems),
                       itemBuilder: (_, index) =>
                           BookmarkContainer(qn: filtered[index]),
-                    ),
-            ),
-          ],
-        );
-      }),
-    );
-  }
-
-  Widget _buildSubjectTabChip({
-    required String label,
-    required int count,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required bool dark,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary
-                : (dark ? AppColors.darkSurface : const Color(0xFFF1F5F9)),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.primary
-                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
-              width: 1.2,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(
-                        alpha: dark ? 0.35 : 0.25,
-                      ),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  color: isSelected
-                      ? Colors.white
-                      : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+                    );
+                  }).toList(),
                 ),
               ),
-              if (count > 0 && label != 'All') ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Colors.white.withValues(alpha: 0.22)
-                        : (dark
-                              ? AppColors.darkCard
-                              : const Color(0xFFE2E8F0)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected
-                          ? Colors.white
-                          : (dark
-                                ? AppColors.textWhite
-                                : AppColors.textPrimary),
-                    ),
-                  ),
-                ),
-              ],
+              const SizedBox(height: AppSizes.spaceBtwSections * 2),
             ],
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }

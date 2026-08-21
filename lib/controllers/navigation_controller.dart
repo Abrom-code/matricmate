@@ -34,7 +34,7 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
     }
 
     pages = [
-      _KeepAlivePage(child: SubjectsScreen()),
+      const _KeepAlivePage(child: SubjectsScreen()),
       const _KeepAlivePage(child: EntranceScreen()),
       _KeepAlivePage(child: BookmarkScreen()),
       const _KeepAlivePage(child: AnalyticsScreen()),

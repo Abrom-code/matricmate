@@ -2,22 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/paused_test_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/subject_header.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class SubjectsScreen extends StatefulWidget {
-  SubjectsScreen({super.key});
+  const SubjectsScreen({super.key});
 
   @override
   State<SubjectsScreen> createState() => _SubjectsScreenState();
@@ -74,53 +75,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               onPressed: () => ctrl.syncAll(),
             );
           }),
-          // Paused tests appbar button
-          Obx(() {
-            final count = ctrl.pausedTests.length;
-            if (count == 0) return const SizedBox.shrink();
-            return IconButton(
-              tooltip: '$count test${count == 1 ? '' : 's'} in progress',
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              onPressed: () => Get.toNamed(Routes.pausedTests),
-              icon: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Icon(
-                    Icons.pause_circle_filled_rounded,
-                    size: 20,
-                    color: AppColors.white,
-                  ),
-                  Positioned(
-                    top: -5,
-                    right: -6,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: AppColors.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 14,
-                        minHeight: 14,
-                      ),
-                      child: Text(
-                        '$count',
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
         ],
       ),
       body: Obx(() {
@@ -143,24 +97,39 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSizes.defaultSpace),
-                  child: Column(
-                    children: [
-                      if (isInactive)
-                        PremiumBanner(
-                          onTap: () => Get.bottomSheet(
-                            const PremiumBottomSheet(),
-                            isScrollControlled: true,
-                          ),
-                        ),
-                      if (isInactive)
-                        const SizedBox(height: AppSizes.spaceBtwItems),
-                      if (isPending) const PendingPaymentBanner(),
-                      if (isPending)
-                        const SizedBox(height: AppSizes.spaceBtwItems),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.paddingOf(context).bottom + 100,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── 1. Pending Payment Banner ────────────────────
+                    if (isPending) ...[
+                      const PendingPaymentBanner(),
+                      const SizedBox(height: 16),
+                    ],
 
+                    // ── 2. Upgrade to Premium Banner ─────────────────
+                    if (isInactive) ...[
+                      PremiumBanner(
+                        onTap: () => Get.bottomSheet(
+                          const PremiumBottomSheet(),
+                          isScrollControlled: true,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // ── 3. Subject Header with Stream & Counts ────────
+                    SubjectHeader(subjectCount: filteredSubjects.length),
+
+                    // ── 4. Subject Grid ──────────────────────────────
+                    if (filteredSubjects.isNotEmpty) ...[
                       GridLayout(
+                        mainAxisExtent: 175,
                         itemCount: filteredSubjects.length,
                         itemBuilder: (_, index) {
                           final subject = filteredSubjects[index];
@@ -184,25 +153,72 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                           );
                         },
                       ),
-                      if (filteredSubjects.isNotEmpty)
-                        const SizedBox(height: AppSizes.spaceBtwSections * 2),
-                      if (filteredSubjects.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(
-                            top: AppSizes.spaceBtwSections,
-                          ),
-                          child: Center(
-                            child: Text(
-                              'No subjects yet.\nTap the sync button to load your content.',
-                              textAlign: TextAlign.center,
-                            ),
+                      const SizedBox(height: 18),
+                    ],
+
+                    // ── 5. Paused / In-Progress Tests Banner ─────────
+                    const PausedTestBanner(),
+
+                    // ── 6. Empty State ───────────────────────────────
+                    if (filteredSubjects.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 48),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.menu_book_rounded,
+                                  size: 40,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              const Text(
+                                'No subjects found',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Tap the sync button to load your stream subjects.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: AppColors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () => ctrl.syncAll(),
+                                icon: const Icon(Icons.sync_rounded, size: 16),
+                                label: const Text('Sync Subjects'),
+                              ),
+                            ],
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ),
             ),
+
+            // ── Top Syncing Indicator ────────────────────────────────
             if (syncing)
               const Positioned(
                 top: 0,

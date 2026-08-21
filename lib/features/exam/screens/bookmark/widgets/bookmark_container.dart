@@ -41,24 +41,21 @@ class BookmarkContainer extends GetView<BookmarkController> {
         child: Container(
           decoration: BoxDecoration(
             color: dark ? AppColors.darkCard : AppColors.white,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: dark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : const Color(0xFFEAEAEA),
+              color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+              width: 1.2,
             ),
-            boxShadow: dark
-                ? []
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.055),
-                      blurRadius: 14,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: dark ? 0.25 : 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(16),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

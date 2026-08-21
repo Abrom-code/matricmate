@@ -148,14 +148,51 @@ class _BookmarkScreenState extends State<BookmarkScreen>
 
               // ── Tab bar ─────────────────────────────────────────────
               Container(
-                color: dark ? AppColors.darkCard : AppColors.white,
-                child: TabBar(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.defaultSpace / 2,
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                decoration: BoxDecoration(
+                  color: dark ? AppColors.darkCard : AppColors.white,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: dark
+                          ? AppColors.darkBorder
+                          : const Color(0xFFE2E8F0),
+                    ),
                   ),
+                ),
+                child: TabBar(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,
-                  tabs: tabs.map((t) => Tab(text: t)).toList(),
+                  indicator: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelColor: AppColors.white,
+                  unselectedLabelColor: dark
+                      ? AppColors.darkGrey
+                      : AppColors.textSecondary,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                  tabs: tabs.map((t) {
+                    final count = ctrl.getBySubject(t).length;
+                    return Tab(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          t == 'All' || count == 0 ? t : '$t ($count)',
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
 
@@ -165,20 +202,67 @@ class _BookmarkScreenState extends State<BookmarkScreen>
                   children: tabs.map((subject) {
                     final filtered = ctrl.getBySubject(subject);
                     if (filtered.isEmpty) {
-                      return const Center(child: Text('No bookmark found'));
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 72,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: dark ? 0.2 : 0.08,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.bookmark_border_rounded,
+                                    size: 36,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No bookmarks found',
+                                style: TextStyle(
+                                  fontSize: 16.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: dark
+                                      ? AppColors.textWhite
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Save questions during practice to review them anytime here.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: dark
+                                      ? AppColors.darkGrey
+                                      : AppColors.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
                     }
                     return ListView.separated(
-                      padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                       itemCount: filtered.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: AppSizes.spaceBtwItems),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (_, index) =>
                           BookmarkContainer(qn: filtered[index]),
                     );
                   }).toList(),
                 ),
               ),
-              const SizedBox(height: AppSizes.spaceBtwSections * 2),
             ],
           ),
         );

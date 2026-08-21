@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
+import 'package:matricmate/features/authentication/controllers/login/forgot_password_controller.dart';
 
-/// Controller is registered permanently in GeneralBinding; this binding is empty.
 class ForgotPasswordBinding extends Bindings {
   @override
-  void dependencies() {}
+  void dependencies() {
+    Get.lazyPut<ForgotPasswordController>(() => ForgotPasswordController());
+  }
 }

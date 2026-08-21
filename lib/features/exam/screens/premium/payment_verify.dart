@@ -7,6 +7,7 @@ import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PaymentVerificationScreen extends StatelessWidget {
   const PaymentVerificationScreen({super.key});
@@ -14,133 +15,311 @@ class PaymentVerificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = PremiumController.instance;
+    final userCtrl = UserController.instance;
+    final isDark = AppHelperFunctions.isDark(context);
+
+    final cardBg = isDark ? const Color(0xFF18181B) : const Color(0xFFF4F4F5);
+    final borderColor = isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7);
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF09090B);
+    final secondaryTextColor = isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A);
+
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
         title: Text(
-          'Verify Payment',
+          'Payment Status',
           style: Theme.of(
             context,
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Obx(() {
-            final isFetching = UserController.instance.userFetching.value;
-            final isLoading = controller.isUploading.value;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 60),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        child: Obx(() {
+          final isFetching = userCtrl.userFetching.value;
+          final isLoading = controller.isUploading.value;
 
-                // Title
-                const Text(
-                  'Payment Verification in Progress',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 12),
+
+              // ── Glowing Status Hero ───────────────────────────────
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFB800), Color(0xFFFF8A00)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF9500).withValues(alpha: 0.35),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-
-                const SizedBox(height: 15),
-
-                // Subtitle
-                const Text(
-                  'We are verifying your receipt. This usually takes a few hours. '
-                  "Please click the refresh status button after around 30 minutes. If this couldn't work, please contact the our support on Telegram.",
-                  textAlign: TextAlign.left,
-                  style: const TextStyle(
-                    color: AppColors.darkGrey,
-                    fontSize: 12,
+                child: const Center(
+                  child: Icon(
+                    Icons.hourglass_top_rounded,
+                    color: Colors.white,
+                    size: 44,
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 40),
+              const SizedBox(height: 20),
 
-                // Refresh button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      await UserController.instance.checkPaymentStatus();
-                    },
-                    icon: isFetching ? null : const Icon(Icons.refresh),
-                    label: isFetching && !isLoading
-                        ? const AppCircularButtonLoading()
-                        : const Text(
-                            'Refresh Payment',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+              // ── Title & Subtitle ──────────────────────────────────
+              Text(
+                'Verification in Progress',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                  color: primaryTextColor,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                'Your payment receipt was received and is currently being verified by our team.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: secondaryTextColor,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Step Timeline Card ────────────────────────────────
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Column(
+                  children: [
+                    _timelineStep(
+                      stepNumber: '1',
+                      title: 'Receipt Submitted',
+                      subtitle: 'Uploaded from your gallery',
+                      isCompleted: true,
+                      isActive: false,
+                      isDark: isDark,
+                    ),
+                    _timelineDivider(isCompleted: true, isDark: isDark),
+                    _timelineStep(
+                      stepNumber: '2',
+                      title: 'Admin Verification',
+                      subtitle: 'Usually confirmed within 15–30 minutes',
+                      isCompleted: false,
+                      isActive: true,
+                      isDark: isDark,
+                    ),
+                    _timelineDivider(isCompleted: false, isDark: isDark),
+                    _timelineStep(
+                      stepNumber: '3',
+                      title: 'Instant Activation',
+                      subtitle: 'All tests & explanations unlocked',
+                      isCompleted: false,
+                      isActive: false,
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Action Buttons ────────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
+                  onPressed: isFetching
+                      ? null
+                      : () async {
+                          await userCtrl.checkPaymentStatus();
+                        },
+                  child: isFetching
+                      ? const AppCircularButtonLoading()
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.refresh_rounded, size: 20, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              'Check Verification Status',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
+              ),
 
-                const SizedBox(height: 15),
+              const SizedBox(height: 12),
 
-                // Cancel button
-                SizedBox(
-                  height: 50,
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: isLoading
-                        ? null
-                        : () {
-                            AppDialogBoxes.showOkCancelDialog(
-                              context: context,
-                              title: 'Cancel Payment',
-                              subtitle:
-                                  'Are you sure you want to cancel this payment?',
-                              onPressed: () {
-                                Get.back();
-                                controller.cancelPayment();
-                              },
-                            );
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: () => Get.until((route) => route.isFirst),
+                  icon: const Icon(Icons.home_outlined, size: 18),
+                  label: const Text(
+                    'Back to Home',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    side: BorderSide(color: borderColor),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Cancel payment text link
+              TextButton(
+                onPressed: isLoading
+                    ? null
+                    : () {
+                        AppDialogBoxes.showOkCancelDialog(
+                          context: context,
+                          title: 'Cancel Payment',
+                          subtitle:
+                              'Are you sure you want to cancel this pending payment?',
+                          onPressed: () {
+                            Get.back();
+                            controller.cancelPayment();
                           },
-                    child: isLoading
-                        ? const AppCircularButtonLoading(color: AppColors.error)
-                        : const Text(
-                            'Cancel Payment',
-                            style: TextStyle(fontSize: 16, color: Colors.red),
-                          ),
+                        );
+                      },
+                child: Text(
+                  'Cancel This Submission',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.error.withValues(alpha: 0.9),
                   ),
                 ),
-                const SizedBox(height: 15),
-                const Divider(),
-                const SizedBox(height: 15),
+              ),
 
-                // Back to home button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => Get.until((route) => route.isFirst),
-                    icon: const Icon(Icons.home_outlined),
-                    label: const Text(
-                      'Back to Home',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
 
-                const SizedBox(height: 15),
-                const Divider(),
-                const SizedBox(height: 15),
-
-                const TelegramChatButton(),
-              ],
-            );
-          }),
-        ),
+              const TelegramChatButton(),
+            ],
+          );
+        }),
       ),
+    );
+  }
+
+  static Widget _timelineStep({
+    required String stepNumber,
+    required String title,
+    required String subtitle,
+    required bool isCompleted,
+    required bool isActive,
+    required bool isDark,
+  }) {
+    final Color badgeColor = isCompleted
+        ? const Color(0xFF10B981)
+        : (isActive ? const Color(0xFFFF9500) : (isDark ? const Color(0xFF3F3F46) : const Color(0xFFD4D4D8)));
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: badgeColor,
+            shape: BoxShape.circle,
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFFF9500).withValues(alpha: 0.4),
+                      blurRadius: 8,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: isCompleted
+                ? const Icon(Icons.check, size: 16, color: Colors.white)
+                : Text(
+                    stepNumber,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF09090B),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Widget _timelineDivider({required bool isCompleted, required bool isDark}) {
+    return Container(
+      margin: const EdgeInsets.only(left: 13, top: 4, bottom: 4),
+      height: 20,
+      width: 2,
+      color: isCompleted
+          ? const Color(0xFF10B981)
+          : (isDark ? const Color(0xFF3F3F46) : const Color(0xFFD4D4D8)),
     );
   }
 }

@@ -13,60 +13,110 @@ class LinkInputField extends StatelessWidget {
     final controller = Get.find<PremiumController>();
     final isDark = AppHelperFunctions.isDark(context);
 
-    return TextFormField(
-      controller: controller.urlFiledController,
-      onTapOutside: (_) => FocusScope.of(context).unfocus(),
-      style: const TextStyle(fontSize: 14),
-      validator: (value) => (value == null || value.trim().isEmpty)
-          ? null
-          : AppValidator.isValidUrl(value),
-      decoration: InputDecoration(
-        hintText: 'https://transaction...',
-        hintStyle: Theme.of(context).textTheme.labelMedium,
-        // Prefix icon
-        prefixIcon: const Icon(Icons.link, color: Colors.teal),
-        // suffix icon
-        suffixIcon: InkWell(
-          onTap: () async {
-            await controller.pasteFromClipboard();
-          },
-          child: const Icon(Icons.paste, size: 20, color: Colors.teal),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'TRANSACTION LINK OR REF (OPTIONAL)',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B),
+              ),
+            ),
+          ],
         ),
-
-        // Filled background
-        filled: true,
-        fillColor: isDark ? AppColors.dark : Colors.grey.shade100,
-
-        // Content spacing
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-
-        // Default border
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-
-        // Enabled border
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDark ? AppColors.darkerGrey : Colors.grey.shade300,
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller.urlFiledController,
+          onTapOutside: (_) => FocusScope.of(context).unfocus(),
+          style: TextStyle(
+            fontSize: 13,
+            color: isDark ? Colors.white : const Color(0xFF09090B),
+          ),
+          validator: (value) => (value == null || value.trim().isEmpty)
+              ? null
+              : AppValidator.isValidUrl(value),
+          decoration: InputDecoration(
+            hintText: 'https://telebirr.et/receipt/... or SMS text',
+            hintStyle: TextStyle(
+              fontSize: 12,
+              color: isDark ? const Color(0xFF52525B) : const Color(0xFFA1A1AA),
+            ),
+            prefixIcon: Container(
+              margin: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.link_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
+            ),
+            suffixIcon: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () async {
+                await controller.pasteFromClipboard();
+              },
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.content_paste_rounded,
+                      size: 14,
+                      color: isDark ? Colors.white : const Color(0xFF18181B),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Paste',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF18181B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            filled: true,
+            fillColor: isDark ? const Color(0xFF18181B) : const Color(0xFFF4F4F5),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+            ),
           ),
         ),
-
-        // Focused border
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.teal, width: 1.5),
-        ),
-
-        // Optional label
-        labelText: 'Transaction Link',
-        labelStyle: const TextStyle(color: Colors.teal),
-      ),
+      ],
     );
   }
 }

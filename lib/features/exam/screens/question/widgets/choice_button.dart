@@ -31,36 +31,42 @@ class ChoiceButton extends StatelessWidget {
 
     Color bgColor;
     Color borderColor;
-    Color badgeColor;
+    Color badgeBgColor;
+    Color badgeBorderColor;
     Color badgeTextColor;
 
     if (isChecked) {
       if (isCorrect) {
-        bgColor = const Color(0xFF10B981).withValues(alpha: dark ? 0.20 : 0.10);
+        bgColor = const Color(0xFF10B981).withValues(alpha: dark ? 0.14 : 0.07);
         borderColor = const Color(0xFF10B981);
-        badgeColor = const Color(0xFF10B981);
+        badgeBgColor = const Color(0xFF10B981);
+        badgeBorderColor = const Color(0xFF10B981);
         badgeTextColor = Colors.white;
       } else if (isSelected) {
-        bgColor = const Color(0xFFEF4444).withValues(alpha: dark ? 0.20 : 0.10);
+        bgColor = const Color(0xFFEF4444).withValues(alpha: dark ? 0.14 : 0.07);
         borderColor = const Color(0xFFEF4444);
-        badgeColor = const Color(0xFFEF4444);
+        badgeBgColor = const Color(0xFFEF4444);
+        badgeBorderColor = const Color(0xFFEF4444);
         badgeTextColor = Colors.white;
       } else {
-        bgColor = dark ? AppColors.darkCard : const Color(0xFFF8FAFC);
+        bgColor = dark ? AppColors.darkCard.withValues(alpha: 0.5) : Colors.white;
         borderColor = dark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-        badgeColor = dark ? AppColors.darkSurface : const Color(0xFFE2E8F0);
+        badgeBgColor = Colors.transparent;
+        badgeBorderColor = dark ? AppColors.darkBorder : const Color(0xFFCBD5E1);
         badgeTextColor = dark ? AppColors.darkGrey : AppColors.textSecondary;
       }
     } else {
       if (isSelected) {
-        bgColor = AppColors.primary.withValues(alpha: dark ? 0.25 : 0.08);
+        bgColor = AppColors.primary.withValues(alpha: dark ? 0.15 : 0.06);
         borderColor = AppColors.primary;
-        badgeColor = AppColors.primary;
+        badgeBgColor = AppColors.primary;
+        badgeBorderColor = AppColors.primary;
         badgeTextColor = Colors.white;
       } else {
-        bgColor = dark ? AppColors.darkCard : const Color(0xFFF8FAFC);
+        bgColor = dark ? AppColors.darkCard.withValues(alpha: 0.5) : Colors.white;
         borderColor = dark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-        badgeColor = dark ? AppColors.darkSurface : const Color(0xFFE2E8F0);
+        badgeBgColor = Colors.transparent;
+        badgeBorderColor = dark ? AppColors.darkBorder : const Color(0xFFCBD5E1);
         badgeTextColor = dark ? AppColors.textWhite : AppColors.textPrimary;
       }
     }
@@ -72,39 +78,47 @@ class ChoiceButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          splashColor: AppColors.primary.withValues(alpha: 0.12),
+          splashColor: AppColors.primary.withValues(alpha: 0.08),
+          highlightColor: AppColors.primary.withValues(alpha: 0.04),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: borderColor,
-                width: (isChecked && (isCorrect || isSelected)) || isSelected
-                    ? 2.0
-                    : 1.5,
+                width: isSelected || (isChecked && (isCorrect || isSelected))
+                    ? 1.8
+                    : 1.2,
               ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: isSelected
+                      ? AppColors.primary.withValues(alpha: dark ? 0.15 : 0.08)
+                      : (dark
+                            ? Colors.black.withValues(alpha: 0.15)
+                            : const Color(0x08000000)),
+                  blurRadius: isSelected ? 10 : 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Option Letter Badge
-                Container(
-                  width: 28,
-                  height: 28,
+                // Circular Option Badge
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: 30,
+                  height: 30,
                   decoration: BoxDecoration(
-                    color: badgeColor,
-                    borderRadius: BorderRadius.circular(9),
+                    color: badgeBgColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: badgeBorderColor,
+                      width: 1.5,
+                    ),
                   ),
                   child: Center(
                     child: Text(
@@ -122,13 +136,15 @@ class ChoiceButton extends StatelessWidget {
                 // Option Content
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.only(top: 3),
                     child: Text.rich(
                       RichTextParser.parse(
                         optionTxt,
                         TextStyle(
                           fontSize: 15.5,
-                          fontWeight: FontWeight.w400,
+                          fontWeight: isSelected
+                              ? FontWeight.w500
+                              : FontWeight.w400,
                           height: 1.5,
                           letterSpacing: 0.1,
                           color: dark
@@ -144,16 +160,22 @@ class ChoiceButton extends StatelessWidget {
                 if (isChecked) ...[
                   const SizedBox(width: 8),
                   if (isCorrect)
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      color: Color(0xFF10B981),
-                      size: 22,
+                    const Padding(
+                      padding: EdgeInsets.only(top: 3),
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF10B981),
+                        size: 22,
+                      ),
                     )
                   else if (isSelected)
-                    const Icon(
-                      Icons.cancel_rounded,
-                      color: Color(0xFFEF4444),
-                      size: 22,
+                    const Padding(
+                      padding: EdgeInsets.only(top: 3),
+                      child: Icon(
+                        Icons.cancel_rounded,
+                        color: Color(0xFFEF4444),
+                        size: 22,
+                      ),
                     ),
                 ],
               ],

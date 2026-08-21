@@ -12,6 +12,9 @@ class UserModel {
   /// Account creation timestamp used for notification filtering.
   final DateTime? createdAt;
 
+  /// Number of receipt upload attempts
+  final int receiptUploadCount;
+
   UserModel({
     required this.id,
     required this.firstName,
@@ -21,6 +24,7 @@ class UserModel {
     this.password,
     this.status = 'inactive',
     this.createdAt,
+    this.receiptUploadCount = 0,
   });
 
   /// FROM JSON (Supabase → Dart)
@@ -35,6 +39,8 @@ class UserModel {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
+      receiptUploadCount:
+          (json['receipt_upload_count'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -42,7 +48,10 @@ class UserModel {
   factory UserModel.fromMap(Map<String, dynamic> json) =>
       UserModel.fromJson(json);
 
-  /// TO JSON (Dart → Supabase)
+  /// TO JSON (Dart → Supabase) for profile operations only.
+  /// NOTE: receipt_upload_count is intentionally excluded — it is managed
+  /// exclusively by PaymentRepository and must never be overwritten by a
+  /// profile save/upsert.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -64,6 +73,7 @@ class UserModel {
       'stream': stream,
       'subscription_status': status,
       'created_at': createdAt?.toIso8601String(),
+      'receipt_upload_count': receiptUploadCount,
     };
   }
 
@@ -77,6 +87,7 @@ class UserModel {
     String? password,
     String? status,
     DateTime? createdAt,
+    int? receiptUploadCount,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -87,6 +98,7 @@ class UserModel {
       password: password ?? this.password,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
+      receiptUploadCount: receiptUploadCount ?? this.receiptUploadCount,
     );
   }
 
@@ -98,6 +110,7 @@ class UserModel {
     email: '',
     stream: '',
     status: 'inactive',
+    receiptUploadCount: 0,
   );
 
   /// FULL NAME
@@ -108,4 +121,5 @@ class UserModel {
   bool get isActive => status == 'active';
   bool get isPending => status == 'pending';
   bool get isInactive => status == 'inactive';
+  bool get exceededUploadLimit => receiptUploadCount >= 2;
 }

@@ -23,7 +23,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 11,
+      version: 12,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -160,6 +160,14 @@ class DatabaseService extends GetxController {
           try {
             await db.execute(
               'ALTER TABLE notifications ADD COLUMN target_stream TEXT',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 12) {
+          // Add receipt_upload_count to user table
+          try {
+            await db.execute(
+              'ALTER TABLE user ADD COLUMN receipt_upload_count INTEGER DEFAULT 0',
             );
           } catch (_) {}
         }

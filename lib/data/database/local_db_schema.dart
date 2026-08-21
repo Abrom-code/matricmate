@@ -12,7 +12,8 @@ class DBschema {
         email TEXT NOT NULL,
         stream TEXT,
         subscription_status TEXT DEFAULT 'inactive',
-        created_at TEXT
+        created_at TEXT,
+        receipt_upload_count INTEGER DEFAULT 0
       );
     ''');
 

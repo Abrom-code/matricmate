@@ -61,8 +61,8 @@ class PaymentScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
                     color: isDark
-                        ? const Color(0xFFA1A1AA)
-                        : const Color(0xFF52525B),
+                        ? AppColors.darkGrey
+                        : AppColors.textSecondary,
                   ),
                 ),
                 const Spacer(),
@@ -127,8 +127,8 @@ class PaymentScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
                     color: isDark
-                        ? const Color(0xFFA1A1AA)
-                        : const Color(0xFF52525B),
+                        ? AppColors.darkGrey
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -155,7 +155,7 @@ class PaymentScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ── Support ────────────────────────────────────────────
+            // ── Support ────────────────────────────────────
             const TelegramChatButton(),
           ],
         ),
@@ -173,12 +173,12 @@ class PaymentScreen extends StatelessWidget {
             MediaQuery.paddingOf(context).bottom + 12,
           ),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF141416) : Colors.white,
+            color: isDark ? AppColors.darkCard : AppColors.white,
             border: Border(
               top: BorderSide(
                 color: isDark
-                    ? const Color(0xFF27272A)
-                    : const Color(0xFFE4E4E7),
+                    ? AppColors.darkBorder
+                    : AppColors.borderPrimary,
               ),
             ),
             boxShadow: [
@@ -195,7 +195,7 @@ class PaymentScreen extends StatelessWidget {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -210,7 +210,7 @@ class PaymentScreen extends StatelessWidget {
                         const Icon(
                           Icons.check_circle_outline_rounded,
                           size: 20,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -220,7 +220,7 @@ class PaymentScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: AppColors.white,
                           ),
                         ),
                       ],

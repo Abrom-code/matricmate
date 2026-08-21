@@ -60,10 +60,10 @@ class PremiumScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
+                        gradient: LinearGradient(
                           colors: [
-                            Color(0xFF0D9488),
-                            Color(0xFF0F766E),
+                            AppColors.primary,
+                            AppColors.primary.withValues(alpha: 0.85),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -71,7 +71,7 @@ class PremiumScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0D9488).withValues(alpha: 0.35),
+                            color: AppColors.primary.withValues(alpha: 0.35),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),
@@ -89,36 +89,62 @@ class PremiumScreen extends StatelessWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: AppColors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   '${selectedPlan.durationMonths} MONTHS ACCESS',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
                               ),
-                              if (selectedPlan.badgeText != null)
+                              if (selectedPlan.isFeatured || selectedPlan.badgeText != null)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
+                                    horizontal: 10,
+                                    vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFFF9500),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    selectedPlan.badgeText!,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFF59E0B),
+                                        Color(0xFFD97706),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                     ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFD97706).withValues(alpha: 0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.star_rounded,
+                                        size: 13,
+                                        color: AppColors.white,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'BEST VALUE',
+                                        style: TextStyle(
+                                          color: AppColors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                             ],
@@ -134,7 +160,7 @@ class PremiumScreen extends StatelessWidget {
                                   Text(
                                     '${selectedPlan.title} Plan',
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                       fontSize: 18,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: -0.3,
@@ -144,7 +170,7 @@ class PremiumScreen extends StatelessWidget {
                                   Text(
                                     selectedPlan.subtitle,
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.85),
+                                      color: AppColors.white.withValues(alpha: 0.85),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -156,7 +182,7 @@ class PremiumScreen extends StatelessWidget {
                                     TextSpan(
                                       text: '$price',
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.white,
                                         fontSize: 32,
                                         fontWeight: FontWeight.w900,
                                         letterSpacing: -0.8,
@@ -165,7 +191,7 @@ class PremiumScreen extends StatelessWidget {
                                     const TextSpan(
                                       text: ' ETB',
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.white,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -206,8 +232,8 @@ class PremiumScreen extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.6,
                             color: isDark
-                                ? const Color(0xFFA1A1AA)
-                                : const Color(0xFF52525B),
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -227,8 +253,8 @@ class PremiumScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? const Color(0xFF18181B)
-                              : const Color(0xFFF4F4F5),
+                              ? AppColors.darkSurface
+                              : AppColors.lightCard,
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Center(
@@ -272,8 +298,8 @@ class PremiumScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? const Color(0xFF18181B)
-                              : const Color(0xFFF4F4F5),
+                              ? AppColors.darkSurface
+                              : AppColors.lightCard,
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Center(
@@ -358,10 +384,10 @@ class PremiumScreen extends StatelessWidget {
             MediaQuery.paddingOf(context).bottom + 12,
           ),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF141416) : Colors.white,
+            color: isDark ? AppColors.darkCard : AppColors.white,
             border: Border(
               top: BorderSide(
-                color: isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+                color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
               ),
             ),
             boxShadow: [
@@ -378,7 +404,7 @@ class PremiumScreen extends StatelessWidget {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -408,14 +434,14 @@ class PremiumScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   ),
                   const SizedBox(width: 8),
                   const Icon(
                     Icons.arrow_forward_rounded,
                     size: 18,
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 ],
               ),

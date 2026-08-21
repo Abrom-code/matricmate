@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class PremiumBottomSheet extends StatelessWidget {
+class PremiumBottomSheet extends StatefulWidget {
   const PremiumBottomSheet({super.key});
+
+  @override
+  State<PremiumBottomSheet> createState() => _PremiumBottomSheetState();
+}
+
+class _PremiumBottomSheetState extends State<PremiumBottomSheet> {
+  bool _showAllFeatures = false;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final screenHeight = MediaQuery.sizeOf(context).height;
-    final cfg = PaymentConfigService.instance;
 
-    final bgColor = dark ? const Color(0xFF141416) : Colors.white;
-    final cardBg = dark ? const Color(0xFF1E1E22) : const Color(0xFFF6F7FB);
-    final borderColor = dark ? const Color(0xFF2C2C32) : const Color(0xFFE8ECF4);
-    final primaryTextColor = dark ? Colors.white : const Color(0xFF1A1D1E);
-    final secondaryTextColor = dark ? const Color(0xFF9E9EA7) : const Color(0xFF6C727A);
+    final bgColor = dark ? AppColors.darkCard : AppColors.white;
+    final cardBg = dark ? AppColors.darkSurface : AppColors.lightGrey;
+    final borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
+    final primaryTextColor = dark ? AppColors.textWhite : AppColors.textPrimary;
+    final secondaryTextColor = dark ? AppColors.darkGrey : AppColors.textSecondary;
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: screenHeight * 0.90),
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.92),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -44,12 +49,12 @@ class PremiumBottomSheet extends StatelessWidget {
                 width: 44,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: dark ? const Color(0xFF383840) : const Color(0xFFD5D8E2),
+                  color: dark ? AppColors.darkBorder : AppColors.grey,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             // ── Scrollable Body ──────────────────────────────────────
             Flexible(
@@ -63,35 +68,38 @@ class PremiumBottomSheet extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── Floating Crown Icon ─────────────────────────
+                    // ── Primary Theme Floating Icon ──────────────────
                     Container(
-                      width: 64,
-                      height: 64,
+                      width: 60,
+                      height: 60,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFB800), Color(0xFFFF5E00)],
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withValues(alpha: 0.8),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFF8A00).withValues(alpha: 0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
+                            color: AppColors.primary.withValues(alpha: 0.35),
+                            blurRadius: 14,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
                       child: const Center(
                         child: Icon(
                           Icons.workspace_premium_rounded,
-                          color: Colors.white,
-                          size: 34,
+                          color: AppColors.white,
+                          size: 32,
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
                     // ── Title & Subtitle ────────────────────────────
                     Text(
@@ -108,7 +116,7 @@ class PremiumBottomSheet extends StatelessWidget {
                     const SizedBox(height: 6),
 
                     Text(
-                      'Ace your matric exams with full entrance papers, chapter tests & Amharic explanations.',
+                      'Everything you need to excel in your matric exams — all subjects, all grades.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
@@ -117,14 +125,14 @@ class PremiumBottomSheet extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 20),
 
-                    // ── Feature Rows ────────────────────────────────
+                    // ── Main Core Features ──────────────────────────
                     _featureCard(
                       icon: Icons.military_tech_rounded,
-                      iconGradient: const [Color(0xFFFF9500), Color(0xFFFF5E00)],
-                      title: 'All Entrance & Model Exams',
-                      subtitle: 'Access 10+ years of national matric & model questions.',
+                      iconColor: AppColors.amberAccent,
+                      title: 'National Entrance Exams',
+                      subtitle: '10+ years of past matric papers with full answer keys.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -133,9 +141,20 @@ class PremiumBottomSheet extends StatelessWidget {
 
                     _featureCard(
                       icon: Icons.menu_book_rounded,
-                      iconGradient: const [Color(0xFF007AFF), Color(0xFF00C6FF)],
-                      title: 'Complete Chapter Tests',
-                      subtitle: 'Master every unit in Grades 9–12 with targeted quizzes.',
+                      iconColor: AppColors.primary,
+                      title: 'Chapter Tests for All Subjects',
+                      subtitle: 'Targeted chapter quizzes covering Grades 9, 10, 11 & 12.',
+                      cardBg: cardBg,
+                      borderColor: borderColor,
+                      primaryText: primaryTextColor,
+                      secondaryText: secondaryTextColor,
+                    ),
+
+                    _featureCard(
+                      icon: Icons.wifi_off_rounded,
+                      iconColor: AppColors.success,
+                      title: '100% Offline Access',
+                      subtitle: 'Download and practice tests anytime, anywhere without internet.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -144,95 +163,120 @@ class PremiumBottomSheet extends StatelessWidget {
 
                     _featureCard(
                       icon: Icons.translate_rounded,
-                      iconGradient: const [Color(0xFF34C759), Color(0xFF30B0C7)],
+                      iconColor: AppColors.primary,
                       title: 'Amharic & English Explanations',
-                      subtitle: 'Detailed bilingual reasoning for every single question.',
+                      subtitle: 'Clear, step-by-step reasoning in both languages.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
                       secondaryText: secondaryTextColor,
                     ),
 
-                    _featureCard(
-                      icon: Icons.timer_outlined,
-                      iconGradient: const [Color(0xFFAF52DE), Color(0xFFFF2D55)],
-                      title: 'Timed Exam Simulation',
-                      subtitle: 'Real exam clock, instant scores & bookmark review.',
-                      cardBg: cardBg,
-                      borderColor: borderColor,
-                      primaryText: primaryTextColor,
-                      secondaryText: secondaryTextColor,
+                    // ── Expandable Features with Slide-Down Animation ────
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 320),
+                      curve: Curves.easeInOutCubic,
+                      child: _showAllFeatures
+                          ? AnimatedSlide(
+                              duration: const Duration(milliseconds: 320),
+                              curve: Curves.easeOutCubic,
+                              offset: Offset.zero,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 300),
+                                opacity: 1.0,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _featureCard(
+                                      icon: Icons.speed_rounded,
+                                      iconColor: AppColors.secondary,
+                                      title: 'Exam Mode vs Practice Mode',
+                                      subtitle: 'Take timed real simulations or practice with instant feedback.',
+                                      cardBg: cardBg,
+                                      borderColor: borderColor,
+                                      primaryText: primaryTextColor,
+                                      secondaryText: secondaryTextColor,
+                                    ),
+                                    _featureCard(
+                                      icon: Icons.assignment_turned_in_rounded,
+                                      iconColor: AppColors.info,
+                                      title: 'Standardized Model Exams',
+                                      subtitle: 'Full-length model tests designed by expert educators.',
+                                      cardBg: cardBg,
+                                      borderColor: borderColor,
+                                      primaryText: primaryTextColor,
+                                      secondaryText: secondaryTextColor,
+                                    ),
+                                    _featureCard(
+                                      icon: Icons.school_rounded,
+                                      iconColor: AppColors.primary,
+                                      title: 'Grade-Level Assessments',
+                                      subtitle: 'Comprehensive yearly assessments for each grade.',
+                                      cardBg: cardBg,
+                                      borderColor: borderColor,
+                                      primaryText: primaryTextColor,
+                                      secondaryText: secondaryTextColor,
+                                    ),
+                                    _featureCard(
+                                      icon: Icons.insights_rounded,
+                                      iconColor: AppColors.warning,
+                                      title: 'Detailed Performance Analytics',
+                                      subtitle: 'Track your speed, strengths, and chapters to review.',
+                                      cardBg: cardBg,
+                                      borderColor: borderColor,
+                                      primaryText: primaryTextColor,
+                                      secondaryText: secondaryTextColor,
+                                    ),
+                                    _featureCard(
+                                      icon: Icons.bookmark_added_rounded,
+                                      iconColor: AppColors.amberAccent,
+                                      title: 'Smart Bookmarks & Question Bank',
+                                      subtitle: 'Save challenging questions and review them before exams.',
+                                      cardBg: cardBg,
+                                      borderColor: borderColor,
+                                      primaryText: primaryTextColor,
+                                      secondaryText: secondaryTextColor,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
                     ),
 
-                    const SizedBox(height: 20),
-
-                    // ── Pricing Preview Pill ────────────────────────
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: dark ? 0.15 : 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.25),
+                    // ── See More / See Less Toggle ──────────────────
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() => _showAllFeatures = !_showAllFeatures);
+                      },
+                      icon: Icon(
+                        _showAllFeatures
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                      label: Text(
+                        _showAllFeatures
+                            ? 'Show less'
+                            : 'See all features & test modes (5 more)',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.verified_rounded,
-                            size: 16,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Obx(() {
-                              final price = cfg.getPriceForPlan('6_months', 150);
-                              return Text(
-                                'Plans from $price ETB • 6 Months to 4 Years',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              );
-                            }),
-                          ),
-                        ],
-                      ),
                     ),
-
-                    const SizedBox(height: 18),
 
                     // ── Primary Action Button ────────────────────────
-                    Container(
+                    const SizedBox(height: 12),
+                    SizedBox(
                       width: double.infinity,
                       height: 54,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            AppColors.primary,
-                            Color(0xFF009688),
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
+                          backgroundColor: AppColors.primary,
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -246,7 +290,7 @@ class PremiumBottomSheet extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppColors.white,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -254,7 +298,7 @@ class PremiumBottomSheet extends StatelessWidget {
                             Icon(
                               Icons.arrow_forward_rounded,
                               size: 18,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ],
                         ),
@@ -272,7 +316,7 @@ class PremiumBottomSheet extends StatelessWidget {
 
   static Widget _featureCard({
     required IconData icon,
-    required List<Color> iconGradient,
+    required Color iconColor,
     required String title,
     required String subtitle,
     required Color cardBg,
@@ -291,28 +335,17 @@ class PremiumBottomSheet extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: iconGradient,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: iconColor.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: iconGradient.first.withValues(alpha: 0.25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: Center(
-              child: Icon(icon, color: Colors.white, size: 22),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +353,7 @@ class PremiumBottomSheet extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                     color: primaryText,
                   ),
@@ -329,7 +362,7 @@ class PremiumBottomSheet extends StatelessWidget {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     color: secondaryText,
                     height: 1.3,
                   ),

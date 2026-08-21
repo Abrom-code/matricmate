@@ -39,7 +39,7 @@ class PlanSelector extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.6,
-                color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B),
+                color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
             const Spacer(),
@@ -48,20 +48,20 @@ class PlanSelector extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: isDark ? const Color(0xFF71717A) : const Color(0xFFA1A1AA),
+                color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
 
         // Horizontal scrollable list of plan cards
         SizedBox(
-          height: 154,
+          height: 160,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
             itemCount: SubscriptionPlan.all.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
@@ -107,16 +107,21 @@ class _ModernPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeBorderColor = AppColors.primary;
-    final inactiveBorderColor = isDark
-        ? const Color(0xFF27272A)
-        : const Color(0xFFE4E4E7);
+    final isFeatured = plan.isFeatured;
+
+    final activeBorderColor = isFeatured
+        ? (isSelected ? AppColors.primary : AppColors.amberAccent)
+        : AppColors.primary;
+
+    final inactiveBorderColor = isFeatured
+        ? AppColors.amberAccent.withValues(alpha: 0.6)
+        : (isDark ? AppColors.darkBorder : AppColors.borderPrimary);
 
     final cardBg = isSelected
         ? (isDark
-            ? const Color(0xFF1E2922)
-            : const Color(0xFFF0FDF4))
-        : (isDark ? const Color(0xFF18181B) : Colors.white);
+            ? AppColors.primary.withValues(alpha: 0.15)
+            : AppColors.primary.withValues(alpha: 0.08))
+        : (isDark ? AppColors.darkCard : AppColors.white);
 
     return Stack(
       clipBehavior: Clip.none,
@@ -126,30 +131,39 @@ class _ModernPlanCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            width: 140,
-            padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+            width: 142,
+            padding: const EdgeInsets.fromLTRB(14, 18, 14, 14),
             decoration: BoxDecoration(
               color: cardBg,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected ? activeBorderColor : inactiveBorderColor,
-                width: isSelected ? 2 : 1,
+                width: isSelected ? 2 : (isFeatured ? 1.5 : 1),
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.22),
+                        color: (isFeatured ? AppColors.amberAccent : AppColors.primary)
+                            .withValues(alpha: 0.25),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                  : (isFeatured
+                      ? [
+                          BoxShadow(
+                            color: AppColors.amberAccent.withValues(alpha: 0.12),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +179,7 @@ class _ModernPlanCard extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.2,
-                        color: isDark ? Colors.white : const Color(0xFF09090B),
+                        color: isDark ? AppColors.textWhite : AppColors.textPrimary,
                       ),
                     ),
                     AnimatedContainer(
@@ -181,8 +195,8 @@ class _ModernPlanCard extends StatelessWidget {
                           color: isSelected
                               ? AppColors.primary
                               : (isDark
-                                  ? const Color(0xFF52525B)
-                                  : const Color(0xFFD4D4D8)),
+                                  ? AppColors.darkGrey
+                                  : AppColors.grey),
                           width: 2,
                         ),
                       ),
@@ -190,7 +204,7 @@ class _ModernPlanCard extends StatelessWidget {
                           ? const Icon(
                               Icons.check,
                               size: 13,
-                              color: Colors.white,
+                              color: AppColors.white,
                             )
                           : null,
                     ),
@@ -204,8 +218,8 @@ class _ModernPlanCard extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: isDark
-                        ? const Color(0xFFA1A1AA)
-                        : const Color(0xFF71717A),
+                        ? AppColors.darkGrey
+                        : AppColors.textSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -228,11 +242,11 @@ class _ModernPlanCard extends StatelessWidget {
                               letterSpacing: -0.5,
                               color: isSelected
                                   ? (isDark
-                                      ? const Color(0xFF34D399)
+                                      ? AppColors.primary.withValues(alpha: 0.9)
                                       : AppColors.primary)
                                   : (isDark
-                                      ? Colors.white
-                                      : const Color(0xFF09090B)),
+                                      ? AppColors.textWhite
+                                      : AppColors.textPrimary),
                             ),
                           ),
                           TextSpan(
@@ -241,8 +255,8 @@ class _ModernPlanCard extends StatelessWidget {
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: isDark
-                                  ? const Color(0xFFA1A1AA)
-                                  : const Color(0xFF71717A),
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -255,8 +269,8 @@ class _ModernPlanCard extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                         color: isDark
-                            ? const Color(0xFF71717A)
-                            : const Color(0xFFA1A1AA),
+                            ? AppColors.darkGrey
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -266,36 +280,50 @@ class _ModernPlanCard extends StatelessWidget {
           ),
         ),
 
-        // Featured / Value Badge
-        if (plan.badgeText != null)
+        // Featured / Best Value Badge
+        if (isFeatured || plan.badgeText != null)
           Positioned(
-            top: -7,
-            left: 12,
+            top: -8,
+            right: 10,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFF9500), Color(0xFFFF3B30)],
+                  colors: [
+                    Color(0xFFF59E0B),
+                    Color(0xFFD97706),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF5E00).withValues(alpha: 0.4),
-                    blurRadius: 6,
+                    color: const Color(0xFFD97706).withValues(alpha: 0.45),
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: Text(
-                plan.badgeText!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
-                ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.star_rounded,
+                    size: 12,
+                    color: AppColors.white,
+                  ),
+                  SizedBox(width: 3),
+                  Text(
+                    'BEST VALUE',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

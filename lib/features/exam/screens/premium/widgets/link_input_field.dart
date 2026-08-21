@@ -24,7 +24,7 @@ class LinkInputField extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
-                color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B),
+                color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
           ],
@@ -35,7 +35,7 @@ class LinkInputField extends StatelessWidget {
           onTapOutside: (_) => FocusScope.of(context).unfocus(),
           style: TextStyle(
             fontSize: 13,
-            color: isDark ? Colors.white : const Color(0xFF09090B),
+            color: isDark ? AppColors.textWhite : AppColors.textPrimary,
           ),
           validator: (value) => (value == null || value.trim().isEmpty)
               ? null
@@ -44,7 +44,7 @@ class LinkInputField extends StatelessWidget {
             hintText: 'https://telebirr.et/receipt/... or SMS text',
             hintStyle: TextStyle(
               fontSize: 12,
-              color: isDark ? const Color(0xFF52525B) : const Color(0xFFA1A1AA),
+              color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
             ),
             prefixIcon: Container(
               margin: const EdgeInsets.all(10),
@@ -68,7 +68,7 @@ class LinkInputField extends StatelessWidget {
                 margin: const EdgeInsets.all(8),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+                  color: isDark ? AppColors.darkSurface : AppColors.grey.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -77,7 +77,7 @@ class LinkInputField extends StatelessWidget {
                     Icon(
                       Icons.content_paste_rounded,
                       size: 14,
-                      color: isDark ? Colors.white : const Color(0xFF18181B),
+                      color: isDark ? AppColors.textWhite : AppColors.textPrimary,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -85,7 +85,7 @@ class LinkInputField extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF18181B),
+                        color: isDark ? AppColors.textWhite : AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -93,7 +93,7 @@ class LinkInputField extends StatelessWidget {
               ),
             ),
             filled: true,
-            fillColor: isDark ? const Color(0xFF18181B) : const Color(0xFFF4F4F5),
+            fillColor: isDark ? AppColors.darkSurface : AppColors.lightCard,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 14,
@@ -101,13 +101,13 @@ class LinkInputField extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+                color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+                color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
               ),
             ),
             focusedBorder: OutlineInputBorder(

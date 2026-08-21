@@ -16,12 +16,14 @@ Widget paymentTile({
   final dark = AppHelperFunctions.isDark(context);
 
   final cardBg = selected
-      ? (dark ? const Color(0xFF1E2922) : const Color(0xFFF0FDF4))
-      : (dark ? const Color(0xFF18181B) : Colors.white);
+      ? (dark
+          ? AppColors.primary.withValues(alpha: 0.15)
+          : AppColors.primary.withValues(alpha: 0.08))
+      : (dark ? AppColors.darkCard : AppColors.white);
 
   final borderColor = selected
       ? AppColors.primary
-      : (dark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7));
+      : (dark ? AppColors.darkBorder : AppColors.borderPrimary);
 
   // Distinct brand color hints based on method title
   final brandColor = _getBrandColor(title);
@@ -88,7 +90,7 @@ Widget paymentTile({
                             fontWeight: FontWeight.w700,
                             fontSize: 15,
                             letterSpacing: -0.2,
-                            color: dark ? Colors.white : const Color(0xFF09090B),
+                            color: dark ? AppColors.textWhite : AppColors.textPrimary,
                           ),
                         ),
                         if (subtitle.isNotEmpty) ...[
@@ -97,8 +99,8 @@ Widget paymentTile({
                             subtitle,
                             style: TextStyle(
                               color: dark
-                                  ? const Color(0xFFA1A1AA)
-                                  : const Color(0xFF71717A),
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -119,8 +121,8 @@ Widget paymentTile({
                           color: selected
                               ? AppColors.primary
                               : (dark
-                                  ? const Color(0xFF52525B)
-                                  : const Color(0xFFD4D4D8)),
+                                  ? AppColors.darkGrey
+                                  : AppColors.grey),
                           width: 2,
                         ),
                       ),
@@ -128,7 +130,7 @@ Widget paymentTile({
                           ? const Icon(
                               Icons.check,
                               size: 14,
-                              color: Colors.white,
+                              color: AppColors.white,
                             )
                           : null,
                     ),
@@ -146,11 +148,11 @@ Widget paymentTile({
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF2563EB),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                    color: AppColors.primary.withValues(alpha: 0.35),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -159,7 +161,7 @@ Widget paymentTile({
               child: const Text(
                 'RECOMMENDED',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.4,
@@ -175,15 +177,13 @@ Widget paymentTile({
 Color _getBrandColor(String title) {
   final lower = title.toLowerCase();
   if (lower.contains('telebirr')) {
-    return const Color(0xFF007AFF);
+    return AppColors.info;
   } else if (lower.contains('cbe')) {
-    return const Color(0xFF7C3AED);
+    return AppColors.secondary;
   } else if (lower.contains('abyssinia') || lower.contains('boa')) {
-    return const Color(0xFFD97706);
+    return AppColors.amberAccent;
   } else if (lower.contains('mpesa') || lower.contains('m-pesa')) {
-    return const Color(0xFF10B981);
-  } else if (lower.contains('awash')) {
-    return const Color(0xFF0284C7);
+    return AppColors.success;
   }
   return AppColors.primary;
 }

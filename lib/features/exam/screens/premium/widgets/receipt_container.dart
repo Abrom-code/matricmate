@@ -24,7 +24,7 @@ class ReceiptContainer extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
-                color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B),
+                color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
           ],
@@ -37,11 +37,11 @@ class ReceiptContainer extends StatelessWidget {
           height: file == null ? 160 : 260,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            color: isDark ? const Color(0xFF18181B) : const Color(0xFFF4F4F5),
+            color: isDark ? AppColors.darkSurface : AppColors.lightCard,
             border: Border.all(
               color: file != null
                   ? AppColors.primary
-                  : (isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7)),
+                  : (isDark ? AppColors.darkBorder : AppColors.borderPrimary),
               width: file != null ? 2 : 1.5,
             ),
           ),
@@ -52,8 +52,11 @@ class ReceiptContainer extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primary, Color(0xFF0D9488)],
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withValues(alpha: 0.8),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -68,7 +71,7 @@ class ReceiptContainer extends StatelessWidget {
                       ),
                       child: const Icon(
                         Icons.add_photo_alternate_rounded,
-                        color: Colors.white,
+                        color: AppColors.white,
                         size: 26,
                       ),
                     ),
@@ -78,7 +81,7 @@ class ReceiptContainer extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
-                        color: isDark ? Colors.white : const Color(0xFF09090B),
+                        color: isDark ? AppColors.textWhite : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -87,7 +90,7 @@ class ReceiptContainer extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: isDark ? const Color(0xFF71717A) : const Color(0xFFA1A1AA),
+                        color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -113,10 +116,10 @@ class ReceiptContainer extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.75),
+                          color: AppColors.black.withValues(alpha: 0.75),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: AppColors.white.withValues(alpha: 0.2),
                           ),
                         ),
                         child: const Row(
@@ -125,13 +128,13 @@ class ReceiptContainer extends StatelessWidget {
                             Icon(
                               Icons.edit_rounded,
                               size: 13,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                             SizedBox(width: 4),
                             Text(
                               'Change',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                               ),

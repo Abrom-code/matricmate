@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -13,10 +14,10 @@ class TelegramChatButton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF18181B) : const Color(0xFFF4F4F5),
+        color: dark ? AppColors.darkSurface : AppColors.lightCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: dark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+          color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
         ),
       ),
       child: Row(
@@ -25,14 +26,14 @@ class TelegramChatButton extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF0088CC).withValues(alpha: 0.15),
+              color: AppColors.info.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: const Center(
               child: Icon(
                 Icons.send_rounded,
                 size: 20,
-                color: Color(0xFF0088CC),
+                color: AppColors.info,
               ),
             ),
           ),
@@ -46,7 +47,7 @@ class TelegramChatButton extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: dark ? Colors.white : const Color(0xFF09090B),
+                    color: dark ? AppColors.textWhite : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -54,7 +55,7 @@ class TelegramChatButton extends StatelessWidget {
                   'Instant support on Telegram',
                   style: TextStyle(
                     fontSize: 11,
-                    color: dark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -62,8 +63,8 @@ class TelegramChatButton extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0088CC),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.info,
+              foregroundColor: AppColors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               shape: RoundedRectangleBorder(

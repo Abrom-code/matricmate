@@ -18,10 +18,10 @@ class PaymentVerificationScreen extends StatelessWidget {
     final userCtrl = UserController.instance;
     final isDark = AppHelperFunctions.isDark(context);
 
-    final cardBg = isDark ? const Color(0xFF18181B) : const Color(0xFFF4F4F5);
-    final borderColor = isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7);
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF09090B);
-    final secondaryTextColor = isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A);
+    final cardBg = isDark ? AppColors.darkSurface : AppColors.lightCard;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.borderPrimary;
+    final primaryTextColor = isDark ? AppColors.textWhite : AppColors.textPrimary;
+    final secondaryTextColor = isDark ? AppColors.darkGrey : AppColors.textSecondary;
 
     return Scaffold(
       appBar: Appbar(
@@ -44,20 +44,23 @@ class PaymentVerificationScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 12),
 
-              // ── Glowing Status Hero ───────────────────────────────
+              // ── Primary Theme Status Hero ─────────────────────────
               Container(
                 width: 90,
                 height: 90,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFB800), Color(0xFFFF8A00)],
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withValues(alpha: 0.8),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFF9500).withValues(alpha: 0.35),
+                      color: AppColors.primary.withValues(alpha: 0.35),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -66,7 +69,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                 child: const Center(
                   child: Icon(
                     Icons.hourglass_top_rounded,
-                    color: Colors.white,
+                    color: AppColors.white,
                     size: 44,
                   ),
                 ),
@@ -149,7 +152,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -165,14 +168,14 @@ class PaymentVerificationScreen extends StatelessWidget {
                       : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.refresh_rounded, size: 20, color: Colors.white),
+                            Icon(Icons.refresh_rounded, size: 20, color: AppColors.white),
                             SizedBox(width: 8),
                             Text(
                               'Check Verification Status',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             ),
                           ],
@@ -250,8 +253,8 @@ class PaymentVerificationScreen extends StatelessWidget {
     required bool isDark,
   }) {
     final Color badgeColor = isCompleted
-        ? const Color(0xFF10B981)
-        : (isActive ? const Color(0xFFFF9500) : (isDark ? const Color(0xFF3F3F46) : const Color(0xFFD4D4D8)));
+        ? AppColors.success
+        : (isActive ? AppColors.primary : (isDark ? AppColors.darkBorder : AppColors.grey));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,7 +268,7 @@ class PaymentVerificationScreen extends StatelessWidget {
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFFF9500).withValues(alpha: 0.4),
+                      color: AppColors.primary.withValues(alpha: 0.4),
                       blurRadius: 8,
                     ),
                   ]
@@ -273,13 +276,13 @@ class PaymentVerificationScreen extends StatelessWidget {
           ),
           child: Center(
             child: isCompleted
-                ? const Icon(Icons.check, size: 16, color: Colors.white)
+                ? const Icon(Icons.check, size: 16, color: AppColors.white)
                 : Text(
                     stepNumber,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   ),
           ),
@@ -294,7 +297,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF09090B),
+                  color: isDark ? AppColors.textWhite : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -302,7 +305,7 @@ class PaymentVerificationScreen extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
+                  color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -318,8 +321,8 @@ class PaymentVerificationScreen extends StatelessWidget {
       height: 20,
       width: 2,
       color: isCompleted
-          ? const Color(0xFF10B981)
-          : (isDark ? const Color(0xFF3F3F46) : const Color(0xFFD4D4D8)),
+          ? AppColors.success
+          : (isDark ? AppColors.darkBorder : AppColors.grey),
     );
   }
 }

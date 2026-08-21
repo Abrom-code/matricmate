@@ -23,10 +23,10 @@ class PaymentDetail extends StatelessWidget {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF141416) : const Color(0xFFF4F4F5),
+        color: isDark ? AppColors.darkSurface : AppColors.lightCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? const Color(0xFF27272A) : const Color(0xFFE4E4E7),
+          color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
         ),
       ),
       child: Column(
@@ -44,7 +44,7 @@ class PaymentDetail extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
+                    color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ),
                 Container(
@@ -83,7 +83,7 @@ class PaymentDetail extends StatelessWidget {
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
-                      color: isDark ? const Color(0xFF71717A) : const Color(0xFFA1A1AA),
+                      color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -93,7 +93,7 @@ class PaymentDetail extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
-                      color: isDark ? Colors.white : const Color(0xFF09090B),
+                      color: isDark ? AppColors.textWhite : AppColors.textPrimary,
                     ),
                   ),
                   if (name.isNotEmpty) ...[
@@ -103,7 +103,7 @@ class PaymentDetail extends StatelessWidget {
                         const Icon(
                           Icons.verified_user_rounded,
                           size: 13,
-                          color: Color(0xFF10B981),
+                          color: AppColors.success,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -112,8 +112,8 @@ class PaymentDetail extends StatelessWidget {
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: isDark
-                                ? const Color(0xFFA1A1AA)
-                                : const Color(0xFF52525B),
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -145,14 +145,14 @@ class PaymentDetail extends StatelessWidget {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.copy_rounded, size: 14, color: Colors.white),
+                      Icon(Icons.copy_rounded, size: 14, color: AppColors.white),
                       SizedBox(width: 6),
                       Text(
                         'Copy',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       ),
                     ],

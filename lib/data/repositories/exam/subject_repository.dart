@@ -9,7 +9,7 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Runs [task] while slowly ticking [onProgress] from [from] toward [to].
+/// Runs [task] while smoothly ticking [onProgress] from [from] toward [to].
 Future<T> _withProgress<T>(
   Future<T> task,
   double from,
@@ -18,8 +18,8 @@ Future<T> _withProgress<T>(
 ) async {
   onProgress(from);
   double current = from;
-  final ticker = Timer.periodic(const Duration(milliseconds: 120), (_) {
-    current += (to - current) * 0.12;
+  final ticker = Timer.periodic(const Duration(milliseconds: 60), (_) {
+    current += (to - current) * 0.15;
     onProgress(current.clamp(from, to - 0.01));
   });
   try {
@@ -40,35 +40,25 @@ class SubjectRepository {
     try {
       final db = await _dbService.database;
 
-      // Step 1 — chapters (0.0 → 0.15)
-      final chapters = await _withProgress(
-        supabase.from('chapters').select().eq('subject_id', subjectId),
-        0.0,
-        0.15,
-        (p) => onStep('Fetching chapters…', p),
+      // Step 1 — Fetch chapters, tests, and questions all in parallel (0.05 → 0.60)
+      onStep('Fetching content…', 0.05);
+      final fetched = await _withProgress(
+        Future.wait([
+          supabase.from('chapters').select().eq('subject_id', subjectId),
+          supabase.from('tests').select().eq('subject_id', subjectId),
+          supabase
+              .from('questions')
+              .select('*, question_sections(title)')
+              .eq('subject_id', subjectId),
+        ]),
+        0.05,
+        0.60,
+        (p) => onStep('Fetching subject data…', p),
       );
 
-      // Step 2 — fetch all tests (chapter, grade, entrance, model) (0.15 → 0.28)
-      final tests = await _withProgress(
-        supabase.from('tests').select().eq('subject_id', subjectId),
-        0.15,
-        0.28,
-        (p) => onStep('Fetching tests…', p),
-      );
-
-      // Step 3 — questions for chapter/grade tests only (0.28 → 0.62)
-      final testIds = tests.map<int>((t) => t['id'] as int).toList();
-      final questionsData = testIds.isEmpty
-          ? <dynamic>[]
-          : await _withProgress(
-              supabase
-                  .from('questions')
-                  .select('*, question_sections(title)')
-                  .inFilter('test_id', testIds),
-              0.28,
-              0.62,
-              (p) => onStep('Fetching questions…', p),
-            );
+      final chapters = fetched[0] as List;
+      final tests = fetched[1] as List;
+      final questionsData = fetched[2] as List;
 
       final Set<int> passageIds = {};
       final Set<String> imgUrls = {};
@@ -86,7 +76,7 @@ class SubjectRepository {
         }
       }
 
-      // Step 4 — passages (0.62 → 0.74)
+      // Step 2 — Fetch passages if needed (0.60 → 0.72)
       List<dynamic> passageData = [];
       if (passageIds.isNotEmpty) {
         passageData = await _withProgress(
@@ -94,13 +84,13 @@ class SubjectRepository {
               .from('passages')
               .select()
               .inFilter('id', passageIds.toList()),
-          0.62,
-          0.74,
+          0.60,
+          0.72,
           (p) => onStep('Fetching passages…', p),
         );
       }
 
-      // Step 5 — write to SQLite (0.74 → 0.86)
+      // Step 3 — Write to SQLite in a single transaction (0.72 → 0.86)
       final batch = db.batch();
       for (var ch in chapters) {
         batch.insert(
@@ -132,12 +122,12 @@ class SubjectRepository {
       }
       await _withProgress(
         batch.commit(noResult: true),
-        0.74,
+        0.72,
         0.86,
         (p) => onStep('Saving to device…', p),
       );
 
-      // Step 6 — images (0.86 → 1.0)
+      // Step 4 — Images (0.86 → 1.0)
       if (imgUrls.isNotEmpty) {
         await _withProgress(
           AppHelperFunctions.downloadImages(imgUrls),

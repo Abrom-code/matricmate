@@ -105,7 +105,7 @@ class PremiumBottomSheet extends StatelessWidget {
                     ),
                     onPressed: () => Get.offNamed(Routes.premium),
                     child: Text(
-                      'Premium (${PaymentConfigService.instance.subscriptionPrice.value} birr)',
+                      'Upgrade Premium (From ${PaymentConfigService.instance.getPriceForPlan('6_months', 150)} ETB)',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

@@ -43,17 +43,30 @@ class AccountSettings extends StatelessWidget {
               trailing: const Icon(Icons.keyboard_arrow_right),
               onTap: () => Get.toNamed(Routes.changePassword),
             ),
+            if (userCtrl.user.value.isActive)
+              AppListTile(
+                icon: const Icon(
+                  Icons.workspace_premium,
+                  color: Colors.amber,
+                ),
+                title: 'Premium Member',
+                subtitle: userCtrl.user.value.remainingDaysText.isNotEmpty
+                    ? userCtrl.user.value.remainingDaysText
+                    : 'Active Access',
+                trailing: const Icon(Icons.verified, color: Colors.green, size: 20),
+                onTap: null,
+              ),
             if (isInactive)
               Obx(() {
                 final price =
-                    PaymentConfigService.instance.subscriptionPrice.value;
+                    PaymentConfigService.instance.getPriceForPlan('6_months', 150);
                 return AppListTile(
                   icon: const Icon(
                     Icons.workspace_premium,
                     color: Colors.amber,
                   ),
                   title: 'Upgrade Premium',
-                  subtitle: '$price ETB / year',
+                  subtitle: 'Starting from $price ETB',
                   trailing: const Icon(Icons.keyboard_arrow_right),
                   onTap: () => Get.bottomSheet(
                     const PremiumBottomSheet(),

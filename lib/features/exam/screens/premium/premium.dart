@@ -5,10 +5,12 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payment_tile.dart';
+import 'package:matricmate/features/exam/screens/premium/widgets/plan_selector.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PremiumScreen extends StatelessWidget {
   const PremiumScreen({super.key});
@@ -17,6 +19,7 @@ class PremiumScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = PremiumController.instance;
     final cfg = PaymentConfigService.instance;
+    final isDark = AppHelperFunctions.isDark(context);
 
     return Scaffold(
       appBar: Appbar(
@@ -39,7 +42,8 @@ class PremiumScreen extends StatelessWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16.0),
               child: Obx(() {
-                final price = cfg.subscriptionPrice.value;
+                final selectedPlan = controller.selectedPlan.value;
+                final price = controller.selectedPlanPrice;
                 final methods = cfg.methods.toList();
                 final selected = controller.selectedPayment.value;
                 final isLoading = cfg.isLoading.value;
@@ -48,34 +52,92 @@ class PremiumScreen extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ── Plan Duration Selector ─────────────────────
+                    const PlanSelector(),
+
+                    const SizedBox(height: 20),
+
                     // ── Total Amount Card ──────────────────────────
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.85),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withValues(alpha: 0.85),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Total Amount Due',
-                            style: TextStyle(color: AppColors.white),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$price ETB',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${selectedPlan.title} Access',
+                                style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$price ETB',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '${selectedPlan.durationMonths} Months',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
+
+                    // ── Payment Methods Header ─────────────────────
+                    Text(
+                      'PAYMENT METHOD',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                        color: isDark ? AppColors.grey : AppColors.darkerGrey,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
 
                     // ── All payment methods from DB ─────────────────
                     if (isLoading && methods.isEmpty)

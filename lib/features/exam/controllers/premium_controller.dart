@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:matricmate/data/repositories/payment/payment_repository.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
+import 'package:matricmate/features/exam/models/subscription_plan.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -17,6 +18,15 @@ class PremiumController extends GetxController {
   final PaymentRepository _repo = PaymentRepository();
   final UserController _userController = Get.find<UserController>();
   final _cfg = PaymentConfigService.instance;
+
+  /// Currently selected subscription plan (defaults to 1 Year).
+  final selectedPlan = Rx<SubscriptionPlan>(SubscriptionPlan.featured);
+
+  /// Current price in ETB for the selected plan.
+  int get selectedPlanPrice => _cfg.getPriceForPlan(
+    selectedPlan.value.key,
+    selectedPlan.value.defaultPrice,
+  );
 
   /// Currently selected payment method.
   final selectedPayment = Rxn<PaymentConfig>();
@@ -147,12 +157,18 @@ class PremiumController extends GetxController {
 
       final result = await _repo.uploadReceipt(receipt.value!, userId);
 
+      final plan = selectedPlan.value;
+      final price = selectedPlanPrice;
+
       await _repo.savePaymentReceipt(
         userId: userId,
         receiptPath: result['filePath']!,
         receiptUrl: result['url']!,
         paymentMethod: payment.key,
         verificationUrl: urlFiledController.text.trim(),
+        planKey: plan.key,
+        planDurationMonths: plan.durationMonths,
+        amount: price,
       );
 
       await _repo.setUserPending(userId);

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class AnalyticsSummaryGrid extends StatelessWidget {
@@ -16,10 +15,9 @@ class AnalyticsSummaryGrid extends StatelessWidget {
     return GridView.count(
       // Responsive layout: 4 cards inline for landscape, 2x2 grid for portrait
       crossAxisCount: isLandscape ? 4 : 2,
-      crossAxisSpacing: AppSizes.spaceBtwItems,
-      mainAxisSpacing: AppSizes.spaceBtwItems,
-      // Flatter cards in landscape since there's more width per card.
-      childAspectRatio: isLandscape ? 1.8 : 1.3,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: isLandscape ? 1.8 : 1.25,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
@@ -31,19 +29,19 @@ class AnalyticsSummaryGrid extends StatelessWidget {
         ),
         _StatCard(
           icon: Iconsax.chart_copy,
-          iconColor: AppColors.info,
+          iconColor: const Color(0xFF0284C7),
           value: '${controller.avgScorePct.value.toStringAsFixed(0)}%',
           label: 'Avg score %',
         ),
         _StatCard(
-          icon: Icons.calculate_outlined,
-          iconColor: AppColors.success,
+          icon: Icons.check_circle_outline_rounded,
+          iconColor: const Color(0xFF10B981),
           value: _formatNumber(controller.totalCorrect.value),
           label: 'Correct answers',
         ),
         _StatCard(
           icon: Iconsax.archive_tick_copy,
-          iconColor: AppColors.warning,
+          iconColor: const Color(0xFFF59E0B),
           value: '${controller.bookmarkCount.value}',
           label: 'Bookmarks',
         ),
@@ -76,41 +74,62 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: dark ? 0.0 : 0.06),
+            color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
             blurRadius: 10,
-            spreadRadius: -2,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, color: iconColor, size: 22),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: dark ? AppColors.white : AppColors.black,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: dark ? 0.22 : 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Icon(icon, color: iconColor, size: 19),
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: dark ? AppColors.white : const Color(0xFF0F172A),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ],
       ),

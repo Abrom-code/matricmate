@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class AppListTile extends StatelessWidget {
@@ -28,19 +27,22 @@ class AppListTile extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       child: ListTile(
         dense: isDense,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
         leading: Container(
-          padding: const EdgeInsets.all(AppSizes.xs),
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
+            color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.1),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: icon,
+          child: Center(child: icon),
         ),
         title: Text(
           title,
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: 15,
-            color: dark ? AppColors.grey : AppColors.darkerGrey,
+          style: TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w600,
+            color: dark ? AppColors.white : const Color(0xFF1E293B),
           ),
         ),
         subtitle: subtitle != null
@@ -48,7 +50,8 @@ class AppListTile extends StatelessWidget {
                 subtitle!,
                 style: TextStyle(
                   fontSize: 12,
-                  color: dark ? AppColors.darkGrey : AppColors.darkGrey,
+                  fontWeight: FontWeight.w400,
+                  color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                 ),
               )
             : null,

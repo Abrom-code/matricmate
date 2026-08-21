@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ScoreTrendChart extends StatelessWidget {
@@ -14,36 +13,83 @@ class ScoreTrendChart extends StatelessWidget {
     final points = controller.trendPoints;
 
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
             blurRadius: 10,
-            spreadRadius: -2,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Score trend',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Score Trend',
+                style: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              if (points.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(
+                      alpha: dark ? 0.2 : 0.1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Avg: ${controller.avgScorePct.value.toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: AppSizes.spaceBtwItems),
+          const SizedBox(height: 14),
           SizedBox(
             height: 130,
             child: points.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No data yet',
-                      style: TextStyle(color: AppColors.textSecondary),
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.show_chart_rounded,
+                          size: 32,
+                          color: dark
+                              ? AppColors.darkGrey
+                              : const Color(0xFFCBD5E1),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Complete tests to see your score trajectory',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : CustomPaint(
@@ -51,34 +97,41 @@ class ScoreTrendChart extends StatelessWidget {
                     painter: _LinePainter(points: points),
                   ),
           ),
-          const SizedBox(height: AppSizes.sm),
-          // X-axis labels
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                points.isNotEmpty ? 'TEST 1' : '',
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textSecondary,
+          if (points.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            // X-axis labels
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'TEST 1',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                  ),
                 ),
-              ),
-              Text(
-                points.length > 2 ? 'LAST ${points.length} TESTS' : '',
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textSecondary,
+                if (points.length > 2)
+                  Text(
+                    'LAST ${points.length} TESTS',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    ),
+                  ),
+                Text(
+                  'TEST ${points.length}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                  ),
                 ),
-              ),
-              Text(
-                points.isNotEmpty ? 'TEST ${points.length}' : '',
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
       ),
     );

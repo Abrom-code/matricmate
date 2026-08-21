@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class SubjectPerformanceSection extends StatelessWidget {
@@ -14,35 +13,40 @@ class SubjectPerformanceSection extends StatelessWidget {
     final stats = controller.subjectStats;
 
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
             blurRadius: 10,
-            spreadRadius: -2,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Performance by subject',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          const Text(
+            'Performance by Subject',
+            style: TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
           ),
-          const SizedBox(height: AppSizes.spaceBtwItems),
+          const SizedBox(height: 14),
           if (stats.isEmpty)
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text(
-                  'No data yet',
+                  'No subject data yet',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
               ),
@@ -52,9 +56,8 @@ class SubjectPerformanceSection extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: stats.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: AppSizes.spaceBtwItems),
-              itemBuilder: (_, i) => _SubjectBar(stat: stats[i]),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) => _SubjectBar(stat: stats[i], dark: dark),
             ),
         ],
       ),
@@ -63,13 +66,14 @@ class SubjectPerformanceSection extends StatelessWidget {
 }
 
 class _SubjectBar extends StatelessWidget {
-  const _SubjectBar({required this.stat});
+  const _SubjectBar({required this.stat, required this.dark});
   final SubjectStat stat;
+  final bool dark;
 
   Color _barColor(double score) {
-    if (score >= 70) return AppColors.success;
-    if (score >= 50) return AppColors.warning;
-    return AppColors.error;
+    if (score >= 70) return const Color(0xFF10B981);
+    if (score >= 50) return const Color(0xFFF59E0B);
+    return const Color(0xFFEF4444);
   }
 
   @override
@@ -85,25 +89,38 @@ class _SubjectBar extends StatelessWidget {
           children: [
             Text(
               stat.name,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
-            Text(
-              '${pct.toStringAsFixed(0)}%',
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: color,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: dark ? AppColors.white : const Color(0xFF1E293B),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: dark ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                '${pct.toStringAsFixed(0)}%',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 7),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
             value: pct / 100,
             minHeight: 7,
-            backgroundColor: color.withValues(alpha: 0.15),
+            backgroundColor: dark
+                ? Colors.white.withValues(alpha: 0.08)
+                : const Color(0xFFE2E8F0),
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),

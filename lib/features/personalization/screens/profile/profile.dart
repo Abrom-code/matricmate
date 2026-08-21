@@ -37,12 +37,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final dark = AppHelperFunctions.isDark(context);
 
     return Scaffold(
+      backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: ModernAppbarWithBuilder(
         title: 'My Profile',
         subtitleBuilder: (_) => Obx(() {
           final fullName = UserController.instance.user.value.fullName.trim();
           return Text(
-            fullName,
+            fullName.isNotEmpty ? fullName : 'Student Profile',
             style: const TextStyle(
               color: Color(0xFFD1FAE5),
               fontSize: 11.5,
@@ -57,58 +58,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
             MediaQuery.orientationOf(context) == Orientation.landscape;
         final content = SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(AppSizes.defaultSpace),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Profile card — has its own internal Obx
                 const ProfileSection(),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                const SizedBox(height: 20),
 
                 // Account settings
                 Text(
                   'ACCOUNT SETTINGS',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: dark ? AppColors.grey : AppColors.darkerGrey,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppSizes.spaceBtwItems),
+                const SizedBox(height: 10),
                 const AccountSettings(),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                const SizedBox(height: 20),
 
                 // Connect & support
                 Text(
                   'CONNECT & SUPPORT',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: dark ? AppColors.grey : AppColors.darkerGrey,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppSizes.spaceBtwItems),
+                const SizedBox(height: 10),
                 const ConnectSupportSection(),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                const SizedBox(height: 24),
 
                 // Log out
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
+                  height: 48,
+                  child: OutlinedButton.icon(
                     onPressed: () => AppDialogBoxes.showOkCancelDialog(
                       context: context,
+                      title: 'Log Out',
+                      subtitle: 'Are you sure you want to log out of MatricMate?',
                       onPressed: () {
                         Get.back();
                         userController.logOut();
                       },
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
+                    icon: const Icon(
+                      Icons.logout_rounded,
+                      size: 18,
+                      color: Color(0xFFEF4444),
                     ),
-                    child: const Text(
+                    label: const Text(
                       'Log Out',
-                      style: TextStyle(color: Colors.red),
+                      style: TextStyle(
+                        color: Color(0xFFEF4444),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.5,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444)
+                          .withValues(alpha: dark ? 0.12 : 0.04),
+                      side: BorderSide(
+                        color: const Color(0xFFEF4444)
+                            .withValues(alpha: dark ? 0.3 : 0.25),
+                        width: 1.2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: AppSizes.spaceBtwSections * 2),
+                const SizedBox(height: AppSizes.spaceBtwSections),
               ],
             ),
           ),

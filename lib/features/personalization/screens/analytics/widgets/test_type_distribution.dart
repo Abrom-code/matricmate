@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class TestTypeDistribution extends StatelessWidget {
@@ -11,16 +10,16 @@ class TestTypeDistribution extends StatelessWidget {
 
   static const _typeColors = {
     'chapter': AppColors.primary,
-    'entrance': AppColors.info,
-    'model': AppColors.success,
-    'grade': AppColors.warning,
+    'entrance': Color(0xFF0284C7),
+    'model': Color(0xFF10B981),
+    'grade': Color(0xFFF59E0B),
   };
 
   static const _typeLabels = {
-    'chapter': 'Chapter',
-    'entrance': 'Entrance',
-    'model': 'Model',
-    'grade': 'Grade',
+    'chapter': 'Chapter Practice',
+    'entrance': 'Entrance Exam',
+    'model': 'Model Exam',
+    'grade': 'Grade Exam',
   };
 
   @override
@@ -29,35 +28,40 @@ class TestTypeDistribution extends StatelessWidget {
     final dist = controller.typeDistribution;
 
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
             blurRadius: 10,
-            spreadRadius: -2,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Test type distribution',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          const Text(
+            'Test Type Distribution',
+            style: TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
           ),
-          const SizedBox(height: AppSizes.spaceBtwItems),
+          const SizedBox(height: 14),
           if (dist.isEmpty)
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text(
-                  'No data yet',
+                  'No test distribution data yet',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
               ),
@@ -73,7 +77,7 @@ class TestTypeDistribution extends StatelessWidget {
                     painter: _DonutPainter(dist: dist, colors: _typeColors),
                   ),
                 ),
-                const SizedBox(width: AppSizes.spaceBtwItems),
+                const SizedBox(width: 18),
                 // Legend
                 Expanded(
                   child: Column(
@@ -84,29 +88,49 @@ class TestTypeDistribution extends StatelessWidget {
                       final pct = dist[key] ?? 0.0;
                       final color = _typeColors[key] ?? AppColors.grey;
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        padding: const EdgeInsets.symmetric(vertical: 3.5),
                         child: Row(
                           children: [
                             Container(
-                              width: 10,
-                              height: 10,
+                              width: 9,
+                              height: 9,
                               decoration: BoxDecoration(
                                 color: color,
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 7),
                             Expanded(
                               child: Text(
                                 label,
-                                style: const TextStyle(fontSize: 12),
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: dark
+                                      ? AppColors.white
+                                      : const Color(0xFF334155),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Text(
-                              '${pct.toStringAsFixed(0)}%',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: color.withValues(
+                                  alpha: dark ? 0.2 : 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '${pct.toStringAsFixed(0)}%',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: color,
+                                ),
                               ),
                             ),
                           ],

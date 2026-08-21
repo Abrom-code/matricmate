@@ -6,7 +6,6 @@ import 'package:matricmate/features/personalization/controllers/profile_controll
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/app_images.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ProfileSection extends StatelessWidget {
@@ -22,16 +21,19 @@ class ProfileSection extends StatelessWidget {
 
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(AppSizes.md),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: dark ? AppColors.darkCard : AppColors.white,
-          borderRadius: BorderRadius.circular(AppSizes.lg),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.07),
-              blurRadius: 16,
-              spreadRadius: -2,
-              offset: const Offset(0, 6),
+              color: Colors.black.withValues(alpha: dark ? 0.2 : 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -42,7 +44,7 @@ class ProfileSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _StatusAvatar(status: user.status),
-                const SizedBox(width: AppSizes.md),
+                const SizedBox(width: 16),
 
                 // Name / badge / stream
                 Expanded(
@@ -51,52 +53,67 @@ class ProfileSection extends StatelessWidget {
                     children: [
                       Text(
                         user.fullName.isEmpty ? '—' : user.fullName,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                          color: dark
+                              ? AppColors.white
+                              : const Color(0xFF0F172A),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
                       StatusBadge(status: user.status),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 7),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Iconsax.book_1_copy,
-                            size: 13,
-                            color: AppColors.textSecondary,
+                            size: 13.5,
+                            color: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 5),
                           Expanded(
                             child: Text(
                               user.stream.isNotEmpty
                                   ? '${user.stream[0].toUpperCase()}${user.stream.substring(1)} Science'
                                   : 'Stream not set',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                                color: dark
+                                    ? AppColors.darkGrey
+                                    : AppColors.textSecondary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Iconsax.sms_copy,
-                            size: 13,
-                            color: AppColors.textSecondary,
+                            size: 13.5,
+                            color: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 5),
                           Expanded(
                             child: Text(
                               user.email,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                                color: dark
+                                    ? AppColors.darkGrey
+                                    : AppColors.textSecondary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -109,14 +126,15 @@ class ProfileSection extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: AppSizes.spaceBtwItems),
+            const SizedBox(height: 16),
             Divider(
               height: 1,
+              thickness: 0.8,
               color: dark
-                  ? AppColors.darkerGrey.withValues(alpha: 0.5)
-                  : AppColors.grey,
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : const Color(0xFFF1F5F9),
             ),
-            const SizedBox(height: AppSizes.spaceBtwItems),
+            const SizedBox(height: 14),
 
             // ── Stats row ──────────────────────────────────────────
             Obx(
@@ -134,14 +152,14 @@ class ProfileSection extends StatelessWidget {
                         '${controller.avgScorePct.value.toStringAsFixed(0)}%',
                     label: 'AVG SCORE',
                     icon: Iconsax.chart_copy,
-                    iconColor: AppColors.info,
+                    iconColor: const Color(0xFF0284C7),
                   ),
                   _VerticalDivider(dark: dark),
                   _StatItem(
                     value: '${controller.bookmarkCount.value}',
                     label: 'BOOKMARKS',
                     icon: Iconsax.archive_tick_copy,
-                    iconColor: AppColors.warning,
+                    iconColor: const Color(0xFFF59E0B),
                   ),
                 ],
               ),
@@ -224,20 +242,39 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
     return Expanded(
       child: Column(
         children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: dark ? 0.22 : 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Icon(icon, color: iconColor, size: 16),
+            ),
+          ),
+          const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+              color: dark ? AppColors.white : const Color(0xFF0F172A),
+            ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 10,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: AppColors.textSecondary,
+              color: dark ? AppColors.darkGrey : AppColors.textSecondary,
             ),
           ),
         ],
@@ -254,10 +291,10 @@ class _VerticalDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      height: 36,
+      height: 44,
       color: dark
-          ? AppColors.darkerGrey.withValues(alpha: 0.5)
-          : AppColors.grey,
+          ? Colors.white.withValues(alpha: 0.08)
+          : const Color(0xFFF1F5F9),
     );
   }
 }

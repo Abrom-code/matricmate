@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
-import 'package:matricmate/features/exam/screens/entrance/entrance.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
@@ -35,7 +34,6 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
 
     pages = [
       const _KeepAlivePage(child: SubjectsScreen()),
-      const _KeepAlivePage(child: EntranceScreen()),
       _KeepAlivePage(child: BookmarkScreen()),
       const _KeepAlivePage(child: AnalyticsScreen()),
       const _KeepAlivePage(child: ProfileScreen()),

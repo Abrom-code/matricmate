@@ -185,17 +185,22 @@ class PremiumBottomSheet extends StatelessWidget {
                             color: AppColors.primary,
                           ),
                           const SizedBox(width: 8),
-                          Obx(() {
-                            final price = cfg.getPriceForPlan('6_months', 150);
-                            return Text(
-                              'Plans from $price ETB • 6 Months to 4 Years access',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                            );
-                          }),
+                          Flexible(
+                            child: Obx(() {
+                              final price = cfg.getPriceForPlan('6_months', 150);
+                              return Text(
+                                'Plans from $price ETB • 6 Months to 4 Years',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            }),
+                          ),
                         ],
                       ),
                     ),

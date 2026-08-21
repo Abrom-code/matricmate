@@ -74,6 +74,19 @@ lib/utils/constants/api_constants.dart
 lib/motivations/
 todo.txt
 
+# Release signing & Keystores
+key.properties
+**/key.properties
+*.jks
+*.keystore
+
+# Machine specific
+local.properties
+**/local.properties
+
+# Node dependencies
+node_modules/
+
 # ------------------------------
 # Coverage
 # ------------------------------

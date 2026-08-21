@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
-import 'package:matricmate/features/notifications/services/notification_navigator.dart';
-import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/features/notifications/screens/notification_detail_screen.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -31,67 +30,64 @@ class NotificationTile extends StatelessWidget {
   bool get _isRejected =>
       notification.type == 'payment' && _paymentStatus == 'rejected';
 
-  Color _borderColor(bool dark) {
-    if (notification.isRead) return Colors.transparent;
-    if (_isApproved) return Colors.green.withValues(alpha: 0.5);
-    if (_isRejected) return Colors.red.withValues(alpha: 0.5);
-    return AppColors.primary.withValues(alpha: 0.4);
+  Color _accentColor() {
+    if (_isApproved) return const Color(0xFF10B981);
+    if (_isRejected) return const Color(0xFFEF4444);
+    if (notification.type == 'payment') return const Color(0xFFF59E0B);
+    if (notification.type == 'new_content') return const Color(0xFF0284C7);
+    return AppColors.primary;
   }
-
-  // ── Type icon ────────────────────────────────────────────────────────
 
   _TypeIconData get _typeIcon {
     if (_isApproved) {
-      return _TypeIconData(Icons.check_circle_rounded, Colors.green.shade600);
+      return const _TypeIconData(
+        Icons.verified_rounded,
+        Color(0xFF10B981),
+      );
     }
     if (_isRejected) {
-      return _TypeIconData(Icons.cancel_rounded, Colors.red.shade600);
+      return const _TypeIconData(
+        Icons.cancel_rounded,
+        Color(0xFFEF4444),
+      );
     }
 
     switch (notification.type) {
       case 'payment':
         return const _TypeIconData(
-          Icons.payment_rounded,
-          AppColors.amberAccent,
+          Icons.account_balance_wallet_rounded,
+          Color(0xFFF59E0B),
         );
       case 'new_content':
         return const _TypeIconData(
           Icons.menu_book_rounded,
-          AppColors.secondary,
+          Color(0xFF0284C7),
         );
       default:
-        return const _TypeIconData(Icons.campaign_rounded, AppColors.primary);
+        return const _TypeIconData(
+          Icons.campaign_rounded,
+          AppColors.primary,
+        );
     }
   }
 
-  // ── Tap routing ──────────────────────────────────────────────────────
+  String get _categoryLabel {
+    if (notification.type == 'payment') return 'PAYMENT';
+    if (notification.type == 'new_content') return 'NEW TEST';
+    return 'ANNOUNCEMENT';
+  }
 
   Future<void> _onTap() async {
     await NotificationsController.instance.markRead(notification.id);
-
-    switch (notification.type) {
-      case 'payment':
-        if (_isApproved) {
-          // Premium is active — go home so they can use it immediately.
-          Get.until((route) => route.isFirst);
-        } else {
-          // Rejected or pending — let them see the status / retry.
-          Get.toNamed(Routes.paymentVerification);
-        }
-        break;
-      case 'new_content':
-        await NotificationTestOpener.open(notification.payload);
-        break;
-      default:
-        // Announcement — stay on notifications list (already there).
-        break;
-    }
+    Get.to(() => NotificationDetailScreen(notification: notification));
   }
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final iconData = _typeIcon;
+    final accent = _accentColor();
+    final isUnread = !notification.isRead;
 
     return Dismissible(
       key: ValueKey(notification.id),
@@ -101,77 +97,149 @@ class NotificationTile extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: Colors.red.shade400,
-          borderRadius: BorderRadius.circular(14),
+          color: const Color(0xFFEF4444),
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(
-          Icons.delete_outline_rounded,
-          color: Colors.white,
-          size: 24,
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            SizedBox(width: 6),
+            Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
       ),
       child: GestureDetector(
         onTap: _onTap,
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: dark ? AppColors.darkCard : AppColors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _borderColor(dark), width: 1.5),
-            boxShadow: dark
-                ? []
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+            color: isUnread
+                ? (dark
+                    ? const Color(0xFF1E232E)
+                    : const Color(0xFFF8FAFC))
+                : (dark ? AppColors.darkCard : AppColors.white),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isUnread
+                  ? accent.withValues(alpha: dark ? 0.40 : 0.28)
+                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
+              width: isUnread ? 1.4 : 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ── Type icon ──────────────────────────────────────────
-              Container(
-                width: 36,
-                height: 36,
-                margin: const EdgeInsets.only(right: 12, top: 2),
-                decoration: BoxDecoration(
-                  color: iconData.color.withValues(alpha: dark ? 0.15 : 0.10),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(iconData.icon, size: 18, color: iconData.color),
+              // ── Type icon squircle ─────────────────────────────────
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: iconData.color.withValues(alpha: dark ? 0.22 : 0.10),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(
+                        color: iconData.color.withValues(alpha: dark ? 0.35 : 0.20),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(iconData.icon, size: 22, color: iconData.color),
+                    ),
+                  ),
+                  if (isUnread)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: accent,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: dark ? AppColors.darkCard : AppColors.white,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
+              const SizedBox(width: 14),
 
               // ── Content ───────────────────────────────────────────
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title row — with status badge for payment notifications
+                    // Meta row: Category pill + date + status badge
                     Row(
                       children: [
+                        Text(
+                          _categoryLabel,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                            color: accent,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '·',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            notification.title,
+                            _relativeTime(notification.createdAt),
                             style: TextStyle(
-                              fontWeight: notification.isRead
-                                  ? FontWeight.w500
-                                  : FontWeight.w600,
-                              fontSize: 14,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w500,
+                              color: dark
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (_isApproved)
                           _StatusBadge(
                             label: 'Approved',
-                            color: Colors.green.shade600,
+                            color: const Color(0xFF10B981),
                             dark: dark,
                           )
                         else if (_isRejected)
                           _StatusBadge(
                             label: 'Rejected',
-                            color: Colors.red.shade600,
+                            color: const Color(0xFFEF4444),
                             dark: dark,
                           ),
                       ],
@@ -179,87 +247,52 @@ class NotificationTile extends StatelessWidget {
 
                     const SizedBox(height: 4),
 
-                    // Body
+                    // Title
                     Text(
-                      notification.body,
+                      notification.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 13,
-                        color: notification.isRead
-                            ? AppColors.darkGrey
-                            : AppColors.textSecondary,
+                        fontWeight: isUnread ? FontWeight.w800 : FontWeight.w700,
+                        fontSize: 14.5,
+                        letterSpacing: -0.2,
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
                       ),
                     ),
 
-                    // Rejection reason (if present)
-                    if (_isRejected &&
-                        notification.payload['rejection_reason'] != null) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(
-                            alpha: dark ? 0.12 : 0.07,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.info_outline_rounded,
-                              size: 13,
-                              color: Colors.red.shade400,
-                            ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: Text(
-                                notification.payload['rejection_reason']
-                                    .toString(),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.red.shade400,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    const SizedBox(height: 3),
 
-                    const SizedBox(height: 6),
-
-                    // Timestamp
+                    // Body clamped to 2 lines
                     Text(
-                      _relativeTime(notification.createdAt),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.darkGrey,
+                      notification.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.4,
+                        color: isUnread
+                            ? (dark
+                                ? const Color(0xFFCBD5E1)
+                                : const Color(0xFF334155))
+                            : (dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // ── Unread dot ────────────────────────────────────────
-              if (!notification.isRead) ...[
-                const SizedBox(width: 8),
-                Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.only(top: 4),
-                  decoration: BoxDecoration(
-                    color: _isApproved
-                        ? Colors.green.shade600
-                        : _isRejected
-                        ? Colors.red.shade600
-                        : AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
+              const SizedBox(width: 8),
+
+              // Trailing chevron
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: dark
+                    ? AppColors.darkGrey.withValues(alpha: 0.6)
+                    : AppColors.textSecondary.withValues(alpha: 0.6),
+              ),
             ],
           ),
         ),
@@ -292,15 +325,19 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: dark ? 0.2 : 0.1),
+        color: color.withValues(alpha: dark ? 0.22 : 0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withValues(alpha: dark ? 0.35 : 0.25),
+          width: 1,
+        ),
       ),
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 10.5,
           fontWeight: FontWeight.w700,
           color: color,
           letterSpacing: 0.3,
@@ -323,3 +360,4 @@ String _relativeTime(DateTime dt) {
   if (diff.inDays < 7) return '${diff.inDays}d ago';
   return AppFormatter.formatDate(dt.millisecondsSinceEpoch);
 }
+

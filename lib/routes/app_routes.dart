@@ -35,6 +35,7 @@ class Routes {
 
   // profile
   static const userProfile = '/user-profile';
+  static const editProfile = '/edit-profile';
 
   // auth
   static const signup = '/signup';

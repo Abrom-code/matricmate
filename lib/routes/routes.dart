@@ -37,6 +37,7 @@ import 'package:matricmate/features/notifications/screens/notifications_screen.d
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
+import 'package:matricmate/features/personalization/screens/update/update_profile.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/bindings/exam/premium_binding.dart';
@@ -141,6 +142,10 @@ class AppRoutes {
       name: Routes.changePassword,
       page: () => const ChangePasswordScreen(),
       binding: ChangePasswordBinding(),
+    ),
+    GetPage(
+      name: Routes.editProfile,
+      page: () => const EditProfileScreen(),
     ),
 
     GetPage(

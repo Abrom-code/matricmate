@@ -31,21 +31,23 @@ class UpdateProfileController extends GetxController {
 
     firstName = TextEditingController(text: user.firstName);
     lastName = TextEditingController(text: user.lastName);
-    selectedStream = user.stream.obs;
+    selectedStream = (user.stream.isNotEmpty ? user.stream : 'natural').obs;
   }
 
   Future<void> updateProfile() async {
     try {
       if (!updateFormKey.currentState!.validate()) return;
 
+      // Set button loading state IMMEDIATELY with 0ms delay
+      isUpdating.value = true;
+
       final isConnected = await NetworkManager.instance.isConnected();
 
       if (!isConnected) {
-        ToastHelper.warning('No Internet');
+        isUpdating.value = false;
+        ToastHelper.warning('No Internet Connection');
         return;
       }
-
-      isUpdating.value = true;
 
       final currentUser = _userController.user.value;
 
@@ -55,10 +57,13 @@ class UpdateProfileController extends GetxController {
         stream: selectedStream.value,
       );
 
-      //  update remote + local DB
+      // Optimistic update
+      _userController.user.value = updatedUser;
+
+      // Update remote + local DB
       await _userRepository.updateFullUserRecord(updatedUser);
 
-      //  refresh local state only — no need to re-validate session
+      // Refresh local state
       await _userController.loadLocalUser();
 
       // Re-save FCM token for the (potentially new) stream
@@ -68,6 +73,7 @@ class UpdateProfileController extends GetxController {
 
       ToastHelper.success('Profile updated successfully');
     } catch (e) {
+      await _userController.loadLocalUser();
       AppExceptionHandler.handleResponse(e);
     } finally {
       isUpdating.value = false;

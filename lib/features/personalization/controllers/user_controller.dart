@@ -28,6 +28,8 @@ class UserController extends GetxController {
   /// Kept as a field so we can cancel the realtime watch on logout.
   final _sessionService = SessionService();
 
+  StreamSubscription<User?>? _authSub;
+
   Rx<UserModel> user = UserModel.empty().obs;
 
   final RxBool isDeleting = false.obs;
@@ -39,7 +41,7 @@ class UserController extends GetxController {
   void onInit() {
     super.onInit();
 
-    _authRepo.userChanges.listen((firebaseUser) async {
+    _authSub = _authRepo.userChanges.listen((firebaseUser) async {
       if (firebaseUser != null) {
         await loadLocalUser();
       } else {
@@ -166,6 +168,13 @@ class UserController extends GetxController {
 
   void showDeleteDialog() {
     Get.dialog(const _DeleteAccountDialog(), barrierDismissible: true);
+  }
+
+  @override
+  void onClose() {
+    _authSub?.cancel();
+    cancelSessionWatch();
+    super.onClose();
   }
 }
 

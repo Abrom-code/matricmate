@@ -90,7 +90,6 @@ class FcmService {
     importance: Importance.high,
   );
 
-  Worker? _streamWatcher;
   bool _initialized = false;
 
   /// Prevents stale launch notifications from re-navigating on hot restart.
@@ -361,8 +360,6 @@ class FcmService {
     await _messaging.unsubscribeFromTopic('all_users');
     await _messaging.unsubscribeFromTopic('natural');
     await _messaging.unsubscribeFromTopic('social');
-    _streamWatcher?.dispose();
-    _streamWatcher = null;
     _initialized = false;
   }
 

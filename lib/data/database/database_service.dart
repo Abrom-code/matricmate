@@ -134,14 +134,6 @@ class DatabaseService extends GetxController {
             );
           } catch (_) {}
         }
-        if (oldVersion < 11) {
-          // Add target_stream column if upgrading from v9
-          try {
-            await db.execute(
-              'ALTER TABLE notifications ADD COLUMN target_stream TEXT',
-            );
-          } catch (_) {}
-        }
         if (oldVersion < 10) {
           // Add created_at to user table for notification filtering
           try {
@@ -160,6 +152,14 @@ class DatabaseService extends GetxController {
             await db.execute(
               'CREATE INDEX IF NOT EXISTS idx_dismissals_user '
               'ON notification_dismissals(user_id)',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 11) {
+          // Add target_stream column if upgrading from v9/10
+          try {
+            await db.execute(
+              'ALTER TABLE notifications ADD COLUMN target_stream TEXT',
             );
           } catch (_) {}
         }

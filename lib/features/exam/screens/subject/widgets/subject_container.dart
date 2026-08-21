@@ -12,10 +12,12 @@ class SubjectContainer extends StatelessWidget {
     required this.onTap,
     required this.isDownloaded,
     required this.onPressed,
+    this.onDelete,
   });
 
   final String title, image;
   final VoidCallback onTap, onPressed;
+  final VoidCallback? onDelete;
   final bool isDownloaded;
 
   @override
@@ -141,23 +143,58 @@ class SubjectContainer extends StatelessWidget {
                                 ),
                               ),
                             )
-                          else
+                          else ...[
+                            // Ready status checkmark (top-left)
                             Positioned(
                               top: 6,
-                              right: 6,
+                              left: 6,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: dark ? 0.2 : 0.15),
+                                  color: AppColors.success.withValues(alpha: dark ? 0.25 : 0.15),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.check_rounded,
-                                  size: 12,
+                                  size: 11,
                                   color: AppColors.success,
                                 ),
                               ),
                             ),
+
+                            // Delete / remove from device icon button (top-right)
+                            if (onDelete != null)
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: onDelete,
+                                  child: Container(
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color: dark
+                                          ? const Color(0xFF2C2C2E)
+                                          : AppColors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: dark ? 0.35 : 0.12),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 14,
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ],
                       ),
                     ),

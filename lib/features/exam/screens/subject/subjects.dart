@@ -138,16 +138,23 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                         itemCount: filteredSubjects.length,
                         itemBuilder: (_, index) {
                           final subject = filteredSubjects[index];
+                          final isDownloaded = subject.isDownloaded || subject.isEntranceDownloaded;
                           return SubjectContainer(
                             title: subject.name,
                             image: AppHelperFunctions.getSubjectImage(
                               subject.name,
                             ),
-                            isDownloaded: subject.isDownloaded || subject.isEntranceDownloaded,
+                            isDownloaded: isDownloaded,
                             onPressed: () =>
                                 ctrl.downloadSubject(subject.name, subject.id),
                             onTap: () =>
                                 SubjectModeModal.show(context, subject),
+                            onDelete: isDownloaded
+                                ? () => SubjectModeModal.confirmDelete(
+                                      context,
+                                      subject,
+                                    )
+                                : null,
                           );
                         },
                       ),

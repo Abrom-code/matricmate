@@ -226,7 +226,7 @@ class SubjectModeModal extends StatelessWidget {
 
                 // ── Remove from Device Button ──────────────────────────────
                 InkWell(
-                  onTap: () => _confirmDelete(context, subject),
+                  onTap: () => confirmDelete(context, subject, closeModal: true),
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -262,7 +262,11 @@ class SubjectModeModal extends StatelessWidget {
     );
   }
 
-  static void _confirmDelete(BuildContext context, SubjectModel subject) {
+  static void confirmDelete(
+    BuildContext context,
+    SubjectModel subject, {
+    bool closeModal = false,
+  }) {
     final dark = AppHelperFunctions.isDark(context);
     showDialog(
       context: context,
@@ -345,7 +349,9 @@ class SubjectModeModal extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.of(ctx).pop();
-                            Navigator.of(context).pop();
+                            if (closeModal) {
+                              Navigator.of(context).pop();
+                            }
                             SubjectsController.instance.deleteSubject(subject);
                           },
                           style: ElevatedButton.styleFrom(

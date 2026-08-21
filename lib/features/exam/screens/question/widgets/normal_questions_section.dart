@@ -15,6 +15,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ExamQuestionSection extends GetView<QuestionController> {
   const ExamQuestionSection({super.key, required this.question});
@@ -64,6 +65,7 @@ class ExamQuestionSection extends GetView<QuestionController> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.defaultSpace,
@@ -141,7 +143,15 @@ class ExamQuestionSection extends GetView<QuestionController> {
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(
+                        color: dark
+                            ? AppColors.darkBorder
+                            : AppColors.borderPrimary,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     onPressed: controller.currentIndex.value > 0
                         ? controller.previousQuestion
@@ -152,20 +162,28 @@ class ExamQuestionSection extends GetView<QuestionController> {
                     ),
                     label: const Text(
                       'Prev',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: canSkip
                       ? OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            foregroundColor: AppColors.darkGrey,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            foregroundColor: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
                             side: BorderSide(
-                              color: AppColors.darkGrey.withValues(alpha: 0.4),
+                              color: dark
+                                  ? AppColors.darkBorder
+                                  : AppColors.borderPrimary,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           onPressed: examMode
@@ -185,13 +203,20 @@ class ExamQuestionSection extends GetView<QuestionController> {
                           ),
                           label: Text(
                             examMode && isLast ? 'Finish' : 'Skip',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         )
-                      : OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 13),
+                      : ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                           onPressed: examMode
                               ? () async {
@@ -218,6 +243,7 @@ class ExamQuestionSection extends GetView<QuestionController> {
                           ),
                           label: Text(
                             isLast ? 'Finish' : 'Next',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

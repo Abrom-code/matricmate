@@ -16,16 +16,17 @@ class QuestionSection extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
 
     final baseStyle = TextStyle(
-      fontSize: 16,
+      fontSize: 16.5,
       fontWeight: FontWeight.w400,
-      height: 1.6,
+      height: 1.55,
       letterSpacing: 0.1,
-      color: dark ? AppColors.grey : AppColors.darkerGrey,
+      color: dark ? AppColors.textWhite : AppColors.textPrimary,
     );
 
     final numberStyle = baseStyle.copyWith(
       fontSize: 17,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
+      color: dark ? AppColors.white : AppColors.primary,
     );
 
     // ── No table: original single Text.rich with prepended number ─────

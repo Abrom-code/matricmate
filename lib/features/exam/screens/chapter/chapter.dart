@@ -73,31 +73,32 @@ class ChapterScreen extends GetView<ChapterController> {
           ],
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(46),
+          preferredSize: const Size.fromHeight(48),
           child: Container(
-            margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
             height: 38,
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: AppColors.white.withValues(alpha: 0.12),
+                width: 1,
+              ),
             ),
             child: TabBar(
               controller: tabController.tabController,
               indicator: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: const Color(0xFF00382E),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
+                color: AppColors.white.withValues(alpha: 0.22),
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: 0.35),
+                  width: 1,
+                ),
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               labelColor: AppColors.white,
-              unselectedLabelColor: AppColors.white.withValues(alpha: 0.75),
+              unselectedLabelColor: AppColors.white.withValues(alpha: 0.70),
               labelPadding: EdgeInsets.zero,
               tabs: tabController.tabs.map((t) {
                 return Tab(

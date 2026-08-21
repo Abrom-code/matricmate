@@ -127,7 +127,10 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       const SizedBox(height: 16),
                     ],
 
-                    // ── 3. Subject Grid ──────────────────────────────
+                    // ── 3. Paused / In-Progress Tests Banner ─────────
+                    const PausedTestBanner(),
+
+                    // ── 4. Subject Grid ──────────────────────────────
                     if (filteredSubjects.isNotEmpty) ...[
                       GridLayout(
                         mainAxisExtent: 175,
@@ -157,10 +160,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       const SizedBox(height: 18),
                     ],
 
-                    // ── 5. Paused / In-Progress Tests Banner ─────────
-                    const PausedTestBanner(),
-
-                    // ── 6. Empty State ───────────────────────────────
+                    // ── 5. Empty State ───────────────────────────────
                     if (filteredSubjects.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 48),

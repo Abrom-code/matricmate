@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '768230513418',
     projectId: 'matricmate-a1bf6',
     storageBucket: 'matricmate-a1bf6.firebasestorage.app',
-    iosBundleId: 'com.example.matricmate',
+    iosBundleId: 'com.abopia.matricmate',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '768230513418',
     projectId: 'matricmate-a1bf6',
     storageBucket: 'matricmate-a1bf6.firebasestorage.app',
-    iosBundleId: 'com.example.matricmate',
+    iosBundleId: 'com.abopia.matricmate',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

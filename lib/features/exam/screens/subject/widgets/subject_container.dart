@@ -149,15 +149,20 @@ class SubjectContainer extends StatelessWidget {
                               top: 6,
                               left: 6,
                               child: Container(
-                                padding: const EdgeInsets.all(4),
+                                width: 22,
+                                height: 22,
                                 decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: dark ? 0.25 : 0.15),
+                                  color: AppColors.success.withValues(
+                                    alpha: dark ? 0.25 : 0.15,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
-                                  Icons.check_rounded,
-                                  size: 11,
-                                  color: AppColors.success,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.check_rounded,
+                                    size: 12,
+                                    color: AppColors.success,
+                                  ),
                                 ),
                               ),
                             ),
@@ -173,37 +178,19 @@ class SubjectContainer extends StatelessWidget {
                                     onTap: onDelete,
                                     customBorder: const CircleBorder(),
                                     child: Container(
-                                      width: 28,
-                                      height: 28,
+                                      width: 22,
+                                      height: 22,
                                       decoration: BoxDecoration(
-                                        color: dark
-                                            ? const Color(0xFFEF4444)
-                                                .withValues(alpha: 0.18)
-                                            : const Color(0xFFFEE2E2),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: const Color(0xFFEF4444)
-                                              .withValues(
-                                            alpha: dark ? 0.40 : 0.30,
-                                          ),
-                                          width: 1.0,
+                                        color: AppColors.error.withValues(
+                                          alpha: dark ? 0.25 : 0.15,
                                         ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFFEF4444)
-                                                .withValues(
-                                              alpha: dark ? 0.25 : 0.12,
-                                            ),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
+                                        shape: BoxShape.circle,
                                       ),
                                       child: const Center(
                                         child: Icon(
                                           Icons.delete_outline_rounded,
-                                          size: 15,
-                                          color: Color(0xFFEF4444),
+                                          size: 12,
+                                          color: AppColors.error,
                                         ),
                                       ),
                                     ),

@@ -36,41 +36,26 @@ class SubjectModeModal extends StatelessWidget {
         ? '${stream[0].toUpperCase()}${stream.substring(1)} Stream'
         : 'Secondary Stream';
 
-    return GestureDetector(
-      onTap: () => Navigator.of(context).pop(),
-      behavior: HitTestBehavior.opaque,
-      child: Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        elevation: 0,
-        child: Center(
-          child: GestureDetector(
-            onTap: () {}, // Prevent card taps from bubbling up to dismiss
-            behavior: HitTestBehavior.opaque,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: dark ? AppColors.darkCard : AppColors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: dark
-                        ? AppColors.darkBorder
-                        : AppColors.borderPrimary,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: dark ? 0.45 : 0.18),
-                      blurRadius: 28,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+    return Dialog(
+      backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+      elevation: 16,
+      shadowColor: Colors.black.withValues(alpha: dark ? 0.45 : 0.18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+          width: 1.2,
+        ),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
                     // ── Subject Header ────────────────────────────────────────
                     Row(
                       children: [
@@ -286,10 +271,7 @@ class SubjectModeModal extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        ),
-      ),
-    );
+          );
   }
 
   static void confirmDelete(

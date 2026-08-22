@@ -62,7 +62,7 @@ class SubjectContainer extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // ── Image Frame with Download Action/Status ────────
                   Expanded(
@@ -134,7 +134,7 @@ class SubjectContainer extends StatelessWidget {
                                               ],
                                             )
                                           : const Icon(
-                                              Icons.cloud_download_rounded,
+                                              Icons.arrow_downward_rounded,
                                               color: AppColors.white,
                                               size: 22,
                                             ),
@@ -219,35 +219,24 @@ class SubjectContainer extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   // ── Subject Name & Status ──────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
-                            color: dark ? AppColors.textWhite : AppColors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 11,
-                        color: dark ? AppColors.darkGrey : AppColors.grey,
-                      ),
-                    ],
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      color: dark ? AppColors.textWhite : AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     isDownloaded
                         ? 'Ready to practice'
                         : (isDownloading ? 'Downloading...' : 'Tap to download'),
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w500,

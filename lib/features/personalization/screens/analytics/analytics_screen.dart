@@ -151,28 +151,92 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Active filter chips row
+                    // ── Quick Period Filter Selector ────────────────────────
+                    Obx(() {
+                      final selected = controller.selectedTimeFilter.value;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: dark
+                              ? AppColors.darkCard
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: dark
+                                ? AppColors.darkBorder
+                                : const Color(0xFFE2E8F0),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                alpha: dark ? 0.2 : 0.03,
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            _PeriodTab(
+                              title: 'All Time',
+                              isSelected: selected == TimeFilter.all,
+                              onTap: () => controller.applyFilters(
+                                timeFilter: TimeFilter.all,
+                              ),
+                              dark: dark,
+                            ),
+                            _PeriodTab(
+                              title: '30 Days',
+                              isSelected: selected == TimeFilter.lastMonth,
+                              onTap: () => controller.applyFilters(
+                                timeFilter: TimeFilter.lastMonth,
+                              ),
+                              dark: dark,
+                            ),
+                            _PeriodTab(
+                              title: '7 Days',
+                              isSelected: selected == TimeFilter.lastWeek,
+                              onTap: () => controller.applyFilters(
+                                timeFilter: TimeFilter.lastWeek,
+                              ),
+                              dark: dark,
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    // Active filter chips row (if any other filters applied)
                     if (controller.hasActiveFilters) ...[
                       ActiveFilterRow(controller: controller),
                       const SizedBox(height: 12),
                     ],
 
+                    // 1. Hero Readiness & Summary Stats
                     AnalyticsSummaryGrid(controller: controller),
                     const SizedBox(height: 14),
 
+                    // 2. Score Trajectory Trend Chart
                     ScoreTrendChart(controller: controller),
                     const SizedBox(height: 14),
 
+                    // 3. Priority Focus & Recommendations
+                    WeakestAreasCard(controller: controller),
+                    const SizedBox(height: 14),
+
+                    // 4. Subject Mastery Breakdown
                     SubjectPerformanceSection(controller: controller),
                     const SizedBox(height: 14),
 
+                    // 5. Test Type Distribution
                     TestTypeDistribution(controller: controller),
                     const SizedBox(height: 14),
 
+                    // 6. Chapter Progress Section
                     ChapterProgressSection(controller: controller),
-                    const SizedBox(height: 14),
-
-                    WeakestAreasCard(controller: controller),
                   ],
                 ),
               );
@@ -190,6 +254,51 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
         );
       }),
+    );
+  }
+}
+
+class _PeriodTab extends StatelessWidget {
+  const _PeriodTab({
+    required this.title,
+    required this.isSelected,
+    required this.onTap,
+    required this.dark,
+  });
+
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              color: isSelected
+                  ? Colors.white
+                  : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -221,6 +221,9 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                   height: 48,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.white,
                       elevation: 0,
@@ -234,6 +237,8 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
+                        height: 1.0,
+                        color: Colors.white,
                       ),
                     ),
                   ),

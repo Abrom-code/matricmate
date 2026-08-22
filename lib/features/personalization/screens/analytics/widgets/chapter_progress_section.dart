@@ -25,10 +25,10 @@ class _ChapterProgressSectionState extends State<ChapterProgressSection> {
         : chapters.take(_previewCount).toList();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
           width: 1.2,
@@ -36,8 +36,8 @@ class _ChapterProgressSectionState extends State<ChapterProgressSection> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -48,12 +48,13 @@ class _ChapterProgressSectionState extends State<ChapterProgressSection> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Chapter Progress',
                 style: TextStyle(
-                  fontSize: 15.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                  color: dark ? AppColors.white : const Color(0xFF0F172A),
                 ),
               ),
               if (hasMore)

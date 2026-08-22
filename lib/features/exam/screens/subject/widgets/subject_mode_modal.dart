@@ -174,13 +174,13 @@ class SubjectModeModal extends StatelessWidget {
                   ),
                 ),
 
-                // ── Option 1: Study & Practice ────────────────────────────
+                // ── Option 1: Tests ──────────────────────────────────────
                 _ModeOptionTile(
                   dark: dark,
                   icon: Iconsax.book_1_copy,
                   iconGradient: const [AppColors.primary, Color(0xFF00796B)],
-                  title: 'Study & Practice',
-                  subtitle: 'Learn by grade, chapter and topic',
+                  title: 'Tests',
+                  subtitle: 'Chapter and grade based tests',
                   chips: const ['Grades 9 – 12', 'Chapter Tests'],
                   onTap: () {
                     Navigator.of(context).pop();

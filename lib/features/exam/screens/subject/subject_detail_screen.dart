@@ -161,18 +161,18 @@ class SubjectDetailScreen extends StatelessWidget {
                 ),
               ),
 
-              // ── 3. Primary Destination 1: Study & Practice ──────────
+              // ── 3. Primary Destination 1: Tests ─────────────────────
               _PrimaryDestinationCard(
                 dark: dark,
                 icon: Iconsax.book_1_copy,
                 iconGradient: const [AppColors.primary, Color(0xFF00796B)],
-                title: 'Study & Practice',
-                subtitle: 'Learn by grade, chapter and topic',
+                title: 'Tests',
+                subtitle: 'Chapter and grade based tests',
                 chips: const ['Grades 9 – 12', 'Chapter Tests'],
                 isDownloaded: subject.isDownloaded,
                 isDownloading: isStudyDownloading,
                 progress: studyProgress,
-                downloadButtonLabel: 'Download Study Material',
+                downloadButtonLabel: 'Download Tests',
                 onDownload: () =>
                     ctrl.downloadSubject(subject.name, subject.id),
                 onTap: subject.isDownloaded

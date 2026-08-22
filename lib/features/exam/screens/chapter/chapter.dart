@@ -63,7 +63,7 @@ class ChapterScreen extends GetView<ChapterController> {
               ),
             ),
             const Text(
-              'Study & Practice',
+              'Chapter & Grade Tests',
               style: TextStyle(
                 color: Color(0xFFD1FAE5),
                 fontSize: 11.5,

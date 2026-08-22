@@ -238,33 +238,47 @@ class SubjectModeModal extends StatelessWidget {
                     const SizedBox(height: 14),
 
                     // ── Remove from Device Button ──────────────────────────────
-                    InkWell(
-                      onTap: () =>
-                          confirmDelete(context, subject, closeModal: true),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withValues(
+                          alpha: dark ? 0.12 : 0.05,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.delete_outline_rounded,
-                              size: 16,
-                              color: AppColors.error.withValues(alpha: 0.85),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Remove from device',
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.error.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFEF4444).withValues(
+                            alpha: dark ? 0.25 : 0.15,
+                          ),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: InkWell(
+                        onTap: () =>
+                            confirmDelete(context, subject, closeModal: true),
+                        borderRadius: BorderRadius.circular(12),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.delete_outline_rounded,
+                                size: 16,
+                                color: Color(0xFFEF4444),
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 8),
+                              Text(
+                                'Remove from device',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFEF4444),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -289,101 +303,161 @@ class SubjectModeModal extends StatelessWidget {
       builder: (ctx) {
         return Dialog(
           backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+          elevation: 16,
+          shadowColor: Colors.black.withValues(alpha: dark ? 0.5 : 0.15),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+              width: 1.2,
+            ),
           ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
+            constraints: const BoxConstraints(maxWidth: 380),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // ── Layered Danger Icon Badge ─────────────────────────
                   Container(
-                    width: 52,
-                    height: 52,
+                    width: 64,
+                    height: 64,
                     decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.12),
+                      color: const Color(0xFFEF4444).withValues(
+                        alpha: dark ? 0.14 : 0.08,
+                      ),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: AppColors.error,
-                      size: 28,
+                    child: Center(
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444).withValues(
+                            alpha: dark ? 0.22 : 0.14,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.delete_outline_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 24,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 18),
+
+                  // ── Title ─────────────────────────────────────────────
                   Text(
                     'Delete ${subject.name}?',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: dark ? AppColors.white : AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.4,
+                      color: dark ? AppColors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 8),
+
+                  // ── Subtitle ──────────────────────────────────────────
                   Text(
-                    'This will remove all downloaded chapters, questions, and exams for ${subject.name} from your device. You can download it again anytime.',
+                    'This will remove all downloaded chapters, tests, and exams for ${subject.name} from your device. You can download it again anytime.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 13,
-                      color: dark ? Colors.white60 : AppColors.textSecondary,
-                      height: 1.4,
+                      fontSize: 13.5,
+                      height: 1.45,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+
+                  // ── Action Buttons ────────────────────────────────────
                   Row(
                     children: [
+                      // Cancel Button
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          height: 46,
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(
+                                color: dark
+                                    ? AppColors.darkInputBorder
+                                    : const Color(0xFFCBD5E1),
+                                width: 1.2,
+                              ),
                             ),
-                            side: BorderSide(
-                              color: dark
-                                  ? AppColors.darkBorder
-                                  : AppColors.borderPrimary,
-                            ),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: dark
-                                  ? AppColors.white
-                                  : AppColors.textPrimary,
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                height: 1.0,
+                                color: dark
+                                    ? AppColors.white
+                                    : const Color(0xFF334155),
+                              ),
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
+
+                      // Delete Button
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(ctx).pop();
-                            if (closeModal) {
-                              Navigator.of(context).pop();
-                            }
-                            SubjectsController.instance.deleteSubject(subject);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.error,
-                            foregroundColor: AppColors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          height: 46,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(ctx).pop();
+                              if (closeModal) {
+                                Navigator.of(context).pop();
+                              }
+                              SubjectsController.instance.deleteSubject(subject);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              backgroundColor: const Color(0xFFEF4444),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            'Delete',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

@@ -167,29 +167,45 @@ class SubjectContainer extends StatelessWidget {
                               Positioned(
                                 top: 6,
                                 right: 6,
-                                child: GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: onDelete,
-                                  child: Container(
-                                    width: 26,
-                                    height: 26,
-                                    decoration: BoxDecoration(
-                                      color: dark
-                                          ? const Color(0xFF2C2C2E)
-                                          : AppColors.white,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: dark ? 0.35 : 0.12),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 1),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: onDelete,
+                                    customBorder: const CircleBorder(),
+                                    child: Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                        color: dark
+                                            ? const Color(0xFFEF4444)
+                                                .withValues(alpha: 0.18)
+                                            : const Color(0xFFFEE2E2),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color(0xFFEF4444)
+                                              .withValues(
+                                            alpha: dark ? 0.40 : 0.30,
+                                          ),
+                                          width: 1.0,
                                         ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.delete_outline_rounded,
-                                      size: 14,
-                                      color: AppColors.error,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFFEF4444)
+                                                .withValues(
+                                              alpha: dark ? 0.25 : 0.12,
+                                            ),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 15,
+                                          color: Color(0xFFEF4444),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

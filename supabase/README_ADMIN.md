@@ -1,4 +1,4 @@
-# MatricMate admin backend — migrations and edge functions
+# MatricET admin backend — migrations and edge functions
 
 Everything the admin console (`../../m_admin`) depends on server-side.
 

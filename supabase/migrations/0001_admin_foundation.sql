@@ -1,7 +1,7 @@
 -- =====================================================================
 -- 0001_admin_foundation.sql
 --
--- Foundation for the MatricMate admin console.
+-- Foundation for the MatricET admin console.
 --
 -- SAFETY CONTRACT
 --   * Idempotent: every statement uses IF NOT EXISTS / IF EXISTS or is

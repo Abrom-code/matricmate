@@ -54,7 +54,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
 
     return Scaffold(
       appBar: ModernAppbarWithBuilder(
-        title: 'MatricMate',
+        title: 'MatricET',
         showNotification: true,
         subtitleBuilder: (_) => Obx(() {
           final stream = UserController.instance.user.value.stream;

@@ -1,5 +1,5 @@
 -- =====================================================================
--- schema.sql  —  MatricMate complete database schema (v1, clean install)
+-- schema.sql  —  MatricET complete database schema (v1, clean install)
 --
 -- Run this once on a fresh Supabase project.
 -- After running, go to Supabase → Table Editor and set Realtime on:

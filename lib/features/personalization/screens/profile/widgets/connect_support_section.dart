@@ -79,7 +79,7 @@ class ConnectSupportSection extends StatelessWidget {
                   : () => SharePlus.instance.share(
                       ShareParams(
                         text:
-                            'Check out MatricMate to prepare for your exams! $shareLink',
+                            'Check out MatricET to prepare for your exams! $shareLink',
                       ),
                     ),
             );

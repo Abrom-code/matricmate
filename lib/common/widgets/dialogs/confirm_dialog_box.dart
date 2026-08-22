@@ -93,7 +93,7 @@ class AppDialogBoxes {
 
                   // ── Subtitle ──────────────────────────────────────────
                   Text(
-                    'Are you sure you want to log out of MatricMate?',
+                    'Are you sure you want to log out of MatricET?',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13.5,

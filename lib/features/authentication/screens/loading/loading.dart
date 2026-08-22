@@ -67,7 +67,7 @@ class _LoadingScreenState extends State<LoadingScreen>
 
                 // ── App name ─────────────────────────────────────────
                 const Text(
-                  'MatricMate',
+                  'MatricET',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,

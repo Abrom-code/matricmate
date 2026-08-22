@@ -1,4 +1,4 @@
-# matricmate
+# MatricET
 
 A new Flutter project.
 

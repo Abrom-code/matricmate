@@ -54,7 +54,9 @@ class SubjectModeModal extends StatelessWidget {
                   color: dark ? AppColors.darkCard : AppColors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+                    color: dark
+                        ? AppColors.darkBorder
+                        : AppColors.borderPrimary,
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -69,205 +71,211 @@ class SubjectModeModal extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                // ── Subject Header ────────────────────────────────────────
-                Row(
-                  children: [
-                    // Artwork Thumbnail
-                    Container(
-                      width: 50,
-                      height: 50,
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: dark
-                            ? AppColors.darkSurface
-                            : AppColors.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Image.asset(
-                        AppHelperFunctions.getSubjectImage(subject.name),
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-
-                    const SizedBox(width: 14),
-
-                    // Title + Stream
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            subject.name,
-                            style: TextStyle(
-                              fontSize: 18.5,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.3,
-                              color: dark
-                                  ? AppColors.textWhite
-                                  : AppColors.textPrimary,
-                            ),
+                    // ── Subject Header ────────────────────────────────────────
+                    Row(
+                      children: [
+                        // Artwork Thumbnail
+                        Container(
+                          width: 50,
+                          height: 50,
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: dark
+                                ? AppColors.darkSurface
+                                : AppColors.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          const SizedBox(height: 3),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(
-                                alpha: dark ? 0.2 : 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              streamLabel,
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
-                              ),
-                            ),
+                          child: Image.asset(
+                            AppHelperFunctions.getSubjectImage(subject.name),
+                            fit: BoxFit.contain,
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Close Button
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: dark
-                              ? AppColors.darkSurface
-                              : AppColors.lightGrey,
-                          shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 18,
+
+                        const SizedBox(width: 14),
+
+                        // Title + Stream
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                subject.name,
+                                style: TextStyle(
+                                  fontSize: 18.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.3,
+                                  color: dark
+                                      ? AppColors.textWhite
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: dark ? 0.2 : 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  streamLabel,
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Close Button
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: dark
+                                  ? AppColors.darkSurface
+                                  : AppColors.lightGrey,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 18,
+                              color: dark
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // ── Subtitle ──────────────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(left: 2, bottom: 12),
+                      child: Text(
+                        'Choose Practice Mode',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
                           color: dark
                               ? AppColors.darkGrey
                               : AppColors.textSecondary,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                    ),
+
+                    // ── Option 1: Tests ──────────────────────────────────────
+                    _ModeOptionTile(
+                      dark: dark,
+                      icon: Iconsax.book_1_copy,
+                      iconGradient: const [
+                        AppColors.primary,
+                        Color(0xFF00796B),
+                      ],
+                      title: 'Tests',
+                      subtitle: 'Chapter and grade based tests',
+                      chips: const ['Grades 9 – 12', 'Chapter Tests'],
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Get.toNamed(
+                          Routes.chapter,
+                          arguments: {'title': subject.name, 'id': subject.id},
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // ── Option 2: Exams ──────────────────────────────────────
+                    _ModeOptionTile(
+                      dark: dark,
+                      icon: Icons.military_tech_rounded,
+                      iconGradient: const [
+                        Color(0xFF3B82F6),
+                        Color(0xFF1D4ED8),
+                      ],
+                      title: 'Exams',
+                      subtitle: 'Entrance and model exams',
+                      chips: totalMockExams > 0
+                          ? [
+                              '$entranceCount Entrance Papers',
+                              if (modelCount > 0) '$modelCount Model Tests',
+                            ]
+                          : ['Coming soon'],
+                      isDisabled: totalMockExams == 0,
+                      onTap: () {
+                        if (totalMockExams == 0) {
+                          ToastHelper.info(
+                            'Exams for ${subject.name} are coming soon!',
+                          );
+                          return;
+                        }
+                        Navigator.of(context).pop();
+                        Get.toNamed(
+                          Routes.entranceExams,
+                          arguments: {
+                            'subject_id': subject.id,
+                            'subject': subject.name,
+                          },
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ── Remove from Device Button ──────────────────────────────
+                    InkWell(
+                      onTap: () =>
+                          confirmDelete(context, subject, closeModal: true),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.delete_outline_rounded,
+                              size: 16,
+                              color: AppColors.error.withValues(alpha: 0.85),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Remove from device',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.error.withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 18),
-
-                // ── Subtitle ──────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.only(left: 2, bottom: 12),
-                  child: Text(
-                    'Choose Practice Mode',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                ),
-
-                // ── Option 1: Tests ──────────────────────────────────────
-                _ModeOptionTile(
-                  dark: dark,
-                  icon: Iconsax.book_1_copy,
-                  iconGradient: const [AppColors.primary, Color(0xFF00796B)],
-                  title: 'Tests',
-                  subtitle: 'Chapter and grade based tests',
-                  chips: const ['Grades 9 – 12', 'Chapter Tests'],
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    Get.toNamed(
-                      Routes.chapter,
-                      arguments: {
-                        'title': subject.name,
-                        'id': subject.id,
-                      },
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                // ── Option 2: Exams ──────────────────────────────────────
-                _ModeOptionTile(
-                  dark: dark,
-                  icon: Icons.military_tech_rounded,
-                  iconGradient: const [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
-                  title: 'Exams',
-                  subtitle: 'Entrance and model exams',
-                  chips: totalMockExams > 0
-                      ? [
-                          '$entranceCount Entrance Papers',
-                          if (modelCount > 0) '$modelCount Model Tests',
-                        ]
-                      : ['Coming soon'],
-                  isDisabled: totalMockExams == 0,
-                  onTap: () {
-                    if (totalMockExams == 0) {
-                      ToastHelper.info(
-                        'Exams for ${subject.name} are coming soon!',
-                      );
-                      return;
-                    }
-                    Navigator.of(context).pop();
-                    Get.toNamed(
-                      Routes.entranceExams,
-                      arguments: {
-                        'subject_id': subject.id,
-                        'subject': subject.name,
-                      },
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 14),
-
-                // ── Remove from Device Button ──────────────────────────────
-                InkWell(
-                  onTap: () => confirmDelete(context, subject, closeModal: true),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.delete_outline_rounded,
-                          size: 16,
-                          color: AppColors.error.withValues(alpha: 0.85),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Remove from device',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.error.withValues(alpha: 0.85),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 
   static void confirmDelete(

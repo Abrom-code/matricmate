@@ -57,10 +57,16 @@ class AnalyticsController extends GetxController {
   final selectedScore = ScoreFilter.all.obs;
   final selectedTimed = TimedFilter.all.obs;
 
-  // ── Available option lists (populated from DB) ───────────────────────────
+  // ── Available option lists ───────────────────────────────────────────────
 
   final availableSubjects = <String>[].obs;
-  final availableTestTypes = <String>[].obs;
+  final availableTestTypes = <String>[
+    'All Categories',
+    'Entrance Exam',
+    'Model Exam',
+    'Chapter Test',
+    'Grade Exam',
+  ].obs;
 
   // ── Output data ──────────────────────────────────────────────────────────
 
@@ -85,93 +91,65 @@ class AnalyticsController extends GetxController {
   // ── Populate filter option lists ─────────────────────────────────────────
 
   Future<void> _initFilterOptions() async {
-    final userId = UserController.instance.user.value.id;
-    if (userId.isEmpty) return;
     final db = await _db.database;
+    final userStream = UserController.instance.user.value.stream.toLowerCase();
+
+    String streamCondition = '';
+    if (userStream == 'natural') {
+      streamCondition = 'WHERE (is_natural = 1 OR is_common = 1)';
+    } else if (userStream == 'social') {
+      streamCondition = 'WHERE (is_natural = 0 OR is_common = 1)';
+    }
 
     final subjectRows = await db.rawQuery(
       '''
-      SELECT DISTINCT s.name FROM subjects s
-      JOIN tests t ON t.subject_id = s.id
-      JOIN results r ON r.test_id = t.id
-      WHERE r.user_id = ?
-      ORDER BY s.name
+      SELECT DISTINCT name FROM subjects
+      $streamCondition
+      ORDER BY name
     ''',
-      [userId],
-    );
-
-    final typeRows = await db.rawQuery(
-      '''
-      SELECT DISTINCT t.type FROM tests t
-      JOIN results r ON r.test_id = t.id
-      WHERE r.user_id = ?
-      ORDER BY t.type
-    ''',
-      [userId],
     );
 
     availableSubjects.value = [
       'All Subjects',
       ...subjectRows.map((r) => r['name'] as String),
     ];
-
-    availableTestTypes.value = [
-      'All Types',
-      ...typeRows.map((r) => _cap(r['type'] as String)),
-    ];
   }
 
-  String _cap(String s) => s[0].toUpperCase() + s.substring(1);
+  String _normalizeTestType(String label) {
+    final lower = label.toLowerCase();
+    if (lower.contains('entrance')) return 'entrance';
+    if (lower.contains('model')) return 'model';
+    if (lower.contains('chapter')) return 'chapter';
+    if (lower.contains('grade')) return 'grade';
+    return lower;
+  }
 
   // ── Build SQL WHERE clause from all active filters ───────────────────────
 
   String _buildWhere(String userId) {
     final parts = <String>['r.user_id = ?'];
 
+    // Automatic Profile Stream filtering (no manual stream picker needed)
+    final userStream = UserController.instance.user.value.stream.toLowerCase();
+    if (userStream == 'natural') {
+      parts.add('(s.is_natural = 1 OR s.is_common = 1)');
+    } else if (userStream == 'social') {
+      parts.add('(s.is_natural = 0 OR s.is_common = 1)');
+    }
+
     // Subject
     if (selectedSubject.value != 'All Subjects') {
       parts.add("s.name = '${selectedSubject.value}'");
     }
 
-    // Test type
-    if (selectedTestType.value != 'All Types') {
-      parts.add("t.type = '${selectedTestType.value.toLowerCase()}'");
+    // Test Category (All 4 categories supported)
+    if (selectedTestType.value != 'All Types' &&
+        selectedTestType.value != 'All Categories') {
+      final type = _normalizeTestType(selectedTestType.value);
+      parts.add("t.type = '$type'");
     }
 
-    // Grade
-    switch (selectedGrade.value) {
-      case GradeFilter.grade9:
-        parts.add('t.grade = 9');
-        break;
-      case GradeFilter.grade10:
-        parts.add('t.grade = 10');
-        break;
-      case GradeFilter.grade11:
-        parts.add('t.grade = 11');
-        break;
-      case GradeFilter.grade12:
-        parts.add('t.grade = 12');
-        break;
-      case GradeFilter.all:
-        break;
-    }
-
-    // Stream
-    switch (selectedStream.value) {
-      case StreamFilter.natural:
-        parts.add('s.is_natural = 1 AND s.is_common = 0');
-        break;
-      case StreamFilter.social:
-        parts.add('s.is_natural = 0 AND s.is_common = 0');
-        break;
-      case StreamFilter.common:
-        parts.add('s.is_common = 1');
-        break;
-      case StreamFilter.all:
-        break;
-    }
-
-    // Timed
+    // Timed format
     switch (selectedTimed.value) {
       case TimedFilter.timedOnly:
         parts.add('t.time != -1');
@@ -245,7 +223,7 @@ class AnalyticsController extends GetxController {
 
   void resetFilters() {
     selectedSubject.value = 'All Subjects';
-    selectedTestType.value = 'All Types';
+    selectedTestType.value = 'All Categories';
     selectedTimeFilter.value = TimeFilter.all;
     selectedGrade.value = GradeFilter.all;
     selectedStream.value = StreamFilter.all;
@@ -257,8 +235,12 @@ class AnalyticsController extends GetxController {
   int get activeFilterCount {
     int count = 0;
     if (selectedSubject.value != 'All Subjects') count++;
-    if (selectedTestType.value != 'All Types') count++;
-    if (selectedStream.value != StreamFilter.all) count++;
+    if (selectedTestType.value != 'All Types' &&
+        selectedTestType.value != 'All Categories') {
+      count++;
+    }
+    if (selectedTimed.value != TimedFilter.all) count++;
+    if (selectedScore.value != ScoreFilter.all) count++;
     return count;
   }
 

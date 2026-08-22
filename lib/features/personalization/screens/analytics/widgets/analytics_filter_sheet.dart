@@ -16,7 +16,8 @@ class AnalyticsFilterSheet extends StatefulWidget {
 class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
   late String _subject;
   late String _testType;
-  late StreamFilter _stream;
+  late TimedFilter _timed;
+  late ScoreFilter _score;
 
   @override
   void initState() {
@@ -24,20 +25,23 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
     final c = widget.controller;
     _subject = c.selectedSubject.value;
     _testType = c.selectedTestType.value;
-    _stream = c.selectedStream.value;
+    _timed = c.selectedTimed.value;
+    _score = c.selectedScore.value;
   }
 
   void _reset() => setState(() {
     _subject = 'All Subjects';
-    _testType = 'All Types';
-    _stream = StreamFilter.all;
+    _testType = 'All Categories';
+    _timed = TimedFilter.all;
+    _score = ScoreFilter.all;
   });
 
   void _apply() {
     widget.controller.applyFilters(
       subject: _subject,
       testType: _testType,
-      stream: _stream,
+      timed: _timed,
+      score: _score,
     );
     Get.back();
   }
@@ -53,7 +57,7 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
         ),
         child: Container(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
+            maxHeight: MediaQuery.of(context).size.height * 0.88,
           ),
           decoration: BoxDecoration(
             color: dark ? AppColors.darkCard : AppColors.white,
@@ -112,7 +116,7 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Filter Analytics',
+                          'Filter Insights',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -159,60 +163,21 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 1 — Stream Category
-                      _ModernSectionHeader(
-                        icon: Iconsax.hierarchy_copy,
-                        title: 'Academic Stream',
-                        dark: dark,
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          _StreamCard(
-                            title: 'All Streams',
-                            icon: Icons.all_inclusive_rounded,
-                            isSelected: _stream == StreamFilter.all,
-                            onTap: () => setState(() => _stream = StreamFilter.all),
-                            dark: dark,
-                          ),
-                          const SizedBox(width: 8),
-                          _StreamCard(
-                            title: 'Natural',
-                            icon: Icons.science_outlined,
-                            isSelected: _stream == StreamFilter.natural,
-                            onTap: () =>
-                                setState(() => _stream = StreamFilter.natural),
-                            dark: dark,
-                          ),
-                          const SizedBox(width: 8),
-                          _StreamCard(
-                            title: 'Social',
-                            icon: Icons.public_rounded,
-                            isSelected: _stream == StreamFilter.social,
-                            onTap: () =>
-                                setState(() => _stream = StreamFilter.social),
-                            dark: dark,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      // 2 — Test Type
+                      // 1 — Test Category (All 4 Categories)
                       _ModernSectionHeader(
                         icon: Iconsax.note_21_copy,
                         title: 'Test Category',
                         dark: dark,
                       ),
                       const SizedBox(height: 10),
-                      _ModernChipGroup<String>(
-                        items: widget.controller.availableTestTypes.toList(),
+                      _TestTypeGrid(
                         selected: _testType,
-                        labelOf: (s) => s,
-                        onSelect: (s) => setState(() => _testType = s),
+                        onSelect: (type) => setState(() => _testType = type),
+                        dark: dark,
                       ),
                       const SizedBox(height: 20),
 
-                      // 3 — Subject
+                      // 2 — Subject
                       _ModernSectionHeader(
                         icon: Iconsax.book_1_copy,
                         title: 'Subject',
@@ -224,6 +189,48 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                         selected: _subject,
                         labelOf: (s) => s,
                         onSelect: (s) => setState(() => _subject = s),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 3 — Test Format (Timed vs Practice)
+                      _ModernSectionHeader(
+                        icon: Iconsax.clock_copy,
+                        title: 'Test Mode / Format',
+                        dark: dark,
+                      ),
+                      const SizedBox(height: 10),
+                      _ModernChipGroup<TimedFilter>(
+                        items: TimedFilter.values,
+                        selected: _timed,
+                        labelOf: (t) => {
+                          TimedFilter.all: 'All Formats',
+                          TimedFilter.timedOnly: '⏱️ Timed Only',
+                          TimedFilter.untimeOnly: '✍️ Practice Mode',
+                        }[t]!,
+                        onSelect: (t) => setState(() => _timed = t),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 4 — Score Benchmark
+                      _ModernSectionHeader(
+                        icon: Iconsax.chart_copy,
+                        title: 'Score Benchmark',
+                        dark: dark,
+                      ),
+                      const SizedBox(height: 10),
+                      _ModernChipGroup<ScoreFilter>(
+                        items: const [
+                          ScoreFilter.all,
+                          ScoreFilter.good,
+                          ScoreFilter.poor,
+                        ],
+                        selected: _score,
+                        labelOf: (s) => {
+                          ScoreFilter.all: 'All Scores',
+                          ScoreFilter.good: '🟢 Mastered (≥ 70%)',
+                          ScoreFilter.poor: '🔴 Needs Practice (< 50%)',
+                        }[s]!,
+                        onSelect: (s) => setState(() => _score = s),
                       ),
                     ],
                   ),
@@ -269,76 +276,85 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
   }
 }
 
-// ── Stream Card ──────────────────────────────────────────────────────────────
+// ── Test Type Grid (All 4 Categories + All) ──────────────────────────────────
 
-class _StreamCard extends StatelessWidget {
-  const _StreamCard({
-    required this.title,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
+class _TestTypeGrid extends StatelessWidget {
+  const _TestTypeGrid({
+    required this.selected,
+    required this.onSelect,
     required this.dark,
   });
 
-  final String title;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
+  final String selected;
+  final void Function(String) onSelect;
   final bool dark;
+
+  static const _categories = [
+    {'title': 'All Categories', 'icon': Icons.all_inclusive_rounded},
+    {'title': 'Entrance Exam', 'icon': Icons.school_outlined},
+    {'title': 'Model Exam', 'icon': Icons.star_border_rounded},
+    {'title': 'Chapter Test', 'icon': Icons.menu_book_rounded},
+    {'title': 'Grade Exam', 'icon': Icons.assignment_outlined},
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary
-                : (dark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : const Color(0xFFF8FAFC)),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSelected
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _categories.map((cat) {
+        final title = cat['title'] as String;
+        final icon = cat['icon'] as IconData;
+        final isSel = selected == title ||
+            (selected == 'All Types' && title == 'All Categories');
+
+        return GestureDetector(
+          onTap: () => onSelect(title),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSel
                   ? AppColors.primary
                   : (dark
-                      ? AppColors.darkBorder
-                      : const Color(0xFFE2E8F0)),
-              width: 1.2,
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFF8FAFC)),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSel
+                    ? AppColors.primary
+                    : (dark
+                        ? AppColors.darkBorder
+                        : const Color(0xFFE2E8F0)),
+                width: 1.2,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isSel
+                      ? Colors.white
+                      : (dark ? AppColors.white : const Color(0xFF334155)),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                    color: isSel
+                        ? Colors.white
+                        : (dark ? AppColors.white : const Color(0xFF1E293B)),
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: isSelected
-                    ? Colors.white
-                    : (dark ? AppColors.white : const Color(0xFF334155)),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected
-                      ? Colors.white
-                      : (dark ? AppColors.white : const Color(0xFF1E293B)),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      }).toList(),
     );
   }
 }
@@ -435,7 +451,7 @@ class _ModernChipGroup<T> extends StatelessWidget {
             child: Text(
               labelOf(item),
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
                 color: isSel
                     ? AppColors.white
@@ -467,24 +483,32 @@ class ActiveFilterRow extends StatelessWidget {
         ),
       );
     }
-    if (controller.selectedTestType.value != 'All Types') {
+    if (controller.selectedTestType.value != 'All Types' &&
+        controller.selectedTestType.value != 'All Categories') {
       chips.add(
         _DismissChip(
           label: controller.selectedTestType.value,
-          onRemove: () => controller.applyFilters(testType: 'All Types'),
+          onRemove: () => controller.applyFilters(testType: 'All Categories'),
         ),
       );
     }
-    if (controller.selectedStream.value != StreamFilter.all) {
-      final labels = {
-        StreamFilter.natural: 'Natural Science',
-        StreamFilter.social: 'Social Science',
-        StreamFilter.common: 'Common',
-      };
+    if (controller.selectedTimed.value != TimedFilter.all) {
       chips.add(
         _DismissChip(
-          label: labels[controller.selectedStream.value] ?? 'Stream',
-          onRemove: () => controller.applyFilters(stream: StreamFilter.all),
+          label: controller.selectedTimed.value == TimedFilter.timedOnly
+              ? '⏱️ Timed'
+              : '✍️ Practice',
+          onRemove: () => controller.applyFilters(timed: TimedFilter.all),
+        ),
+      );
+    }
+    if (controller.selectedScore.value != ScoreFilter.all) {
+      chips.add(
+        _DismissChip(
+          label: controller.selectedScore.value == ScoreFilter.good
+              ? '🟢 Mastered'
+              : '🔴 Needs Practice',
+          onRemove: () => controller.applyFilters(score: ScoreFilter.all),
         ),
       );
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
+import 'package:matricmate/utils/constants/app_images.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -55,18 +56,11 @@ class _LoadingScreenState extends State<LoadingScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ── Logo ────────────────────────────────────────────
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.10),
-                    shape: BoxShape.circle,
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Image.asset(
-                    'assets/images/logo/transparent_logo.png',
-                    fit: BoxFit.contain,
-                  ),
+                Image.asset(
+                  AppImages.transparentIcon,
+                  width: 96,
+                  height: 96,
+                  fit: BoxFit.contain,
                 ),
 
                 const SizedBox(height: 20),

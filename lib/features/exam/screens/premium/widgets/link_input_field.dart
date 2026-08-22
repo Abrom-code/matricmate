@@ -43,8 +43,8 @@ class LinkInputField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'https://telebirr.et/receipt/... or SMS text',
             hintStyle: TextStyle(
-              fontSize: 12,
-              color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
+              fontSize: 12.5,
+              color: isDark ? AppColors.darkInputHint : AppColors.lightInputHint,
             ),
             prefixIcon: Container(
               margin: const EdgeInsets.all(10),
@@ -93,7 +93,7 @@ class LinkInputField extends StatelessWidget {
               ),
             ),
             filled: true,
-            fillColor: isDark ? AppColors.darkSurface : AppColors.lightCard,
+            fillColor: isDark ? AppColors.darkInputFill : AppColors.lightInputFill,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 14,
@@ -101,18 +101,20 @@ class LinkInputField extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
+                color: isDark ? AppColors.darkInputBorder : AppColors.lightInputBorder,
+                width: 1.2,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
+                color: isDark ? AppColors.darkInputBorder : AppColors.lightInputBorder,
+                width: 1.2,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
             ),
           ),
         ),

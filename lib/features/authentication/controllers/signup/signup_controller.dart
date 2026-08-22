@@ -17,10 +17,12 @@ class SignupController extends GetxController {
       AuthenticationRepository();
 
   final hidePassword = true.obs;
-  late final TextEditingController firstName;
-  late final TextEditingController lastName;
-  late final TextEditingController email;
-  late final TextEditingController password;
+  final hideConfirmPassword = true.obs;
+  final firstName = TextEditingController();
+  final lastName = TextEditingController();
+  final email = TextEditingController();
+  final password = TextEditingController();
+  final confirmPassword = TextEditingController();
   final RxString selectedStream = ''.obs;
   final RxBool isSigning = false.obs;
 
@@ -32,11 +34,6 @@ class SignupController extends GetxController {
 
   @override
   void onInit() {
-    firstName = TextEditingController();
-    lastName = TextEditingController();
-    email = TextEditingController();
-    password = TextEditingController();
-    signupFormKey = GlobalKey<FormState>();
     super.onInit();
   }
 
@@ -46,12 +43,17 @@ class SignupController extends GetxController {
     lastName.dispose();
     email.dispose();
     password.dispose();
+    confirmPassword.dispose();
     super.onClose();
   }
 
   Future<void> signup() async {
     try {
       if (!signupFormKey.currentState!.validate()) return;
+      if (password.text.trim() != confirmPassword.text.trim()) {
+        ToastHelper.warning('Passwords do not match');
+        return;
+      }
       if (selectedStream.value.isEmpty) {
         ToastHelper.warning('Please select stream, you can edit later!');
         return;

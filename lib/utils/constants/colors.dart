@@ -47,6 +47,16 @@ class AppColors {
   static const Color borderSecondary = Color(0xFFEDF0F2);
   static const Color darkBorder = Color(0xFF2E2E2E);
 
+  // Input Field Colors
+  static const Color darkInputFill = Color(0xFF141416);
+  static const Color lightInputFill = Color(0xFFF8FAFC);
+  static const Color darkInputBorder = Color(0xFF2A2D34);
+  static const Color lightInputBorder = Color(0xFFE2E8F0);
+  static const Color darkInputLabel = Color(0xFF94A3B8);
+  static const Color lightInputLabel = Color(0xFF64748B);
+  static const Color darkInputHint = Color(0xFF64748B);
+  static const Color lightInputHint = Color(0xFF94A3B8);
+
   // Error and Validation Colors
   static const Color error = Color(0xFFd32f2f);
   static const Color success = Color(0xFF388e3c);

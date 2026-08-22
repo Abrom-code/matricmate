@@ -254,25 +254,46 @@ class _SearchBar extends StatelessWidget {
         focusNode: focusNode,
         onTapOutside: (_) => FocusScope.of(context).unfocus(),
         onChanged: onChanged,
+        style: TextStyle(
+          color: dark ? AppColors.white : const Color(0xFF0F172A),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
-          prefixIcon: const Icon(Icons.search, size: 20),
+          filled: true,
+          fillColor: dark ? AppColors.darkInputFill : AppColors.lightInputFill,
+          prefixIcon: Icon(
+            Icons.search,
+            size: 20,
+            color: dark ? AppColors.darkInputLabel : AppColors.lightInputLabel,
+          ),
           suffixIcon: ValueListenableBuilder<TextEditingValue>(
             valueListenable: controller,
             builder: (_, value, __) => value.text.isEmpty
                 ? const SizedBox.shrink()
                 : IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
+                    icon: Icon(
+                      Icons.clear,
+                      size: 18,
+                      color: dark ? AppColors.darkInputLabel : AppColors.lightInputLabel,
+                    ),
                     onPressed: onClear,
                   ),
           ),
-          border: _border(Colors.grey),
+          border: _border(dark ? AppColors.darkInputBorder : AppColors.lightInputBorder),
           enabledBorder: _border(
-            dark ? Colors.grey.shade700 : Colors.grey.shade400,
+            dark ? AppColors.darkInputBorder : AppColors.lightInputBorder,
           ),
-          focusedBorder: _border(AppColors.primary),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+          ),
           hintText: 'Search bookmarks…',
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          hintStyle: TextStyle(
+            color: dark ? AppColors.darkInputHint : AppColors.lightInputHint,
+            fontSize: 13.5,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         ),
       ),
     );

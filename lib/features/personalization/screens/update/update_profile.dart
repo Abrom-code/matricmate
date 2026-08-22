@@ -91,26 +91,62 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     TextFormField(
                       controller: controller.firstName,
                       textCapitalization: TextCapitalization.sentences,
+                      style: TextStyle(
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w500,
+                      ),
                       validator: (val) =>
                           AppValidator.validateEmptyText('First Name', val),
                       onTapOutside: (_) => FocusScope.of(context).unfocus(),
                       decoration: InputDecoration(
                         labelText: 'First Name',
-                        prefixIcon: const Icon(Iconsax.user_copy, size: 18),
+                        labelStyle: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                          color: dark
+                              ? AppColors.darkInputLabel
+                              : AppColors.lightInputLabel,
+                        ),
+                        floatingLabelStyle: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                        hintStyle: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w400,
+                          color: dark
+                              ? AppColors.darkInputHint
+                              : AppColors.lightInputHint,
+                        ),
+                        prefixIcon: Icon(
+                          Iconsax.user_copy,
+                          size: 18,
+                          color: dark
+                              ? AppColors.darkInputLabel
+                              : AppColors.lightInputLabel,
+                        ),
                         filled: true,
                         fillColor: dark
-                            ? const Color(0xFF151922)
-                            : const Color(0xFFF8FAFC),
+                            ? AppColors.darkInputFill
+                            : AppColors.lightInputFill,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                            color: dark
+                                ? AppColors.darkInputBorder
+                                : AppColors.lightInputBorder,
+                            width: 1.2,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                            color: dark
+                                ? AppColors.darkInputBorder
+                                : AppColors.lightInputBorder,
+                            width: 1.2,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -126,26 +162,62 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     TextFormField(
                       controller: controller.lastName,
                       textCapitalization: TextCapitalization.sentences,
+                      style: TextStyle(
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w500,
+                      ),
                       validator: (val) =>
                           AppValidator.validateEmptyText('Last Name', val),
                       onTapOutside: (_) => FocusScope.of(context).unfocus(),
                       decoration: InputDecoration(
                         labelText: 'Last Name',
-                        prefixIcon: const Icon(Iconsax.user_copy, size: 18),
+                        labelStyle: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                          color: dark
+                              ? AppColors.darkInputLabel
+                              : AppColors.lightInputLabel,
+                        ),
+                        floatingLabelStyle: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                        hintStyle: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w400,
+                          color: dark
+                              ? AppColors.darkInputHint
+                              : AppColors.lightInputHint,
+                        ),
+                        prefixIcon: Icon(
+                          Iconsax.user_copy,
+                          size: 18,
+                          color: dark
+                              ? AppColors.darkInputLabel
+                              : AppColors.lightInputLabel,
+                        ),
                         filled: true,
                         fillColor: dark
-                            ? const Color(0xFF151922)
-                            : const Color(0xFFF8FAFC),
+                            ? AppColors.darkInputFill
+                            : AppColors.lightInputFill,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                            color: dark
+                                ? AppColors.darkInputBorder
+                                : AppColors.lightInputBorder,
+                            width: 1.2,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                            color: dark
+                                ? AppColors.darkInputBorder
+                                : AppColors.lightInputBorder,
+                            width: 1.2,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -407,13 +479,13 @@ class _StreamChip extends StatelessWidget {
             color: isSelected
                 ? AppColors.primary.withValues(alpha: dark ? 0.22 : 0.10)
                 : (dark
-                    ? const Color(0xFF151922)
-                    : const Color(0xFFF8FAFC)),
+                    ? AppColors.darkInputFill
+                    : AppColors.lightInputFill),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isSelected
                   ? AppColors.primary
-                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
+                  : (dark ? AppColors.darkInputBorder : AppColors.lightInputBorder),
               width: isSelected ? 1.6 : 1.2,
             ),
           ),
@@ -425,7 +497,7 @@ class _StreamChip extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.primary
-                      : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
+                      : (dark ? AppColors.darkSurface : const Color(0xFFE2E8F0)),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
@@ -434,7 +506,7 @@ class _StreamChip extends StatelessWidget {
                     size: 18,
                     color: isSelected
                         ? Colors.white
-                        : (dark ? AppColors.white : const Color(0xFF0F172A)),
+                        : (dark ? AppColors.darkInputLabel : const Color(0xFF0F172A)),
                   ),
                 ),
               ),
@@ -457,7 +529,7 @@ class _StreamChip extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 11,
-                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                        color: dark ? AppColors.darkInputLabel : AppColors.textSecondary,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),

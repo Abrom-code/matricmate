@@ -258,11 +258,7 @@ class AnalyticsController extends GetxController {
     int count = 0;
     if (selectedSubject.value != 'All Subjects') count++;
     if (selectedTestType.value != 'All Types') count++;
-    if (selectedTimeFilter.value != TimeFilter.all) count++;
-    if (selectedGrade.value != GradeFilter.all) count++;
     if (selectedStream.value != StreamFilter.all) count++;
-    if (selectedScore.value != ScoreFilter.all) count++;
-    if (selectedTimed.value != TimedFilter.all) count++;
     return count;
   }
 

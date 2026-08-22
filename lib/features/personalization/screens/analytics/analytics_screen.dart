@@ -290,12 +290,14 @@ class _PeriodTab extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: 12,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
               color: isSelected
                   ? Colors.white
                   : (dark ? AppColors.darkGrey : AppColors.textSecondary),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),

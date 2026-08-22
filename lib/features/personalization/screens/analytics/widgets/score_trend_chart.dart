@@ -41,28 +41,33 @@ class ScoreTrendChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Score Trajectory',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: dark ? AppColors.white : const Color(0xFF0F172A),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Score Trajectory',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Performance progression across attempts',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    const SizedBox(height: 2),
+                    Text(
+                      'Performance progression across attempts',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               if (points.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.symmetric(

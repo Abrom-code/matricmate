@@ -44,7 +44,7 @@ class AnalyticsSummaryGrid extends StatelessWidget {
       children: [
         // ── Top Hero: Exam Readiness Banner ──────────────────────────────────
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: dark ? AppColors.darkCard : AppColors.white,
             borderRadius: BorderRadius.circular(20),
@@ -67,8 +67,8 @@ class AnalyticsSummaryGrid extends StatelessWidget {
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    width: 68,
-                    height: 68,
+                    width: 64,
+                    height: 64,
                     child: CircularProgressIndicator(
                       value: tests == 0 ? 0.0 : (avgScore / 100).clamp(0.0, 1.0),
                       strokeWidth: 6,
@@ -79,49 +79,49 @@ class AnalyticsSummaryGrid extends StatelessWidget {
                       valueColor: AlwaysStoppedAnimation<Color>(readinessColor),
                     ),
                   ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        tests == 0 ? '0%' : '${avgScore.toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                          color: dark ? AppColors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    tests == 0 ? '0%' : '${avgScore.toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                      color: dark ? AppColors.white : const Color(0xFF0F172A),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(width: 18),
+              const SizedBox(width: 16),
 
               // Title & Context
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: readinessColor.withValues(
-                              alpha: dark ? 0.22 : 0.12,
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
                             ),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            readinessTitle.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                              color: readinessColor,
+                            decoration: BoxDecoration(
+                              color: readinessColor.withValues(
+                                alpha: dark ? 0.22 : 0.12,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              readinessTitle.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                                color: readinessColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
@@ -129,7 +129,7 @@ class AnalyticsSummaryGrid extends StatelessWidget {
                         Text(
                           '• Readiness',
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: dark
                                 ? AppColors.darkGrey
@@ -138,15 +138,17 @@ class AnalyticsSummaryGrid extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
                     Text(
                       readinessSubtitle,
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: dark ? AppColors.white : const Color(0xFF1E293B),
-                        height: 1.3,
+                        height: 1.25,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -162,7 +164,7 @@ class AnalyticsSummaryGrid extends StatelessWidget {
           crossAxisCount: isLandscape ? 4 : 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: isLandscape ? 1.8 : 1.35,
+          childAspectRatio: isLandscape ? 1.8 : 1.18,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
@@ -171,28 +173,28 @@ class AnalyticsSummaryGrid extends StatelessWidget {
               iconColor: AppColors.primary,
               value: '$tests',
               label: 'Tests Completed',
-              trend: tests > 0 ? '$tests done' : 'Get started',
+              trend: tests > 0 ? '$tests done' : 'Start now',
             ),
             _StatCard(
               icon: Iconsax.chart_copy,
               iconColor: const Color(0xFF0284C7),
               value: '${avgScore.toStringAsFixed(0)}%',
               label: 'Average Score',
-              trend: avgScore >= 70 ? 'High mastery' : 'Target 75%+',
+              trend: avgScore >= 70 ? 'High' : 'Target 75%',
             ),
             _StatCard(
               icon: Icons.check_circle_outline_rounded,
               iconColor: const Color(0xFF10B981),
               value: _formatNumber(controller.totalCorrect.value),
               label: 'Correct Answers',
-              trend: 'All-time practice',
+              trend: 'All tests',
             ),
             _StatCard(
               icon: Iconsax.archive_tick_copy,
               iconColor: const Color(0xFFF59E0B),
               value: '${controller.bookmarkCount.value}',
               label: 'Saved Questions',
-              trend: 'Bookmarked for review',
+              trend: 'Saved',
             ),
           ],
         ),
@@ -227,7 +229,7 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -238,8 +240,8 @@ class _StatCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -251,28 +253,32 @@ class _StatCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: iconColor.withValues(alpha: dark ? 0.22 : 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(9),
                 ),
                 child: Center(
-                  child: Icon(icon, color: iconColor, size: 19),
+                  child: Icon(icon, color: iconColor, size: 17),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: dark ? 0.14 : 0.08),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  trend,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
-                    color: iconColor,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: dark ? 0.14 : 0.08),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    trend,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: iconColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -285,17 +291,17 @@ class _StatCard extends StatelessWidget {
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.w900,
                   color: dark ? AppColors.white : const Color(0xFF0F172A),
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                 ),

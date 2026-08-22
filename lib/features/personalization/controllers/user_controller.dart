@@ -222,12 +222,23 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
 
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      elevation: 12,
+      shadowColor: Colors.black.withValues(alpha: dark ? 0.4 : 0.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // Warning icon container
             Container(
               width: 50,
@@ -268,9 +279,27 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
             TextField(
               controller: _passwordController,
               obscureText: _obscure,
+              style: TextStyle(
+                color: dark ? AppColors.white : const Color(0xFF0F172A),
+                fontSize: 14.5,
+                fontWeight: FontWeight.w500,
+              ),
               decoration: InputDecoration(
                 hintText: 'Enter your password',
-                prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
+                hintStyle: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w400,
+                  color: dark
+                      ? AppColors.darkInputHint
+                      : AppColors.lightInputHint,
+                ),
+                prefixIcon: Icon(
+                  Icons.lock_outline_rounded,
+                  size: 18,
+                  color: dark
+                      ? AppColors.darkInputLabel
+                      : AppColors.lightInputLabel,
+                ),
                 suffixIcon: IconButton(
                   onPressed: () => setState(() => _obscure = !_obscure),
                   icon: Icon(
@@ -278,33 +307,38 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined,
                     size: 18,
+                    color: dark
+                        ? AppColors.darkInputLabel
+                        : AppColors.lightInputLabel,
                   ),
                 ),
                 filled: true,
                 fillColor: dark
-                    ? const Color(0xFF151922)
-                    : const Color(0xFFF8FAFC),
+                    ? AppColors.darkInputFill
+                    : AppColors.lightInputFill,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
                     color: dark
-                        ? AppColors.darkBorder
-                        : const Color(0xFFE2E8F0),
+                        ? AppColors.darkInputBorder
+                        : AppColors.lightInputBorder,
+                    width: 1.2,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
                     color: dark
-                        ? AppColors.darkBorder
-                        : const Color(0xFFE2E8F0),
+                        ? AppColors.darkInputBorder
+                        : AppColors.lightInputBorder,
+                    width: 1.2,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
                     color: Color(0xFFEF4444),
-                    width: 1.5,
+                    width: 1.6,
                   ),
                 ),
               ),
@@ -317,6 +351,9 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                     height: 44,
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -331,6 +368,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                         'Cancel',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
+                          height: 1.0,
                           color: dark ? AppColors.white : const Color(0xFF334155),
                         ),
                       ),
@@ -343,6 +381,9 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                     height: 44,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         backgroundColor: const Color(0xFFEF4444),
                         foregroundColor: Colors.white,
                         elevation: 0,
@@ -366,6 +407,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
+                                height: 1.0,
                               ),
                             ),
                     ),
@@ -376,6 +418,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

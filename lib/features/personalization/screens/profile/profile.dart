@@ -102,30 +102,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () => AppDialogBoxes.showOkCancelDialog(
+                  child: OutlinedButton(
+                    onPressed: () => AppDialogBoxes.showLogoutDialog(
                       context: context,
-                      title: 'Log Out',
-                      subtitle: 'Are you sure you want to log out of MatricMate?',
-                      onPressed: () {
+                      onLogout: () {
                         Get.back();
                         userController.logOut();
                       },
                     ),
-                    icon: const Icon(
-                      Icons.logout_rounded,
-                      size: 18,
-                      color: Color(0xFFEF4444),
-                    ),
-                    label: const Text(
-                      'Log Out',
-                      style: TextStyle(
-                        color: Color(0xFFEF4444),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.5,
-                      ),
-                    ),
                     style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       backgroundColor: const Color(0xFFEF4444)
                           .withValues(alpha: dark ? 0.12 : 0.04),
                       side: BorderSide(
@@ -136,6 +124,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.logout_rounded,
+                          size: 18,
+                          color: Color(0xFFEF4444),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Log Out',
+                          style: TextStyle(
+                            color: Color(0xFFEF4444),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5,
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

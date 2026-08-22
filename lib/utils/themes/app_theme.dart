@@ -40,6 +40,24 @@ class AppTheme {
     inputDecorationTheme: AppTextFormFieldTheme.lightInputDecorationTheme,
     outlinedButtonTheme: AppOutlinedButtonTheme.lightOutlinedButtonTheme,
     primaryColor: Colors.teal,
+    dialogTheme: DialogThemeData(
+      backgroundColor: AppColors.lightContainer,
+      elevation: 10,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: AppColors.borderPrimary, width: 1.2),
+      ),
+      titleTextStyle: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        color: Color(0xFF0F172A),
+      ),
+      contentTextStyle: const TextStyle(
+        fontSize: 13.5,
+        color: AppColors.textSecondary,
+        height: 1.45,
+      ),
+    ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: SnackbarColors.lightSurface,
       contentTextStyle: const TextStyle(
@@ -76,6 +94,24 @@ class AppTheme {
     bottomSheetTheme: AppBottomSheetTheme.darkBottomSheetTheme,
     checkboxTheme: AppCheckboxTheme.darkCheckboxTheme,
     chipTheme: AppChipTheme.darkChipTheme,
+    dialogTheme: DialogThemeData(
+      backgroundColor: AppColors.darkCard,
+      elevation: 10,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: AppColors.darkBorder, width: 1.2),
+      ),
+      titleTextStyle: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        color: AppColors.white,
+      ),
+      contentTextStyle: const TextStyle(
+        fontSize: 13.5,
+        color: AppColors.darkGrey,
+        height: 1.45,
+      ),
+    ),
     elevatedButtonTheme: AppElevatedButtonTheme.darkElevatedButtonTheme,
     inputDecorationTheme: AppTextFormFieldTheme.darkInputDecorationTheme,
     outlinedButtonTheme: AppOutlinedButtonTheme.darkOutlinedButtonTheme,

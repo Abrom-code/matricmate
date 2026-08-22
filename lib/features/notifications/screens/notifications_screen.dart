@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
@@ -50,103 +51,39 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _confirmClearAll(BuildContext context) {
-    final dark = AppHelperFunctions.isDark(context);
-    showDialog(
+    AppDialogBoxes.showOkCancelDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: dark ? AppColors.darkCard : AppColors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-            width: 1.2,
-          ),
-        ),
-        title: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.2 : 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.delete_outline_rounded,
-                  color: Color(0xFFEF4444),
-                  size: 20,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Clear All?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-        content: Text(
+      title: 'Clear All Notifications?',
+      subtitle:
           'This will remove all notifications from your device. You can undo this action immediately after.',
-          style: TextStyle(
-            fontSize: 13.5,
-            color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-            height: 1.4,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: dark ? AppColors.white : const Color(0xFF0F172A),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              final count = ctrl.notifications.length;
-              ctrl.deleteAll();
+      confirmText: 'Clear All',
+      icon: Icons.delete_outline_rounded,
+      isDestructive: true,
+      onPressed: () {
+        Navigator.pop(context);
+        final count = ctrl.notifications.length;
+        ctrl.deleteAll();
 
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '$count notification${count == 1 ? '' : 's'} cleared',
-                    ),
-                    duration: const Duration(seconds: 4),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      textColor: const Color(0xFF5EEAD4),
-                      onPressed: () => ctrl.undoDeleteAll(),
-                    ),
-                  ),
-                );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                '$count notification${count == 1 ? '' : 's'} cleared',
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              action: SnackBarAction(
+                label: 'Undo',
+                textColor: const Color(0xFF5EEAD4),
+                onPressed: () => ctrl.undoDeleteAll(),
+              ),
             ),
-            child: const Text(
-              'Clear All',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
+          );
+      },
     );
   }
 

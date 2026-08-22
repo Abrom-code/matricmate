@@ -209,7 +209,7 @@ class SubjectModeModal extends StatelessWidget {
                         Color(0xFF1D4ED8),
                       ],
                       title: 'Exams',
-                      subtitle: 'Entrance and model exams',
+                      subtitle: 'Entrance and model exams from multiple years',
                       chips: totalMockExams > 0
                           ? [
                               '$entranceCount Entrance Papers',

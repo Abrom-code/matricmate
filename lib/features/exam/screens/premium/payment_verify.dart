@@ -216,6 +216,9 @@ class PaymentVerificationScreen extends StatelessWidget {
                           title: 'Cancel Payment',
                           subtitle:
                               'Are you sure you want to cancel this pending payment?',
+                          confirmText: 'Cancel Payment',
+                          icon: Icons.cancel_outlined,
+                          isDestructive: true,
                           onPressed: () {
                             Get.back();
                             controller.cancelPayment();

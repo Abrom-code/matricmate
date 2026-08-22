@@ -149,12 +149,44 @@ class _BookmarkScreenState extends State<BookmarkScreen>
               // ── Tab bar ─────────────────────────────────────────────
               Container(
                 color: dark ? AppColors.darkCard : AppColors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSizes.sm,
+                ),
                 child: TabBar(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSizes.defaultSpace / 2,
                   ),
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,
+                  indicatorPadding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 0,
+                  ),
+                  indicator: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.primary.withValues(
+                      alpha: dark ? 0.25 : 0.12,
+                    ),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.35),
+                      width: 1,
+                    ),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: dark
+                      ? AppColors.darkGrey
+                      : AppColors.textSecondary,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 14),
                   tabs: tabs.map((t) => Tab(text: t)).toList(),
                 ),
               ),
@@ -168,7 +200,12 @@ class _BookmarkScreenState extends State<BookmarkScreen>
                       return const Center(child: Text('No bookmark found'));
                     }
                     return ListView.separated(
-                      padding: const EdgeInsets.all(AppSizes.defaultSpace / 2),
+                      padding: EdgeInsets.fromLTRB(
+                        AppSizes.defaultSpace / 2,
+                        AppSizes.defaultSpace / 2,
+                        AppSizes.defaultSpace / 2,
+                        MediaQuery.paddingOf(context).bottom + 100,
+                      ),
                       itemCount: filtered.length,
                       separatorBuilder: (_, __) =>
                           const SizedBox(height: AppSizes.spaceBtwItems),
@@ -178,7 +215,6 @@ class _BookmarkScreenState extends State<BookmarkScreen>
                   }).toList(),
                 ),
               ),
-              const SizedBox(height: AppSizes.spaceBtwSections * 2),
             ],
           ),
         );
@@ -218,25 +254,46 @@ class _SearchBar extends StatelessWidget {
         focusNode: focusNode,
         onTapOutside: (_) => FocusScope.of(context).unfocus(),
         onChanged: onChanged,
+        style: TextStyle(
+          color: dark ? AppColors.white : const Color(0xFF0F172A),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
-          prefixIcon: const Icon(Icons.search, size: 20),
+          filled: true,
+          fillColor: dark ? AppColors.darkInputFill : AppColors.lightInputFill,
+          prefixIcon: Icon(
+            Icons.search,
+            size: 20,
+            color: dark ? AppColors.darkInputLabel : AppColors.lightInputLabel,
+          ),
           suffixIcon: ValueListenableBuilder<TextEditingValue>(
             valueListenable: controller,
             builder: (_, value, __) => value.text.isEmpty
                 ? const SizedBox.shrink()
                 : IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
+                    icon: Icon(
+                      Icons.clear,
+                      size: 18,
+                      color: dark ? AppColors.darkInputLabel : AppColors.lightInputLabel,
+                    ),
                     onPressed: onClear,
                   ),
           ),
-          border: _border(Colors.grey),
+          border: _border(dark ? AppColors.darkInputBorder : AppColors.lightInputBorder),
           enabledBorder: _border(
-            dark ? Colors.grey.shade700 : Colors.grey.shade400,
+            dark ? AppColors.darkInputBorder : AppColors.lightInputBorder,
           ),
-          focusedBorder: _border(AppColors.primary),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+          ),
           hintText: 'Search bookmarks…',
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          hintStyle: TextStyle(
+            color: dark ? AppColors.darkInputHint : AppColors.lightInputHint,
+            fontSize: 13.5,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         ),
       ),
     );

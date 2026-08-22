@@ -31,30 +31,45 @@ class PassageLayoutCtrl extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium!.copyWith(color: AppColors.primary),
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             // eye icon shows current state
             Icon(
               hidden
                   ? Icons.visibility_outlined
                   : Icons.visibility_off_outlined,
-              color: AppColors.primary.withValues(alpha: 0.7),
-              size: 16,
+              color: AppColors.white.withValues(alpha: 0.85),
+              size: 17,
             ),
             // timer if timed
             if (controller.isTimed) ...[
-              const SizedBox(width: 4),
-              Text(
-                '(${controller.formattedTime(controller.remainingSeconds.value)})',
-                style: Theme.of(context).textTheme.labelMedium!.copyWith(
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
                   color: controller.remainingSeconds.value < 300
-                      ? Colors.amber
-                      : AppColors.primary,
-                  fontWeight: FontWeight.w600,
+                      ? Colors.red.withValues(alpha: 0.3)
+                      : AppColors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  controller.formattedTime(controller.remainingSeconds.value),
+                  style: TextStyle(
+                    color: controller.remainingSeconds.value < 300
+                        ? Colors.amberAccent
+                        : const Color(0xFFD1FAE5),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11.5,
+                  ),
                 ),
               ),
             ],

@@ -12,10 +12,12 @@ class SubjectContainer extends StatelessWidget {
     required this.onTap,
     required this.isDownloaded,
     required this.onPressed,
+    this.onDelete,
   });
 
   final String title, image;
   final VoidCallback onTap, onPressed;
+  final VoidCallback? onDelete;
   final bool isDownloaded;
 
   @override
@@ -60,7 +62,7 @@ class SubjectContainer extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // ── Image Frame with Download Action/Status ────────
                   Expanded(
@@ -132,7 +134,7 @@ class SubjectContainer extends StatelessWidget {
                                               ],
                                             )
                                           : const Icon(
-                                              Icons.cloud_download_rounded,
+                                              Icons.arrow_downward_rounded,
                                               color: AppColors.white,
                                               size: 22,
                                             ),
@@ -141,23 +143,61 @@ class SubjectContainer extends StatelessWidget {
                                 ),
                               ),
                             )
-                          else
+                          else ...[
+                            // Ready status checkmark (top-left)
                             Positioned(
                               top: 6,
-                              right: 6,
+                              left: 6,
                               child: Container(
-                                padding: const EdgeInsets.all(4),
+                                width: 22,
+                                height: 22,
                                 decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: dark ? 0.2 : 0.15),
+                                  color: AppColors.success.withValues(
+                                    alpha: dark ? 0.25 : 0.15,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
-                                  Icons.check_rounded,
-                                  size: 12,
-                                  color: AppColors.success,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.check_rounded,
+                                    size: 12,
+                                    color: AppColors.success,
+                                  ),
                                 ),
                               ),
                             ),
+
+                            // Delete / remove from device icon button (top-right)
+                            if (onDelete != null)
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: onDelete,
+                                    customBorder: const CircleBorder(),
+                                    child: Container(
+                                      width: 22,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.error.withValues(
+                                          alpha: dark ? 0.25 : 0.15,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 12,
+                                          color: AppColors.error,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ],
                       ),
                     ),
@@ -166,35 +206,24 @@ class SubjectContainer extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   // ── Subject Name & Status ──────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
-                            color: dark ? AppColors.textWhite : AppColors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 11,
-                        color: dark ? AppColors.darkGrey : AppColors.grey,
-                      ),
-                    ],
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      color: dark ? AppColors.textWhite : AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     isDownloaded
                         ? 'Ready to practice'
                         : (isDownloading ? 'Downloading...' : 'Tap to download'),
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w500,

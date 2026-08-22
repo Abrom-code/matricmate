@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/screens/widgets/notification_section_header.dart';
 import 'package:matricmate/features/notifications/screens/widgets/notification_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -36,9 +37,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         SnackBar(
           content: const Text('Notification deleted'),
           duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           action: SnackBarAction(
             label: 'Undo',
-            textColor: AppColors.primary,
+            textColor: const Color(0xFF5EEAD4),
             onPressed: () => ctrl.undoDeleteOne(),
           ),
         ),
@@ -46,45 +51,39 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _confirmClearAll(BuildContext context) {
-    showDialog(
+    AppDialogBoxes.showOkCancelDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Clear all notifications?'),
-        content: const Text('This removes all notifications from your device.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              final count = ctrl.notifications.length;
-              ctrl.deleteAll();
+      title: 'Clear All Notifications?',
+      subtitle:
+          'This will remove all notifications from your device. You can undo this action immediately after.',
+      confirmText: 'Clear All',
+      icon: Icons.delete_outline_rounded,
+      isDestructive: true,
+      onPressed: () {
+        Navigator.pop(context);
+        final count = ctrl.notifications.length;
+        ctrl.deleteAll();
 
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '$count notification${count == 1 ? '' : 's'} cleared',
-                    ),
-                    duration: const Duration(seconds: 4),
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      textColor: AppColors.primary,
-                      onPressed: () => ctrl.undoDeleteAll(),
-                    ),
-                  ),
-                );
-            },
-            child: const Text(
-              'Clear all',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                '$count notification${count == 1 ? '' : 's'} cleared',
+              ),
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              action: SnackBarAction(
+                label: 'Undo',
+                textColor: const Color(0xFF5EEAD4),
+                onPressed: () => ctrl.undoDeleteAll(),
+              ),
             ),
-          ),
-        ],
-      ),
+          );
+      },
     );
   }
 
@@ -103,7 +102,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
       widgets.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+          padding: const EdgeInsets.only(bottom: 10),
           child: NotificationTile(
             notification: n,
             onDismissed: () => _onTileDismissed(n),
@@ -117,34 +116,89 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
+
     return Scaffold(
+      backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: ModernAppbarWithBuilder(
         title: 'Notifications',
         showBackArrow: true,
+        subtitleBuilder: (_) => Obx(() {
+          final unread = ctrl.unreadCount.value;
+          final total = ctrl.notifications.length;
+          if (total == 0) {
+            return const Text(
+              'All caught up',
+              style: TextStyle(
+                color: Color(0xFFD1FAE5),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+              ),
+            );
+          }
+          return Text(
+            unread > 0 ? '$unread unread · $total total' : '$total notifications',
+            style: const TextStyle(
+              color: Color(0xFFD1FAE5),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
+          );
+        }),
         actions: [
           Obx(() {
             if (ctrl.notifications.isEmpty) return const SizedBox.shrink();
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (ctrl.unreadCount.value > 0)
-                  TextButton(
-                    onPressed: ctrl.markAllRead,
-                    child: const Icon(
-                      Icons.done_all_rounded,
-                      color: AppColors.white,
-                      size: 22,
+                if (ctrl.unreadCount.value > 0) ...[
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: ctrl.markAllRead,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.done_all_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                IconButton(
-                  tooltip: 'Clear all',
-                  icon: const Icon(
-                    Icons.delete_sweep_rounded,
-                    color: AppColors.white,
-                    size: 22,
+                  const SizedBox(width: 8),
+                ],
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _confirmClearAll(context),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.delete_sweep_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
                   ),
-                  onPressed: () => _confirmClearAll(context),
                 ),
+                const SizedBox(width: 14),
               ],
             );
           }),
@@ -160,20 +214,65 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
           if (ctrl.notifications.isEmpty) {
             return ListView(
-              children: const [
-                SizedBox(height: 120),
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                const SizedBox(height: 100),
                 Center(
-                  child: Icon(
-                    Icons.notifications_none_rounded,
-                    size: 48,
-                    color: AppColors.darkGrey,
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: dark ? 0.22 : 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.notifications_none_rounded,
+                        size: 36,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
                 ),
-                SizedBox(height: 12),
-                Center(
+                const SizedBox(height: 18),
+                const Center(
                   child: Text(
-                    'No notifications yet',
-                    style: TextStyle(color: AppColors.darkGrey),
+                    'All Caught Up!',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Text(
+                    'You have no notifications right now. Check back later for test announcements, updates, and results.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.45,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () => ctrl.loadNotifications(syncRemote: true),
+                    icon: const Icon(Icons.sync_rounded, size: 16),
+                    label: const Text('Check for Updates'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
                   ),
                 ),
               ],
@@ -181,7 +280,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(AppSizes.defaultSpace),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: _buildGroupedList(ctrl.notifications),
           );
         }),
@@ -189,3 +288,4 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 }
+

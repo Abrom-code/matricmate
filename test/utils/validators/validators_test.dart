@@ -37,6 +37,21 @@ void main() {
       expect(AppValidator.validatePassword('abcde!'), isNull);
     });
 
+    test('validates matching confirmation passwords', () {
+      expect(
+        AppValidator.validateConfirmPassword('', 'SecurePass!1'),
+        'Please confirm your password.',
+      );
+      expect(
+        AppValidator.validateConfirmPassword('WrongPass!1', 'SecurePass!1'),
+        'Passwords do not match.',
+      );
+      expect(
+        AppValidator.validateConfirmPassword('SecurePass!1', 'SecurePass!1'),
+        isNull,
+      );
+    });
+
     test('validates ten-digit phone numbers', () {
       expect(
         AppValidator.validatePhoneNumber('123'),

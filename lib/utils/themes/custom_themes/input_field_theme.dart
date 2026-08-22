@@ -1,72 +1,104 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 
 class AppTextFormFieldTheme {
   AppTextFormFieldTheme._();
 
   static InputDecorationTheme lightInputDecorationTheme = InputDecorationTheme(
     errorMaxLines: 3,
-    prefixIconColor: Colors.grey,
-    suffixIconColor: Colors.grey,
-    labelStyle: const TextStyle().copyWith(fontSize: 14, color: Colors.black),
-    hintStyle: const TextStyle().copyWith(fontSize: 14, color: Colors.black),
-    errorStyle: const TextStyle().copyWith(fontStyle: FontStyle.normal),
-    floatingLabelStyle: const TextStyle().copyWith(
-      color: Colors.black.withValues(alpha: 0.8),
+    prefixIconColor: AppColors.lightInputLabel,
+    suffixIconColor: AppColors.lightInputLabel,
+    labelStyle: const TextStyle(
+      fontSize: 13.5,
+      fontWeight: FontWeight.w500,
+      color: AppColors.lightInputLabel,
     ),
-    fillColor: Colors.white,
+    hintStyle: const TextStyle(
+      fontSize: 13.5,
+      fontWeight: FontWeight.w400,
+      color: AppColors.lightInputHint,
+    ),
+    errorStyle: const TextStyle(
+      fontSize: 11.5,
+      fontWeight: FontWeight.w500,
+      color: AppColors.error,
+    ),
+    floatingLabelStyle: const TextStyle(
+      fontSize: 12.5,
+      fontWeight: FontWeight.w600,
+      color: AppColors.primary,
+    ),
+    fillColor: AppColors.lightInputFill,
     filled: true,
-    border: const OutlineInputBorder().copyWith(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+    border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 1, color: Color(0xFFDDE1E7)),
+      borderSide: const BorderSide(width: 1.2, color: AppColors.lightInputBorder),
     ),
-    enabledBorder: const OutlineInputBorder().copyWith(
+    enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 1, color: Color(0xFFDDE1E7)),
+      borderSide: const BorderSide(width: 1.2, color: AppColors.lightInputBorder),
     ),
-    focusedBorder: const OutlineInputBorder().copyWith(
+    focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 1.5, color: Colors.teal),
+      borderSide: const BorderSide(width: 1.6, color: AppColors.primary),
     ),
-    errorBorder: const OutlineInputBorder().copyWith(
+    errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 1, color: Colors.red),
+      borderSide: const BorderSide(width: 1.2, color: AppColors.error),
     ),
-    focusedErrorBorder: const OutlineInputBorder().copyWith(
+    focusedErrorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 2, color: Colors.orange),
+      borderSide: const BorderSide(width: 1.6, color: AppColors.error),
     ),
-  ); // InputDecorationTheme
+  );
 
   static InputDecorationTheme darkInputDecorationTheme = InputDecorationTheme(
-    errorMaxLines: 2,
-    prefixIconColor: Colors.grey,
-    suffixIconColor: Colors.grey,
-    labelStyle: const TextStyle().copyWith(fontSize: 14, color: Colors.white),
-    hintStyle: const TextStyle().copyWith(fontSize: 14, color: Colors.white54),
-    floatingLabelStyle: const TextStyle().copyWith(
-      color: Colors.white.withValues(alpha: 0.8),
+    errorMaxLines: 3,
+    prefixIconColor: AppColors.darkInputLabel,
+    suffixIconColor: AppColors.darkInputLabel,
+    labelStyle: const TextStyle(
+      fontSize: 13.5,
+      fontWeight: FontWeight.w500,
+      color: AppColors.darkInputLabel,
     ),
-    fillColor: const Color(0xFF252525),
+    hintStyle: const TextStyle(
+      fontSize: 13.5,
+      fontWeight: FontWeight.w400,
+      color: AppColors.darkInputHint,
+    ),
+    errorStyle: const TextStyle(
+      fontSize: 11.5,
+      fontWeight: FontWeight.w500,
+      color: Color(0xFFF87171),
+    ),
+    floatingLabelStyle: const TextStyle(
+      fontSize: 12.5,
+      fontWeight: FontWeight.w600,
+      color: AppColors.primary,
+    ),
+    fillColor: AppColors.darkInputFill,
     filled: true,
-    border: const OutlineInputBorder().copyWith(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+    border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 1, color: Color(0xFF2E2E2E)),
+      borderSide: const BorderSide(width: 1.2, color: AppColors.darkInputBorder),
     ),
-    enabledBorder: const OutlineInputBorder().copyWith(
+    enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 1, color: Color(0xFF2E2E2E)),
+      borderSide: const BorderSide(width: 1.2, color: AppColors.darkInputBorder),
     ),
-    focusedBorder: const OutlineInputBorder().copyWith(
+    focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 1.5, color: Colors.teal),
+      borderSide: const BorderSide(width: 1.6, color: AppColors.primary),
     ),
-    errorBorder: const OutlineInputBorder().copyWith(
+    errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 1, color: Colors.red),
+      borderSide: const BorderSide(width: 1.2, color: Color(0xFFEF4444)),
     ),
-    focusedErrorBorder: const OutlineInputBorder().copyWith(
+    focusedErrorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(width: 2, color: Colors.orange),
+      borderSide: const BorderSide(width: 1.6, color: Color(0xFFEF4444)),
     ),
-  ); // InputDecorationTheme
+  );
 }

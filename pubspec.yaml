@@ -1,5 +1,5 @@
 name: matricmate
-description: "MatricMate — Ethiopian matric exam prep app with chapter tests, entrance exams, bookmarks, and offline support."
+description: "MatricET — Ethiopian matric exam prep app with chapter tests, entrance exams, bookmarks, and offline support."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -42,7 +42,6 @@ dependencies:
   firebase_core: ^4.6.0
   firebase_auth: ^6.3.0
   connectivity_plus: ^7.1.0
-  firebase_storage: ^13.4.6
   smooth_page_indicator: ^2.0.1
   sqflite: ^2.4.2
   path: ^1.9.1
@@ -71,6 +70,7 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icons/icon.png"
+  remove_alpha_ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

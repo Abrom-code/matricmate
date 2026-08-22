@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
+import 'package:matricmate/utils/constants/app_images.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -54,18 +55,38 @@ class _LoadingScreenState extends State<LoadingScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ── Logo ────────────────────────────────────────────
+                // ── Logo with Circular Outline Background ──────────
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: 112,
+                  height: 112,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
+                    color: AppColors.primary.withValues(
+                      alpha: dark ? 0.08 : 0.04,
+                    ),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(
+                        alpha: dark ? 0.35 : 0.25,
+                      ),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(
+                          alpha: dark ? 0.15 : 0.08,
+                        ),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
-                  padding: const EdgeInsets.all(16),
-                  child: Image.asset(
-                    'assets/images/logo/transparent_logo.png',
-                    fit: BoxFit.contain,
+                  child: Center(
+                    child: Image.asset(
+                      AppImages.transparentIcon,
+                      width: 76,
+                      height: 76,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
 
@@ -73,7 +94,7 @@ class _LoadingScreenState extends State<LoadingScreen>
 
                 // ── App name ─────────────────────────────────────────
                 const Text(
-                  'MatricMate',
+                  'MatricET',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,

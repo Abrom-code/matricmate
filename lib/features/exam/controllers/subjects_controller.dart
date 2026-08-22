@@ -119,18 +119,19 @@ class SubjectsController extends GetxController {
     }
   }
 
-  /// DOWNLOAD SUBJECT (chapter content)
+  /// DOWNLOAD SUBJECT (all chapter, grade, entrance, and model exam materials)
   Future<void> downloadSubject(String subject, int subjectId) async {
+    // Immediate UI feedback on tap
+    downloadingMap[subject] = true;
+    subjectDownloadStep[subject] = 'Starting…';
+    subjectDownloadProgress[subject] = 0.05;
+
     try {
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) {
-        ToastHelper.warning('No Internet!');
+      final hasNet = await NetworkManager.instance.hasNetworkInterface();
+      if (!hasNet) {
+        ToastHelper.warning('No Internet connection!');
         return;
       }
-
-      subjectDownloadStep[subject] = 'Starting…';
-      subjectDownloadProgress[subject] = 0.0;
-      downloadingMap[subject] = true;
 
       await _repo.downloadSubject(
         subjectId,
@@ -154,17 +155,17 @@ class SubjectsController extends GetxController {
 
   /// DOWNLOAD ENTRANCE + MODEL EXAMS for one subject
   Future<void> downloadEntranceExams(SubjectModel subject) async {
+    entranceDownloadStep[subject.id] = 'Starting…';
+    entranceDownloadProgress[subject.id] = 0.05;
+
     try {
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) {
-        ToastHelper.warning('No Internet!');
+      final hasNet = await NetworkManager.instance.hasNetworkInterface();
+      if (!hasNet) {
+        ToastHelper.warning('No Internet connection!');
         return;
       }
 
       final syncRepo = SyncRepository();
-      entranceDownloadStep[subject.id] = 'Starting…';
-      entranceDownloadProgress[subject.id] = 0.0;
-
       await syncRepo.downloadEntranceForSubject(
         subject.id,
         onStep: (step, progress) {
@@ -181,6 +182,21 @@ class SubjectsController extends GetxController {
     } finally {
       entranceDownloadStep.remove(subject.id);
       entranceDownloadProgress.remove(subject.id);
+    }
+  }
+
+  /// REMOVE / DELETE SUBJECT DOWNLOAD FROM DEVICE
+  Future<void> deleteSubject(SubjectModel subject) async {
+    try {
+      isLoading.value = true;
+      await _repo.deleteSubject(subject.id);
+      await loadLocalSubjects();
+      await loadPausedTests();
+      ToastHelper.success('${subject.name} removed from device');
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isLoading.value = false;
     }
   }
 

@@ -12,7 +12,7 @@ import 'package:matricmate/features/personalization/screens/analytics/widgets/te
 import 'package:matricmate/features/personalization/screens/analytics/widgets/weakest_areas_card.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -38,14 +38,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
+
     return Scaffold(
+      backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: ModernAppbarWithBuilder(
         title: 'Analytics',
         subtitleBuilder: (_) => Obx(() {
           final stream = UserController.instance.user.value.stream;
           final label = stream.isNotEmpty
               ? '${stream[0].toUpperCase()}${stream.substring(1)} science stream'
-              : '';
+              : 'Performance & Insights';
           return Text(
             label,
             style: const TextStyle(
@@ -58,43 +61,71 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         actions: [
           Obx(() {
             final count = controller.activeFilterCount;
-            return Stack(
-              alignment: Alignment.topRight,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.tune_outlined, color: AppColors.white),
-                  onPressed: () => Get.bottomSheet(
-                    AnalyticsFilterSheet(controller: controller),
-                    isScrollControlled: true,
-                  ),
-                ),
-                if (count > 0)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
-                        color: AppColors.secondary,
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topRight,
+                children: [
+                  IconButton(
+                    tooltip: 'Filter analytics',
+                    onPressed: () => Get.bottomSheet(
+                      AnalyticsFilterSheet(controller: controller),
+                      isScrollControlled: true,
+                    ),
+                    icon: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: Center(
-                        child: Text(
-                          '$count',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.black,
-                          ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.tune_rounded,
+                          size: 17,
+                          color: AppColors.white,
                         ),
                       ),
                     ),
                   ),
-              ],
+                  if (count > 0)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 3,
+                            ),
+                          ],
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$count',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.black,
+                              height: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             );
           }),
-          const SizedBox(width: 4),
         ],
       ),
       body: Obx(() {
@@ -111,30 +142,37 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               // Center and constrain content width in landscape
               final content = SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(AppSizes.defaultSpace),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.paddingOf(context).bottom + 100,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Active filter chips row
-                    if (controller.hasActiveFilters)
+                    if (controller.hasActiveFilters) ...[
                       ActiveFilterRow(controller: controller),
+                      const SizedBox(height: 12),
+                    ],
 
                     AnalyticsSummaryGrid(controller: controller),
+                    const SizedBox(height: 14),
 
                     ScoreTrendChart(controller: controller),
-                    const SizedBox(height: AppSizes.spaceBtwSections),
+                    const SizedBox(height: 14),
 
                     SubjectPerformanceSection(controller: controller),
-                    const SizedBox(height: AppSizes.spaceBtwSections),
+                    const SizedBox(height: 14),
 
                     TestTypeDistribution(controller: controller),
-                    const SizedBox(height: AppSizes.spaceBtwSections),
+                    const SizedBox(height: 14),
 
                     ChapterProgressSection(controller: controller),
-                    const SizedBox(height: AppSizes.spaceBtwSections),
+                    const SizedBox(height: 14),
 
                     WeakestAreasCard(controller: controller),
-                    const SizedBox(height: AppSizes.spaceBtwSections * 2),
                   ],
                 ),
               );

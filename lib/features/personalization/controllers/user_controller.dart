@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
@@ -219,52 +218,207 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Delete Account',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+      elevation: 12,
+      shadowColor: Colors.black.withValues(alpha: dark ? 0.4 : 0.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+            // Warning icon container
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444)
+                    .withValues(alpha: dark ? 0.22 : 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.delete_forever_rounded,
+                  color: Color(0xFFEF4444),
+                  size: 26,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
-            const Text('Enter your password to confirm'),
-            const SizedBox(height: 12),
+            const Text(
+              'Delete Account',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Enter your password to permanently delete your account and all data.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 18),
             TextField(
               controller: _passwordController,
               obscureText: _obscure,
+              style: TextStyle(
+                color: dark ? AppColors.white : const Color(0xFF0F172A),
+                fontSize: 14.5,
+                fontWeight: FontWeight.w500,
+              ),
               decoration: InputDecoration(
+                hintText: 'Enter your password',
+                hintStyle: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w400,
+                  color: dark
+                      ? AppColors.darkInputHint
+                      : AppColors.lightInputHint,
+                ),
+                prefixIcon: Icon(
+                  Icons.lock_outline_rounded,
+                  size: 18,
+                  color: dark
+                      ? AppColors.darkInputLabel
+                      : AppColors.lightInputLabel,
+                ),
                 suffixIcon: IconButton(
                   onPressed: () => setState(() => _obscure = !_obscure),
                   icon: Icon(
-                    _obscure ? Icons.visibility_off : Icons.visibility,
+                    _obscure
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 18,
+                    color: dark
+                        ? AppColors.darkInputLabel
+                        : AppColors.lightInputLabel,
+                  ),
+                ),
+                filled: true,
+                fillColor: dark
+                    ? AppColors.darkInputFill
+                    : AppColors.lightInputFill,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: dark
+                        ? AppColors.darkInputBorder
+                        : AppColors.lightInputBorder,
+                    width: 1.2,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: dark
+                        ? AppColors.darkInputBorder
+                        : AppColors.lightInputBorder,
+                    width: 1.2,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFEF4444),
+                    width: 1.6,
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                  side: const BorderSide(color: AppColors.error),
-                ),
-                onPressed: _deleting ? null : _submit,
-                child: _deleting
-                    ? const AppCircularButtonLoading(color: AppColors.error)
-                    : const Text(
-                        'Delete',
-                        style: TextStyle(color: AppColors.error),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 44,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(
+                          color: dark
+                              ? AppColors.darkBorder
+                              : const Color(0xFFCBD5E1),
+                        ),
                       ),
-              ),
+                      onPressed: _deleting ? null : () => Get.back(),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          height: 1.0,
+                          color: dark ? AppColors.white : const Color(0xFF334155),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 44,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        backgroundColor: const Color(0xFFEF4444),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _deleting ? null : _submit,
+                      child: _deleting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text(
+                              'Delete',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                height: 1.0,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

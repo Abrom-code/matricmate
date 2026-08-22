@@ -11,7 +11,7 @@ import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/paused_test_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
-import 'package:matricmate/features/exam/screens/subject/widgets/subject_header.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -54,7 +54,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
 
     return Scaffold(
       appBar: ModernAppbarWithBuilder(
-        title: 'MatricMate',
+        title: 'MatricET',
         showNotification: true,
         subtitleBuilder: (_) => Obx(() {
           final stream = UserController.instance.user.value.stream;
@@ -127,8 +127,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       const SizedBox(height: 16),
                     ],
 
-                    // ── 3. Subject Header with Stream & Counts ────────
-                    SubjectHeader(subjectCount: filteredSubjects.length),
+                    // ── 3. Paused / In-Progress Tests Banner ─────────
+                    const PausedTestBanner(),
 
                     // ── 4. Subject Grid ──────────────────────────────
                     if (filteredSubjects.isNotEmpty) ...[
@@ -137,22 +137,22 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                         itemCount: filteredSubjects.length,
                         itemBuilder: (_, index) {
                           final subject = filteredSubjects[index];
+                          final isDownloaded = subject.isDownloaded || subject.isEntranceDownloaded;
                           return SubjectContainer(
                             title: subject.name,
                             image: AppHelperFunctions.getSubjectImage(
                               subject.name,
                             ),
-                            isDownloaded: subject.isDownloaded,
+                            isDownloaded: isDownloaded,
                             onPressed: () =>
                                 ctrl.downloadSubject(subject.name, subject.id),
-                            onTap: () => subject.isDownloaded
-                                ? Get.toNamed(
-                                    Routes.chapter,
-                                    arguments: {
-                                      'title': subject.name,
-                                      'id': subject.id,
-                                    },
-                                  )
+                            onTap: () =>
+                                SubjectModeModal.show(context, subject),
+                            onDelete: isDownloaded
+                                ? () => SubjectModeModal.confirmDelete(
+                                      context,
+                                      subject,
+                                    )
                                 : null,
                           );
                         },
@@ -160,10 +160,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       const SizedBox(height: 18),
                     ],
 
-                    // ── 5. Paused / In-Progress Tests Banner ─────────
-                    const PausedTestBanner(),
-
-                    // ── 6. Empty State ───────────────────────────────
+                    // ── 5. Empty State ───────────────────────────────
                     if (filteredSubjects.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 48),

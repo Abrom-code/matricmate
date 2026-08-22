@@ -43,15 +43,15 @@ class QuestionModel {
 
   factory QuestionModel.fromMap(Map<String, dynamic> map) {
     return QuestionModel(
-      id: map['id'],
-      subjectId: map['subject_id'],
-      grade: map['grade'],
-      testId: map['test_id'],
-      correctOptionIndex: map['correct_option_index'],
-      questionText: map['question_text'] ?? '',
-      chapterId: map['chapter_id'],
-      passageId: map['passage_id'],
-      questionOrder: map['question_order'],
+      id: map['id'] as int? ?? 0,
+      subjectId: (map['subject_id'] as int?) ?? 0,
+      grade: map['grade'] as int?,
+      testId: (map['test_id'] as int?) ?? 0,
+      correctOptionIndex: (map['correct_option_index'] as int?) ?? 0,
+      questionText: map['question_text']?.toString() ?? '',
+      chapterId: map['chapter_id'] as int?,
+      passageId: map['passage_id'] as int?,
+      questionOrder: map['question_order'] as int?,
       imageUrl: map['image_url']?.toString(),
       sectionId: map['section_id'],
       // Handles both SQLite flat column and Supabase nested relation

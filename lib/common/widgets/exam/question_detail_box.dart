@@ -67,10 +67,21 @@ class QuestionDetailBox extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.defaultSpace / 1.3),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: dark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(AppSizes.md),
+        color: dark ? AppColors.darkCard : AppColors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: dark ? 0.25 : 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,7 +92,11 @@ class QuestionDetailBox extends StatelessWidget {
             children: [headerLeft, headerRight],
           ),
 
-          const Divider(height: AppSizes.lg),
+          Divider(
+            height: 24,
+            thickness: 1,
+            color: dark ? AppColors.darkBorder : const Color(0xFFF1F5F9),
+          ),
 
           // ── Passage section (collapsible) ─────────────────────────────
           if (question.passageId != null) ...[

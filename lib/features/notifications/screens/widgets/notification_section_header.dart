@@ -12,25 +12,32 @@ class NotificationSectionHeader extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 6),
+      padding: const EdgeInsets.only(top: 14, bottom: 8),
       child: Row(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-              color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: dark ? 0.20 : 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.9,
+                color: dark ? const Color(0xFF5EEAD4) : AppColors.primary,
+              ),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Container(
               height: 1,
-              color: (dark ? AppColors.darkGrey : AppColors.grey).withValues(
-                alpha: 0.4,
-              ),
+              color: dark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : const Color(0xFFE2E8F0),
             ),
           ),
         ],
@@ -52,3 +59,4 @@ class NotificationSectionHeader extends StatelessWidget {
     return 'Earlier';
   }
 }
+

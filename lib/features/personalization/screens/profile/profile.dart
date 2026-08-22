@@ -8,7 +8,6 @@ import 'package:matricmate/features/personalization/screens/profile/widgets/acco
 import 'package:matricmate/features/personalization/screens/profile/widgets/connect_support_section.dart';
 import 'package:matricmate/features/personalization/screens/profile/widgets/profile_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -37,12 +36,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final dark = AppHelperFunctions.isDark(context);
 
     return Scaffold(
+      backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: ModernAppbarWithBuilder(
         title: 'My Profile',
         subtitleBuilder: (_) => Obx(() {
           final fullName = UserController.instance.user.value.fullName.trim();
           return Text(
-            fullName,
+            fullName.isNotEmpty ? fullName : 'Student Profile',
             style: const TextStyle(
               color: Color(0xFFD1FAE5),
               fontSize: 11.5,
@@ -57,58 +57,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
             MediaQuery.orientationOf(context) == Orientation.landscape;
         final content = SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(AppSizes.defaultSpace),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              MediaQuery.paddingOf(context).bottom + 100,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Profile card — has its own internal Obx
                 const ProfileSection(),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                const SizedBox(height: 20),
 
                 // Account settings
                 Text(
                   'ACCOUNT SETTINGS',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: dark ? AppColors.grey : AppColors.darkerGrey,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppSizes.spaceBtwItems),
+                const SizedBox(height: 10),
                 const AccountSettings(),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                const SizedBox(height: 20),
 
                 // Connect & support
                 Text(
                   'CONNECT & SUPPORT',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: dark ? AppColors.grey : AppColors.darkerGrey,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppSizes.spaceBtwItems),
+                const SizedBox(height: 10),
                 const ConnectSupportSection(),
-                const SizedBox(height: AppSizes.spaceBtwSections),
+                const SizedBox(height: 24),
 
                 // Log out
                 SizedBox(
                   width: double.infinity,
+                  height: 48,
                   child: OutlinedButton(
-                    onPressed: () => AppDialogBoxes.showOkCancelDialog(
+                    onPressed: () => AppDialogBoxes.showLogoutDialog(
                       context: context,
-                      onPressed: () {
+                      onLogout: () {
                         Get.back();
                         userController.logOut();
                       },
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      backgroundColor: const Color(0xFFEF4444)
+                          .withValues(alpha: dark ? 0.12 : 0.04),
+                      side: BorderSide(
+                        color: const Color(0xFFEF4444)
+                            .withValues(alpha: dark ? 0.3 : 0.25),
+                        width: 1.2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
-                    child: const Text(
-                      'Log Out',
-                      style: TextStyle(color: Colors.red),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.logout_rounded,
+                          size: 18,
+                          color: Color(0xFFEF4444),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Log Out',
+                          style: TextStyle(
+                            color: Color(0xFFEF4444),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5,
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-
-                const SizedBox(height: AppSizes.spaceBtwSections * 2),
               ],
             ),
           ),

@@ -13,8 +13,30 @@ class ReviewController extends GetxController {
   final RxMap<int, bool> isPassageExpanded = <int, bool>{}.obs;
   final RxString languageSelected = 'EN'.obs;
   final RxMap<int, PassageModel> passages = <int, PassageModel>{}.obs;
+  final RxString selectedFilter = 'All'.obs;
 
   late ResultModel result;
+
+  List<QuestionModel> get filteredQuestions {
+    switch (selectedFilter.value) {
+      case 'Correct':
+        return result.testQuestions
+            .where((q) => result.selectedAnswers[q.id] == q.correctOptionIndex)
+            .toList();
+      case 'Wrong':
+        return result.testQuestions
+            .where((q) =>
+                result.selectedAnswers[q.id] != null &&
+                result.selectedAnswers[q.id] != q.correctOptionIndex)
+            .toList();
+      case 'Skipped':
+        return result.testQuestions
+            .where((q) => result.selectedAnswers[q.id] == null)
+            .toList();
+      default:
+        return result.testQuestions;
+    }
+  }
 
   @override
   void onInit() {

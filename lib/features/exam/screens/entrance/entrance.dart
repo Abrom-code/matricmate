@@ -6,12 +6,10 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/entrance/widgets/entrance_subject_tile.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class EntranceScreen extends StatefulWidget {
   const EntranceScreen({super.key});
@@ -40,18 +38,19 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
     super.dispose();
   }
 
-  // Refresh banner when the user navigates back to this screen.
   @override
   void didPopNext() => ctrl.loadPausedTests();
 
   @override
   Widget build(BuildContext context) {
     final syncController = Get.find<SyncingController>();
+    final isDark = AppHelperFunctions.isDark(context);
+    final userController = UserController.instance;
 
     return Scaffold(
       appBar: ModernAppbar(
-        title: 'Entrance Exams',
-        subtitle: 'Select a subject',
+        title: 'Exams',
+        subtitle: 'Entrance & model exam papers',
         actions: [
           Obx(() {
             final syncing = syncController.entranceSyncing.value;
@@ -123,84 +122,131 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
         final entranceNums = ctrl.entranceTestNumbers;
         final modelNums = ctrl.modelTestNumbers;
         final syncing = syncController.entranceSyncing.value;
-        final isInactive = UserController.instance.user.value.isInactive;
 
         if (ctrl.isLoading.value && subjects.isEmpty) {
-          return const AppCircularLoading(title: 'Loading...');
+          return const AppCircularLoading(title: 'Loading subjects...');
         }
 
         if (subjects.isEmpty) {
-          return const Center(
-            child: Text(
-              'No subjects yet.\nTap the sync button on the home screen.',
-              textAlign: TextAlign.center,
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.military_tech_rounded,
+                      size: 40,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'No exams yet',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Tap the sync button above to fetch the latest past entrance papers.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
 
         return Stack(
           children: [
-            CustomScrollView(
-              slivers: [
-                // ── Banners ─────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSizes.defaultSpace,
-                      AppSizes.defaultSpace,
-                      AppSizes.defaultSpace,
-                      0,
-                    ),
-                    child: Column(
-                      children: [
-                        // Premium banner (inactive users only)
-                        if (isInactive) ...[
-                          PremiumBanner(
-                            onTap: () => Get.bottomSheet(
-                              const PremiumBottomSheet(),
-                              isScrollControlled: true,
-                            ),
+            RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async {
+                await syncController.syncEntranceExams();
+                await ctrl.loadPausedTests();
+              },
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.paddingOf(context).bottom + 100,
+                ),
+                itemCount: subjects.length + 1,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  // Header row
+                  if (index == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6, left: 2, right: 2),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Select a Subject',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                  color: isDark
+                                      ? AppColors.textWhite
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Obx(() {
+                                final stream = userController.user.value.stream;
+                                final streamLabel = stream.isNotEmpty
+                                    ? '${stream[0].toUpperCase()}${stream.substring(1)} Stream'
+                                    : 'Grade 12';
+                                return Text(
+                                  '$streamLabel • ${subjects.length} subjects',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark
+                                        ? AppColors.darkGrey
+                                        : AppColors.textSecondary,
+                                  ),
+                                );
+                              }),
+                            ],
                           ),
-                          const SizedBox(height: AppSizes.spaceBtwItems),
                         ],
-                      ],
-                    ),
-                  ),
-                ),
+                      ),
+                    );
+                  }
 
-                // ── Subject list ─────────────────────────────────────────
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSizes.defaultSpace,
-                    AppSizes.spaceBtwItems,
-                    AppSizes.defaultSpace,
-                    AppSizes.defaultSpace,
-                  ),
-                  sliver: SliverList.separated(
-                    itemCount: subjects.length + 1,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: AppSizes.spaceBtwItems),
-                    itemBuilder: (_, index) {
-                      if (index == subjects.length) {
-                        return const SizedBox(
-                          height: AppSizes.spaceBtwSections * 2,
-                        );
-                      }
-                      final subject = subjects[index];
-                      final entranceCount = entranceNums[subject.id] ?? 0;
-                      final modelCount = modelNums[subject.id] ?? 0;
+                  final subject = subjects[index - 1];
+                  final entranceCount = entranceNums[subject.id] ?? 0;
+                  final modelCount = modelNums[subject.id] ?? 0;
 
-                      return EntranceSubjectTile(
-                        subject: subject,
-                        entranceCount: entranceCount,
-                        modelCount: modelCount,
-                        total: entranceCount + modelCount,
-                      );
-                    },
-                  ),
-                ),
-              ],
+                  return EntranceSubjectTile(
+                    subject: subject,
+                    entranceCount: entranceCount,
+                    modelCount: modelCount,
+                    total: entranceCount + modelCount,
+                  );
+                },
+              ),
             ),
+
             if (syncing)
               const Positioned(
                 top: 0,

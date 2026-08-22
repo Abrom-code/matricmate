@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/app_images.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppHelperFunctions {
@@ -30,6 +29,20 @@ class AppHelperFunctions {
           await cache.downloadFile(url);
         } catch (e) {
           debugPrint('Image download failed for $url: $e');
+        }
+      }),
+    );
+  }
+
+  static Future<void> removeCachedImages(Set<String> urls) async {
+    if (urls.isEmpty) return;
+    final cache = DefaultCacheManager();
+    await Future.wait(
+      urls.map((url) async {
+        try {
+          await cache.removeFile(url);
+        } catch (e) {
+          debugPrint('Image cache eviction failed for $url: $e');
         }
       }),
     );
@@ -108,115 +121,134 @@ class AppHelperFunctions {
         final dark = isDark(context);
         return Dialog(
           backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+          elevation: 12,
+          shadowColor: Colors.black.withValues(alpha: dark ? 0.4 : 0.12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+              width: 1.2,
+            ),
           ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 380),
             child: Padding(
-              padding: const EdgeInsets.all(AppSizes.lg),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // ── Icon ─────────────────────────────────────────────
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    width: 52,
+                    height: 52,
                     decoration: BoxDecoration(
                       color: AppColors.secondary.withValues(
-                        alpha: dark ? 0.2 : 0.12,
+                        alpha: dark ? 0.20 : 0.12,
                       ),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.pause_rounded,
-                      color: AppColors.secondary,
-                      size: 28,
+                    child: const Center(
+                      child: Icon(
+                        Icons.pause_rounded,
+                        color: AppColors.secondary,
+                        size: 26,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: AppSizes.spaceBtwItems),
+                  const SizedBox(height: 16),
 
                   // ── Title ───────────────────────────────────────────
                   Text(
                     title,
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: dark ? AppColors.white : const Color(0xFF0F172A),
+                    ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: AppSizes.sm),
+                  const SizedBox(height: 8),
 
                   // ── Message ─────────────────────────────────────────
                   Text(
                     message,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: dark
-                          ? AppColors.grey
-                          : AppColors.darkerGrey.withValues(alpha: 0.8),
+                      fontSize: 13.5,
+                      height: 1.45,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: AppSizes.lg),
+                  const SizedBox(height: 24),
 
                   // ── Actions ─────────────────────────────────────────
                   Row(
                     children: [
-                      // Secondary button (Cancel - safe default)
+                      // Secondary button (Cancel)
                       Expanded(
-                        child: Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          child: InkWell(
-                            onTap: () {
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton(
+                            onPressed: () {
                               Navigator.pop(context);
                               onCancel?.call();
                             },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                ),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              side: BorderSide(
+                                color: dark
+                                    ? AppColors.darkInputBorder
+                                    : const Color(0xFFCBD5E1),
+                                width: 1.2,
+                              ),
+                              shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                                textAlign: TextAlign.center,
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                height: 1.0,
+                                color: dark
+                                    ? AppColors.white
+                                    : const Color(0xFF334155),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppSizes.sm),
+                      const SizedBox(width: 12),
 
-                      // Primary button (Ok - main action)
+                      // Primary button (Ok / Resume)
                       Expanded(
-                        child: Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          child: InkWell(
-                            onTap: onOkPressed,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
+                        child: SizedBox(
+                          height: 44,
+                          child: ElevatedButton(
+                            onPressed: onOkPressed,
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Text(
-                                'Ok',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.white,
-                                ),
-                                textAlign: TextAlign.center,
+                            ),
+                            child: const Text(
+                              'OK',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                height: 1.0,
+                                color: Colors.white,
                               ),
                             ),
                           ),

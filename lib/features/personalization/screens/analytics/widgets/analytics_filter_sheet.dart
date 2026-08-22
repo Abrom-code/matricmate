@@ -75,60 +75,60 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
           decoration: BoxDecoration(
             color: dark ? AppColors.darkCard : AppColors.white,
             borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppSizes.lg),
+              top: Radius.circular(24),
             ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // ── Handle ──────────────────────────────────────────────
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: 10),
               Center(
                 child: Container(
-                  width: 40,
-                  height: 4,
+                  width: 44,
+                  height: 4.5,
                   decoration: BoxDecoration(
-                    color: AppColors.grey,
-                    borderRadius: BorderRadius.circular(2),
+                    color: dark ? AppColors.darkBorder : const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
               ),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: 10),
 
               // ── Header ──────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.defaultSpace,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'Filter Analytics',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
                       ),
                     ),
                     TextButton(
                       onPressed: _reset,
                       child: const Text(
                         'Reset all',
-                        style: TextStyle(color: AppColors.primary),
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+              const Divider(height: 1),
 
               // ── Scrollable body ──────────────────────────────────────
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSizes.defaultSpace,
-                    AppSizes.sm,
-                    AppSizes.defaultSpace,
-                    AppSizes.md,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -215,30 +215,24 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
 
               // ── Apply button ─────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSizes.defaultSpace,
-                  0,
-                  AppSizes.defaultSpace,
-                  AppSizes.defaultSpace,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                 child: SizedBox(
                   width: double.infinity,
+                  height: 48,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppSizes.borderRadiusLg,
-                        ),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                     onPressed: _apply,
                     child: const Text(
                       'Apply Filters',
                       style: TextStyle(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 15,
                       ),
                     ),
@@ -420,12 +414,16 @@ class _DismissChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
+        color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.35),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -435,13 +433,17 @@ class _DismissChip extends StatelessWidget {
             style: const TextStyle(
               fontSize: 12,
               color: AppColors.primary,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(Icons.close, size: 14, color: AppColors.primary),
+            child: const Icon(
+              Icons.close_rounded,
+              size: 14,
+              color: AppColors.primary,
+            ),
           ),
         ],
       ),
@@ -459,7 +461,7 @@ class _FilterSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -467,12 +469,12 @@ class _FilterSection extends StatelessWidget {
             label.toUpperCase(),
             style: const TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.1,
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: 8),
           child,
         ],
       ),
@@ -497,6 +499,8 @@ class _ChipGroup<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
+
     if (items.isEmpty) {
       return const Text(
         'No options',
@@ -511,25 +515,32 @@ class _ChipGroup<T> extends StatelessWidget {
         return GestureDetector(
           onTap: () => onSelect(item),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 130),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            duration: const Duration(milliseconds: 140),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
             decoration: BoxDecoration(
               color: isSel
                   ? AppColors.primary
-                  : AppColors.primary.withValues(alpha: 0.07),
+                  : (dark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : const Color(0xFFF1F5F9)),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSel
                     ? AppColors.primary
-                    : AppColors.primary.withValues(alpha: 0.25),
+                    : (dark
+                        ? AppColors.darkBorder
+                        : const Color(0xFFE2E8F0)),
+                width: 1,
               ),
             ),
             child: Text(
               labelOf(item),
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSel ? FontWeight.w600 : FontWeight.w400,
-                color: isSel ? AppColors.white : AppColors.primary,
+                fontSize: 12.5,
+                fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                color: isSel
+                    ? AppColors.white
+                    : (dark ? AppColors.white : const Color(0xFF334155)),
               ),
             ),
           ),

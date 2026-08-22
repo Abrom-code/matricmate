@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
 
-// ── Full-screen page loader ───────────────────────────────────────────────────
+// ── Full-screen / in-page loader ─────────────────────────────────────────────
 
 class AppCircularLoading extends StatelessWidget {
   const AppCircularLoading({super.key, this.title = 'Loading...'});
@@ -10,28 +9,48 @@ class AppCircularLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const AppPulsingDots(),
-          const SizedBox(height: AppSizes.spaceBtwItems),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 13, color: AppColors.darkGrey),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppPulsingDots(
+              dotSize: 9,
+              dotSpacing: 5,
+              color: AppColors.primary,
+            ),
+            if (title.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.1,
+                  color: dark
+                      ? AppColors.white.withValues(alpha: 0.75)
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Pulsing dots (reusable) ───────────────────────────────────────────────────
+// ── Pulsing 3 dots (reusable) ──────────────────────────────────────────────────
 
 class AppPulsingDots extends StatefulWidget {
   const AppPulsingDots({
     super.key,
-    this.dotSize = 7,
+    this.dotSize = 8,
     this.dotSpacing = 4,
     this.color = AppColors.primary,
   });
@@ -73,18 +92,24 @@ class _AppPulsingDotsState extends State<AppPulsingDots>
           animation: _ctrl,
           builder: (_, __) {
             final t = ((_ctrl.value - delay) % 1.0 + 1.0) % 1.0;
-            final opacity = t < 0.4
+            final progress = t < 0.4
                 ? (t / 0.4)
                 : t < 0.8
-                ? 1.0 - ((t - 0.4) / 0.4)
-                : 0.0;
-            return Container(
-              margin: EdgeInsets.symmetric(horizontal: widget.dotSpacing),
-              width: widget.dotSize,
-              height: widget.dotSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: widget.color.withValues(alpha: 0.3 + (opacity * 0.7)),
+                    ? 1.0 - ((t - 0.4) / 0.4)
+                    : 0.0;
+            final scale = 0.75 + (progress * 0.45);
+            final alpha = 0.25 + (progress * 0.75);
+
+            return Transform.scale(
+              scale: scale,
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: widget.dotSpacing),
+                width: widget.dotSize,
+                height: widget.dotSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: widget.color.withValues(alpha: alpha),
+                ),
               ),
             );
           },
@@ -107,6 +132,6 @@ class AppCircularButtonLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppPulsingDots(dotSize: 6, color: color);
+    return AppPulsingDots(dotSize: 6, dotSpacing: 3, color: color);
   }
 }

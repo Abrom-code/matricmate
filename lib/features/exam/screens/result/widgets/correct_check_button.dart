@@ -1,27 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:matricmate/utils/constants/colors.dart';
 
 class CorrectCheckButton extends StatelessWidget {
   const CorrectCheckButton({
     super.key,
     this.text = 'Correct',
-    this.color = AppColors.primary,
-    this.icon = Iconsax.tick_circle_copy,
+    this.color = const Color(0xFF10B981),
+    this.icon = Icons.check_circle_rounded,
   });
+
   final String text;
   final Color color;
   final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      spacing: 5,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 17),
-        Text(text.toUpperCase(), style: TextStyle(color: color)),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontSize: 11.5,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

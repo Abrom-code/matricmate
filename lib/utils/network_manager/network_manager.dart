@@ -32,28 +32,25 @@ class NetworkManager extends GetxController {
   /// Performs internet reachability check via lightweight HTTP request.
   Future<bool> _checkInternetReachability() async {
     try {
-      // Try multiple reliable endpoints in case one is down
       final endpoints = [
         'https://www.google.com',
         'https://www.cloudflare.com',
-        'https://www.apple.com',
       ];
 
-      for (final endpoint in endpoints) {
-        try {
-          await http
-              .head(Uri.parse(endpoint))
-              .timeout(const Duration(seconds: 5));
+      final results = await Future.wait(
+        endpoints.map((url) async {
+          try {
+            await http
+                .head(Uri.parse(url))
+                .timeout(const Duration(milliseconds: 2000));
+            return true;
+          } catch (_) {
+            return false;
+          }
+        }),
+      );
 
-          // Any response (even 4xx/5xx) means we have internet connectivity
-          return true;
-        } catch (_) {
-          // Try next endpoint
-          continue;
-        }
-      }
-
-      return false;
+      return results.any((reachable) => reachable);
     } catch (_) {
       return false;
     }

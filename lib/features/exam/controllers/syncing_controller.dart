@@ -55,9 +55,9 @@ class SyncingController extends GetxController {
       final syncStarted = DateTime.now().toUtc();
       final since = await SyncPrefs.lastEntranceSync();
 
-      // Sync content only for subjects the user has explicitly downloaded
+      // Sync content only for subjects the user has downloaded
       final downloadedIds = localSubjects
-          .where((s) => s['is_entrance_downloaded'] == 1)
+          .where((s) => (s['is_downloaded'] ?? 0) == 1 || (s['is_entrance_downloaded'] ?? 0) == 1)
           .map((s) => s['id'] as int)
           .toList();
 
@@ -85,12 +85,9 @@ class SyncingController extends GetxController {
         await SyncPrefs.saveEntranceSync(syncStarted);
       }
 
-      // Always refresh counts for ALL subjects (downloaded or not) so
-      final dbSubjects = await _subjectRepo.getLocalSubjects();
-      SubjectsController.instance.subjects.assignAll(
-        dbSubjects.map((e) => SubjectModel.fromMap(e)).toList(),
-      );
+      // Refresh entrance counts from remote and reload subjects
       await SubjectsController.instance.refreshEntranceCountsFromRemote();
+      await SubjectsController.instance.loadLocalSubjects();
 
       ToastHelper.success(
         downloadedIds.isNotEmpty
@@ -127,15 +124,13 @@ class SyncingController extends GetxController {
       final syncStarted = DateTime.now().toUtc();
       final results = await Future.wait([
         SyncPrefs.lastSubjectsSync(),
-        SyncPrefs.lastEntranceSync(),
         SyncPrefs.lastChaptersSync(),
         UserController.instance.fetchUserRecord(),
       ]);
 
       final sinceSubjects = results[0] as DateTime?;
-      final sinceEntrance = results[1] as DateTime?;
-      final sinceChapters = results[2] as DateTime?;
-      final isValidUser = results[3] as bool;
+      final sinceChapters = results[1] as DateTime?;
+      final isValidUser = results[2] as bool;
 
       // Sync subjects (delta)
       await syncSubjects(since: sinceSubjects);
@@ -143,42 +138,20 @@ class SyncingController extends GetxController {
 
       final localSubjects = await _subjectRepo.getLocalSubjects();
       final downloadedIds = localSubjects
-          .where((s) => s['is_downloaded'] == 1)
+          .where((s) => (s['is_downloaded'] ?? 0) == 1 || (s['is_entrance_downloaded'] ?? 0) == 1)
           .map((s) => s['id'].toString())
           .toList();
 
-      // Only sync entrance/model tests for subjects the user explicitly
-      final entranceDownloadedIds = localSubjects
-          .where((s) => s['is_entrance_downloaded'] == 1)
-          .map((s) => s['id'] as int)
-          .toList();
-
       if (isValidUser && downloadedIds.isNotEmpty) {
-        final futures = <Future>[
-          _syncChapterContent(downloadedIds, since: sinceChapters),
-        ];
-        if (entranceDownloadedIds.isNotEmpty) {
-          futures.add(
-            _syncRepository.downloadEntranceTests(
-              entranceDownloadedIds,
-              since: sinceEntrance,
-            ),
-          );
-        }
-        await Future.wait(futures);
+        await _syncChapterContent(downloadedIds, since: sinceChapters);
         await SyncPrefs.saveChaptersSync(syncStarted);
-      } else if (entranceDownloadedIds.isNotEmpty) {
-        await _syncRepository.downloadEntranceTests(
-          entranceDownloadedIds,
-          since: sinceEntrance,
-        );
-      }
-
-      if (entranceDownloadedIds.isNotEmpty) {
         await SyncPrefs.saveEntranceSync(syncStarted);
       }
 
-      // Reload subjects from SQLite to reflect any flag changes from syncSubjects().
+      // Refresh entrance and model exam counts for all subjects from remote
+      await SubjectsController.instance.refreshEntranceCountsFromRemote();
+
+      // Reload subjects from SQLite to reflect any flag or count changes
       await SubjectsController.instance.loadLocalSubjects();
       return true;
     } catch (e) {
@@ -198,12 +171,11 @@ class SyncingController extends GetxController {
     final fetchChapters = since == null;
 
     final futures = <Future>[
-      // Only sync chapter/grade tests — entrance & model are handled separately
+      // Sync all tests (chapter, grade, entrance, model) for downloaded subjects
       _syncRepository.getBySubjectId(
         'tests',
         downloadedIds,
         since: since,
-        typeFilter: ['chapter', 'grade'],
       ),
       _syncRepository.getBySubjectId('questions', downloadedIds, since: since),
     ];

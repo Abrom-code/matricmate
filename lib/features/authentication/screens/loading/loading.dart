@@ -55,12 +55,39 @@ class _LoadingScreenState extends State<LoadingScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ── Logo ────────────────────────────────────────────
-                Image.asset(
-                  AppImages.transparentIcon,
-                  width: 96,
-                  height: 96,
-                  fit: BoxFit.contain,
+                // ── Logo with Circular Outline Background ──────────
+                Container(
+                  width: 112,
+                  height: 112,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primary.withValues(
+                      alpha: dark ? 0.08 : 0.04,
+                    ),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(
+                        alpha: dark ? 0.35 : 0.25,
+                      ),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(
+                          alpha: dark ? 0.15 : 0.08,
+                        ),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      AppImages.transparentIcon,
+                      width: 76,
+                      height: 76,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 20),

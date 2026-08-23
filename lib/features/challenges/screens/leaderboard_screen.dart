@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
@@ -57,7 +57,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.challengeTitle ?? '🏆 Leaderboard Standings',
+          widget.challengeTitle ?? 'ðŸ† Leaderboard Standings',
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
         actions: [
@@ -71,9 +71,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       ),
       body: Column(
         children: [
-          // ── Period & Stream Selector ──────────────────────────────
+                    // ── Period Tabs ──────────────────────────────────────────
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 10),
             decoration: BoxDecoration(
               color: dark ? AppColors.darkCard : AppColors.white,
               border: Border(
@@ -82,7 +82,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               ),
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Period Tabs
                 Obx(
@@ -116,76 +117,38 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
 
-                // Stream Tabs (Natural / Social) - only shown if both streams or global standing
-                Obx(
-                  () {
-                    if (!_ctrl.shouldShowStreamFilter) {
-                      final stream = _ctrl.activeStream.value;
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: (stream == 'natural' ? AppColors.primary : AppColors.secondary).withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '${stream.isNotEmpty ? stream[0].toUpperCase() + stream.substring(1) : ""} Stream Only',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: stream == 'natural' ? AppColors.primary : AppColors.secondary,
-                                ),
-                              ),
-                            ),
-                          ],
+                // Student's stream indicator badge
+                Obx(() {
+                  final stream = _ctrl.activeStream.value;
+                  final isNat = stream == 'natural';
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: (isNat ? AppColors.primary : AppColors.secondary).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isNat ? Iconsax.tree_copy : Iconsax.people_copy,
+                          size: 12,
+                          color: isNat ? AppColors.primary : AppColors.secondary,
                         ),
-                      );
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'Stream: ',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${stream.isNotEmpty ? stream[0].toUpperCase() + stream.substring(1) : "Natural"} Stream',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: isNat ? AppColors.primary : AppColors.secondary,
                           ),
-                          const SizedBox(width: 6),
-                          ChoiceChip(
-                            label: const Text('Natural Stream', style: TextStyle(fontSize: 11)),
-                            selected: _ctrl.activeStream.value == 'natural',
-                            onSelected: (_) => _ctrl.setStream('natural'),
-                            selectedColor: AppColors.primary.withValues(alpha: 0.18),
-                            labelStyle: TextStyle(
-                              color: _ctrl.activeStream.value == 'natural'
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ChoiceChip(
-                            label: const Text('Social Stream', style: TextStyle(fontSize: 11)),
-                            selected: _ctrl.activeStream.value == 'social',
-                            onSelected: (_) => _ctrl.setStream('social'),
-                            selectedColor: AppColors.secondary.withValues(alpha: 0.18),
-                            labelStyle: TextStyle(
-                              color: _ctrl.activeStream.value == 'social'
-                                  ? AppColors.secondary
-                                  : AppColors.textSecondary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               ],
             ),
           ),
@@ -228,13 +191,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   controller: _scrollCtrl,
                   padding: const EdgeInsets.all(AppSizes.md),
                   children: [
-                    // ── Podium for Top 3 ───────────────────────────
+                    // -- Podium for Top 3 ---------------------------
                     if (top3.isNotEmpty) ...[
                       _PodiumView(top3: top3, dark: dark),
                       const SizedBox(height: AppSizes.spaceBtwSections),
                     ],
 
-                    // ── Remaining Rankings (#4+) ───────────────────
+                    // -- Remaining Rankings (#4+) -------------------
                     if (rest.isNotEmpty) ...[
                       const Text(
                         'All Rankings',
@@ -263,7 +226,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             }),
           ),
 
-          // ── Pinned Current User Rank Bar ──────────────────────────
+          // -- Pinned Current User Rank Bar --------------------------
           Obx(() {
             final userEntry = _ctrl.currentUserEntry;
             if (userEntry == null) return const SizedBox.shrink();
@@ -339,7 +302,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 }
 
-// ── Podium View ──────────────────────────────────────────────────────────────
+// -- Podium View --------------------------------------------------------------
 
 class _PodiumView extends StatelessWidget {
   const _PodiumView({required this.top3, required this.dark});
@@ -511,7 +474,7 @@ class _PodiumStep extends StatelessWidget {
   }
 }
 
-// ── Student Leaderboard Tile (#4+) ───────────────────────────────────────────
+// -- Student Leaderboard Tile (#4+) -------------------------------------------
 
 class _StudentLeaderboardTile extends StatelessWidget {
   const _StudentLeaderboardTile({
@@ -634,3 +597,4 @@ class _PeriodTabChip extends StatelessWidget {
     );
   }
 }
+

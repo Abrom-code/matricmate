@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_leaderboard_entry.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -6,14 +6,9 @@ import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class LeaderboardController extends GetxController {
   LeaderboardController({this.challengeId, this.audience}) {
-    final aud = audience?.toLowerCase().trim();
-    if (aud != null && aud.isNotEmpty && aud != 'both') {
-      activeStream.value = aud;
-    } else {
-      activeStream.value = UserController.instance.user.value.stream.toLowerCase().isNotEmpty
-          ? UserController.instance.user.value.stream.toLowerCase()
-          : 'natural';
-    }
+    final userStream = UserController.instance.user.value.stream.toLowerCase().trim();
+    activeStream.value = userStream.isNotEmpty ? userStream : 'natural';
+
     if (challengeId != null && challengeId!.isNotEmpty) {
       activeTab.value = 'challenge';
     } else {
@@ -27,23 +22,13 @@ class LeaderboardController extends GetxController {
 
   final isLoading = false.obs;
   final activeTab = 'challenge'.obs; // 'challenge', 'weekly', 'monthly'
-  final activeStream = 'natural'.obs; // 'natural', 'social'
+  final activeStream = 'natural'.obs; // Locked to student's stream
   final entries = <ChallengeLeaderboardEntry>[].obs;
 
   String get currentUserId => UserController.instance.user.value.id;
 
   ChallengeLeaderboardEntry? get currentUserEntry =>
       entries.firstWhereOrNull((e) => e.userId == currentUserId);
-
-  bool get shouldShowStreamFilter {
-    if (activeTab.value == 'challenge' && challengeId != null) {
-      final aud = audience?.toLowerCase().trim();
-      if (aud != null && aud.isNotEmpty && aud != 'both') {
-        return false;
-      }
-    }
-    return true;
-  }
 
   @override
   void onInit() {
@@ -83,12 +68,6 @@ class LeaderboardController extends GetxController {
   void setTab(String tab) {
     if (activeTab.value == tab) return;
     activeTab.value = tab;
-    loadLeaderboard();
-  }
-
-  void setStream(String stream) {
-    if (activeStream.value == stream) return;
-    activeStream.value = stream;
     loadLeaderboard();
   }
 }

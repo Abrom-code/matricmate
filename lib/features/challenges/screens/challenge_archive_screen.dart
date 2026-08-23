@@ -211,7 +211,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 ),
                               ),
                               icon: const Icon(Iconsax.book_1_copy, size: 15),
-                              label: const Text('Practice Offline', style: TextStyle(fontSize: 12)),
+                              label: const Text('Practice', style: TextStyle(fontSize: 12)),
                             ),
                           ] else ...[
                             FilledButton.icon(
@@ -229,7 +229,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                     )
                                   : const Icon(Iconsax.document_download_copy, size: 15),
                               label: Text(
-                                isDownloading ? 'Downloading...' : 'Download Set',
+                                isDownloading ? 'Downloading...' : 'Download',
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ),

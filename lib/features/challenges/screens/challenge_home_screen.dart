@@ -453,7 +453,7 @@ class _CompletedChallengeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Row: Subject, Audience, Download/Delete Action
+            // Header Row: Subject, Audience, Offline Indicator
             Row(
               children: [
                 Container(
@@ -488,59 +488,26 @@ class _CompletedChallengeCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // Offline Download / Delete Management
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
-                  final isBusy = ctrl.isDownloading[challenge.id] == true;
-
-                  if (isBusy) {
-                    return const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    );
-                  }
-
                   if (isDown) {
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                          decoration: BoxDecoration(
-                            color: Colors.teal.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.offline_pin_rounded, size: 12, color: Colors.teal),
-                              SizedBox(width: 4),
-                              Text('Offline', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.teal)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        IconButton(
-                          icon: const Icon(Iconsax.trash_copy, size: 15, color: AppColors.error),
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          tooltip: 'Delete Offline Download',
-                          onPressed: () => ctrl.confirmDeleteDownload(context, challenge),
-                        ),
-                      ],
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.offline_pin_rounded, size: 12, color: Colors.teal),
+                          SizedBox(width: 4),
+                          Text('Offline', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.teal)),
+                        ],
+                      ),
                     );
                   }
-
-                  return IconButton(
-                    icon: const Icon(Iconsax.arrow_circle_down_copy, size: 18, color: AppColors.primary),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    tooltip: 'Download for Offline Practice',
-                    onPressed: () => ctrl.downloadChallenge(challenge),
-                  );
+                  return const SizedBox.shrink();
                 }),
               ],
             ),
@@ -581,7 +548,7 @@ class _CompletedChallengeCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Action Buttons (Review / Practice + Standings)
+            // Action Buttons (Rankings + Download or Delete & Practice)
             Row(
               children: [
                 Expanded(
@@ -604,18 +571,56 @@ class _CompletedChallengeCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                Obx(() {
+                  final isDown = ctrl.isDownloaded(challenge.id);
+                  final isBusy = ctrl.isDownloading[challenge.id] == true;
+
+                  if (isDown) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: 'Delete Offline Download',
+                          icon: const Icon(Iconsax.trash_copy, size: 17, color: AppColors.error),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => ctrl.confirmDeleteDownload(context, challenge),
+                        ),
+                        const SizedBox(width: 4),
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          ),
+                          onPressed: () => ctrl.openCompletedChallenge(challenge),
+                          icon: const Icon(Iconsax.book_1_copy, size: 14),
+                          label: const Text('Practice', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Expanded(
+                    flex: 2,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      onPressed: isBusy ? null : () => ctrl.downloadChallenge(challenge),
+                      icon: isBusy
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Iconsax.document_download_copy, size: 14),
+                      label: Text(
+                        isBusy ? 'Downloading...' : 'Download',
+                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    onPressed: () => ctrl.openCompletedChallenge(challenge),
-                    icon: const Icon(Iconsax.book_1_copy, size: 14),
-                    label: const Text('Practice & Review', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                  ),
-                ),
+                  );
+                }),
               ],
             ),
           ],

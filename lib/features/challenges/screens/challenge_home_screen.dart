@@ -578,8 +578,9 @@ class _CompletedChallengeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSizes.xs),
                 Obx(() {
+                  final isDown = ctrl.isDownloaded(challenge.id);
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-                  if (isDone) {
+                  if (isDown && isDone) {
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                       decoration: BoxDecoration(
@@ -608,10 +609,9 @@ class _CompletedChallengeCard extends StatelessWidget {
                 const Spacer(),
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
-                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-                  if (isDown || isDone) {
+                  if (isDown) {
                     return IconButton(
-                      tooltip: 'Remove local data / practice',
+                      tooltip: 'Remove offline download',
                       icon: const Icon(Iconsax.trash_copy, size: 16, color: AppColors.error),
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
@@ -684,12 +684,12 @@ class _CompletedChallengeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Obx(() {
-                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   final isDown = ctrl.isDownloaded(challenge.id);
+                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   final isBusy = ctrl.isDownloading[challenge.id] == true;
 
-                  // 1. If completed/practiced -> show Review button
-                  if (isDone) {
+                  // 1. If downloaded and completed -> show Review button
+                  if (isDown && isDone) {
                     return Expanded(
                       flex: 2,
                       child: FilledButton.icon(
@@ -731,7 +731,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                     );
                   }
 
-                  // 3. Otherwise -> show Download button
+                  // 3. Not downloaded -> show pre-downloaded Download button
                   return Expanded(
                     flex: 2,
                     child: FilledButton.icon(

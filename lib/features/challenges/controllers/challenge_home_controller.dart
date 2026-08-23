@@ -234,7 +234,7 @@ class ChallengeHomeController extends GetxController {
   Future<void> refreshDownloadStates() async {
     final downloaded = <String>{};
     for (final c in [...availableChallenges, ...completedChallenges]) {
-      final isDown = await _db.isChallengeDownloaded(c.id);
+      final isDown = await _db.isChallengeDownloaded(c.id, setId: c.setId);
       if (isDown) downloaded.add(c.id);
     }
     downloadedIds.assignAll(downloaded);
@@ -271,8 +271,8 @@ class ChallengeHomeController extends GetxController {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Offline Download'),
-        content: Text('Are you sure you want to remove "${challenge.title}" from your device storage?'),
+        title: const Text('Delete Downloaded Challenge'),
+        content: Text('Are you sure you want to remove "${challenge.title}" offline data and local practice from this device?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -281,7 +281,7 @@ class ChallengeHomeController extends GetxController {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Remove'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -289,10 +289,10 @@ class ChallengeHomeController extends GetxController {
 
     if (confirmed == true) {
       try {
-        await _db.deleteDownloadedChallenge(challenge.id);
+        await _db.deleteDownloadedChallenge(challenge.id, setId: challenge.setId);
         downloadedIds.remove(challenge.id);
         attemptedIds.remove(challenge.id);
-        ToastHelper.info('Removed offline download & local practice.');
+        ToastHelper.info('Removed offline download.');
       } catch (e) {
         AppExceptionHandler.handleResponse(e);
       }

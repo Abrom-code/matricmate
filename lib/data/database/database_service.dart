@@ -696,18 +696,20 @@ class DatabaseService extends GetxController {
     );
   }
 
-  Future<bool> isChallengeDownloaded(String challengeId) async {
+  Future<bool> isChallengeDownloaded(String challengeId, {String? setId}) async {
     final db = await database;
+    final ids = [challengeId, if (setId != null && setId.isNotEmpty) setId];
+    final placeholders = List.filled(ids.length, '?').join(',');
     final res = await db.query(
       'local_challenge_sets',
-      where: 'challenge_id = ? OR id = ?',
-      whereArgs: [challengeId, challengeId],
+      where: 'challenge_id IN ($placeholders) OR id IN ($placeholders)',
+      whereArgs: [...ids, ...ids],
       limit: 1,
     );
     return res.isNotEmpty;
   }
 
-  Future<void> deleteDownloadedChallenge(String challengeId) async {
+  Future<void> deleteDownloadedChallenge(String challengeId, {String? setId}) async {
     final db = await database;
     await db.transaction((txn) async {
       try {
@@ -717,16 +719,19 @@ class DatabaseService extends GetxController {
           whereArgs: [challengeId],
         );
       } catch (_) {}
-      await txn.delete(
-        'local_challenge_questions',
-        where: 'set_id = ? OR id = ?',
-        whereArgs: [challengeId, challengeId],
-      );
-      await txn.delete(
-        'local_challenge_sets',
-        where: 'id = ? OR challenge_id = ?',
-        whereArgs: [challengeId, challengeId],
-      );
+      final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
+      for (final id in ids) {
+        await txn.delete(
+          'local_challenge_questions',
+          where: 'set_id = ? OR id = ?',
+          whereArgs: [id, id],
+        );
+        await txn.delete(
+          'local_challenge_sets',
+          where: 'id = ? OR challenge_id = ?',
+          whereArgs: [id, id],
+        );
+      }
     });
   }
   // ── Practice results persistence ──────────────────────────────────────────

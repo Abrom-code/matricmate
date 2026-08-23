@@ -165,8 +165,9 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           ),
                           const SizedBox(width: AppSizes.xs),
                           Obx(() {
+                            final isDown = _ctrl.isDownloaded(challenge.id);
                             final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
-                            if (isDone) {
+                            if (isDown && isDone) {
                               return Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                                 decoration: BoxDecoration(
@@ -195,15 +196,14 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           const Spacer(),
                           Obx(() {
                             final isDown = _ctrl.isDownloaded(challenge.id);
-                            final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
-                            if (isDown || isDone) {
+                            if (isDown) {
                               return IconButton(
-                                tooltip: 'Remove local data / practice',
+                                tooltip: 'Remove offline download',
                                 icon: const Icon(Iconsax.trash_copy, size: 16, color: AppColors.error),
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
-                                onPressed: () => _ctrl.deleteDownload(challenge),
+                                onPressed: () => _ctrl.confirmDeleteDownload(context, challenge),
                               );
                             }
                             return const SizedBox.shrink();
@@ -247,8 +247,11 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           Expanded(
                             flex: 2,
                             child: Obx(() {
+                              final isDown = _ctrl.isDownloaded(challenge.id);
                               final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
-                              if (isDone) {
+                              final isDownloading = _ctrl.isDownloading[challenge.id] == true;
+
+                              if (isDown && isDone) {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFF10B981),
@@ -259,41 +262,44 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                   label: const Text('Review', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
                                 );
                               }
-                              return isDown
-                                  ? FilledButton.icon(
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                      ),
-                                      onPressed: () => Get.to(
-                                        () => ChallengePracticeScreen(
-                                          challengeId: challenge.id,
-                                          title: challenge.title,
-                                        ),
-                                      ),
-                                      icon: const Icon(Iconsax.book_1_copy, size: 14),
-                                      label: const Text('Practice', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                                    )
-                                  : FilledButton.icon(
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                      ),
-                                      onPressed: isDownloading
-                                          ? null
-                                          : () => _ctrl.downloadChallenge(challenge),
-                                      icon: isDownloading
-                                          ? const SizedBox(
-                                              width: 14,
-                                              height: 14,
-                                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                            )
-                                          : const Icon(Iconsax.document_download_copy, size: 14),
-                                      label: Text(
-                                        isDownloading ? 'Downloading...' : 'Download',
-                                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
-                                      ),
-                                    );
+
+                              if (isDown) {
+                                return FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                  ),
+                                  onPressed: () => Get.to(
+                                    () => ChallengePracticeScreen(
+                                      challengeId: challenge.id,
+                                      title: challenge.title,
+                                    ),
+                                  ),
+                                  icon: const Icon(Iconsax.book_1_copy, size: 14),
+                                  label: const Text('Practice', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                );
+                              }
+
+                              return FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onPressed: isDownloading
+                                    ? null
+                                    : () => _ctrl.downloadChallenge(challenge),
+                                icon: isDownloading
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      )
+                                    : const Icon(Iconsax.document_download_copy, size: 14),
+                                label: Text(
+                                  isDownloading ? 'Downloading...' : 'Download',
+                                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                                ),
+                              );
                             }),
                           ),
                         ],

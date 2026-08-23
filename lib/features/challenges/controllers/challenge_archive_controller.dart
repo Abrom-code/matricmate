@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
@@ -149,7 +150,7 @@ class ChallengeArchiveController extends GetxController {
   Future<void> refreshDownloadStates() async {
     final downloaded = <String>{};
     for (final c in challenges) {
-      final isDown = await _db.isChallengeDownloaded(c.id);
+      final isDown = await _db.isChallengeDownloaded(c.id, setId: c.setId);
       if (isDown) downloaded.add(c.id);
     }
     downloadedIds.assignAll(downloaded);
@@ -208,14 +209,35 @@ class ChallengeArchiveController extends GetxController {
     }
   }
 
-  Future<void> deleteDownload(LeaderboardChallengeModel challenge) async {
-    try {
-      await _db.deleteDownloadedChallenge(challenge.id);
-      downloadedIds.remove(challenge.id);
-      attemptedIds.remove(challenge.id);
-      ToastHelper.info('Removed local data.');
-    } catch (e) {
-      AppExceptionHandler.handleResponse(e);
+  Future<void> confirmDeleteDownload(BuildContext context, LeaderboardChallengeModel challenge) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Downloaded Challenge'),
+        content: Text('Are you sure you want to remove "${challenge.title}" offline data and local practice from this device?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _db.deleteDownloadedChallenge(challenge.id, setId: challenge.setId);
+        downloadedIds.remove(challenge.id);
+        attemptedIds.remove(challenge.id);
+        ToastHelper.info('Removed offline download.');
+      } catch (e) {
+        AppExceptionHandler.handleResponse(e);
+      }
     }
   }
 

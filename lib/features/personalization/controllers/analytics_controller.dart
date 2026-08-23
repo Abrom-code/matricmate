@@ -80,6 +80,25 @@ class AnalyticsController extends GetxController {
   final typeDistribution = <String, double>{}.obs;
   final chapterStats = <ChapterStat>[].obs;
   final weakestAreas = <SubjectStat>[].obs;
+  // ── Challenge Analytics Observables ────────────────────────────────────────
+  final totalChallengesTaken = 0.obs;
+  final challengesThisWeek = 0.obs;
+  final challengesThisMonth = 0.obs;
+  final challengeAvgScorePct = 0.0.obs;
+  final challengeTotalTimeSeconds = 0.obs;
+
+  String get formattedChallengeTime {
+    final secs = challengeTotalTimeSeconds.value;
+    if (secs == 0) return '0m';
+    final mins = secs ~/ 60;
+    final hrs = mins ~/ 60;
+    final remMins = mins % 60;
+    if (hrs > 0) {
+      return '${hrs}h ${remMins}m';
+    }
+    return '${mins}m';
+  }
+
 
   @override
   void onInit() {
@@ -272,6 +291,7 @@ class AnalyticsController extends GetxController {
         _loadTypeDistribution(userId),
         _loadChapterProgress(userId),
         _loadBookmarkCount(userId),
+        _loadChallengeAnalytics(userId),
       ]);
       _computeWeakestAreas();
     } finally {
@@ -495,6 +515,61 @@ class AnalyticsController extends GetxController {
       }
       return ChapterStat(title: title, score: score);
     }).toList();
+  }
+
+    Future<void> _loadChallengeAnalytics(String userId) async {
+    final db = await _db.database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS local_challenge_practice (
+          challenge_id TEXT PRIMARY KEY,
+          score INTEGER NOT NULL,
+          total_questions INTEGER NOT NULL,
+          time_spent_seconds INTEGER,
+          user_answers TEXT NOT NULL,
+          completed_at TEXT NOT NULL
+        )
+      ''');
+
+      final rows = await db.query('local_challenge_practice');
+
+      final now = DateTime.now();
+      final oneWeekAgo = now.subtract(const Duration(days: 7));
+      final oneMonthAgo = now.subtract(const Duration(days: 30));
+
+      int countTotal = 0;
+      int countWeek = 0;
+      int countMonth = 0;
+      int totalScore = 0;
+      int totalQuestions = 0;
+      int totalTime = 0;
+
+      for (final r in rows) {
+        countTotal++;
+        final score = (r['score'] as num?)?.toInt() ?? 0;
+        final totQ = (r['total_questions'] as num?)?.toInt() ?? 0;
+        final timeSpent = (r['time_spent_seconds'] as num?)?.toInt() ?? 0;
+        final completedAtStr = r['completed_at']?.toString();
+
+        totalScore += score;
+        totalQuestions += totQ;
+        totalTime += timeSpent;
+
+        if (completedAtStr != null) {
+          final dt = DateTime.tryParse(completedAtStr);
+          if (dt != null) {
+            if (dt.isAfter(oneWeekAgo)) countWeek++;
+            if (dt.isAfter(oneMonthAgo)) countMonth++;
+          }
+        }
+      }
+
+      totalChallengesTaken.value = countTotal;
+      challengesThisWeek.value = countWeek;
+      challengesThisMonth.value = countMonth;
+      challengeTotalTimeSeconds.value = totalTime;
+      challengeAvgScorePct.value = totalQuestions > 0 ? (totalScore / totalQuestions * 100) : 0.0;
+    } catch (_) {}
   }
 
   Future<void> _loadBookmarkCount(String userId) async {

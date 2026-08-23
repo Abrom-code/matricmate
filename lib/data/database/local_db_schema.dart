@@ -188,6 +188,8 @@ class DBschema {
         choices TEXT NOT NULL,
         correct_choice TEXT NOT NULL,
         explanation TEXT,
+        explanation_en TEXT,
+        explanation_am TEXT,
         image_url TEXT,
         FOREIGN KEY(set_id) REFERENCES local_challenge_sets(id) ON DELETE CASCADE
       );

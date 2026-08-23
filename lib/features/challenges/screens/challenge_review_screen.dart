@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -249,7 +250,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
             }),
           ),
 
-          // ── Bottom Leaderboard Button ────────────────────────────
+          // ── Bottom Action Bar (Practice Again + Leaderboard) ─────
           if (widget.challengeId != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
@@ -261,26 +262,49 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                   ),
                 ),
               ),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () => Get.to(
-                    () => LeaderboardScreen(
-                      challengeId: widget.challengeId,
-                      challengeTitle: widget.title,
-                      userScore: correctCount,
-                      userTimeSeconds: widget.timeSpentSeconds,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(
+                          color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+                        ),
+                      ),
+                      onPressed: () => Get.to(
+                        () => ChallengePracticeScreen(
+                          challengeId: widget.challengeId!,
+                          title: widget.title,
+                        ),
+                      ),
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: const Text('Practice Again', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                     ),
                   ),
-                  icon: const Icon(Iconsax.ranking_copy, size: 18),
-                  label: const Text(
-                    'View National Standings & Rankings',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () => Get.to(
+                        () => LeaderboardScreen(
+                          challengeId: widget.challengeId,
+                          challengeTitle: widget.title,
+                          userScore: correctCount,
+                          userTimeSeconds: widget.timeSpentSeconds,
+                        ),
+                      ),
+                      icon: const Icon(Iconsax.ranking_copy, size: 16),
+                      label: const Text(
+                        'Standings & Rankings',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
         ],

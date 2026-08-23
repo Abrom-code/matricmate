@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_leaderboard_entry.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
@@ -134,6 +135,46 @@ class ChallengeRepository {
     return (rows as List)
         .map((r) => ChallengeQuestionModel.fromJson(r as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<Map<String, dynamic>?> fetchUserAttempt({
+    required String challengeId,
+    required String userId,
+  }) async {
+    try {
+      await _checkConnectivity();
+
+      final attemptRow = await _sb
+          .from('challenge_attempts')
+          .select('*')
+          .eq('challenge_id', challengeId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (attemptRow == null) return null;
+
+      final attemptId = attemptRow['id']?.toString() ?? '';
+      final answersRows = await _sb
+          .from('challenge_answers')
+          .select('question_id, selected_choice, is_correct')
+          .eq('attempt_id', attemptId);
+
+      final Map<String, String> userAnswers = {};
+      for (final a in answersRows) {
+        final qId = a['question_id']?.toString() ?? '';
+        final choice = a['selected_choice']?.toString() ?? '';
+        if (qId.isNotEmpty) {
+          userAnswers[qId] = choice;
+        }
+      }
+
+      return {
+        'attempt': ChallengeAttemptModel.fromJson(attemptRow),
+        'user_answers': userAnswers,
+      };
+    } catch (_) {
+      return null;
+    }
   }
 
   // ── Leaderboards ──────────────────────────────────────────────────────────

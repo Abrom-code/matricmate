@@ -216,7 +216,34 @@ class DatabaseService extends GetxController {
           } catch (_) {}
         }
       },
-      onOpen: (db) async {},
+      onOpen: (db) async {
+        try {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS local_challenge_sets (
+              id TEXT PRIMARY KEY,
+              challenge_id TEXT NOT NULL,
+              subject_id INTEGER NOT NULL,
+              title TEXT NOT NULL,
+              audience TEXT DEFAULT 'both',
+              downloaded_at TEXT NOT NULL
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS local_challenge_questions (
+              id TEXT PRIMARY KEY,
+              set_id TEXT NOT NULL,
+              order_index INTEGER NOT NULL,
+              question_text TEXT NOT NULL,
+              choices TEXT NOT NULL,
+              correct_choice TEXT NOT NULL,
+              explanation TEXT,
+              explanation_en TEXT,
+              explanation_am TEXT,
+              image_url TEXT
+            )
+          ''');
+        } catch (_) {}
+      },
     );
   }
 
@@ -593,8 +620,7 @@ class DatabaseService extends GetxController {
   Future<void> insertDownloadedChallengeBundle(Map<String, dynamic> bundle) async {
     final db = await database;
     await db.transaction((txn) async {
-      final setId = bundle['set_id']?.toString() ?? bundle['id']?.toString() ?? '';
-      final challengeId = bundle['challenge_id']?.toString() ?? '';
+      final challengeId = bundle['challenge_id']?.toString() ?? bundle['id']?.toString() ?? '';
       final subjectId = (bundle['subject_id'] as num?)?.toInt() ?? 0;
       final title = bundle['title']?.toString() ?? 'Challenge Set';
       final audience = bundle['audience']?.toString() ?? 'both';
@@ -602,7 +628,7 @@ class DatabaseService extends GetxController {
       await txn.insert(
         'local_challenge_sets',
         {
-          'id': setId,
+          'id': challengeId,
           'challenge_id': challengeId,
           'subject_id': subjectId,
           'title': title,
@@ -623,16 +649,21 @@ class DatabaseService extends GetxController {
             choicesStr = choices;
           }
 
+          final explEn = q['explanation_en']?.toString() ?? q['explanation']?.toString() ?? '';
+          final explAm = q['explanation_am']?.toString() ?? '';
+
           await txn.insert(
             'local_challenge_questions',
             {
               'id': q['id']?.toString() ?? '',
-              'set_id': setId,
+              'set_id': challengeId,
               'order_index': (q['order_index'] as num?)?.toInt() ?? 1,
               'question_text': q['question_text']?.toString() ?? '',
               'choices': choicesStr,
               'correct_choice': q['correct_choice']?.toString() ?? '',
-              'explanation': q['explanation']?.toString() ?? '',
+              'explanation': explEn,
+              'explanation_en': explEn,
+              'explanation_am': explAm,
               'image_url': q['image_url']?.toString(),
             },
             conflictAlgorithm: ConflictAlgorithm.replace,
@@ -681,8 +712,8 @@ class DatabaseService extends GetxController {
     await db.transaction((txn) async {
       await txn.delete(
         'local_challenge_questions',
-        where: 'set_id = ?',
-        whereArgs: [challengeId],
+        where: 'set_id = ? OR id = ?',
+        whereArgs: [challengeId, challengeId],
       );
       await txn.delete(
         'local_challenge_sets',

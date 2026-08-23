@@ -4,9 +4,12 @@ import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
+import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -242,13 +245,58 @@ class ChallengeHomeController extends GetxController {
     }
   }
 
-  void openCompletedChallenge(LeaderboardChallengeModel challenge) {
-    Get.to(
-      () => ChallengePracticeScreen(
+  Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+    try {
+      final userId = UserController.instance.user.value.id;
+
+      // Check if user already completed an attempt
+      final attemptData = await _repo.fetchUserAttempt(
         challengeId: challenge.id,
-        title: challenge.title,
-        setId: challenge.setId,
-      ),
-    );
+        userId: userId,
+      );
+
+      if (attemptData != null) {
+        final attempt = attemptData['attempt'] as ChallengeAttemptModel;
+        final userAnswers = attemptData['user_answers'] as Map<String, String>;
+
+        // Load full review questions with explanations
+        List<ChallengeQuestionModel> questions = [];
+        final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
+        if (localRows.isNotEmpty) {
+          questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
+        } else {
+          questions = await _repo.fetchQuestionsForReview(challenge.id);
+        }
+
+        Get.to(
+          () => ChallengeReviewScreen(
+            challengeId: challenge.id,
+            title: challenge.title,
+            questions: questions,
+            userAnswers: userAnswers,
+            score: attempt.score,
+            timeSpentSeconds: attempt.totalTimeSeconds,
+          ),
+        );
+      } else {
+        // User has not attempted -> open practice mode
+        Get.to(
+          () => ChallengePracticeScreen(
+            challengeId: challenge.id,
+            title: challenge.title,
+            setId: challenge.setId,
+          ),
+        );
+      }
+    } catch (_) {
+      // Fallback to practice mode
+      Get.to(
+        () => ChallengePracticeScreen(
+          challengeId: challenge.id,
+          title: challenge.title,
+          setId: challenge.setId,
+        ),
+      );
+    }
   }
 }

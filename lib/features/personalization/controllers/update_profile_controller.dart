@@ -1,3 +1,6 @@
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
+import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
+import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -68,6 +71,17 @@ class UpdateProfileController extends GetxController {
 
       // Re-save FCM token for the (potentially new) stream
       unawaited(FcmService.instance.saveTokenForCurrentUser());
+
+      // Trigger automatic reload in all stream-dependent controllers
+      if (Get.isRegistered<SubjectsController>()) {
+        SubjectsController.instance.selectedStream.value = updatedUser.stream;
+      }
+      if (Get.isRegistered<ChallengeHomeController>()) {
+        ChallengeHomeController.instance.loadAllChallenges(showLoading: false);
+      }
+      if (Get.isRegistered<AnalyticsController>()) {
+        AnalyticsController.instance.loadAll();
+      }
 
       Get.back();
 

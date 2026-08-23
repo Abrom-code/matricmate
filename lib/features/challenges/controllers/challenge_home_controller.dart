@@ -81,7 +81,7 @@ class ChallengeHomeController extends GetxController {
     _startTimer();
     _startRealtime();
 
-    ever(UserController.instance.user, (_) => update());
+    ever(UserController.instance.user, (_) => loadAllChallenges(showLoading: false));
   }
 
   @override
@@ -123,11 +123,23 @@ class ChallengeHomeController extends GetxController {
           : [];
 
       final list = <LeaderboardChallengeModel>[];
+      final isNatural = userStream.toLowerCase().trim() == 'natural';
       for (final r in rows) {
         final cId = r['challenge_id']?.toString() ?? r['id']?.toString() ?? '';
         final sId = (r['subject_id'] as num?)?.toInt() ?? 0;
         final title = r['title']?.toString() ?? 'Challenge Set';
-        final aud = r['audience']?.toString() ?? 'both';
+        final aud = (r['audience']?.toString() ?? 'both').toLowerCase().trim();
+
+        final matchesAud = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
+        if (!matchesAud) continue;
+
+        if (subjectsList.isNotEmpty) {
+          final subj = subjectsList.firstWhereOrNull((s) => s.id == sId);
+          if (subj != null) {
+            final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+            if (!matchesSubj) continue;
+          }
+        }
 
         final qRows = await _db.getDownloadedChallengeQuestions(cId);
 

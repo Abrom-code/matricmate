@@ -45,7 +45,7 @@ class ChallengeRepository {
     // Filter by stream locally if needed
     if (stream != null && stream.isNotEmpty) {
       final s = stream.toLowerCase();
-      return list.where((c) => c.audience == 'both' || c.audience.toLowerCase() == s).toList();
+      return list.where((c) => c.audience.toLowerCase().trim() == 'both' || c.audience.toLowerCase().trim() == s.toLowerCase().trim()).toList();
     }
     return list;
   }
@@ -414,7 +414,7 @@ class ChallengeRepository {
 
     if (stream != null && stream.isNotEmpty) {
       final s = stream.toLowerCase();
-      return list.where((c) => c.audience == 'both' || c.audience.toLowerCase() == s).toList();
+      return list.where((c) => c.audience.toLowerCase().trim() == 'both' || c.audience.toLowerCase().trim() == s.toLowerCase().trim()).toList();
     }
     return list;
   }

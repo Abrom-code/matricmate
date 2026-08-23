@@ -86,6 +86,10 @@ class AnalyticsController extends GetxController {
     super.onInit();
     _initFilterOptions();
     loadAll();
+    ever(UserController.instance.user, (_) {
+      _initFilterOptions();
+      loadAll();
+    });
   }
 
   // ── Populate filter option lists ─────────────────────────────────────────
@@ -219,6 +223,10 @@ class AnalyticsController extends GetxController {
     if (score != null) selectedScore.value = score;
     if (timed != null) selectedTimed.value = timed;
     loadAll();
+    ever(UserController.instance.user, (_) {
+      _initFilterOptions();
+      loadAll();
+    });
   }
 
   void resetFilters() {
@@ -230,6 +238,10 @@ class AnalyticsController extends GetxController {
     selectedScore.value = ScoreFilter.all;
     selectedTimed.value = TimedFilter.all;
     loadAll();
+    ever(UserController.instance.user, (_) {
+      _initFilterOptions();
+      loadAll();
+    });
   }
 
   int get activeFilterCount {

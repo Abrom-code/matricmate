@@ -165,9 +165,9 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
                     )
                   else
                     FilledButton.icon(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: _ctrl.finishPracticeAndReview,
                       icon: const Icon(Iconsax.tick_circle_copy, size: 16),
-                      label: const Text('Finish Review'),
+                      label: const Text('Finish & Review'),
                     ),
                 ],
               ),

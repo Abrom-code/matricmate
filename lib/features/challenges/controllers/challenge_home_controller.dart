@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -30,6 +31,7 @@ class ChallengeHomeController extends GetxController {
 
   final downloadedIds = <String>{}.obs;
   final isDownloading = <String, bool>{}.obs;
+  final attemptedIds = <String>{}.obs;
 
   final now = DateTime.now().obs;
 
@@ -127,6 +129,7 @@ class ChallengeHomeController extends GetxController {
 
       // 3. Refresh offline download states
       await refreshDownloadStates();
+      await refreshAttemptStates();
     } catch (e) {
       if (showLoading) AppExceptionHandler.handleResponse(e);
     } finally {
@@ -249,21 +252,40 @@ class ChallengeHomeController extends GetxController {
     }
   }
 
-  Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+  
+  void markAttemptedOrPracticed(String challengeId) {
+    attemptedIds.add(challengeId);
+  }
+
+  bool isAttemptedOrPracticed(String challengeId) => attemptedIds.contains(challengeId);
+
+  Future<void> refreshAttemptStates() async {
+    try {
+      final local = await _db.getCompletedPracticeChallengeIds();
+      attemptedIds.addAll(local);
+
+      final userId = UserController.instance.user.value.id;
+      if (userId.isNotEmpty) {
+        final online = await _repo.fetchUserSubmittedChallengeIds(userId);
+        attemptedIds.addAll(online);
+      }
+    } catch (_) {}
+  }
+
+    Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
     try {
       final userId = UserController.instance.user.value.id;
 
-      // Check if user already completed an attempt
-      final attemptData = await _repo.fetchUserAttempt(
-        challengeId: challenge.id,
-        userId: userId,
-      );
+      // 1. Check local practice results first (fastest)
+      final localPractice = await _db.getChallengePracticeResult(challenge.id);
+      if (localPractice != null) {
+        final answersStr = localPractice['user_answers']?.toString() ?? '{}';
+        Map<String, String> userAnswers = {};
+        try {
+          final decoded = jsonDecode(answersStr) as Map<String, dynamic>;
+          userAnswers = decoded.map((k, v) => MapEntry(k, v.toString()));
+        } catch (_) {}
 
-      if (attemptData != null) {
-        final attempt = attemptData['attempt'] as ChallengeAttemptModel;
-        final userAnswers = attemptData['user_answers'] as Map<String, String>;
-
-        // Load full review questions with explanations
         List<ChallengeQuestionModel> questions = [];
         final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
         if (localRows.isNotEmpty) {
@@ -272,29 +294,65 @@ class ChallengeHomeController extends GetxController {
           questions = await _repo.fetchQuestionsForReview(challenge.id);
         }
 
-        Get.to(
-          () => ChallengeReviewScreen(
-            challengeId: challenge.id,
-            title: challenge.title,
-            audience: challenge.audience,
-            questions: questions,
-            userAnswers: userAnswers,
-            score: attempt.score,
-            timeSpentSeconds: attempt.totalTimeSeconds,
-          ),
-        );
-      } else {
-        // User has not attempted -> open practice mode
-        Get.to(
-          () => ChallengePracticeScreen(
-            challengeId: challenge.id,
-            title: challenge.title,
-            setId: challenge.setId,
-          ),
-        );
+        if (questions.isNotEmpty) {
+          Get.to(
+            () => ChallengeReviewScreen(
+              challengeId: challenge.id,
+              title: challenge.title,
+              audience: challenge.audience,
+              questions: questions,
+              userAnswers: userAnswers,
+              score: (localPractice['score'] as num?)?.toInt() ?? 0,
+              timeSpentSeconds: (localPractice['time_spent_seconds'] as num?)?.toInt() ?? 0,
+            ),
+          );
+          return;
+        }
       }
+
+      // 2. Check online submitted attempt
+      if (userId.isNotEmpty) {
+        final attemptData = await _repo.fetchUserAttempt(
+          challengeId: challenge.id,
+          userId: userId,
+        );
+
+        if (attemptData != null) {
+          final attempt = attemptData['attempt'] as ChallengeAttemptModel;
+          final userAnswers = attemptData['user_answers'] as Map<String, String>;
+
+          List<ChallengeQuestionModel> questions = [];
+          final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
+          if (localRows.isNotEmpty) {
+            questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
+          } else {
+            questions = await _repo.fetchQuestionsForReview(challenge.id);
+          }
+
+          Get.to(
+            () => ChallengeReviewScreen(
+              challengeId: challenge.id,
+              title: challenge.title,
+              audience: challenge.audience,
+              questions: questions,
+              userAnswers: userAnswers,
+              score: attempt.score,
+              timeSpentSeconds: attempt.totalTimeSeconds,
+            ),
+          );
+          return;
+        }
+      }
+
+      // 3. Fallback to Practice mode
+      Get.to(
+        () => ChallengePracticeScreen(
+          challengeId: challenge.id,
+          title: challenge.title,
+          setId: challenge.setId,
+        ),
+      );
     } catch (_) {
-      // Fallback to practice mode
       Get.to(
         () => ChallengePracticeScreen(
           challengeId: challenge.id,

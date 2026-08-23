@@ -468,7 +468,7 @@ class _CompletedChallengeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Row: Subject, Audience, Delete Button in top right
+            // Header Row: Subject, Audience, Completed Badge, Delete Button in top right
             Row(
               children: [
                 Container(
@@ -502,6 +502,35 @@ class _CompletedChallengeCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: AppSizes.xs),
+                Obx(() {
+                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                  if (isDone) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_rounded, size: 12, color: Color(0xFF10B981)),
+                          SizedBox(width: 3.5),
+                          Text(
+                            'Done',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF10B981),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
                 const Spacer(),
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
@@ -556,7 +585,7 @@ class _CompletedChallengeCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Action Buttons (Rankings + Practice or Download)
+            // Action Buttons (Rankings + Review / Practice / Download)
             Row(
               children: [
                 Expanded(
@@ -580,9 +609,30 @@ class _CompletedChallengeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Obx(() {
+                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   final isDown = ctrl.isDownloaded(challenge.id);
                   final isBusy = ctrl.isDownloading[challenge.id] == true;
 
+                  // 1. If completed/practiced -> show Review button
+                  if (isDone) {
+                    return Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                        onPressed: () => ctrl.openCompletedChallenge(challenge),
+                        icon: const Icon(Iconsax.document_text_1_copy, size: 14),
+                        label: const Text(
+                          'Review',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    );
+                  }
+
+                  // 2. If downloaded -> show Practice button
                   if (isDown) {
                     return Expanded(
                       flex: 2,
@@ -606,6 +656,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                     );
                   }
 
+                  // 3. Otherwise -> show Download button
                   return Expanded(
                     flex: 2,
                     child: FilledButton.icon(

@@ -1,8 +1,13 @@
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
+import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -18,6 +23,7 @@ class ChallengeArchiveController extends GetxController {
   final challenges = <LeaderboardChallengeModel>[].obs;
   final downloadedIds = <String>{}.obs;
   final isDownloading = <String, bool>{}.obs;
+  final attemptedIds = <String>{}.obs;
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream.toLowerCase().trim();
@@ -54,6 +60,7 @@ class ChallengeArchiveController extends GetxController {
 
       challenges.value = filtered;
       await refreshDownloadStates();
+      await refreshAttemptStates();
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
@@ -70,7 +77,25 @@ class ChallengeArchiveController extends GetxController {
     downloadedIds.assignAll(downloaded);
   }
 
+  Future<void> refreshAttemptStates() async {
+    try {
+      final local = await _db.getCompletedPracticeChallengeIds();
+      attemptedIds.addAll(local);
+
+      final userId = UserController.instance.user.value.id;
+      if (userId.isNotEmpty) {
+        final online = await _repo.fetchUserSubmittedChallengeIds(userId);
+        attemptedIds.addAll(online);
+      }
+    } catch (_) {}
+  }
+
   bool isDownloaded(String challengeId) => downloadedIds.contains(challengeId);
+  bool isAttemptedOrPracticed(String challengeId) => attemptedIds.contains(challengeId);
+
+  void markAttemptedOrPracticed(String challengeId) {
+    attemptedIds.add(challengeId);
+  }
 
   Future<void> downloadChallenge(LeaderboardChallengeModel challenge) async {
     if (!isPremium) {
@@ -99,11 +124,102 @@ class ChallengeArchiveController extends GetxController {
 
   Future<void> deleteDownload(LeaderboardChallengeModel challenge) async {
     try {
-      await _db.deleteDownloadedChallenge(challenge.setId);
+      await _db.deleteDownloadedChallenge(challenge.id);
       downloadedIds.remove(challenge.id);
-      ToastHelper.info('Removed local download');
+      ToastHelper.info('Download removed.');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
+    }
+  }
+
+  Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+    try {
+      final userId = UserController.instance.user.value.id;
+
+      // 1. Check local practice results first (fastest)
+      final localPractice = await _db.getChallengePracticeResult(challenge.id);
+      if (localPractice != null) {
+        final answersStr = localPractice['user_answers']?.toString() ?? '{}';
+        Map<String, String> userAnswers = {};
+        try {
+          final decoded = jsonDecode(answersStr) as Map<String, dynamic>;
+          userAnswers = decoded.map((k, v) => MapEntry(k, v.toString()));
+        } catch (_) {}
+
+        List<ChallengeQuestionModel> questions = [];
+        final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
+        if (localRows.isNotEmpty) {
+          questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
+        } else {
+          questions = await _repo.fetchQuestionsForReview(challenge.id);
+        }
+
+        if (questions.isNotEmpty) {
+          Get.to(
+            () => ChallengeReviewScreen(
+              challengeId: challenge.id,
+              title: challenge.title,
+              audience: challenge.audience,
+              questions: questions,
+              userAnswers: userAnswers,
+              score: (localPractice['score'] as num?)?.toInt() ?? 0,
+              timeSpentSeconds: (localPractice['time_spent_seconds'] as num?)?.toInt() ?? 0,
+            ),
+          );
+          return;
+        }
+      }
+
+      // 2. Check online submitted attempt
+      if (userId.isNotEmpty) {
+        final attemptData = await _repo.fetchUserAttempt(
+          challengeId: challenge.id,
+          userId: userId,
+        );
+
+        if (attemptData != null) {
+          final attempt = attemptData['attempt'] as ChallengeAttemptModel;
+          final userAnswers = attemptData['user_answers'] as Map<String, String>;
+
+          List<ChallengeQuestionModel> questions = [];
+          final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
+          if (localRows.isNotEmpty) {
+            questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
+          } else {
+            questions = await _repo.fetchQuestionsForReview(challenge.id);
+          }
+
+          Get.to(
+            () => ChallengeReviewScreen(
+              challengeId: challenge.id,
+              title: challenge.title,
+              audience: challenge.audience,
+              questions: questions,
+              userAnswers: userAnswers,
+              score: attempt.score,
+              timeSpentSeconds: attempt.totalTimeSeconds,
+            ),
+          );
+          return;
+        }
+      }
+
+      // 3. Fallback to Practice mode
+      Get.to(
+        () => ChallengePracticeScreen(
+          challengeId: challenge.id,
+          title: challenge.title,
+          setId: challenge.setId,
+        ),
+      );
+    } catch (_) {
+      Get.to(
+        () => ChallengePracticeScreen(
+          challengeId: challenge.id,
+          title: challenge.title,
+          setId: challenge.setId,
+        ),
+      );
     }
   }
 }

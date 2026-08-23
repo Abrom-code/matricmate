@@ -722,4 +722,68 @@ class DatabaseService extends GetxController {
       );
     });
   }
+  // ── Practice results persistence ──────────────────────────────────────────
+  Future<void> saveChallengePracticeResult({
+    required String challengeId,
+    required int score,
+    required int totalQuestions,
+    required Map<String, String> userAnswers,
+    int? timeSpentSeconds,
+  }) async {
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS local_challenge_practice (
+          challenge_id TEXT PRIMARY KEY,
+          score INTEGER NOT NULL,
+          total_questions INTEGER NOT NULL,
+          time_spent_seconds INTEGER,
+          user_answers TEXT NOT NULL,
+          completed_at TEXT NOT NULL
+        )
+      ''');
+    } catch (_) {}
+
+    await db.insert(
+      'local_challenge_practice',
+      {
+        'challenge_id': challengeId,
+        'score': score,
+        'total_questions': totalQuestions,
+        'time_spent_seconds': timeSpentSeconds ?? 0,
+        'user_answers': jsonEncode(userAnswers),
+        'completed_at': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<Map<String, dynamic>?> getChallengePracticeResult(String challengeId) async {
+    final db = await database;
+    try {
+      final res = await db.query(
+        'local_challenge_practice',
+        where: 'challenge_id = ?',
+        whereArgs: [challengeId],
+        limit: 1,
+      );
+      if (res.isNotEmpty) {
+        return res.first;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<Set<String>> getCompletedPracticeChallengeIds() async {
+    final db = await database;
+    try {
+      final res = await db.query(
+        'local_challenge_practice',
+        columns: ['challenge_id'],
+      );
+      return res.map((r) => r['challenge_id']?.toString() ?? '').where((id) => id.isNotEmpty).toSet();
+    } catch (_) {
+      return {};
+    }
+  }
 }

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class ChallengePracticeController extends GetxController {
@@ -24,6 +27,7 @@ class ChallengePracticeController extends GetxController {
 
   // Selected answers: { question_id: selected_choice_index_or_text }
   final userAnswers = <String, String>{}.obs;
+  final stopwatch = Stopwatch();
 
   int get totalQuestions => questions.length;
   ChallengeQuestionModel get currentQuestion => questions[currentIndex.value];
@@ -31,7 +35,14 @@ class ChallengePracticeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    stopwatch.start();
     loadQuestions();
+  }
+
+  @override
+  void onClose() {
+    stopwatch.stop();
+    super.onClose();
   }
 
   Future<void> loadQuestions() async {
@@ -45,6 +56,16 @@ class ChallengePracticeController extends GetxController {
       } else {
         // Fallback to online repository if not downloaded
         questions.value = await _repo.fetchQuestionsForReview(challengeId);
+      }
+
+      // Check if past practice exists to restore answers
+      final pastPractice = await _db.getChallengePracticeResult(challengeId);
+      if (pastPractice != null) {
+        final answersStr = pastPractice['user_answers']?.toString() ?? '{}';
+        try {
+          final decoded = jsonDecode(answersStr) as Map<String, dynamic>;
+          userAnswers.assignAll(decoded.map((k, v) => MapEntry(k, v.toString())));
+        } catch (_) {}
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -74,5 +95,52 @@ class ChallengePracticeController extends GetxController {
     if (index >= 0 && index < totalQuestions) {
       currentIndex.value = index;
     }
+  }
+
+  Future<void> finishPracticeAndReview() async {
+    // Calculate score
+    int correctCount = 0;
+    for (final q in questions) {
+      final ans = userAnswers[q.id];
+      if (ans != null && ans.isNotEmpty) {
+        final parsedIdx = int.tryParse(q.correctChoice);
+        if (parsedIdx != null && parsedIdx >= 0 && parsedIdx < q.choices.length) {
+          final sIdx = int.tryParse(ans);
+          if (sIdx == parsedIdx || ans == q.choices[parsedIdx]) {
+            correctCount++;
+            continue;
+          }
+        }
+        if (ans == q.correctChoice) correctCount++;
+      }
+    }
+
+    final elapsedSeconds = stopwatch.elapsed.inSeconds;
+
+    // Save practice result locally
+    await _db.saveChallengePracticeResult(
+      challengeId: challengeId,
+      score: correctCount,
+      totalQuestions: totalQuestions,
+      userAnswers: userAnswers,
+      timeSpentSeconds: elapsedSeconds,
+    );
+
+    // Notify home controller
+    if (Get.isRegistered<ChallengeHomeController>()) {
+      ChallengeHomeController.instance.markAttemptedOrPracticed(challengeId);
+    }
+
+    // Navigate to Review Screen
+    Get.off(
+      () => ChallengeReviewScreen(
+        challengeId: challengeId,
+        title: title,
+        questions: questions,
+        userAnswers: userAnswers,
+        score: correctCount,
+        timeSpentSeconds: elapsedSeconds,
+      ),
+    );
   }
 }

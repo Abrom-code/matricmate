@@ -9,6 +9,7 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
+import 'package:matricmate/features/challenges/screens/widgets/stream_challenge_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/paused_test_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
@@ -130,7 +131,10 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                     // ── 3. Paused / In-Progress Tests Banner ─────────
                     const PausedTestBanner(),
 
-                    // ── 4. Subject Grid ──────────────────────────────
+                    // ── 4. National Stream Challenges Banner ────────
+                    const StreamChallengeBanner(),
+
+                    // ── 5. Subject Grid ──────────────────────────────
                     if (filteredSubjects.isNotEmpty) ...[
                       GridLayout(
                         mainAxisExtent: 175,

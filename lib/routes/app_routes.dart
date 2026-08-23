@@ -50,4 +50,11 @@ class Routes {
 
   // loading
   static const loading = '/loading';
+
+  // challenges
+  static const challengeHome = '/challenge-home';
+  static const challengeAttempt = '/challenge-attempt';
+  static const challengeLeaderboard = '/challenge-leaderboard';
+  static const challengeArchive = '/challenge-archive';
+  static const challengePractice = '/challenge-practice';
 }

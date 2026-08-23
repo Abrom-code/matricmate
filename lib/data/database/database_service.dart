@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/local_db_schema.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
@@ -23,7 +24,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 13,
+      version: 14,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -179,6 +180,38 @@ class DatabaseService extends GetxController {
           try {
             await db.execute(
               'ALTER TABLE user ADD COLUMN subscription_expires_at TEXT',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 14) {
+          // Add local challenge tables for offline practice
+          try {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS local_challenge_sets (
+                id TEXT PRIMARY KEY,
+                challenge_id TEXT NOT NULL,
+                subject_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                audience TEXT DEFAULT 'both',
+                downloaded_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS local_challenge_questions (
+                id TEXT PRIMARY KEY,
+                set_id TEXT NOT NULL,
+                order_index INTEGER NOT NULL,
+                question_text TEXT NOT NULL,
+                choices TEXT NOT NULL,
+                correct_choice TEXT NOT NULL,
+                explanation TEXT,
+                image_url TEXT,
+                FOREIGN KEY(set_id) REFERENCES local_challenge_sets(id) ON DELETE CASCADE
+              )
+            ''');
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_local_challenge_questions_set '
+              'ON local_challenge_questions(set_id, order_index)',
             );
           } catch (_) {}
         }
@@ -553,5 +586,109 @@ class DatabaseService extends GetxController {
     } catch (e) {
       rethrow;
     }
+  }
+
+  // ── Offline Challenge Bundle Helpers ─────────────────────────────────────
+
+  Future<void> insertDownloadedChallengeBundle(Map<String, dynamic> bundle) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      final setId = bundle['set_id']?.toString() ?? bundle['id']?.toString() ?? '';
+      final challengeId = bundle['challenge_id']?.toString() ?? '';
+      final subjectId = (bundle['subject_id'] as num?)?.toInt() ?? 0;
+      final title = bundle['title']?.toString() ?? 'Challenge Set';
+      final audience = bundle['audience']?.toString() ?? 'both';
+
+      await txn.insert(
+        'local_challenge_sets',
+        {
+          'id': setId,
+          'challenge_id': challengeId,
+          'subject_id': subjectId,
+          'title': title,
+          'audience': audience,
+          'downloaded_at': DateTime.now().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      final questions = bundle['questions'];
+      if (questions is List) {
+        for (final q in questions) {
+          final choices = q['choices'];
+          String choicesStr = '[]';
+          if (choices is List) {
+            choicesStr = jsonEncode(choices);
+          } else if (choices is String) {
+            choicesStr = choices;
+          }
+
+          await txn.insert(
+            'local_challenge_questions',
+            {
+              'id': q['id']?.toString() ?? '',
+              'set_id': setId,
+              'order_index': (q['order_index'] as num?)?.toInt() ?? 1,
+              'question_text': q['question_text']?.toString() ?? '',
+              'choices': choicesStr,
+              'correct_choice': q['correct_choice']?.toString() ?? '',
+              'explanation': q['explanation']?.toString() ?? '',
+              'image_url': q['image_url']?.toString(),
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getDownloadedChallengeSets({int? subjectId}) async {
+    final db = await database;
+    if (subjectId != null) {
+      return await db.query(
+        'local_challenge_sets',
+        where: 'subject_id = ?',
+        whereArgs: [subjectId],
+        orderBy: 'downloaded_at DESC',
+      );
+    }
+    return await db.query('local_challenge_sets', orderBy: 'downloaded_at DESC');
+  }
+
+  Future<List<Map<String, dynamic>>> getDownloadedChallengeQuestions(String setId) async {
+    final db = await database;
+    return await db.query(
+      'local_challenge_questions',
+      where: 'set_id = ?',
+      whereArgs: [setId],
+      orderBy: 'order_index ASC',
+    );
+  }
+
+  Future<bool> isChallengeDownloaded(String challengeId) async {
+    final db = await database;
+    final res = await db.query(
+      'local_challenge_sets',
+      where: 'challenge_id = ?',
+      whereArgs: [challengeId],
+      limit: 1,
+    );
+    return res.isNotEmpty;
+  }
+
+  Future<void> deleteDownloadedChallenge(String setId) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(
+        'local_challenge_questions',
+        where: 'set_id = ?',
+        whereArgs: [setId],
+      );
+      await txn.delete(
+        'local_challenge_sets',
+        where: 'id = ?',
+        whereArgs: [setId],
+      );
+    });
   }
 }

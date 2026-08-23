@@ -166,5 +166,35 @@ class DBschema {
     await db.execute(
       'CREATE INDEX idx_dismissals_user ON notification_dismissals(user_id)',
     );
+
+    // ── Local Challenge Store (for offline practice of closed challenges) ────
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_challenge_sets (
+        id TEXT PRIMARY KEY,
+        challenge_id TEXT NOT NULL,
+        subject_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        audience TEXT DEFAULT 'both',
+        downloaded_at TEXT NOT NULL
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_challenge_questions (
+        id TEXT PRIMARY KEY,
+        set_id TEXT NOT NULL,
+        order_index INTEGER NOT NULL,
+        question_text TEXT NOT NULL,
+        choices TEXT NOT NULL,
+        correct_choice TEXT NOT NULL,
+        explanation TEXT,
+        image_url TEXT,
+        FOREIGN KEY(set_id) REFERENCES local_challenge_sets(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_local_challenge_questions_set ON local_challenge_questions(set_id, order_index)',
+    );
   }
 }

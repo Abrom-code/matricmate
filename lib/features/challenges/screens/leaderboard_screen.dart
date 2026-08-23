@@ -79,11 +79,25 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Refresh Rankings',
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => _ctrl.loadLeaderboard(),
-          ),
+          Obx(() {
+            if (_ctrl.isLoading.value) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                  ),
+                ),
+              );
+            }
+            return IconButton(
+              tooltip: 'Refresh Rankings',
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () => _ctrl.loadLeaderboard(),
+            );
+          }),
           const SizedBox(width: 4),
         ],
       ),
@@ -142,22 +156,34 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               }
 
               if (_ctrl.entries.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Iconsax.cup_copy, size: 48, color: dark ? Colors.white24 : AppColors.textSecondary),
-                      const SizedBox(height: AppSizes.md),
-                      const Text(
-                        'No attempts recorded yet for this stream',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                return RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () => _ctrl.loadLeaderboard(),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Iconsax.cup_copy, size: 48, color: dark ? Colors.white24 : AppColors.textSecondary),
+                              const SizedBox(height: AppSizes.md),
+                              const Text(
+                                'No attempts recorded yet for this stream',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Be the first to compete and claim rank #1!',
+                                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Be the first to compete and claim rank #1!',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               }

@@ -41,6 +41,7 @@ class _FloatingNavBar extends StatelessWidget {
 
   static const _items = [
     _NavItem(icon: Iconsax.book_1_copy, label: 'Practice'),
+    _NavItem(icon: Iconsax.cup_copy, label: 'Challenge'),
     _NavItem(icon: Iconsax.archive_tick_copy, label: 'Bookmark'),
     _NavItem(icon: Iconsax.chart_copy, label: 'Analytics'),
     _NavItem(icon: Iconsax.user_copy, label: 'Profile'),

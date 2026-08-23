@@ -73,20 +73,15 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen> {
           onRefresh: () => _ctrl.loadChallenges(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.md, AppSizes.md, 80),
+            padding: EdgeInsets.fromLTRB(
+              AppSizes.md,
+              AppSizes.md,
+              AppSizes.md,
+              MediaQuery.paddingOf(context).bottom + 100,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ── Hero Banner ─────────────────────────────────────
-                _HeroBanner(
-                  isPremium: _ctrl.isPremium,
-                  onUpgrade: () => Get.bottomSheet(
-                    const PremiumBottomSheet(),
-                    isScrollControlled: true,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.spaceBtwSections),
-
                 // ── Section Title ───────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -127,103 +122,6 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen> {
           ),
         );
       }),
-    );
-  }
-}
-
-// ── Hero Banner ──────────────────────────────────────────────────────────────
-
-class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({required this.isPremium, required this.onUpgrade});
-
-  final bool isPremium;
-  final VoidCallback onUpgrade;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.md + 4),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F766E).withValues(alpha: 0.25),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Iconsax.cup_copy, color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: AppSizes.sm),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'National Stream Challenges',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      'Compete with matric students across the country',
-                      style: TextStyle(color: Colors.white70, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.md),
-          const Text(
-            '• Timed MCQ challenges tied to your stream subjects\n• Automatic real-time rank computation on finish\n• Weekly & monthly overall leaderboard awards\n• Unlimited offline practice replays after round closes',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 11.5,
-              height: 1.4,
-            ),
-          ),
-          if (!isPremium) ...[
-            const SizedBox(height: AppSizes.md),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF0F766E),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                ),
-                onPressed: onUpgrade,
-                icon: const Icon(Iconsax.crown_copy, size: 16),
-                label: const Text(
-                  'Upgrade to Premium to Enter',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

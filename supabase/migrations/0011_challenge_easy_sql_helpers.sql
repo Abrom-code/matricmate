@@ -1,48 +1,38 @@
 -- =============================================================================
 -- 0011_challenge_easy_sql_helpers.sql
--- Direct `challenge_id` architecture (1 Challenge = Questions directly attached)
--- Supports bilingual explanations (explanation_en & explanation_am)
--- Returns full explanations upon submit/time expiry for post-attempt review.
+-- Clean direct `challenge_id` architecture (Pure Challenge -> Questions)
+-- Zero dependencies on `set_id` or `challenge_question_sets`
 -- =============================================================================
 
 BEGIN;
 
--- 1. Add challenge_id, explanation_en, explanation_am columns
+-- 1. Drop old triggers that might reference set_id
+DROP TRIGGER IF EXISTS trg_sync_challenge_questions ON public.challenge_questions;
+DROP FUNCTION IF EXISTS public.trg_sync_challenge_question_ids();
+
+-- 2. Add challenge_id, explanation_en, explanation_am columns if not present
 ALTER TABLE public.challenge_questions 
 ADD COLUMN IF NOT EXISTS challenge_id uuid REFERENCES public.leaderboard_challenges(id) ON DELETE CASCADE,
 ADD COLUMN IF NOT EXISTS explanation_en text,
 ADD COLUMN IF NOT EXISTS explanation_am text;
 
--- 2. Make set_id optional everywhere
-ALTER TABLE public.challenge_questions ALTER COLUMN set_id DROP NOT NULL;
-ALTER TABLE public.leaderboard_challenges ALTER COLUMN set_id DROP NOT NULL;
-
--- 3. Trigger: Auto-sync set_id <-> challenge_id and explanations
-CREATE OR REPLACE FUNCTION public.trg_sync_challenge_question_ids()
+-- 3. Trigger: Auto-sync explanation <-> explanation_en
+CREATE OR REPLACE FUNCTION public.trg_sync_challenge_question_explanations()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.set_id IS NULL AND NEW.challenge_id IS NOT NULL THEN
-    SELECT set_id INTO NEW.set_id FROM public.leaderboard_challenges WHERE id = NEW.challenge_id;
-  END IF;
-
-  IF NEW.challenge_id IS NULL AND NEW.set_id IS NOT NULL THEN
-    SELECT id INTO NEW.challenge_id FROM public.leaderboard_challenges WHERE set_id = NEW.set_id LIMIT 1;
-  END IF;
-
   IF NEW.explanation IS NULL AND NEW.explanation_en IS NOT NULL THEN
     NEW.explanation := NEW.explanation_en;
   END IF;
-
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_sync_challenge_questions ON public.challenge_questions;
-CREATE TRIGGER trg_sync_challenge_questions
+DROP TRIGGER IF EXISTS trg_sync_challenge_explanations ON public.challenge_questions;
+CREATE TRIGGER trg_sync_challenge_explanations
 BEFORE INSERT OR UPDATE ON public.challenge_questions
-FOR EACH ROW EXECUTE FUNCTION public.trg_sync_challenge_question_ids();
+FOR EACH ROW EXECUTE FUNCTION public.trg_sync_challenge_question_explanations();
 
--- 4. Update rpc_start_attempt to match by challenge_id directly
+-- 4. RPC: Start Attempt (fetches questions directly by challenge_id)
 CREATE OR REPLACE FUNCTION public.rpc_start_attempt(
   p_challenge_id uuid,
   p_user_id text
@@ -108,8 +98,7 @@ BEGIN
     ) ORDER BY q.order_index ASC
   ) INTO v_questions
   FROM public.challenge_questions q
-  WHERE q.challenge_id = v_challenge.id 
-     OR (v_challenge.set_id IS NOT NULL AND q.set_id = v_challenge.set_id);
+  WHERE q.challenge_id = v_challenge.id;
 
   RETURN jsonb_build_object(
     'attempt_id', v_attempt.id,
@@ -123,7 +112,7 @@ BEGIN
 END;
 $$;
 
--- 5. Update rpc_submit_attempt to return questions with full bilingual explanations
+-- 5. RPC: Submit Attempt (returns full questions with correct answers and explanations)
 CREATE OR REPLACE FUNCTION public.rpc_submit_attempt(
   p_attempt_id uuid,
   p_total_time_seconds int DEFAULT NULL
@@ -185,8 +174,7 @@ BEGIN
     ) ORDER BY q.order_index ASC
   ) INTO v_questions
   FROM public.challenge_questions q
-  WHERE q.challenge_id = v_challenge.id 
-     OR (v_challenge.set_id IS NOT NULL AND q.set_id = v_challenge.set_id);
+  WHERE q.challenge_id = v_challenge.id;
 
   RETURN jsonb_build_object(
     'success', true,

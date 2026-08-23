@@ -81,24 +81,30 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
             child: Obx(
               () => TabBar(
                 controller: _tabCtrl,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
+                isScrollable: false,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                 labelColor: AppColors.primary,
                 unselectedLabelColor: dark ? Colors.white60 : AppColors.textSecondary,
                 indicatorColor: AppColors.primary,
                 indicatorWeight: 3,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
+                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12.5),
                 tabs: [
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Iconsax.timer_1_copy, size: 16),
-                        const SizedBox(width: 6),
-                        const Text('Available'),
+                        const Icon(Iconsax.timer_1_copy, size: 15),
+                        const SizedBox(width: 5),
+                        const Flexible(
+                          child: Text(
+                            'Available',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         if (_ctrl.availableChallenges.isNotEmpty) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 5),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -117,12 +123,18 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Iconsax.tick_circle_copy, size: 16),
-                        const SizedBox(width: 6),
-                        const Text('Completed / Past'),
+                        const Icon(Iconsax.tick_circle_copy, size: 15),
+                        const SizedBox(width: 5),
+                        const Flexible(
+                          child: Text(
+                            'Completed / Past',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         if (_ctrl.completedChallenges.isNotEmpty) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 5),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(

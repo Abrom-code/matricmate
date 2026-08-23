@@ -109,16 +109,16 @@ class LeaderboardChallengeModel {
       audience: json['audience']?.toString() ?? 'both',
       title: json['title']?.toString() ?? '',
       startsAt: json['starts_at'] != null
-          ? DateTime.tryParse(json['starts_at'].toString())
+          ? DateTime.tryParse(json['starts_at'].toString())?.toLocal()
           : null,
       endsAt: json['ends_at'] != null
-          ? DateTime.tryParse(json['ends_at'].toString())
+          ? DateTime.tryParse(json['ends_at'].toString())?.toLocal()
           : null,
       durationSeconds: (json['duration_seconds'] as num?)?.toInt() ?? 3600,
       status: json['status']?.toString() ?? 'draft',
       createdBy: json['created_by']?.toString(),
       createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
+          ? (DateTime.tryParse(json['created_at'].toString())?.toLocal() ?? DateTime.now())
           : DateTime.now(),
       questionCount: (json['question_count'] as num?)?.toInt() ?? 0,
       attemptCount: (json['attempt_count'] as num?)?.toInt() ?? 0,

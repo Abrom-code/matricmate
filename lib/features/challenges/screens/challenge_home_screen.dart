@@ -7,6 +7,7 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -455,7 +456,7 @@ class _CompletedChallengeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Row: Subject, Audience, Offline Indicator
+            // Header Row: Subject, Audience, Delete Button in top right
             Row(
               children: [
                 Container(
@@ -493,20 +494,13 @@ class _CompletedChallengeCard extends StatelessWidget {
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
                   if (isDown) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                      decoration: BoxDecoration(
-                        color: Colors.teal.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.offline_pin_rounded, size: 12, color: Colors.teal),
-                          SizedBox(width: 4),
-                          Text('Offline', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.teal)),
-                        ],
-                      ),
+                    return IconButton(
+                      tooltip: 'Remove offline download',
+                      icon: const Icon(Iconsax.trash_copy, size: 16, color: AppColors.error),
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () => ctrl.confirmDeleteDownload(context, challenge),
                     );
                   }
                   return const SizedBox.shrink();
@@ -550,7 +544,7 @@ class _CompletedChallengeCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Action Buttons (Rankings + Download or Delete & Practice)
+            // Action Buttons (Rankings + Practice or Download)
             Row(
               children: [
                 Expanded(
@@ -578,26 +572,25 @@ class _CompletedChallengeCard extends StatelessWidget {
                   final isBusy = ctrl.isDownloading[challenge.id] == true;
 
                   if (isDown) {
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: 'Delete Offline Download',
-                          icon: const Icon(Iconsax.trash_copy, size: 17, color: AppColors.error),
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () => ctrl.confirmDeleteDownload(context, challenge),
+                    return Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
-                        const SizedBox(width: 4),
-                        FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        onPressed: () => Get.to(
+                          () => ChallengePracticeScreen(
+                            challengeId: challenge.id,
+                            title: challenge.title,
                           ),
-                          onPressed: () => ctrl.openCompletedChallenge(challenge),
-                          icon: const Icon(Iconsax.book_1_copy, size: 14),
-                          label: const Text('Practice', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
                         ),
-                      ],
+                        icon: const Icon(Iconsax.book_1_copy, size: 14),
+                        label: const Text(
+                          'Practice',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     );
                   }
 

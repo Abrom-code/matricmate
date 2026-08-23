@@ -245,7 +245,7 @@ class ChallengeHomeController extends GetxController {
         ToastHelper.info('This challenge has not started yet.');
       }
     } else if (challenge.isClosed || challenge.isArchived) {
-      openCompletedChallenge(challenge);
+      Get.to(() => ChallengePracticeScreen(challengeId: challenge.id, title: challenge.title));
     }
   }
 

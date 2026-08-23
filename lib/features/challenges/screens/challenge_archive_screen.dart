@@ -49,11 +49,25 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
       appBar: AppBar(
         title: Text(screenTitle),
         actions: [
-          IconButton(
-            tooltip: 'Refresh Archive',
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => _ctrl.loadArchive(),
-          ),
+          Obx(() {
+            if (_ctrl.isManualRefreshing.value) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                  ),
+                ),
+              );
+            }
+            return IconButton(
+              tooltip: 'Refresh',
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () => _ctrl.manualRefresh(),
+            );
+          }),
           const SizedBox(width: 4),
         ],
       ),
@@ -67,28 +81,40 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
         }
 
         if (_ctrl.challenges.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSizes.xl),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Iconsax.archive_book_copy, size: 48, color: dark ? Colors.white24 : AppColors.textSecondary),
-                  const SizedBox(height: AppSizes.md),
-                  Text(
-                    widget.subjectTitle != null
-                        ? 'No past ${widget.subjectTitle} challenges yet'
-                        : 'No past challenges available yet',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                    textAlign: TextAlign.center,
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () => _ctrl.manualRefresh(),
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.xl),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Iconsax.archive_book_copy, size: 48, color: dark ? Colors.white24 : AppColors.textSecondary),
+                          const SizedBox(height: AppSizes.md),
+                          Text(
+                            widget.subjectTitle != null
+                                ? 'No past ${widget.subjectTitle} challenges yet'
+                                : 'No past challenges available yet',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Once live rounds close, they will appear here for practice and review.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Once live rounds close, they will appear here for practice and review.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                  ),
-                ],
+                ),
               ),
             ),
           );
@@ -96,7 +122,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
 
         return RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: () => _ctrl.loadArchive(),
+          onRefresh: () => _ctrl.manualRefresh(),
           child: ListView.separated(
             padding: const EdgeInsets.all(AppSizes.md),
             itemCount: _ctrl.challenges.length,

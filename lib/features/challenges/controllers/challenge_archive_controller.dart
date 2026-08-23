@@ -25,6 +25,7 @@ class ChallengeArchiveController extends GetxController {
   final _db = DatabaseService.instance;
 
   final isLoading = false.obs;
+  final isManualRefreshing = false.obs;
   final challenges = <LeaderboardChallengeModel>[].obs;
   final downloadedIds = <String>{}.obs;
   final isDownloading = <String, bool>{}.obs;
@@ -39,8 +40,12 @@ class ChallengeArchiveController extends GetxController {
     loadArchive();
   }
 
-  Future<void> loadArchive() async {
-    isLoading.value = true;
+  Future<void> loadArchive({bool isManual = false}) async {
+    if (isManual) {
+      isManualRefreshing.value = true;
+    } else {
+      isLoading.value = true;
+    }
     try {
       final list = await _repo.fetchClosedChallenges(stream: userStream);
       final isNatural = userStream == 'natural';
@@ -72,8 +77,11 @@ class ChallengeArchiveController extends GetxController {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoading.value = false;
+      isManualRefreshing.value = false;
     }
   }
+
+  Future<void> manualRefresh() => loadArchive(isManual: true);
 
   Future<void> refreshDownloadStates() async {
     final downloaded = <String>{};

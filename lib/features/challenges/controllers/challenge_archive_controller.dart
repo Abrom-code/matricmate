@@ -3,6 +3,7 @@ import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -19,7 +20,7 @@ class ChallengeArchiveController extends GetxController {
   final isDownloading = <String, bool>{}.obs;
 
   bool get isPremium => UserController.instance.user.value.isActive;
-  String get userStream => UserController.instance.user.value.stream;
+  String get userStream => UserController.instance.user.value.stream.toLowerCase().trim();
 
   @override
   void onInit() {
@@ -31,7 +32,27 @@ class ChallengeArchiveController extends GetxController {
     isLoading.value = true;
     try {
       final list = await _repo.fetchClosedChallenges(stream: userStream);
-      challenges.value = list;
+      final isNatural = userStream == 'natural';
+
+      final subjectsList = Get.isRegistered<SubjectsController>()
+          ? SubjectsController.instance.subjects
+          : [];
+
+      final filtered = list.where((c) {
+        final aud = c.audience.toLowerCase().trim();
+        final matchesAudience = aud == 'both' || aud == userStream || userStream.isEmpty;
+        if (!matchesAudience) return false;
+
+        if (subjectsList.isNotEmpty) {
+          final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
+          if (subj != null) {
+            return subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+          }
+        }
+        return true;
+      }).toList();
+
+      challenges.value = filtered;
       await refreshDownloadStates();
     } catch (e) {
       AppExceptionHandler.handleResponse(e);

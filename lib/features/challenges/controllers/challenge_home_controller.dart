@@ -6,6 +6,7 @@ import 'package:matricmate/data/repositories/challenge/challenge_repository.dart
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -73,7 +74,27 @@ class ChallengeHomeController extends GetxController {
     if (showLoading) isLoading.value = true;
     try {
       final list = await _repo.fetchVisibleChallenges(stream: userStream);
-      challenges.value = list;
+      final isNatural = userStream.toLowerCase().trim() == 'natural';
+
+      final subjectsList = Get.isRegistered<SubjectsController>()
+          ? SubjectsController.instance.subjects
+          : [];
+
+      final filtered = list.where((c) {
+        final aud = c.audience.toLowerCase().trim();
+        final matchesAudience = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
+        if (!matchesAudience) return false;
+
+        if (subjectsList.isNotEmpty) {
+          final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
+          if (subj != null) {
+            return subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+          }
+        }
+        return true;
+      }).toList();
+
+      challenges.value = filtered;
     } catch (e) {
       if (showLoading) AppExceptionHandler.handleResponse(e);
     } finally {

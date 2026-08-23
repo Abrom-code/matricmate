@@ -35,7 +35,7 @@ class ChallengeReviewScreen extends StatefulWidget {
 
 class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
   final _scrollCtrl = ScrollController();
-  final _filter = 'all'.obs; // 'all', 'correct', 'incorrect', 'skipped'
+  final _filter = 'all'.obs; // 'all', 'correct', 'wrong', 'not_done'
 
   @override
   void dispose() {
@@ -65,14 +65,14 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
-    // Compute stats
+    // Compute statistics
     int correctCount = 0;
-    int skippedCount = 0;
+    int notDoneCount = 0;
     int wrongCount = 0;
 
     for (final q in widget.questions) {
       if (_isQuestionSkipped(q)) {
-        skippedCount++;
+        notDoneCount++;
       } else if (_isQuestionCorrect(q)) {
         correctCount++;
       } else {
@@ -91,36 +91,30 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
     }
 
     return Scaffold(
+      backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(
-          'Review: ${widget.title}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          if (widget.challengeId != null)
-            TextButton.icon(
-              onPressed: () => Get.to(
-                () => LeaderboardScreen(
-                  challengeId: widget.challengeId,
-                  challengeTitle: widget.title,
-                  audience: widget.audience,
-                  userScore: correctCount,
-                  userTimeSeconds: widget.timeSpentSeconds,
-                ),
-              ),
-              icon: const Icon(Iconsax.ranking_copy, size: 15),
-              label: const Text('Leaderboard', style: TextStyle(fontSize: 12)),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Challenge Review',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
             ),
-          const SizedBox(width: 4),
-        ],
+            Text(
+              widget.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
-          // ── Top Summary Header Card ──────────────────────────────
+          // ── Top Summary Header Card (Time Taken, Score, Accuracy) ──
           Container(
-            padding: const EdgeInsets.all(AppSizes.md),
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
             decoration: BoxDecoration(
               color: dark ? AppColors.darkCard : AppColors.white,
               border: Border(
@@ -135,6 +129,12 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _StatBadge(
+                      label: 'Time Taken',
+                      value: formattedTime,
+                      color: const Color(0xFF8B5CF6),
+                      icon: Iconsax.timer_1_copy,
+                    ),
+                    _StatBadge(
                       label: 'Score',
                       value: '$correctCount / $total',
                       color: AppColors.primary,
@@ -146,52 +146,55 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                       color: const Color(0xFF10B981),
                       icon: Iconsax.chart_2_copy,
                     ),
-                    _StatBadge(
-                      label: 'Time Taken',
-                      value: formattedTime,
-                      color: const Color(0xFF8B5CF6),
-                      icon: Iconsax.timer_1_copy,
-                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
 
-                // Filter tabs
-                Obx(() => SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _FilterChip(
-                            label: 'All ($total)',
-                            selected: _filter.value == 'all',
-                            onTap: () => _filter.value = 'all',
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'Correct ($correctCount)',
-                            color: const Color(0xFF10B981),
-                            selected: _filter.value == 'correct',
-                            onTap: () => _filter.value = 'correct',
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'Wrong ($wrongCount)',
-                            color: const Color(0xFFEF4444),
-                            selected: _filter.value == 'incorrect',
-                            onTap: () => _filter.value = 'incorrect',
-                          ),
-                          if (skippedCount > 0) ...[
-                            const SizedBox(width: 8),
-                            _FilterChip(
-                              label: 'Skipped ($skippedCount)',
-                              color: const Color(0xFFF59E0B),
-                              selected: _filter.value == 'skipped',
-                              onTap: () => _filter.value = 'skipped',
-                            ),
-                          ],
-                        ],
-                      ),
-                    )),
+                // ── Filter Chips Bar: All, Correct, Wrong, Not Done ──
+                Obx(
+                  () => SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _ReviewFilterChip(
+                          label: 'All',
+                          count: total,
+                          color: AppColors.primary,
+                          isSelected: _filter.value == 'all',
+                          onTap: () => _filter.value == 'all',
+                          dark: dark,
+                        ),
+                        const SizedBox(width: 8),
+                        _ReviewFilterChip(
+                          label: 'Correct',
+                          count: correctCount,
+                          color: const Color(0xFF10B981),
+                          isSelected: _filter.value == 'correct',
+                          onTap: () => _filter.value == 'correct',
+                          dark: dark,
+                        ),
+                        const SizedBox(width: 8),
+                        _ReviewFilterChip(
+                          label: 'Wrong',
+                          count: wrongCount,
+                          color: const Color(0xFFEF4444),
+                          isSelected: _filter.value == 'wrong',
+                          onTap: () => _filter.value == 'wrong',
+                          dark: dark,
+                        ),
+                        const SizedBox(width: 8),
+                        _ReviewFilterChip(
+                          label: 'Not Done',
+                          count: notDoneCount,
+                          color: const Color(0xFFF59E0B),
+                          isSelected: _filter.value == 'not_done',
+                          onTap: () => _filter.value == 'not_done',
+                          dark: dark,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -202,8 +205,8 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
               final activeFilter = _filter.value;
               final filteredQuestions = widget.questions.where((q) {
                 if (activeFilter == 'correct') return _isQuestionCorrect(q);
-                if (activeFilter == 'incorrect') return !_isQuestionCorrect(q) && !_isQuestionSkipped(q);
-                if (activeFilter == 'skipped') return _isQuestionSkipped(q);
+                if (activeFilter == 'wrong') return !_isQuestionCorrect(q) && !_isQuestionSkipped(q);
+                if (activeFilter == 'not_done') return _isQuestionSkipped(q);
                 return true;
               }).toList();
 
@@ -217,7 +220,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                         Icon(Iconsax.document_copy, size: 44, color: dark ? Colors.white24 : AppColors.textSecondary),
                         const SizedBox(height: AppSizes.md),
                         Text(
-                          'No questions in "$activeFilter" category',
+                          'No questions in ${_filterDisplay(activeFilter)} category',
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ],
@@ -253,7 +256,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
             }),
           ),
 
-          // ── Bottom Action Bar (Practice Again + Leaderboard) ─────
+          // ── Bottom Action Bar (Practice Again + Standings) ───────
           if (widget.challengeId != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
@@ -315,6 +318,19 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
       ),
     );
   }
+
+  static String _filterDisplay(String filter) {
+    switch (filter) {
+      case 'correct':
+        return '"Correct"';
+      case 'wrong':
+        return '"Wrong"';
+      case 'not_done':
+        return '"Not Done"';
+      default:
+        return '"All"';
+    }
+  }
 }
 
 class _StatBadge extends StatelessWidget {
@@ -367,43 +383,78 @@ class _StatBadge extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
+class _ReviewFilterChip extends StatelessWidget {
+  const _ReviewFilterChip({
     required this.label,
-    required this.selected,
+    required this.count,
+    required this.color,
+    required this.isSelected,
     required this.onTap,
-    this.color,
+    required this.dark,
   });
 
   final String label;
-  final bool selected;
+  final int count;
+  final Color color;
+  final bool isSelected;
   final VoidCallback onTap;
-  final Color? color;
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = color ?? AppColors.primary;
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? activeColor.withValues(alpha: 0.16) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected
+              ? color.withValues(alpha: dark ? 0.2 : 0.1)
+              : (dark ? AppColors.darkSurface : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? activeColor : AppColors.borderPrimary,
-            width: selected ? 1.4 : 1.0,
+            color: isSelected ? color : Colors.transparent,
+            width: 1.2,
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-            color: selected ? activeColor : AppColors.textSecondary,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? color
+                    : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 1.5,
+              ),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? color
+                    : (dark ? AppColors.darkCard : const Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected
+                      ? Colors.white
+                      : (dark ? AppColors.textWhite : AppColors.textPrimary),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

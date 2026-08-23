@@ -101,33 +101,35 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               ),
             ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  if (widget.challengeId != null) ...[
+            child: Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    if (widget.challengeId != null) ...[
+                      _PeriodTabChip(
+                        label: 'This Challenge',
+                        icon: Iconsax.cup_copy,
+                        selected: _ctrl.activeTab.value == 'challenge',
+                        onTap: () => _ctrl.setTab('challenge'),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     _PeriodTabChip(
-                      label: 'This Challenge',
-                      icon: Iconsax.cup_copy,
-                      selected: _ctrl.activeTab.value == 'challenge',
-                      onTap: () => _ctrl.setTab('challenge'),
+                      label: 'This Week',
+                      icon: Iconsax.calendar_1_copy,
+                      selected: _ctrl.activeTab.value == 'weekly',
+                      onTap: () => _ctrl.setTab('weekly'),
                     ),
                     const SizedBox(width: 8),
+                    _PeriodTabChip(
+                      label: 'This Month',
+                      icon: Iconsax.calendar_copy,
+                      selected: _ctrl.activeTab.value == 'monthly',
+                      onTap: () => _ctrl.setTab('monthly'),
+                    ),
                   ],
-                  _PeriodTabChip(
-                    label: 'This Week',
-                    icon: Iconsax.calendar_1_copy,
-                    selected: _ctrl.activeTab.value == 'weekly',
-                    onTap: () => _ctrl.setTab('weekly'),
-                  ),
-                  const SizedBox(width: 8),
-                  _PeriodTabChip(
-                    label: 'This Month',
-                    icon: Iconsax.calendar_copy,
-                    selected: _ctrl.activeTab.value == 'monthly',
-                    onTap: () => _ctrl.setTab('monthly'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

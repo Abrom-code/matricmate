@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_attempt_controller.dart';
+import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -199,100 +200,20 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
                 ),
               ),
 
-              // ── Question & Options Content ────────────────────────
+              // ── Question Box Template ────────────────────────────
               Expanded(
                 child: SingleChildScrollView(
                   controller: _scrollCtrl,
                   padding: const EdgeInsets.all(AppSizes.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Question text
-                      Container(
-                        padding: const EdgeInsets.all(AppSizes.md),
-                        decoration: BoxDecoration(
-                          color: dark ? AppColors.darkCard : AppColors.white,
-                          borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
-                          border: Border.all(
-                            color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
-                          ),
-                        ),
-                        child: Text(
-                          currentQ.questionText,
-                          style: const TextStyle(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w600,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.spaceBtwSections),
-
-                      // Choices list
-                      ...List.generate(currentQ.choices.length, (idx) {
-                        final choiceText = currentQ.choices[idx];
-                        final isSelected = selectedChoice == choiceText || selectedChoice == idx.toString();
-                        final optionLetter = String.fromCharCode(65 + idx);
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: AppSizes.sm + 4),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
-                            onTap: () => _ctrl.selectChoice(currentQ.id, choiceText),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              padding: const EdgeInsets.all(AppSizes.md),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.primary.withValues(alpha: 0.12)
-                                    : (dark ? AppColors.darkCard : AppColors.white),
-                                borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
-                                  width: isSelected ? 1.8 : 1.0,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 32,
-                                    height: 32,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? AppColors.primary
-                                          : (dark ? AppColors.darkContainer : AppColors.grey.withValues(alpha: 0.2)),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Text(
-                                      optionLetter,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 13,
-                                        color: isSelected ? Colors.white : (dark ? Colors.white : Colors.black87),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSizes.md),
-                                  Expanded(
-                                    child: Text(
-                                      choiceText,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
-                                        color: isSelected && !dark ? AppColors.primary : null,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
+                  child: ChallengeQuestionBox(
+                    key: ValueKey('attempt_box_${currentQ.id}'),
+                    question: currentQ,
+                    orderIndex: _ctrl.currentIndex.value + 1,
+                    totalQuestions: _ctrl.totalQuestions,
+                    selectedChoice: selectedChoice,
+                    onSelectChoice: (choice) => _ctrl.selectChoice(currentQ.id, choice),
+                    isChecked: false,
+                    showExplanation: false,
                   ),
                 ),
               ),

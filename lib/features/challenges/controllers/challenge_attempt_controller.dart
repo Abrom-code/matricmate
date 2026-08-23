@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -148,13 +148,15 @@ class ChallengeAttemptController extends GetxController {
 
       final score = (res['score'] as num?)?.toInt() ?? 0;
 
-      // Show completion feedback and transition to leaderboard
+      // Show completion feedback and transition to full review screen
       Get.off(
-        () => LeaderboardScreen(
+        () => ChallengeReviewScreen(
+          title: title,
+          questions: questions.toList(),
+          userAnswers: Map<String, String>.from(userAnswers),
+          score: score,
+          timeSpentSeconds: _timeSpentSeconds,
           challengeId: challengeId,
-          challengeTitle: title,
-          userScore: score,
-          userTimeSeconds: _timeSpentSeconds,
         ),
       );
     } catch (e) {

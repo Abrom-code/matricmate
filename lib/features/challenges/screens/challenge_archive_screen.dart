@@ -10,11 +10,7 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ChallengeArchiveScreen extends StatefulWidget {
-  const ChallengeArchiveScreen({
-    super.key,
-    this.subjectId,
-    this.subjectTitle,
-  });
+  const ChallengeArchiveScreen({super.key, this.subjectId, this.subjectTitle});
 
   final int? subjectId;
   final String? subjectTitle;
@@ -95,7 +91,13 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Iconsax.archive_book_copy, size: 48, color: dark ? Colors.white24 : AppColors.textSecondary),
+                          Icon(
+                            Iconsax.archive_book_copy,
+                            size: 48,
+                            color: dark
+                                ? Colors.white24
+                                : AppColors.textSecondary,
+                          ),
                           const SizedBox(height: AppSizes.md),
                           Text(
                             widget.subjectTitle != null
@@ -108,7 +110,10 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           const Text(
                             'Once live rounds close, they will appear here for practice and review.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -126,18 +131,20 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
           child: ListView.separated(
             padding: const EdgeInsets.all(AppSizes.md),
             itemCount: _ctrl.challenges.length,
-            separatorBuilder: (_, __) => const SizedBox(height: AppSizes.spaceBtwItems),
+            separatorBuilder: (_, __) =>
+                const SizedBox(height: AppSizes.spaceBtwItems),
             itemBuilder: (context, idx) {
               final challenge = _ctrl.challenges[idx];
-              final isDown = _ctrl.isDownloaded(challenge.id);
-              final isDownloading = _ctrl.isDownloading[challenge.id] == true;
+              _ctrl.isDownloaded(challenge.id);
 
               return Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
                   side: BorderSide(
-                    color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+                    color: dark
+                        ? AppColors.darkBorder
+                        : AppColors.borderPrimary,
                   ),
                 ),
                 child: Padding(
@@ -149,7 +156,10 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(4),
@@ -166,18 +176,29 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           const SizedBox(width: AppSizes.xs),
                           Obx(() {
                             final isDown = _ctrl.isDownloaded(challenge.id);
-                            final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
+                            final isDone = _ctrl.isAttemptedOrPracticed(
+                              challenge.id,
+                            );
                             if (isDown && isDone) {
                               return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2.5,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.14),
+                                  color: const Color(
+                                    0xFF10B981,
+                                  ).withValues(alpha: 0.14),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.check_circle_rounded, size: 12, color: Color(0xFF10B981)),
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 12,
+                                      color: Color(0xFF10B981),
+                                    ),
                                     SizedBox(width: 3.5),
                                     Text(
                                       'Done',
@@ -199,11 +220,18 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                             if (isDown) {
                               return IconButton(
                                 tooltip: 'Remove offline download',
-                                icon: const Icon(Iconsax.trash_copy, size: 16, color: AppColors.error),
+                                icon: const Icon(
+                                  Iconsax.trash_copy,
+                                  size: 16,
+                                  color: AppColors.error,
+                                ),
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
-                                onPressed: () => _ctrl.confirmDeleteDownload(context, challenge),
+                                onPressed: () => _ctrl.confirmDeleteDownload(
+                                  context,
+                                  challenge,
+                                ),
                               );
                             }
                             return const SizedBox.shrink();
@@ -215,12 +243,18 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                       // Title
                       Text(
                         challenge.title,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.5,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       const Text(
                         'Practice offline at your own pace with answers & explanations.',
-                        style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: AppSizes.md),
 
@@ -230,7 +264,9 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           Expanded(
                             child: OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                               ),
                               onPressed: () => Get.to(
                                 () => LeaderboardScreen(
@@ -240,7 +276,10 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 ),
                               ),
                               icon: const Icon(Iconsax.ranking_copy, size: 14),
-                              label: const Text('Leaderboard', style: TextStyle(fontSize: 11.5)),
+                              label: const Text(
+                                'Leaderboard',
+                                style: TextStyle(fontSize: 11.5),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -248,18 +287,33 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                             flex: 2,
                             child: Obx(() {
                               final isDown = _ctrl.isDownloaded(challenge.id);
-                              final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
-                              final isDownloading = _ctrl.isDownloading[challenge.id] == true;
+                              final isDone = _ctrl.isAttemptedOrPracticed(
+                                challenge.id,
+                              );
+                              final isDownloading =
+                                  _ctrl.isDownloading[challenge.id] == true;
 
                               if (isDown && isDone) {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFF10B981),
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
                                   ),
-                                  onPressed: () => _ctrl.openCompletedChallenge(challenge),
-                                  icon: const Icon(Iconsax.document_text_1_copy, size: 14),
-                                  label: const Text('Review', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                  onPressed: () =>
+                                      _ctrl.openCompletedChallenge(challenge),
+                                  icon: const Icon(
+                                    Iconsax.document_text_1_copy,
+                                    size: 14,
+                                  ),
+                                  label: const Text(
+                                    'Review',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 );
                               }
 
@@ -267,7 +321,9 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.primary,
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
                                   ),
                                   onPressed: () => Get.to(
                                     () => ChallengePracticeScreen(
@@ -275,15 +331,26 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                       title: challenge.title,
                                     ),
                                   ),
-                                  icon: const Icon(Iconsax.book_1_copy, size: 14),
-                                  label: const Text('Practice', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                  icon: const Icon(
+                                    Iconsax.book_1_copy,
+                                    size: 14,
+                                  ),
+                                  label: const Text(
+                                    'Practice',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 );
                               }
 
                               return FilledButton.icon(
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppColors.primary,
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
                                 ),
                                 onPressed: isDownloading
                                     ? null
@@ -292,12 +359,21 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                     ? const SizedBox(
                                         width: 14,
                                         height: 14,
-                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
                                       )
-                                    : const Icon(Iconsax.document_download_copy, size: 14),
+                                    : const Icon(
+                                        Iconsax.document_download_copy,
+                                        size: 14,
+                                      ),
                                 label: Text(
                                   isDownloading ? 'Downloading...' : 'Download',
-                                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               );
                             }),

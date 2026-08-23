@@ -1,3 +1,4 @@
+import 'package:matricmate/features/challenges/screens/challenge_archive_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -6,6 +7,7 @@ import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -260,87 +262,45 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                               Divider(color: dark ? AppColors.darkBorder : AppColors.borderPrimary),
                               const SizedBox(height: AppSizes.md),
 
-                              // ── 2. Next Section: Subject TabBar & List ─────
-                              const Row(
+                              // ── 2. Next Section: Subjects List ───────
+                              Row(
                                 children: [
-                                  Icon(Iconsax.book_1_copy, size: 15, color: Color(0xFF8B5CF6)),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Challenges by Subject',
+                                  const Icon(Iconsax.book_1_copy, size: 15, color: Color(0xFF8B5CF6)),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Browse by Subject',
                                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '${_ctrl.studentSubjects.length} subjects',
+                                    style: TextStyle(fontSize: 11.5, color: dark ? Colors.white60 : AppColors.textSecondary),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 10),
 
-                              // Horizontal Subject TabBar Chips
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                physics: const BouncingScrollPhysics(),
-                                child: Row(
-                                  children: [
-                                    _SubjectFilterChip(
-                                      label: 'All Subjects',
-                                      icon: Iconsax.category_2_copy,
-                                      count: _ctrl.completedChallenges.length,
-                                      isSelected: _ctrl.selectedCompletedSubjectId.value == null,
-                                      onTap: () => _ctrl.selectCompletedSubject(null),
-                                      dark: dark,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ..._ctrl.studentSubjects.map((subj) {
-                                      final isSelected = _ctrl.selectedCompletedSubjectId.value == subj.id;
-                                      final count = _ctrl.completedChallenges
-                                          .where((c) => c.subjectId == subj.id)
-                                          .length;
-                                      return Padding(
-                                        padding: const EdgeInsets.only(right: 8),
-                                        child: _SubjectFilterChip(
-                                          label: subj.name,
-                                          count: count > 0 ? count : null,
-                                          isSelected: isSelected,
-                                          onTap: () => _ctrl.selectCompletedSubject(subj.id),
-                                          dark: dark,
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.spaceBtwItems),
+                              // Subject Navigation Cards
+                              ..._ctrl.studentSubjects.map((subj) {
+                                final count = _ctrl.completedChallenges
+                                    .where((c) => c.subjectId == subj.id)
+                                    .length;
 
-                              // Challenges List for Selected Subject
-                              if (_ctrl.displayedCompletedChallenges.isEmpty) ...[
-                                const SizedBox(height: 30),
-                                Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Iconsax.folder_open_copy, size: 40, color: dark ? Colors.white24 : AppColors.textSecondary),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        'No challenges found for this subject',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                          color: dark ? Colors.white70 : AppColors.textSecondary,
-                                        ),
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: _SubjectNavCard(
+                                    subject: subj,
+                                    challengeCount: count,
+                                    dark: dark,
+                                    onTap: () => Get.to(
+                                      () => ChallengeArchiveScreen(
+                                        subjectId: subj.id,
+                                        subjectTitle: subj.name,
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              ] else ...[
-                                ..._ctrl.displayedCompletedChallenges.map((challenge) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
-                                    child: _CompletedChallengeCard(
-                                      challenge: challenge,
-                                      ctrl: _ctrl,
-                                      dark: dark,
                                     ),
-                                  );
-                                }),
-                              ],
+                                  ),
+                                );
+                              }),
                             ],
                           ),
                   ),
@@ -924,96 +884,102 @@ class _EmptyState extends StatelessWidget {
 }
 
 
-// ── Subject Filter Chip ──────────────────────────────────────────────────────
+// ── Subject Navigation Card ──────────────────────────────────────────────────
 
-class _SubjectFilterChip extends StatelessWidget {
-  const _SubjectFilterChip({
-    required this.label,
-    this.icon,
-    this.count,
-    required this.isSelected,
-    required this.onTap,
+class _SubjectNavCard extends StatelessWidget {
+  const _SubjectNavCard({
+    required this.subject,
+    required this.challengeCount,
     required this.dark,
+    required this.onTap,
   });
 
-  final String label;
-  final IconData? icon;
-  final int? count;
-  final bool isSelected;
-  final VoidCallback onTap;
+  final SubjectModel subject;
+  final int challengeCount;
   final bool dark;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary
-              : (dark ? AppColors.darkCard : AppColors.white),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
-            width: 1.2,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.25),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
+        side: BorderSide(
+          color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
-                size: 13,
-                color: isSelected ? Colors.white : AppColors.primary,
-              ),
-              const SizedBox(width: 5),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected
-                    ? Colors.white
-                    : (dark ? AppColors.textWhite : AppColors.textPrimary),
-              ),
-            ),
-            if (count != null && count! > 0) ...[
-              const SizedBox(width: 5),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.white.withValues(alpha: 0.25)
-                      : (dark ? AppColors.darkContainer : const Color(0xFFF1F5F9)),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                child: const Icon(
+                  Iconsax.book_copy,
+                  size: 19,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      subject.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      challengeCount > 0
+                          ? '$challengeCount completed rounds'
+                          : 'No rounds yet',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: dark ? Colors.white60 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (challengeCount > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: dark ? AppColors.darkContainer : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '$challengeCount',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: dark ? Colors.white70 : AppColors.textPrimary,
+                    ),
                   ),
                 ),
+              const SizedBox(width: 8),
+              const Icon(
+                Iconsax.arrow_right_3_copy,
+                size: 15,
+                color: AppColors.textSecondary,
               ),
             ],
-          ],
+          ),
         ),
       ),
     );

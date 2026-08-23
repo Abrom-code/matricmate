@@ -10,7 +10,14 @@ import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ChallengeArchiveScreen extends StatefulWidget {
-  const ChallengeArchiveScreen({super.key});
+  const ChallengeArchiveScreen({
+    super.key,
+    this.subjectId,
+    this.subjectTitle,
+  });
+
+  final int? subjectId;
+  final String? subjectTitle;
 
   @override
   State<ChallengeArchiveScreen> createState() => _ChallengeArchiveScreenState();
@@ -22,16 +29,25 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
   @override
   void initState() {
     super.initState();
-    _ctrl = Get.put(ChallengeArchiveController());
+    _ctrl = Get.put(
+      ChallengeArchiveController(
+        subjectId: widget.subjectId,
+        subjectTitle: widget.subjectTitle,
+      ),
+      tag: widget.subjectId != null ? 'archive_${widget.subjectId}' : null,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
+    final screenTitle = widget.subjectTitle != null
+        ? '${widget.subjectTitle} Challenges'
+        : 'Past Challenges Archive';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Past Challenges Archive'),
+        title: Text(screenTitle),
         actions: [
           IconButton(
             tooltip: 'Refresh Archive',
@@ -43,27 +59,37 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
       ),
       body: Obx(() {
         if (_ctrl.isLoading.value && _ctrl.challenges.isEmpty) {
-          return const AppCircularLoading(title: 'Loading archived challenges...');
+          return AppCircularLoading(
+            title: widget.subjectTitle != null
+                ? 'Loading ${widget.subjectTitle} challenges...'
+                : 'Loading archived challenges...',
+          );
         }
 
         if (_ctrl.challenges.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Iconsax.archive_book_copy, size: 48, color: dark ? Colors.white24 : AppColors.textSecondary),
-                const SizedBox(height: AppSizes.md),
-                const Text(
-                  'No past challenges available yet',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Once live rounds close, they will be archived here for offline review.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.xl),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Iconsax.archive_book_copy, size: 48, color: dark ? Colors.white24 : AppColors.textSecondary),
+                  const SizedBox(height: AppSizes.md),
+                  Text(
+                    widget.subjectTitle != null
+                        ? 'No past ${widget.subjectTitle} challenges yet'
+                        : 'No past challenges available yet',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Once live rounds close, they will appear here for practice and review.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -93,14 +119,14 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header: Subject & Stream
+                      // Header: Subject & Stream & Delete Button
                       Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               challenge.subjectName ?? 'Subject',
@@ -112,50 +138,50 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                             ),
                           ),
                           const SizedBox(width: AppSizes.xs),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: (challenge.audience == 'both'
-                                      ? AppColors.secondary
-                                      : AppColors.primary)
-                                  .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${challenge.audience.toUpperCase()} STREAM',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: challenge.audience == 'both'
-                                    ? AppColors.secondary
-                                    : AppColors.primary,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          if (isDown)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.check_circle_rounded, size: 12, color: AppColors.success),
-                                  SizedBox(width: 3),
-                                  Text(
-                                    'Downloaded',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.success,
+                          Obx(() {
+                            final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
+                            if (isDone) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981).withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.check_circle_rounded, size: 12, color: Color(0xFF10B981)),
+                                    SizedBox(width: 3.5),
+                                    Text(
+                                      'Done',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF10B981),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          }),
+                          const Spacer(),
+                          Obx(() {
+                            final isDown = _ctrl.isDownloaded(challenge.id);
+                            final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
+                            if (isDown || isDone) {
+                              return IconButton(
+                                tooltip: 'Remove local data / practice',
+                                icon: const Icon(Iconsax.trash_copy, size: 16, color: AppColors.error),
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () => _ctrl.deleteDownload(challenge),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          }),
                         ],
                       ),
                       const SizedBox(height: AppSizes.sm),
@@ -172,7 +198,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                       ),
                       const SizedBox(height: AppSizes.md),
 
-                      // Actions
+                      // Actions (Leaderboard + Review / Practice / Download)
                       Row(
                         children: [
                           Expanded(
@@ -243,7 +269,8 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                       ),
                                     );
                             }),
-                          ),                        ],
+                          ),
+                        ],
                       ),
                     ],
                   ),

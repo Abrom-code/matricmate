@@ -14,7 +14,12 @@ import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ChallengeArchiveController extends GetxController {
+  ChallengeArchiveController({this.subjectId, this.subjectTitle});
+
   static ChallengeArchiveController get instance => Get.find();
+
+  final int? subjectId;
+  final String? subjectTitle;
 
   final _repo = ChallengeRepository();
   final _db = DatabaseService.instance;
@@ -45,6 +50,8 @@ class ChallengeArchiveController extends GetxController {
           : [];
 
       final filtered = list.where((c) {
+        if (subjectId != null && c.subjectId != subjectId) return false;
+
         final aud = c.audience.toLowerCase().trim();
         final matchesAudience = aud == 'both' || aud == userStream || userStream.isEmpty;
         if (!matchesAudience) return false;
@@ -126,7 +133,8 @@ class ChallengeArchiveController extends GetxController {
     try {
       await _db.deleteDownloadedChallenge(challenge.id);
       downloadedIds.remove(challenge.id);
-      ToastHelper.info('Download removed.');
+      attemptedIds.remove(challenge.id);
+      ToastHelper.info('Removed local data.');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }

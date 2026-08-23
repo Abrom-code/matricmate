@@ -534,9 +534,10 @@ class _CompletedChallengeCard extends StatelessWidget {
                 const Spacer(),
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
-                  if (isDown) {
+                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                  if (isDown || isDone) {
                     return IconButton(
-                      tooltip: 'Remove offline download',
+                      tooltip: 'Remove local data / practice',
                       icon: const Icon(Iconsax.trash_copy, size: 16, color: AppColors.error),
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,

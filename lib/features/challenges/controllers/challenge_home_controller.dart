@@ -197,7 +197,8 @@ class ChallengeHomeController extends GetxController {
       try {
         await _db.deleteDownloadedChallenge(challenge.id);
         downloadedIds.remove(challenge.id);
-        ToastHelper.info('Removed offline download.');
+        attemptedIds.remove(challenge.id);
+        ToastHelper.info('Removed offline download & local practice.');
       } catch (e) {
         AppExceptionHandler.handleResponse(e);
       }

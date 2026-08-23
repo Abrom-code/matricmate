@@ -710,6 +710,13 @@ class DatabaseService extends GetxController {
   Future<void> deleteDownloadedChallenge(String challengeId) async {
     final db = await database;
     await db.transaction((txn) async {
+      try {
+        await txn.delete(
+          'local_challenge_practice',
+          where: 'challenge_id = ?',
+          whereArgs: [challengeId],
+        );
+      } catch (_) {}
       await txn.delete(
         'local_challenge_questions',
         where: 'set_id = ? OR id = ?',

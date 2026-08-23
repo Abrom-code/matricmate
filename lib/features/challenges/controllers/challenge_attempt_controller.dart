@@ -1,3 +1,6 @@
+import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
@@ -165,6 +168,25 @@ class ChallengeAttemptController extends GetxController {
           reviewQuestions = questions.toList();
         }
       }
+
+      // Save to local DB so it's stored and marked as Done locally
+      try {
+        final db = DatabaseService.instance;
+        await db.saveChallengePracticeResult(
+          challengeId: challengeId,
+          score: score,
+          totalQuestions: reviewQuestions.length,
+          userAnswers: Map<String, String>.from(userAnswers),
+          timeSpentSeconds: _timeSpentSeconds,
+        );
+
+        if (Get.isRegistered<ChallengeHomeController>()) {
+          ChallengeHomeController.instance.markAttemptedOrPracticed(challengeId);
+        }
+        if (Get.isRegistered<ChallengeArchiveController>()) {
+          ChallengeArchiveController.instance.markAttemptedOrPracticed(challengeId);
+        }
+      } catch (_) {}
 
       // Show completion feedback and transition to full review screen
       Get.off(

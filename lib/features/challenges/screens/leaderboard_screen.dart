@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
@@ -56,9 +56,27 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.challengeTitle ?? 'ðŸ† Leaderboard Standings',
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.challengeTitle ?? 'Leaderboard Standings',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
+            Obx(() {
+              final stream = _ctrl.activeStream.value;
+              final label = stream == 'social' ? 'Social Stream' : 'Natural Stream';
+              return Text(
+                '$label • Top Performers',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: dark ? Colors.white60 : AppColors.textSecondary,
+                ),
+              );
+            }),
+          ],
         ),
         actions: [
           IconButton(
@@ -71,9 +89,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       ),
       body: Column(
         children: [
-                    // ── Period Tabs ──────────────────────────────────────────
+          // ── Period Tabs (This Challenge / This Week / This Month) ────────
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 10),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 8),
             decoration: BoxDecoration(
               color: dark ? AppColors.darkCard : AppColors.white,
               border: Border(
@@ -82,78 +101,38 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Period Tabs
-                Obx(
-                  () => SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        if (widget.challengeId != null) ...[
-                          _PeriodTabChip(
-                            label: 'This Challenge',
-                            icon: Iconsax.cup_copy,
-                            selected: _ctrl.activeTab.value == 'challenge',
-                            onTap: () => _ctrl.setTab('challenge'),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        _PeriodTabChip(
-                          label: 'This Week',
-                          icon: Iconsax.calendar_1_copy,
-                          selected: _ctrl.activeTab.value == 'weekly',
-                          onTap: () => _ctrl.setTab('weekly'),
-                        ),
-                        const SizedBox(width: 8),
-                        _PeriodTabChip(
-                          label: 'This Month',
-                          icon: Iconsax.calendar_copy,
-                          selected: _ctrl.activeTab.value == 'monthly',
-                          onTap: () => _ctrl.setTab('monthly'),
-                        ),
-                      ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  if (widget.challengeId != null) ...[
+                    _PeriodTabChip(
+                      label: 'This Challenge',
+                      icon: Iconsax.cup_copy,
+                      selected: _ctrl.activeTab.value == 'challenge',
+                      onTap: () => _ctrl.setTab('challenge'),
                     ),
+                    const SizedBox(width: 8),
+                  ],
+                  _PeriodTabChip(
+                    label: 'This Week',
+                    icon: Iconsax.calendar_1_copy,
+                    selected: _ctrl.activeTab.value == 'weekly',
+                    onTap: () => _ctrl.setTab('weekly'),
                   ),
-                ),
-
-                // Student's stream indicator badge
-                Obx(() {
-                  final stream = _ctrl.activeStream.value;
-                  final isNat = stream == 'natural';
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: (isNat ? AppColors.primary : AppColors.secondary).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isNat ? Iconsax.tree_copy : Iconsax.people_copy,
-                          size: 12,
-                          color: isNat ? AppColors.primary : AppColors.secondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${stream.isNotEmpty ? stream[0].toUpperCase() + stream.substring(1) : "Natural"} Stream',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
-                            color: isNat ? AppColors.primary : AppColors.secondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
+                  const SizedBox(width: 8),
+                  _PeriodTabChip(
+                    label: 'This Month',
+                    icon: Iconsax.calendar_copy,
+                    selected: _ctrl.activeTab.value == 'monthly',
+                    onTap: () => _ctrl.setTab('monthly'),
+                  ),
+                ],
+              ),
             ),
           ),
 
-          // ── Main Leaderboard List ─────────────────────────────────
+          // ── Main Leaderboard List ─────────────────────────────────────────
           Expanded(
             child: Obx(() {
               if (_ctrl.isLoading.value && _ctrl.entries.isEmpty) {
@@ -191,86 +170,103 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   controller: _scrollCtrl,
                   padding: const EdgeInsets.all(AppSizes.md),
                   children: [
-                    // -- Podium for Top 3 ---------------------------
+                    // ── Podium for Top 3 ───────────────────────────────────
                     if (top3.isNotEmpty) ...[
                       _PodiumView(top3: top3, dark: dark),
                       const SizedBox(height: AppSizes.spaceBtwSections),
                     ],
 
-                    // -- Remaining Rankings (#4+) -------------------
+                    // ── Remaining Rankings (#4+) ───────────────────────────
                     if (rest.isNotEmpty) ...[
                       const Text(
                         'All Rankings',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: AppSizes.sm),
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: rest.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 6),
-                        itemBuilder: (context, idx) {
-                          final entry = rest[idx];
-                          final isMe = entry.userId == _ctrl.currentUserId;
-                          return _StudentLeaderboardTile(
-                            entry: entry,
-                            isCurrentUser: isMe,
-                            dark: dark,
-                          );
-                        },
+                      ...rest.map(
+                        (e) => _StudentLeaderboardTile(
+                          entry: e,
+                          isCurrentUser: e.userId == _ctrl.currentUserId,
+                          dark: dark,
+                        ),
                       ),
                     ],
+                    const SizedBox(height: 80),
                   ],
                 ),
               );
             }),
           ),
 
-          // -- Pinned Current User Rank Bar --------------------------
+          // ── Pinned Current User Rank Bar ─────────────────────────────────
           Obx(() {
             final userEntry = _ctrl.currentUserEntry;
             if (userEntry == null) return const SizedBox.shrink();
 
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.md,
+                vertical: AppSizes.sm,
+              ),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: dark ? AppColors.darkCard : AppColors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 10,
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
                     offset: const Offset(0, -2),
                   ),
                 ],
+                border: Border(
+                  top: BorderSide(
+                    color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+                  ),
+                ),
               ),
               child: SafeArea(
                 top: false,
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
                       ),
                       child: Text(
-                        'Rank #${userEntry.rank}',
+                        '#${userEntry.rank}',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w800,
-                          fontSize: 13,
+                          fontSize: 14,
                         ),
                       ),
                     ),
                     const SizedBox(width: AppSizes.md),
-                    const Expanded(
-                      child: Text(
-                        'Your Current Standing',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Your Standing',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            userEntry.fullName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Column(
@@ -280,14 +276,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         Text(
                           '${userEntry.score} pts',
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w800,
                             fontSize: 14,
+                            color: AppColors.primary,
                           ),
                         ),
                         Text(
                           userEntry.formattedTime,
-                          style: const TextStyle(color: Colors.white70, fontSize: 11),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -302,7 +301,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 }
 
-// -- Podium View --------------------------------------------------------------
+// ── Podium View ──────────────────────────────────────────────────────────────
 
 class _PodiumView extends StatelessWidget {
   const _PodiumView({required this.top3, required this.dark});
@@ -312,61 +311,57 @@ class _PodiumView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ChallengeLeaderboardEntry? first = top3.isNotEmpty ? top3[0] : null;
-    final ChallengeLeaderboardEntry? second = top3.length > 1 ? top3[1] : null;
-    final ChallengeLeaderboardEntry? third = top3.length > 2 ? top3[2] : null;
+    final first = top3.isNotEmpty ? top3[0] : null;
+    final second = top3.length > 1 ? top3[1] : null;
+    final third = top3.length > 2 ? top3[2] : null;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // 2nd Place (Left)
-        if (second != null)
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // #2 Silver
           Expanded(
-            child: _PodiumStep(
-              entry: second,
-              rank: 2,
-              color: const Color(0xFFC0C0C0), // Silver
-              height: 125,
-              dark: dark,
-            ),
-          )
-        else
-          const Spacer(),
+            child: second != null
+                ? _PodiumStep(
+                    entry: second,
+                    rank: 2,
+                    height: 110,
+                    color: const Color(0xFF94A3B8),
+                    dark: dark,
+                  )
+                : const SizedBox.shrink(),
+          ),
+          const SizedBox(width: 8),
 
-        const SizedBox(width: 8),
-
-        // 1st Place (Center)
-        if (first != null)
+          // #1 Gold
           Expanded(
-            child: _PodiumStep(
-              entry: first,
-              rank: 1,
-              color: const Color(0xFFFFD700), // Gold
-              height: 155,
-              isFirst: true,
-              dark: dark,
-            ),
-          )
-        else
-          const Spacer(),
+            child: first != null
+                ? _PodiumStep(
+                    entry: first,
+                    rank: 1,
+                    height: 140,
+                    color: const Color(0xFFF59E0B),
+                    dark: dark,
+                  )
+                : const SizedBox.shrink(),
+          ),
+          const SizedBox(width: 8),
 
-        const SizedBox(width: 8),
-
-        // 3rd Place (Right)
-        if (third != null)
+          // #3 Bronze
           Expanded(
-            child: _PodiumStep(
-              entry: third,
-              rank: 3,
-              color: const Color(0xFFCD7F32), // Bronze
-              height: 110,
-              dark: dark,
-            ),
-          )
-        else
-          const Spacer(),
-      ],
+            child: third != null
+                ? _PodiumStep(
+                    entry: third,
+                    rank: 3,
+                    height: 90,
+                    color: const Color(0xFFD97706),
+                    dark: dark,
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -375,17 +370,15 @@ class _PodiumStep extends StatelessWidget {
   const _PodiumStep({
     required this.entry,
     required this.rank,
-    required this.color,
     required this.height,
-    this.isFirst = false,
+    required this.color,
     required this.dark,
   });
 
   final ChallengeLeaderboardEntry entry;
   final int rank;
-  final Color color;
   final double height;
-  final bool isFirst;
+  final Color color;
   final bool dark;
 
   @override
@@ -393,45 +386,55 @@ class _PodiumStep extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Avatar + Rank Crown
+        // Avatar circle
         Stack(
-          alignment: Alignment.topCenter,
-          clipBehavior: Clip.none,
+          alignment: Alignment.topRight,
           children: [
-            CircleAvatar(
-              radius: isFirst ? 26 : 22,
-              backgroundColor: color.withValues(alpha: 0.25),
-              child: CircleAvatar(
-                radius: isFirst ? 23 : 19,
-                backgroundColor: color.withValues(alpha: 0.8),
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withValues(alpha: 0.15),
+                border: Border.all(color: color, width: 2),
+              ),
+              child: Center(
                 child: Text(
-                  entry.firstName.isNotEmpty ? entry.firstName[0].toUpperCase() : 'S',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  entry.fullName.isNotEmpty ? entry.fullName[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
                 ),
               ),
             ),
-            if (isFirst)
+            if (rank == 1)
               const Positioned(
-                top: -12,
-                child: Icon(Iconsax.crown_copy, color: Color(0xFFFFD700), size: 20),
+                top: -4,
+                right: -2,
+                child: Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
               ),
           ],
         ),
         const SizedBox(height: 6),
+
+        // Name
         Text(
           entry.fullName,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: isFirst ? 12.5 : 11.5,
-          ),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11.5),
         ),
+        const SizedBox(height: 2),
+
+        // Score
         Text(
           '${entry.score} pts',
           style: TextStyle(
+            fontSize: 11,
             fontWeight: FontWeight.w800,
-            fontSize: isFirst ? 13 : 11.5,
             color: color,
           ),
         ),
@@ -442,18 +445,20 @@ class _PodiumStep extends StatelessWidget {
           height: height,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: dark ? 0.2 : 0.15),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+            color: color.withValues(alpha: dark ? 0.18 : 0.12),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(8),
+              topRight: Radius.circular(8),
+            ),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
-          alignment: Alignment.center,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 '#$rank',
                 style: TextStyle(
-                  fontSize: isFirst ? 26 : 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.w900,
                   color: color,
                 ),
@@ -461,9 +466,8 @@ class _PodiumStep extends StatelessWidget {
               Text(
                 entry.formattedTime,
                 style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: dark ? Colors.white70 : AppColors.darkGrey,
+                  fontSize: 10,
+                  color: dark ? Colors.white60 : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -474,7 +478,7 @@ class _PodiumStep extends StatelessWidget {
   }
 }
 
-// -- Student Leaderboard Tile (#4+) -------------------------------------------
+// ── Student Leaderboard Tile (#4+) ───────────────────────────────────────────
 
 class _StudentLeaderboardTile extends StatelessWidget {
   const _StudentLeaderboardTile({
@@ -490,12 +494,13 @@ class _StudentLeaderboardTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.sm),
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 10),
       decoration: BoxDecoration(
         color: isCurrentUser
-            ? AppColors.primary.withValues(alpha: 0.12)
+            ? AppColors.primary.withValues(alpha: dark ? 0.15 : 0.07)
             : (dark ? AppColors.darkCard : AppColors.white),
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
+        borderRadius: BorderRadius.circular(AppSizes.borderRadiusSm),
         border: Border.all(
           color: isCurrentUser
               ? AppColors.primary
@@ -579,6 +584,7 @@ class _PeriodTabChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChoiceChip(
+      showCheckmark: false,
       avatar: Icon(
         icon,
         size: 14,
@@ -597,4 +603,3 @@ class _PeriodTabChip extends StatelessWidget {
     );
   }
 }
-

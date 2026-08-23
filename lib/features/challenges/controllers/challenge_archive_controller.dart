@@ -40,6 +40,48 @@ class ChallengeArchiveController extends GetxController {
     loadArchive();
   }
 
+    Future<List<LeaderboardChallengeModel>> _loadLocalArchivedChallenges() async {
+    try {
+      final rows = await _db.getDownloadedChallengeSets(subjectId: subjectId);
+      final subjectsList = Get.isRegistered<SubjectsController>()
+          ? SubjectsController.instance.subjects
+          : [];
+
+      final list = <LeaderboardChallengeModel>[];
+      for (final r in rows) {
+        final cId = r['challenge_id']?.toString() ?? r['id']?.toString() ?? '';
+        final sId = (r['subject_id'] as num?)?.toInt() ?? 0;
+        final title = r['title']?.toString() ?? 'Challenge Set';
+        final aud = r['audience']?.toString() ?? 'both';
+
+        final qRows = await _db.getDownloadedChallengeQuestions(cId);
+
+        String? subjName;
+        if (subjectsList.isNotEmpty) {
+          final subj = subjectsList.firstWhereOrNull((s) => s.id == sId);
+          subjName = subj?.name;
+        }
+
+        list.add(
+          LeaderboardChallengeModel(
+            id: cId,
+            setId: cId,
+            title: title,
+            subjectId: sId,
+            subjectName: subjName ?? subjectTitle ?? 'Subject',
+            audience: aud,
+            questionCount: qRows.length,
+            status: 'closed',
+            createdAt: DateTime.now(),
+          ),
+        );
+      }
+      return list;
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<void> loadArchive({bool isManual = false}) async {
     if (isManual) {
       isManualRefreshing.value = true;
@@ -74,7 +116,15 @@ class ChallengeArchiveController extends GetxController {
       await refreshDownloadStates();
       await refreshAttemptStates();
     } catch (e) {
-      AppExceptionHandler.handleResponse(e);
+      // Fallback to local DB when offline or network fails
+      final localChallenges = await _loadLocalArchivedChallenges();
+      if (localChallenges.isNotEmpty) {
+        challenges.value = localChallenges;
+        await refreshDownloadStates();
+        await refreshAttemptStates();
+      } else {
+        AppExceptionHandler.handleResponse(e);
+      }
     } finally {
       isLoading.value = false;
       isManualRefreshing.value = false;
@@ -131,7 +181,15 @@ class ChallengeArchiveController extends GetxController {
       downloadedIds.add(challenge.id);
       ToastHelper.success('Downloaded for offline practice!');
     } catch (e) {
-      AppExceptionHandler.handleResponse(e);
+      // Fallback to local DB when offline or network fails
+      final localChallenges = await _loadLocalArchivedChallenges();
+      if (localChallenges.isNotEmpty) {
+        challenges.value = localChallenges;
+        await refreshDownloadStates();
+        await refreshAttemptStates();
+      } else {
+        AppExceptionHandler.handleResponse(e);
+      }
     } finally {
       isDownloading[challenge.id] = false;
     }

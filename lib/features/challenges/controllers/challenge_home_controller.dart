@@ -115,6 +115,48 @@ class ChallengeHomeController extends GetxController {
         .subscribe();
   }
 
+    Future<List<LeaderboardChallengeModel>> _loadLocalChallenges() async {
+    try {
+      final rows = await _db.getDownloadedChallengeSets();
+      final subjectsList = Get.isRegistered<SubjectsController>()
+          ? SubjectsController.instance.subjects
+          : [];
+
+      final list = <LeaderboardChallengeModel>[];
+      for (final r in rows) {
+        final cId = r['challenge_id']?.toString() ?? r['id']?.toString() ?? '';
+        final sId = (r['subject_id'] as num?)?.toInt() ?? 0;
+        final title = r['title']?.toString() ?? 'Challenge Set';
+        final aud = r['audience']?.toString() ?? 'both';
+
+        final qRows = await _db.getDownloadedChallengeQuestions(cId);
+
+        String? subjName;
+        if (subjectsList.isNotEmpty) {
+          final subj = subjectsList.firstWhereOrNull((s) => s.id == sId);
+          subjName = subj?.name;
+        }
+
+        list.add(
+          LeaderboardChallengeModel(
+            id: cId,
+            setId: cId,
+            title: title,
+            subjectId: sId,
+            subjectName: subjName ?? 'Subject',
+            audience: aud,
+            questionCount: qRows.length,
+            status: 'closed',
+            createdAt: DateTime.now(),
+          ),
+        );
+      }
+      return list;
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<void> loadAllChallenges({bool showLoading = true}) async {
     if (showLoading) isLoading.value = true;
     try {
@@ -164,7 +206,14 @@ class ChallengeHomeController extends GetxController {
       await refreshDownloadStates();
       await refreshAttemptStates();
     } catch (e) {
-      if (showLoading) AppExceptionHandler.handleResponse(e);
+      final local = await _loadLocalChallenges();
+      if (local.isNotEmpty) {
+        completedChallenges.value = local;
+        await refreshDownloadStates();
+        await refreshAttemptStates();
+      } else if (showLoading) {
+        AppExceptionHandler.handleResponse(e);
+      }
     } finally {
       if (showLoading) isLoading.value = false;
     }

@@ -126,6 +126,17 @@ class ChallengePracticeController extends GetxController {
       timeSpentSeconds: elapsedSeconds,
     );
 
+    if (questions.isNotEmpty) {
+      final isDown = await _db.isChallengeDownloaded(challengeId);
+      if (!isDown) {
+        await _db.insertDownloadedChallengeBundle({
+          'challenge_id': challengeId,
+          'title': title,
+          'questions': questions.map((q) => q.toJson()).toList(),
+        });
+      }
+    }
+
     // Notify home controller
     if (Get.isRegistered<ChallengeHomeController>()) {
       ChallengeHomeController.instance.markAttemptedOrPracticed(challengeId);

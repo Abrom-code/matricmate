@@ -230,7 +230,11 @@ class ChallengeHomeController extends GetxController {
 
     if (challenge.isLive) {
       Get.to(
-        () => ChallengeAttemptScreen(challengeId: challenge.id, title: challenge.title),
+        () => ChallengeAttemptScreen(
+          challengeId: challenge.id,
+          title: challenge.title,
+          audience: challenge.audience,
+        ),
       );
     } else if (challenge.isScheduled) {
       if (challenge.startsAt != null) {
@@ -272,6 +276,7 @@ class ChallengeHomeController extends GetxController {
           () => ChallengeReviewScreen(
             challengeId: challenge.id,
             title: challenge.title,
+            audience: challenge.audience,
             questions: questions,
             userAnswers: userAnswers,
             score: attempt.score,

@@ -118,42 +118,73 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                // Stream Tabs (Natural / Social)
+                // Stream Tabs (Natural / Social) - only shown if both streams or global standing
                 Obx(
-                  () => Row(
-                    children: [
-                      const Text(
-                        'Stream: ',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(width: 6),
-                      ChoiceChip(
-                        label: const Text('Natural Stream', style: TextStyle(fontSize: 11)),
-                        selected: _ctrl.activeStream.value == 'natural',
-                        onSelected: (_) => _ctrl.setStream('natural'),
-                        selectedColor: AppColors.primary.withValues(alpha: 0.18),
-                        labelStyle: TextStyle(
-                          color: _ctrl.activeStream.value == 'natural'
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                          fontWeight: FontWeight.bold,
+                  () {
+                    if (!_ctrl.shouldShowStreamFilter) {
+                      final stream = _ctrl.activeStream.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: (stream == 'natural' ? AppColors.primary : AppColors.secondary).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '${stream.isNotEmpty ? stream[0].toUpperCase() + stream.substring(1) : ""} Stream Only',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: stream == 'natural' ? AppColors.primary : AppColors.secondary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                      );
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'Stream: ',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(width: 6),
+                          ChoiceChip(
+                            label: const Text('Natural Stream', style: TextStyle(fontSize: 11)),
+                            selected: _ctrl.activeStream.value == 'natural',
+                            onSelected: (_) => _ctrl.setStream('natural'),
+                            selectedColor: AppColors.primary.withValues(alpha: 0.18),
+                            labelStyle: TextStyle(
+                              color: _ctrl.activeStream.value == 'natural'
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            label: const Text('Social Stream', style: TextStyle(fontSize: 11)),
+                            selected: _ctrl.activeStream.value == 'social',
+                            onSelected: (_) => _ctrl.setStream('social'),
+                            selectedColor: AppColors.secondary.withValues(alpha: 0.18),
+                            labelStyle: TextStyle(
+                              color: _ctrl.activeStream.value == 'social'
+                                  ? AppColors.secondary
+                                  : AppColors.textSecondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      ChoiceChip(
-                        label: const Text('Social Stream', style: TextStyle(fontSize: 11)),
-                        selected: _ctrl.activeStream.value == 'social',
-                        onSelected: (_) => _ctrl.setStream('social'),
-                        selectedColor: AppColors.secondary.withValues(alpha: 0.18),
-                        labelStyle: TextStyle(
-                          color: _ctrl.activeStream.value == 'social'
-                              ? AppColors.secondary
-                              : AppColors.textSecondary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ],
             ),

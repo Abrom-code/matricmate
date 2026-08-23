@@ -18,6 +18,7 @@ class ChallengeReviewScreen extends StatefulWidget {
     this.score,
     this.timeSpentSeconds,
     this.challengeId,
+    this.audience,
   });
 
   final String title;
@@ -26,6 +27,7 @@ class ChallengeReviewScreen extends StatefulWidget {
   final int? score;
   final int? timeSpentSeconds;
   final String? challengeId;
+  final String? audience;
 
   @override
   State<ChallengeReviewScreen> createState() => _ChallengeReviewScreenState();
@@ -103,6 +105,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                 () => LeaderboardScreen(
                   challengeId: widget.challengeId,
                   challengeTitle: widget.title,
+                  audience: widget.audience,
                   userScore: correctCount,
                   userTimeSeconds: widget.timeSpentSeconds,
                 ),
@@ -293,6 +296,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                         () => LeaderboardScreen(
                           challengeId: widget.challengeId,
                           challengeTitle: widget.title,
+                          audience: widget.audience,
                           userScore: correctCount,
                           userTimeSeconds: widget.timeSpentSeconds,
                         ),

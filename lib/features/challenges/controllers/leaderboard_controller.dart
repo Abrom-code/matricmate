@@ -5,9 +5,10 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class LeaderboardController extends GetxController {
-  LeaderboardController({this.challengeId, String? audience}) {
-    if (audience != null && audience.isNotEmpty && audience != 'both') {
-      activeStream.value = audience.toLowerCase();
+  LeaderboardController({this.challengeId, this.audience}) {
+    final aud = audience?.toLowerCase().trim();
+    if (aud != null && aud.isNotEmpty && aud != 'both') {
+      activeStream.value = aud;
     } else {
       activeStream.value = UserController.instance.user.value.stream.toLowerCase().isNotEmpty
           ? UserController.instance.user.value.stream.toLowerCase()
@@ -21,6 +22,7 @@ class LeaderboardController extends GetxController {
   }
 
   final String? challengeId;
+  final String? audience;
   final _repo = ChallengeRepository();
 
   final isLoading = false.obs;
@@ -32,6 +34,16 @@ class LeaderboardController extends GetxController {
 
   ChallengeLeaderboardEntry? get currentUserEntry =>
       entries.firstWhereOrNull((e) => e.userId == currentUserId);
+
+  bool get shouldShowStreamFilter {
+    if (activeTab.value == 'challenge' && challengeId != null) {
+      final aud = audience?.toLowerCase().trim();
+      if (aud != null && aud.isNotEmpty && aud != 'both') {
+        return false;
+      }
+    }
+    return true;
+  }
 
   @override
   void onInit() {

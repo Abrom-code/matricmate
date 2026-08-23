@@ -8,10 +8,15 @@ import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ChallengeAttemptController extends GetxController {
-  ChallengeAttemptController({required this.challengeId, required this.title});
+  ChallengeAttemptController({
+    required this.challengeId,
+    required this.title,
+    this.audience,
+  });
 
   final String challengeId;
   final String title;
+  final String? audience;
 
   final _repo = ChallengeRepository();
 
@@ -170,6 +175,7 @@ class ChallengeAttemptController extends GetxController {
           score: score,
           timeSpentSeconds: _timeSpentSeconds,
           challengeId: challengeId,
+          audience: audience,
         ),
       );
     } catch (e) {

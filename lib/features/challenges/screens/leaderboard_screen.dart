@@ -80,7 +80,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ),
         actions: [
           Obx(() {
-            if (_ctrl.isLoading.value) {
+            if (_ctrl.isManualRefreshing.value) {
               return const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
                 child: Center(
@@ -95,7 +95,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             return IconButton(
               tooltip: 'Refresh Rankings',
               icon: const Icon(Icons.refresh_rounded),
-              onPressed: () => _ctrl.loadLeaderboard(),
+              onPressed: () => _ctrl.manualRefresh(),
             );
           }),
           const SizedBox(width: 4),
@@ -151,7 +151,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           // ── Main Leaderboard List ─────────────────────────────────────────
           Expanded(
             child: Obx(() {
-              if (_ctrl.isLoading.value && _ctrl.entries.isEmpty) {
+              if (_ctrl.isLoading.value) {
                 return const AppCircularLoading(title: 'Computing standings...');
               }
 

@@ -1,4 +1,4 @@
-﻿import 'package:get/get.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_leaderboard_entry.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -21,6 +21,7 @@ class LeaderboardController extends GetxController {
   final _repo = ChallengeRepository();
 
   final isLoading = false.obs;
+  final isManualRefreshing = false.obs;
   final activeTab = 'challenge'.obs; // 'challenge', 'weekly', 'monthly'
   final activeStream = 'natural'.obs; // Locked to student's stream
   final entries = <ChallengeLeaderboardEntry>[].obs;
@@ -36,8 +37,14 @@ class LeaderboardController extends GetxController {
     loadLeaderboard();
   }
 
-  Future<void> loadLeaderboard() async {
-    isLoading.value = true;
+  Future<void> loadLeaderboard({bool isManual = false}) async {
+    if (isManual) {
+      isManualRefreshing.value = true;
+    } else {
+      isLoading.value = true;
+      entries.clear();
+    }
+
     try {
       if (activeTab.value == 'challenge' && challengeId != null) {
         entries.value = await _repo.fetchLeaderboard(
@@ -62,12 +69,17 @@ class LeaderboardController extends GetxController {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoading.value = false;
+      isManualRefreshing.value = false;
     }
   }
 
   void setTab(String tab) {
     if (activeTab.value == tab) return;
     activeTab.value = tab;
-    loadLeaderboard();
+    loadLeaderboard(isManual: false);
+  }
+
+  Future<void> manualRefresh() async {
+    await loadLeaderboard(isManual: true);
   }
 }

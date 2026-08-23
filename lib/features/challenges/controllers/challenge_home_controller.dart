@@ -2,12 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
+import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,10 +18,16 @@ class ChallengeHomeController extends GetxController {
   static ChallengeHomeController get instance => Get.find();
 
   final _repo = ChallengeRepository();
+  final _db = DatabaseService.instance;
   final _sb = Supabase.instance.client;
 
   final isLoading = false.obs;
-  final challenges = <LeaderboardChallengeModel>[].obs;
+  final availableChallenges = <LeaderboardChallengeModel>[].obs;
+  final completedChallenges = <LeaderboardChallengeModel>[].obs;
+
+  final downloadedIds = <String>{}.obs;
+  final isDownloading = <String, bool>{}.obs;
+
   final now = DateTime.now().obs;
 
   Timer? _countdownTimer;
@@ -31,11 +39,10 @@ class ChallengeHomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadChallenges();
+    loadAllChallenges();
     _startTimer();
     _startRealtime();
 
-    // Listen to user status changes
     ever(UserController.instance.user, (_) => update());
   }
 
@@ -64,23 +71,24 @@ class ChallengeHomeController extends GetxController {
           table: 'leaderboard_challenges',
           callback: (payload) {
             debugPrint('[Realtime] Challenge changed: ${payload.eventType}');
-            loadChallenges(showLoading: false);
+            loadAllChallenges(showLoading: false);
           },
         )
         .subscribe();
   }
 
-  Future<void> loadChallenges({bool showLoading = true}) async {
+  Future<void> loadAllChallenges({bool showLoading = true}) async {
     if (showLoading) isLoading.value = true;
     try {
-      final list = await _repo.fetchVisibleChallenges(stream: userStream);
       final isNatural = userStream.toLowerCase().trim() == 'natural';
-
       final subjectsList = Get.isRegistered<SubjectsController>()
           ? SubjectsController.instance.subjects
           : [];
 
-      final filtered = list.where((c) {
+      // 1. Fetch available & live challenges
+      final visibleList = await _repo.fetchVisibleChallenges(stream: userStream);
+      final filteredAvailable = visibleList.where((c) {
+        if (c.isClosed || c.isArchived) return false;
         final aud = c.audience.toLowerCase().trim();
         final matchesAudience = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
         if (!matchesAudience) return false;
@@ -94,11 +102,99 @@ class ChallengeHomeController extends GetxController {
         return true;
       }).toList();
 
-      challenges.value = filtered;
+      availableChallenges.value = filteredAvailable;
+
+      // 2. Fetch completed / closed challenges
+      final closedList = await _repo.fetchClosedChallenges(stream: userStream);
+      final filteredClosed = closedList.where((c) {
+        final aud = c.audience.toLowerCase().trim();
+        final matchesAudience = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
+        if (!matchesAudience) return false;
+
+        if (subjectsList.isNotEmpty) {
+          final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
+          if (subj != null) {
+            return subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+          }
+        }
+        return true;
+      }).toList();
+
+      completedChallenges.value = filteredClosed;
+
+      // 3. Refresh offline download states
+      await refreshDownloadStates();
     } catch (e) {
       if (showLoading) AppExceptionHandler.handleResponse(e);
     } finally {
       if (showLoading) isLoading.value = false;
+    }
+  }
+
+  Future<void> refreshDownloadStates() async {
+    final downloaded = <String>{};
+    for (final c in [...availableChallenges, ...completedChallenges]) {
+      final isDown = await _db.isChallengeDownloaded(c.id);
+      if (isDown) downloaded.add(c.id);
+    }
+    downloadedIds.assignAll(downloaded);
+  }
+
+  bool isDownloaded(String challengeId) => downloadedIds.contains(challengeId);
+
+  Future<void> downloadChallenge(LeaderboardChallengeModel challenge) async {
+    if (!isPremium) {
+      Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
+      return;
+    }
+
+    try {
+      isDownloading[challenge.id] = true;
+      final userId = UserController.instance.user.value.id;
+
+      final bundle = await _repo.fetchChallengeBundle(
+        challengeId: challenge.id,
+        userId: userId,
+      );
+
+      await _db.insertDownloadedChallengeBundle(bundle);
+      downloadedIds.add(challenge.id);
+      ToastHelper.success('Downloaded for offline practice!');
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isDownloading[challenge.id] = false;
+    }
+  }
+
+  Future<void> confirmDeleteDownload(BuildContext context, LeaderboardChallengeModel challenge) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Offline Download'),
+        content: Text('Are you sure you want to remove "${challenge.title}" from your device storage?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _db.deleteDownloadedChallenge(challenge.id);
+        downloadedIds.remove(challenge.id);
+        ToastHelper.info('Removed offline download.');
+      } catch (e) {
+        AppExceptionHandler.handleResponse(e);
+      }
     }
   }
 
@@ -121,7 +217,6 @@ class ChallengeHomeController extends GetxController {
   }
 
   void onChallengeTapped(LeaderboardChallengeModel challenge) {
-    // 1. Check premium requirement
     if (!isPremium) {
       Get.bottomSheet(
         const PremiumBottomSheet(),
@@ -130,7 +225,6 @@ class ChallengeHomeController extends GetxController {
       return;
     }
 
-    // 2. State-specific routing
     if (challenge.isLive) {
       Get.to(
         () => ChallengeAttemptScreen(challengeId: challenge.id, title: challenge.title),
@@ -144,13 +238,17 @@ class ChallengeHomeController extends GetxController {
         ToastHelper.info('This challenge has not started yet.');
       }
     } else if (challenge.isClosed || challenge.isArchived) {
-      Get.to(
-        () => LeaderboardScreen(
-          challengeId: challenge.id,
-          challengeTitle: challenge.title,
-          audience: challenge.audience,
-        ),
-      );
+      openCompletedChallenge(challenge);
     }
+  }
+
+  void openCompletedChallenge(LeaderboardChallengeModel challenge) {
+    Get.to(
+      () => ChallengePracticeScreen(
+        challengeId: challenge.id,
+        title: challenge.title,
+        setId: challenge.setId,
+      ),
+    );
   }
 }

@@ -655,12 +655,12 @@ class DatabaseService extends GetxController {
     return await db.query('local_challenge_sets', orderBy: 'downloaded_at DESC');
   }
 
-  Future<List<Map<String, dynamic>>> getDownloadedChallengeQuestions(String setId) async {
+  Future<List<Map<String, dynamic>>> getDownloadedChallengeQuestions(String challengeId) async {
     final db = await database;
     return await db.query(
       'local_challenge_questions',
-      where: 'set_id = ?',
-      whereArgs: [setId],
+      where: 'set_id = ? OR id = ?',
+      whereArgs: [challengeId, challengeId],
       orderBy: 'order_index ASC',
     );
   }
@@ -669,25 +669,25 @@ class DatabaseService extends GetxController {
     final db = await database;
     final res = await db.query(
       'local_challenge_sets',
-      where: 'challenge_id = ?',
-      whereArgs: [challengeId],
+      where: 'challenge_id = ? OR id = ?',
+      whereArgs: [challengeId, challengeId],
       limit: 1,
     );
     return res.isNotEmpty;
   }
 
-  Future<void> deleteDownloadedChallenge(String setId) async {
+  Future<void> deleteDownloadedChallenge(String challengeId) async {
     final db = await database;
     await db.transaction((txn) async {
       await txn.delete(
         'local_challenge_questions',
         where: 'set_id = ?',
-        whereArgs: [setId],
+        whereArgs: [challengeId],
       );
       await txn.delete(
         'local_challenge_sets',
-        where: 'id = ?',
-        whereArgs: [setId],
+        where: 'id = ? OR challenge_id = ?',
+        whereArgs: [challengeId, challengeId],
       );
     });
   }

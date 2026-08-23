@@ -1,15 +1,22 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class ChallengePracticeController extends GetxController {
-  ChallengePracticeController({required this.setId, required this.title});
+  ChallengePracticeController({
+    required this.challengeId,
+    required this.title,
+    this.setId,
+  });
 
-  final String setId;
+  final String challengeId;
   final String title;
+  final String? setId;
 
   final _db = DatabaseService.instance;
+  final _repo = ChallengeRepository();
 
   final isLoading = true.obs;
   final questions = <ChallengeQuestionModel>[].obs;
@@ -30,10 +37,15 @@ class ChallengePracticeController extends GetxController {
   Future<void> loadQuestions() async {
     isLoading.value = true;
     try {
-      final rows = await _db.getDownloadedChallengeQuestions(setId);
-      questions.value = rows
-          .map((r) => ChallengeQuestionModel.fromJson(r))
-          .toList();
+      final rows = await _db.getDownloadedChallengeQuestions(challengeId);
+      if (rows.isNotEmpty) {
+        questions.value = rows
+            .map((r) => ChallengeQuestionModel.fromJson(r))
+            .toList();
+      } else {
+        // Fallback to online repository if not downloaded
+        questions.value = await _repo.fetchQuestionsForReview(challengeId);
+      }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

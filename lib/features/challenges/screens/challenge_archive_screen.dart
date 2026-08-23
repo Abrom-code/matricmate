@@ -205,8 +205,9 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               ),
                               onPressed: () => Get.to(
                                 () => ChallengePracticeScreen(
-                                  setId: challenge.setId,
+                                  challengeId: challenge.id,
                                   title: challenge.title,
+                                  setId: challenge.setId,
                                 ),
                               ),
                               icon: const Icon(Iconsax.book_1_copy, size: 15),

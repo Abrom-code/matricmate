@@ -223,7 +223,8 @@ class AppRoutes {
       page: () {
         final args = Get.arguments as Map<String, dynamic>? ?? {};
         return ChallengePracticeScreen(
-          setId: args['set_id']?.toString() ?? '',
+          challengeId: args['challenge_id']?.toString() ?? args['id']?.toString() ?? args['set_id']?.toString() ?? '',
+          setId: args['set_id']?.toString(),
           title: args['title']?.toString() ?? 'Practice Challenge',
         );
       },

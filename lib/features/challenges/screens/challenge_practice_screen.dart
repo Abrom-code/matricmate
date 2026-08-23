@@ -11,12 +11,14 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 class ChallengePracticeScreen extends StatefulWidget {
   const ChallengePracticeScreen({
     super.key,
-    required this.setId,
+    required this.challengeId,
     required this.title,
+    this.setId,
   });
 
-  final String setId;
+  final String challengeId;
   final String title;
+  final String? setId;
 
   @override
   State<ChallengePracticeScreen> createState() => _ChallengePracticeScreenState();
@@ -31,10 +33,11 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
     super.initState();
     _ctrl = Get.put(
       ChallengePracticeController(
-        setId: widget.setId,
+        challengeId: widget.challengeId,
         title: widget.title,
+        setId: widget.setId,
       ),
-      tag: 'practice_${widget.setId}',
+      tag: 'practice_${widget.challengeId}',
     );
   }
 

@@ -32,7 +32,7 @@ class ChallengeRepository {
     // Query active/scheduled/closed rounds
     final query = _sb
         .from('leaderboard_challenges')
-        .select('*, subjects(name), challenge_question_sets(title)')
+        .select('*, subjects(name), challenge_questions(id)')
         .or('status.in.(live,closed),and(status.eq.scheduled,starts_at.lte.$twelveHoursFromNow)')
         .order('starts_at', ascending: true);
 
@@ -77,10 +77,10 @@ class ChallengeRepository {
         'title': res['title']?.toString() ?? '',
         'duration_seconds': (res['duration_seconds'] as num?)?.toInt() ?? 3600,
         'started_at': res['started_at'] != null
-            ? DateTime.tryParse(res['started_at'].toString())
+            ? DateTime.tryParse(res['started_at'].toString())?.toLocal()
             : DateTime.now(),
         'ends_at': res['ends_at'] != null
-            ? DateTime.tryParse(res['ends_at'].toString())
+            ? DateTime.tryParse(res['ends_at'].toString())?.toLocal()
             : null,
         'questions': questions,
       };
@@ -88,7 +88,7 @@ class ChallengeRepository {
 
     throw const AppFailure(
       title: 'Error',
-      message: 'Failed to initialize challenge attempt.',
+      message: 'Failed to start challenge attempt',
     );
   }
 
@@ -194,7 +194,7 @@ class ChallengeRepository {
 
     var query = _sb
         .from('leaderboard_challenges')
-        .select('*, subjects(name), challenge_question_sets(title)')
+        .select('*, subjects(name), challenge_questions(id)')
         .inFilter('status', ['closed', 'archived']);
 
     if (subjectId != null) {
@@ -219,17 +219,25 @@ class ChallengeRepository {
   }) async {
     await _checkConnectivity();
 
-    final res = await _sb.rpc('rpc_get_challenge_bundle', params: {
-      'p_challenge_id': challengeId,
-      'p_user_id': userId,
-    });
+    final chRow = await _sb
+        .from('leaderboard_challenges')
+        .select('*, subjects(name)')
+        .eq('id', challengeId)
+        .single();
 
-    if (res is Map<String, dynamic>) {
-      return res;
-    }
-    throw const AppFailure(
-      title: 'Download Failed',
-      message: 'Unable to retrieve challenge archive.',
-    );
+    final qRows = await _sb
+        .from('challenge_questions')
+        .select('*')
+        .eq('challenge_id', challengeId)
+        .order('order_index', ascending: true);
+
+    return {
+      'id': chRow['id']?.toString() ?? '',
+      'challenge_id': chRow['id']?.toString() ?? '',
+      'subject_id': (chRow['subject_id'] as num?)?.toInt() ?? 0,
+      'title': chRow['title']?.toString() ?? 'Challenge',
+      'audience': chRow['audience']?.toString() ?? 'both',
+      'questions': qRows,
+    };
   }
 }

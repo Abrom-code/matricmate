@@ -201,7 +201,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                           ),
                   ),
 
-                  // Tab 2: Completed / Past Challenges
+                  // Tab 2: Completed / Past Challenges (Recent 3 + Subject Filter)
                   RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: () => _ctrl.loadAllChallenges(),
@@ -211,23 +211,82 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                             subtitle: 'Once live challenges end, you can review and practice them here.',
                             dark: dark,
                           )
-                        : ListView.separated(
+                        : ListView(
                             padding: EdgeInsets.fromLTRB(
                               AppSizes.md,
-                              AppSizes.md,
+                              AppSizes.sm,
                               AppSizes.md,
                               MediaQuery.paddingOf(context).bottom + 90,
                             ),
-                            itemCount: _ctrl.completedChallenges.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: AppSizes.spaceBtwItems),
-                            itemBuilder: (context, index) {
-                              final challenge = _ctrl.completedChallenges[index];
-                              return _CompletedChallengeCard(
-                                challenge: challenge,
-                                ctrl: _ctrl,
-                                dark: dark,
-                              );
-                            },
+                            children: [
+                              // ── Subject Filter Bar ──────────────────────────
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                child: Row(
+                                  children: [
+                                    _SubjectFilterChip(
+                                      label: 'Recent 3',
+                                      icon: Iconsax.clock_copy,
+                                      isSelected: _ctrl.selectedCompletedSubjectId.value == null,
+                                      onTap: () => _ctrl.selectCompletedSubject(null),
+                                      dark: dark,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ..._ctrl.studentSubjects.map((subj) {
+                                      final isSelected = _ctrl.selectedCompletedSubjectId.value == subj.id;
+                                      final count = _ctrl.completedChallenges
+                                          .where((c) => c.subjectId == subj.id)
+                                          .length;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: _SubjectFilterChip(
+                                          label: subj.name,
+                                          count: count > 0 ? count : null,
+                                          isSelected: isSelected,
+                                          onTap: () => _ctrl.selectCompletedSubject(subj.id),
+                                          dark: dark,
+                                        ),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.spaceBtwItems),
+
+                              // ── Completed Challenges List (Recent 3 or filtered by Subject) ──
+                              if (_ctrl.displayedCompletedChallenges.isEmpty) ...[
+                                const SizedBox(height: 40),
+                                Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Iconsax.folder_open_copy, size: 44, color: dark ? Colors.white24 : AppColors.textSecondary),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'No completed challenges for this subject yet',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13.5,
+                                          color: dark ? Colors.white70 : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ] else ...[
+                                ..._ctrl.displayedCompletedChallenges.map((challenge) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+                                    child: _CompletedChallengeCard(
+                                      challenge: challenge,
+                                      ctrl: _ctrl,
+                                      dark: dark,
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ],
                           ),
                   ),
                 ],
@@ -802,6 +861,103 @@ class _EmptyState extends StatelessWidget {
                 color: dark ? Colors.white60 : AppColors.textSecondary,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+// ── Subject Filter Chip ──────────────────────────────────────────────────────
+
+class _SubjectFilterChip extends StatelessWidget {
+  const _SubjectFilterChip({
+    required this.label,
+    this.icon,
+    this.count,
+    required this.isSelected,
+    required this.onTap,
+    required this.dark,
+  });
+
+  final String label;
+  final IconData? icon;
+  final int? count;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary
+              : (dark ? AppColors.darkCard : AppColors.white),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
+            width: 1.2,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 13,
+                color: isSelected ? Colors.white : AppColors.primary,
+              ),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected
+                    ? Colors.white
+                    : (dark ? AppColors.textWhite : AppColors.textPrimary),
+              ),
+            ),
+            if (count != null && count! > 0) ...[
+              const SizedBox(width: 5),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.25)
+                      : (dark ? AppColors.darkContainer : const Color(0xFFF1F5F9)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

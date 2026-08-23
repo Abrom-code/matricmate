@@ -1,3 +1,4 @@
+import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -32,6 +33,38 @@ class ChallengeHomeController extends GetxController {
   final downloadedIds = <String>{}.obs;
   final isDownloading = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
+  final selectedCompletedSubjectId = RxnInt(); // null = Recent 3 (default)
+
+  List<SubjectModel> get studentSubjects {
+    final isNatural = userStream.toLowerCase().trim() == 'natural';
+    if (Get.isRegistered<SubjectsController>()) {
+      return SubjectsController.instance.subjects.where((s) {
+        return s.isCommon || (isNatural ? s.isNatural : !s.isNatural);
+      }).toList();
+    }
+    return [];
+  }
+
+  List<LeaderboardChallengeModel> get displayedCompletedChallenges {
+    if (selectedCompletedSubjectId.value == null) {
+      // Default: show the recent 3
+      return completedChallenges.take(3).toList();
+    } else {
+      // Filter by selected subject: show all completed challenges for that subject
+      return completedChallenges
+          .where((c) => c.subjectId == selectedCompletedSubjectId.value)
+          .toList();
+    }
+  }
+
+  void selectCompletedSubject(int? subjectId) {
+    if (selectedCompletedSubjectId.value == subjectId) {
+      selectedCompletedSubjectId.value = null;
+    } else {
+      selectedCompletedSubjectId.value = subjectId;
+    }
+  }
+
 
   final now = DateTime.now().obs;
 

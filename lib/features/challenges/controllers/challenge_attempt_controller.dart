@@ -147,12 +147,25 @@ class ChallengeAttemptController extends GetxController {
       );
 
       final score = (res['score'] as num?)?.toInt() ?? 0;
+      final rawQuestions = res['questions'];
+      List<ChallengeQuestionModel> reviewQuestions = [];
+      if (rawQuestions is List && rawQuestions.isNotEmpty) {
+        reviewQuestions = rawQuestions
+            .map((q) => ChallengeQuestionModel.fromJson(q as Map<String, dynamic>))
+            .toList();
+      } else {
+        try {
+          reviewQuestions = await _repo.fetchQuestionsForReview(challengeId);
+        } catch (_) {
+          reviewQuestions = questions.toList();
+        }
+      }
 
       // Show completion feedback and transition to full review screen
       Get.off(
         () => ChallengeReviewScreen(
           title: title,
-          questions: questions.toList(),
+          questions: reviewQuestions,
           userAnswers: Map<String, String>.from(userAnswers),
           score: score,
           timeSpentSeconds: _timeSpentSeconds,

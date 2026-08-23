@@ -123,6 +123,19 @@ class ChallengeRepository {
     return {'success': true};
   }
 
+  Future<List<ChallengeQuestionModel>> fetchQuestionsForReview(String challengeId) async {
+    await _checkConnectivity();
+    final rows = await _sb
+        .from('challenge_questions')
+        .select('*')
+        .eq('challenge_id', challengeId)
+        .order('order_index', ascending: true);
+
+    return (rows as List)
+        .map((r) => ChallengeQuestionModel.fromJson(r as Map<String, dynamic>))
+        .toList();
+  }
+
   // ── Leaderboards ──────────────────────────────────────────────────────────
 
   Future<List<ChallengeLeaderboardEntry>> fetchLeaderboard({

@@ -2,6 +2,7 @@
 -- 0011_challenge_easy_sql_helpers.sql
 -- Direct `challenge_id` architecture (1 Challenge = Questions directly attached)
 -- Supports bilingual explanations (explanation_en & explanation_am)
+-- Returns full explanations upon submit/time expiry for post-attempt review.
 -- =============================================================================
 
 BEGIN;
@@ -12,7 +13,7 @@ ADD COLUMN IF NOT EXISTS challenge_id uuid REFERENCES public.leaderboard_challen
 ADD COLUMN IF NOT EXISTS explanation_en text,
 ADD COLUMN IF NOT EXISTS explanation_am text;
 
--- 2. Make set_id nullable everywhere
+-- 2. Make set_id optional everywhere
 ALTER TABLE public.challenge_questions ALTER COLUMN set_id DROP NOT NULL;
 ALTER TABLE public.leaderboard_challenges ALTER COLUMN set_id DROP NOT NULL;
 
@@ -20,17 +21,14 @@ ALTER TABLE public.leaderboard_challenges ALTER COLUMN set_id DROP NOT NULL;
 CREATE OR REPLACE FUNCTION public.trg_sync_challenge_question_ids()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- If challenge_id is provided but set_id is not, lookup set_id if exists
   IF NEW.set_id IS NULL AND NEW.challenge_id IS NOT NULL THEN
     SELECT set_id INTO NEW.set_id FROM public.leaderboard_challenges WHERE id = NEW.challenge_id;
   END IF;
 
-  -- If set_id is provided but challenge_id is not, lookup challenge_id
   IF NEW.challenge_id IS NULL AND NEW.set_id IS NOT NULL THEN
     SELECT id INTO NEW.challenge_id FROM public.leaderboard_challenges WHERE set_id = NEW.set_id LIMIT 1;
   END IF;
 
-  -- Sync fallback explanation column
   IF NEW.explanation IS NULL AND NEW.explanation_en IS NOT NULL THEN
     NEW.explanation := NEW.explanation_en;
   END IF;
@@ -59,7 +57,6 @@ DECLARE
   v_attempt record;
   v_questions jsonb;
 BEGIN
-  -- 1. Fetch challenge
   SELECT * INTO v_challenge FROM public.leaderboard_challenges WHERE id = p_challenge_id;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'challenge_not_found';
@@ -77,18 +74,15 @@ BEGIN
     RAISE EXCEPTION 'challenge_ended';
   END IF;
 
-  -- 2. Fetch user
   SELECT * INTO v_user FROM public.users WHERE id = p_user_id;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'user_not_found';
   END IF;
 
-  -- Stream eligibility
   IF v_challenge.audience != 'both' AND lower(v_challenge.audience) != lower(v_user.stream) THEN
     RAISE EXCEPTION 'stream_not_eligible';
   END IF;
 
-  -- 3. Upsert attempt (idempotent for reconnects)
   INSERT INTO public.challenge_attempts (
     challenge_id, user_id, stream, started_at, status
   )
@@ -103,15 +97,13 @@ BEGIN
     RAISE EXCEPTION 'already_submitted';
   END IF;
 
-  -- 4. Load questions matching challenge_id OR set_id
+  -- Return test questions WITHOUT correct answers during active attempt
   SELECT jsonb_agg(
     jsonb_build_object(
       'id', q.id,
       'order_index', q.order_index,
       'question_text', q.question_text,
       'choices', q.choices,
-      'explanation_en', q.explanation_en,
-      'explanation_am', q.explanation_am,
       'image_url', q.image_url
     ) ORDER BY q.order_index ASC
   ) INTO v_questions
@@ -131,30 +123,79 @@ BEGIN
 END;
 $$;
 
--- 5. 1-Line Challenge Creator RPC (directly returns challenge_id)
-CREATE OR REPLACE FUNCTION public.rpc_create_challenge(
-  p_title text,
-  p_subject_id int,
-  p_audience text DEFAULT 'both',
-  p_duration_minutes int DEFAULT 40,
-  p_starts_at timestamptz DEFAULT now(),
-  p_ends_at timestamptz DEFAULT now() + interval '2 days',
-  p_status text DEFAULT 'live'
+-- 5. Update rpc_submit_attempt to return questions with full bilingual explanations
+CREATE OR REPLACE FUNCTION public.rpc_submit_attempt(
+  p_attempt_id uuid,
+  p_total_time_seconds int DEFAULT NULL
 )
-RETURNS uuid AS $$
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 DECLARE
-  v_challenge_id uuid := gen_random_uuid();
+  v_attempt record;
+  v_challenge record;
+  v_score int := 0;
+  v_time int := 0;
+  v_questions jsonb;
 BEGIN
-  INSERT INTO public.leaderboard_challenges (
-    id, subject_id, audience, title, starts_at, ends_at, duration_seconds, status
-  )
-  VALUES (
-    v_challenge_id, p_subject_id, p_audience, p_title,
-    p_starts_at, p_ends_at, p_duration_minutes * 60, p_status
-  );
+  SELECT * INTO v_attempt FROM public.challenge_attempts WHERE id = p_attempt_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'attempt_not_found';
+  END IF;
 
-  RETURN v_challenge_id;
+  SELECT * INTO v_challenge FROM public.leaderboard_challenges WHERE id = v_attempt.challenge_id;
+
+  -- Compute correct count
+  SELECT count(*)::int INTO v_score
+  FROM public.challenge_answers
+  WHERE attempt_id = p_attempt_id AND is_correct = true;
+
+  -- Compute total time
+  IF p_total_time_seconds IS NOT NULL AND p_total_time_seconds > 0 THEN
+    v_time := p_total_time_seconds;
+  ELSE
+    v_time := EXTRACT(EPOCH FROM (now() - v_attempt.started_at))::int;
+  END IF;
+
+  IF v_challenge.duration_seconds > 0 AND v_time > (v_challenge.duration_seconds + 30) THEN
+    v_time := v_challenge.duration_seconds;
+  END IF;
+
+  UPDATE public.challenge_attempts
+  SET
+    score = v_score,
+    total_time_seconds = v_time,
+    submitted_at = coalesce(submitted_at, now()),
+    status = 'submitted'
+  WHERE id = p_attempt_id;
+
+  -- Load complete questions with correct choices & explanations for post-attempt review
+  SELECT jsonb_agg(
+    jsonb_build_object(
+      'id', q.id,
+      'order_index', q.order_index,
+      'question_text', q.question_text,
+      'choices', q.choices,
+      'correct_choice', q.correct_choice,
+      'explanation', coalesce(q.explanation_en, q.explanation, ''),
+      'explanation_en', coalesce(q.explanation_en, q.explanation, ''),
+      'explanation_am', coalesce(q.explanation_am, ''),
+      'image_url', q.image_url
+    ) ORDER BY q.order_index ASC
+  ) INTO v_questions
+  FROM public.challenge_questions q
+  WHERE q.challenge_id = v_challenge.id 
+     OR (v_challenge.set_id IS NOT NULL AND q.set_id = v_challenge.set_id);
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'score', v_score,
+    'total_time_seconds', v_time,
+    'status', 'submitted',
+    'questions', coalesce(v_questions, '[]'::jsonb)
+  );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 COMMIT;

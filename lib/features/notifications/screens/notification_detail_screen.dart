@@ -38,6 +38,17 @@ class NotificationDetailScreen extends StatelessWidget {
       );
     }
 
+    if (notification.type == 'challenge' ||
+        notification.type == 'challenge_round' ||
+        notification.type == 'challenge_reward' ||
+        notification.payload.containsKey('challenge_id')) {
+      return const _TypeVisuals(
+        icon: Icons.emoji_events_rounded,
+        color: Color(0xFF8B5CF6),
+        typeName: 'Challenge / Competition',
+      );
+    }
+
     switch (notification.type) {
       case 'payment':
         return const _TypeVisuals(
@@ -61,6 +72,14 @@ class NotificationDetailScreen extends StatelessWidget {
   }
 
   Future<void> _handleAction() async {
+    if (notification.type == 'challenge' ||
+        notification.type == 'challenge_round' ||
+        notification.type == 'challenge_reward' ||
+        notification.payload.containsKey('challenge_id')) {
+      await NotificationTestOpener.open(notification.payload);
+      return;
+    }
+
     switch (notification.type) {
       case 'payment':
         if (_isApproved) {
@@ -379,6 +398,33 @@ class NotificationDetailScreen extends StatelessWidget {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0284C7),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              )
+            else if (notification.type == 'challenge' ||
+                notification.type == 'challenge_round' ||
+                notification.type == 'challenge_reward' ||
+                notification.payload.containsKey('challenge_id'))
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: _handleAction,
+                  icon: const Icon(Icons.emoji_events_rounded, size: 20),
+                  label: const Text(
+                    'Go to Challenge',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

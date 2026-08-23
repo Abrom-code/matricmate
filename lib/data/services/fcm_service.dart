@@ -337,7 +337,16 @@ class FcmService {
 
   void _handleTap(Map<String, dynamic> data) {
     // Route tap to appropriate screen based on notification type
-    switch (data['type']) {
+    final type = data['type']?.toString();
+    if (data.containsKey('challenge_id') ||
+        type == 'challenge' ||
+        type == 'challenge_round' ||
+        type == 'challenge_reward') {
+      NotificationTestOpener.open(data);
+      return;
+    }
+
+    switch (type) {
       case 'payment':
       case 'payment_status':
         Get.toNamed(Routes.paymentVerification);

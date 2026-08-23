@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/bindings/exam/entrance_exams_binding.dart';
 import 'package:matricmate/bindings/exam/grade_test_binding.dart';
 import 'package:matricmate/bindings/exam/test_binding.dart';
+import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
@@ -13,13 +14,34 @@ import 'package:matricmate/features/exam/screens/entrance/entrance_exams.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
+import 'package:matricmate/routes/app_routes.dart';
 
-/// Handles deep-linking from notifications directly to the target test dialog.
+/// Handles deep-linking from notifications directly to the target test or challenge.
 class NotificationTestOpener {
   NotificationTestOpener._();
 
   static Future<void> open(Map<String, dynamic> data) async {
     final testType = data['test_type'] as String? ?? data['type'] as String?;
+    
+    // Handle challenge deep links
+    if (data.containsKey('challenge_id') ||
+        testType == 'challenge' ||
+        testType == 'challenge_round' ||
+        testType == 'challenge_reward') {
+      final challengeId = data['challenge_id']?.toString();
+      if (challengeId != null && challengeId.isNotEmpty) {
+        Get.to(
+          () => ChallengeAttemptScreen(
+            challengeId: challengeId,
+            title: data['title']?.toString() ?? 'Stream Challenge',
+          ),
+        );
+      } else {
+        Get.toNamed(Routes.challengeHome);
+      }
+      return;
+    }
+
     final testId = int.tryParse('${data['test_id']}');
     if (testType == null || testId == null) return;
 

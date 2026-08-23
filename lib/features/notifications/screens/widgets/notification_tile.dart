@@ -30,11 +30,18 @@ class NotificationTile extends StatelessWidget {
   bool get _isRejected =>
       notification.type == 'payment' && _paymentStatus == 'rejected';
 
+  bool get _isChallenge =>
+      notification.type == 'challenge' ||
+      notification.type == 'challenge_round' ||
+      notification.type == 'challenge_reward' ||
+      notification.payload.containsKey('challenge_id');
+
   Color _accentColor() {
     if (_isApproved) return const Color(0xFF10B981);
     if (_isRejected) return const Color(0xFFEF4444);
     if (notification.type == 'payment') return const Color(0xFFF59E0B);
     if (notification.type == 'new_content') return const Color(0xFF0284C7);
+    if (_isChallenge) return const Color(0xFF8B5CF6);
     return AppColors.primary;
   }
 
@@ -49,6 +56,12 @@ class NotificationTile extends StatelessWidget {
       return const _TypeIconData(
         Icons.cancel_rounded,
         Color(0xFFEF4444),
+      );
+    }
+    if (_isChallenge) {
+      return const _TypeIconData(
+        Icons.emoji_events_rounded,
+        Color(0xFF8B5CF6),
       );
     }
 
@@ -74,6 +87,7 @@ class NotificationTile extends StatelessWidget {
   String get _categoryLabel {
     if (notification.type == 'payment') return 'PAYMENT';
     if (notification.type == 'new_content') return 'NEW TEST';
+    if (_isChallenge) return 'CHALLENGE';
     return 'ANNOUNCEMENT';
   }
 

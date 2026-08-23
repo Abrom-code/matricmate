@@ -35,7 +35,6 @@ class ChallengeReviewScreen extends StatefulWidget {
 
 class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
   final _scrollCtrl = ScrollController();
-  final _filter = 'all'.obs; // 'all', 'correct', 'wrong', 'not_done'
 
   @override
   void dispose() {
@@ -67,16 +66,9 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
 
     // Compute statistics
     int correctCount = 0;
-    int notDoneCount = 0;
-    int wrongCount = 0;
-
     for (final q in widget.questions) {
-      if (_isQuestionSkipped(q)) {
-        notDoneCount++;
-      } else if (_isQuestionCorrect(q)) {
+      if (!(_isQuestionSkipped(q)) && _isQuestionCorrect(q)) {
         correctCount++;
-      } else {
-        wrongCount++;
       }
     }
 
@@ -123,77 +115,26 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                 ),
               ),
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _StatBadge(
-                      label: 'Time Taken',
-                      value: formattedTime,
-                      color: const Color(0xFF8B5CF6),
-                      icon: Iconsax.timer_1_copy,
-                    ),
-                    _StatBadge(
-                      label: 'Score',
-                      value: '$correctCount / $total',
-                      color: AppColors.primary,
-                      icon: Iconsax.award_copy,
-                    ),
-                    _StatBadge(
-                      label: 'Accuracy',
-                      value: '$accuracyPercent%',
-                      color: const Color(0xFF10B981),
-                      icon: Iconsax.chart_2_copy,
-                    ),
-                  ],
+                _StatBadge(
+                  label: 'Time Taken',
+                  value: formattedTime,
+                  color: const Color(0xFF8B5CF6),
+                  icon: Iconsax.timer_1_copy,
                 ),
-                const SizedBox(height: 12),
-
-                // ── Filter Chips Bar: All, Correct, Wrong, Not Done ──
-                Obx(
-                  () => SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _ReviewFilterChip(
-                          label: 'All',
-                          count: total,
-                          color: AppColors.primary,
-                          isSelected: _filter.value == 'all',
-                          onTap: () => _filter.value == 'all',
-                          dark: dark,
-                        ),
-                        const SizedBox(width: 8),
-                        _ReviewFilterChip(
-                          label: 'Correct',
-                          count: correctCount,
-                          color: const Color(0xFF10B981),
-                          isSelected: _filter.value == 'correct',
-                          onTap: () => _filter.value == 'correct',
-                          dark: dark,
-                        ),
-                        const SizedBox(width: 8),
-                        _ReviewFilterChip(
-                          label: 'Wrong',
-                          count: wrongCount,
-                          color: const Color(0xFFEF4444),
-                          isSelected: _filter.value == 'wrong',
-                          onTap: () => _filter.value == 'wrong',
-                          dark: dark,
-                        ),
-                        const SizedBox(width: 8),
-                        _ReviewFilterChip(
-                          label: 'Not Done',
-                          count: notDoneCount,
-                          color: const Color(0xFFF59E0B),
-                          isSelected: _filter.value == 'not_done',
-                          onTap: () => _filter.value == 'not_done',
-                          dark: dark,
-                        ),
-                      ],
-                    ),
-                  ),
+                _StatBadge(
+                  label: 'Score',
+                  value: '$correctCount / $total',
+                  color: AppColors.primary,
+                  icon: Iconsax.award_copy,
+                ),
+                _StatBadge(
+                  label: 'Accuracy',
+                  value: '$accuracyPercent%',
+                  color: const Color(0xFF10B981),
+                  icon: Iconsax.chart_2_copy,
                 ),
               ],
             ),
@@ -201,59 +142,46 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
 
           // ── Questions Review List ────────────────────────────────
           Expanded(
-            child: Obx(() {
-              final activeFilter = _filter.value;
-              final filteredQuestions = widget.questions.where((q) {
-                if (activeFilter == 'correct') return _isQuestionCorrect(q);
-                if (activeFilter == 'wrong') return !_isQuestionCorrect(q) && !_isQuestionSkipped(q);
-                if (activeFilter == 'not_done') return _isQuestionSkipped(q);
-                return true;
-              }).toList();
+            child: widget.questions.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.xl),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Iconsax.document_copy, size: 44, color: dark ? Colors.white24 : AppColors.textSecondary),
+                          const SizedBox(height: AppSizes.md),
+                          const Text(
+                            'No questions available for review',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Scrollbar(
+                    controller: _scrollCtrl,
+                    child: ListView.separated(
+                      controller: _scrollCtrl,
+                      padding: const EdgeInsets.all(AppSizes.md),
+                      itemCount: widget.questions.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.spaceBtwItems),
+                      itemBuilder: (context, idx) {
+                        final q = widget.questions[idx];
+                        final selected = widget.userAnswers[q.id];
 
-              if (filteredQuestions.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSizes.xl),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Iconsax.document_copy, size: 44, color: dark ? Colors.white24 : AppColors.textSecondary),
-                        const SizedBox(height: AppSizes.md),
-                        Text(
-                          'No questions in ${_filterDisplay(activeFilter)} category',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                      ],
+                        return ChallengeQuestionBox(
+                          question: q,
+                          orderIndex: idx + 1,
+                          totalQuestions: total,
+                          selectedChoice: selected,
+                          isChecked: true,
+                          showExplanation: true,
+                          initialExplanationExpanded: false, // Closed by default, user can toggle open/close
+                        );
+                      },
                     ),
                   ),
-                );
-              }
-
-              return Scrollbar(
-                controller: _scrollCtrl,
-                child: ListView.separated(
-                  controller: _scrollCtrl,
-                  padding: const EdgeInsets.all(AppSizes.md),
-                  itemCount: filteredQuestions.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: AppSizes.spaceBtwItems),
-                  itemBuilder: (context, idx) {
-                    final q = filteredQuestions[idx];
-                    final realOrderIndex = widget.questions.indexOf(q) + 1;
-                    final selected = widget.userAnswers[q.id];
-
-                    return ChallengeQuestionBox(
-                      question: q,
-                      orderIndex: realOrderIndex,
-                      totalQuestions: total,
-                      selectedChoice: selected,
-                      isChecked: true,
-                      showExplanation: true,
-                      initialExplanationExpanded: true,
-                    );
-                  },
-                ),
-              );
-            }),
           ),
 
           // ── Bottom Action Bar (Practice Again + Standings) ───────
@@ -318,19 +246,6 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
       ),
     );
   }
-
-  static String _filterDisplay(String filter) {
-    switch (filter) {
-      case 'correct':
-        return '"Correct"';
-      case 'wrong':
-        return '"Wrong"';
-      case 'not_done':
-        return '"Not Done"';
-      default:
-        return '"All"';
-    }
-  }
 }
 
 class _StatBadge extends StatelessWidget {
@@ -379,84 +294,6 @@ class _StatBadge extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _ReviewFilterChip extends StatelessWidget {
-  const _ReviewFilterChip({
-    required this.label,
-    required this.count,
-    required this.color,
-    required this.isSelected,
-    required this.onTap,
-    required this.dark,
-  });
-
-  final String label;
-  final int count;
-  final Color color;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final bool dark;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: dark ? 0.2 : 0.1)
-              : (dark ? AppColors.darkSurface : const Color(0xFFF1F5F9)),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? color : Colors.transparent,
-            width: 1.2,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected
-                    ? color
-                    : (dark ? AppColors.darkGrey : AppColors.textSecondary),
-              ),
-            ),
-            const SizedBox(width: 5),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 1.5,
-              ),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? color
-                    : (dark ? AppColors.darkCard : const Color(0xFFE2E8F0)),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: isSelected
-                      ? Colors.white
-                      : (dark ? AppColors.textWhite : AppColors.textPrimary),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

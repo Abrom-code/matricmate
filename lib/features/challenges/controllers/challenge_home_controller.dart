@@ -45,16 +45,16 @@ class ChallengeHomeController extends GetxController {
     return [];
   }
 
+  List<LeaderboardChallengeModel> get recentCompletedChallenges =>
+      completedChallenges.take(3).toList();
+
   List<LeaderboardChallengeModel> get displayedCompletedChallenges {
     if (selectedCompletedSubjectId.value == null) {
-      // Default: show the recent 3
-      return completedChallenges.take(3).toList();
-    } else {
-      // Filter by selected subject: show all completed challenges for that subject
-      return completedChallenges
-          .where((c) => c.subjectId == selectedCompletedSubjectId.value)
-          .toList();
+      return completedChallenges;
     }
+    return completedChallenges
+        .where((c) => c.subjectId == selectedCompletedSubjectId.value)
+        .toList();
   }
 
   void selectCompletedSubject(int? subjectId) {

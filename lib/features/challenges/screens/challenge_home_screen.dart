@@ -201,7 +201,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                           ),
                   ),
 
-                  // Tab 2: Completed / Past Challenges (Recent 3 + Subject Filter)
+                  // Tab 2: Completed / Past Challenges (Top Recent 3 + Subject TabBar)
                   RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: () => _ctrl.loadAllChallenges(),
@@ -214,20 +214,75 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                         : ListView(
                             padding: EdgeInsets.fromLTRB(
                               AppSizes.md,
-                              AppSizes.sm,
+                              AppSizes.md,
                               AppSizes.md,
                               MediaQuery.paddingOf(context).bottom + 90,
                             ),
                             children: [
-                              // ── Subject Filter Bar ──────────────────────────
+                              // ── 1. Top Section: Recent 3 Completed Rounds ──
+                              Row(
+                                children: [
+                                  const Icon(Iconsax.clock_copy, size: 15, color: AppColors.primary),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Recent Challenges',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                                  ),
+                                  const Spacer(),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      'Latest ${_ctrl.recentCompletedChallenges.length}',
+                                      style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+
+                              // Recent 3 Cards
+                              ..._ctrl.recentCompletedChallenges.map((challenge) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
+                                  child: _CompletedChallengeCard(
+                                    challenge: challenge,
+                                    ctrl: _ctrl,
+                                    dark: dark,
+                                  ),
+                                );
+                              }),
+
+                              const SizedBox(height: AppSizes.sm),
+                              Divider(color: dark ? AppColors.darkBorder : AppColors.borderPrimary),
+                              const SizedBox(height: AppSizes.md),
+
+                              // ── 2. Next Section: Subject TabBar & List ─────
+                              const Row(
+                                children: [
+                                  Icon(Iconsax.book_1_copy, size: 15, color: Color(0xFF8B5CF6)),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Challenges by Subject',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+
+                              // Horizontal Subject TabBar Chips
                               SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 physics: const BouncingScrollPhysics(),
                                 child: Row(
                                   children: [
                                     _SubjectFilterChip(
-                                      label: 'Recent 3',
-                                      icon: Iconsax.clock_copy,
+                                      label: 'All Subjects',
+                                      icon: Iconsax.category_2_copy,
+                                      count: _ctrl.completedChallenges.length,
                                       isSelected: _ctrl.selectedCompletedSubjectId.value == null,
                                       onTap: () => _ctrl.selectCompletedSubject(null),
                                       dark: dark,
@@ -254,20 +309,20 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                               ),
                               const SizedBox(height: AppSizes.spaceBtwItems),
 
-                              // ── Completed Challenges List (Recent 3 or filtered by Subject) ──
+                              // Challenges List for Selected Subject
                               if (_ctrl.displayedCompletedChallenges.isEmpty) ...[
-                                const SizedBox(height: 40),
+                                const SizedBox(height: 30),
                                 Center(
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Iconsax.folder_open_copy, size: 44, color: dark ? Colors.white24 : AppColors.textSecondary),
-                                      const SizedBox(height: 12),
+                                      Icon(Iconsax.folder_open_copy, size: 40, color: dark ? Colors.white24 : AppColors.textSecondary),
+                                      const SizedBox(height: 10),
                                       Text(
-                                        'No completed challenges for this subject yet',
+                                        'No challenges found for this subject',
                                         style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
                                           color: dark ? Colors.white70 : AppColors.textSecondary,
                                         ),
                                       ),

@@ -80,6 +80,8 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
             child: Obx(
               () => TabBar(
                 controller: _tabCtrl,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 labelColor: AppColors.primary,
                 unselectedLabelColor: dark ? Colors.white60 : AppColors.textSecondary,
                 indicatorColor: AppColors.primary,

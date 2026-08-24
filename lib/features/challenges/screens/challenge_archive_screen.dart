@@ -152,7 +152,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header: Subject & Stream & Delete Button
+                      // Header: Subject & Stream & PRO Badge & Delete Button
                       Row(
                         children: [
                           Container(
@@ -173,6 +173,54 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               ),
                             ),
                           ),
+                          const SizedBox(width: AppSizes.xs),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: dark ? Colors.white10 : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              challenge.audience.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w600,
+                                color: dark ? Colors.white70 : AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          Obx(() {
+                            final isPremium = _ctrl.isPremium;
+                            if (!isPremium) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: AppSizes.xs),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.lock_rounded, size: 10.5, color: Colors.amber),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'PRO',
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.amber,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          }),
                           const SizedBox(width: AppSizes.xs),
                           Obx(() {
                             final isDown = _ctrl.isDownloaded(challenge.id);
@@ -258,7 +306,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                       ),
                       const SizedBox(height: AppSizes.md),
 
-                      // Actions (Leaderboard + Review / Practice / Download)
+                      // Actions (Leaderboard + Review / Practice / Download / Unlock)
                       Row(
                         children: [
                           Expanded(
@@ -286,12 +334,34 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           Expanded(
                             flex: 2,
                             child: Obx(() {
+                              final isPremium = _ctrl.isPremium;
                               final isDown = _ctrl.isDownloaded(challenge.id);
                               final isDone = _ctrl.isAttemptedOrPracticed(
                                 challenge.id,
                               );
                               final isDownloading =
                                   _ctrl.isDownloading[challenge.id] == true;
+
+                              if (!isPremium) {
+                                return FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: Colors.amber.shade700,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  onPressed: () => _ctrl.downloadChallenge(challenge),
+                                  icon: const Icon(Icons.lock_rounded, size: 14),
+                                  label: const Text(
+                                    'Unlock (Pro)',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }
 
                               if (isDown && isDone) {
                                 return FilledButton.icon(

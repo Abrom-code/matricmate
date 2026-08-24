@@ -117,8 +117,8 @@ class _ModernPlanCard extends StatelessWidget {
 
     final cardBg = isSelected
         ? (isDark
-            ? const Color(0xFF1E293B)
-            : AppColors.white)
+            ? AppColors.primary.withValues(alpha: 0.15)
+            : AppColors.primary.withValues(alpha: 0.08))
         : (isDark ? AppColors.darkCard : AppColors.white);
 
     return Stack(

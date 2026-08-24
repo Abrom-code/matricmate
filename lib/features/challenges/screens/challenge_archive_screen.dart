@@ -312,13 +312,8 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           Expanded(
                             child: OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(0, 38),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
-                                  horizontal: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               onPressed: () => Get.to(
@@ -352,13 +347,8 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                   style: FilledButton.styleFrom(
                                     backgroundColor: Colors.amber.shade700,
                                     foregroundColor: Colors.white,
-                                    minimumSize: const Size(0, 38),
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 8,
-                                      horizontal: 10,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
                                   onPressed: () => _ctrl.downloadChallenge(challenge),
@@ -377,13 +367,8 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFF10B981),
-                                    minimumSize: const Size(0, 38),
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 8,
-                                      horizontal: 10,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
                                   onPressed: () =>
@@ -406,13 +391,8 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.primary,
-                                    minimumSize: const Size(0, 38),
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 8,
-                                      horizontal: 10,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
                                   onPressed: () => Get.to(
@@ -438,13 +418,8 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               return FilledButton.icon(
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppColors.primary,
-                                  minimumSize: const Size(0, 38),
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 8,
-                                    horizontal: 10,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
                                 onPressed: isDownloading

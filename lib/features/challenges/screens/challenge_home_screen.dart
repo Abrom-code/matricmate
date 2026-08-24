@@ -498,11 +498,7 @@ class _AvailableChallengeCard extends StatelessWidget {
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: isLive ? AppColors.primary : const Color(0xFF2563EB),
-                    minimumSize: const Size(0, 38),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   onPressed: () => ctrl.onChallengeTapped(challenge),
                   icon: const Icon(Icons.lock_rounded, size: 15),
@@ -515,11 +511,7 @@ class _AvailableChallengeCard extends StatelessWidget {
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    minimumSize: const Size(0, 38),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   onPressed: () => ctrl.onChallengeTapped(challenge),
                   icon: const Icon(Iconsax.play_circle_copy, size: 16),
@@ -528,10 +520,10 @@ class _AvailableChallengeCard extends StatelessWidget {
               else if (isScheduled && challenge.startsAt != null)
                 Obx(
                   () => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -745,13 +737,9 @@ class _CompletedChallengeCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 38),
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       side: BorderSide(
                         color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     onPressed: () => Get.to(
@@ -779,11 +767,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.amber.shade700,
                           foregroundColor: Colors.white,
-                          minimumSize: const Size(0, 38),
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                         onPressed: () => ctrl.downloadChallenge(challenge),
                         icon: const Icon(Icons.lock_rounded, size: 14),
@@ -802,11 +786,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF10B981),
-                          minimumSize: const Size(0, 38),
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                         onPressed: () => ctrl.openCompletedChallenge(challenge),
                         icon: const Icon(Iconsax.document_text_1_copy, size: 14),
@@ -825,11 +805,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          minimumSize: const Size(0, 38),
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                         onPressed: () => Get.to(
                           () => ChallengePracticeScreen(
@@ -852,11 +828,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
-                        minimumSize: const Size(0, 38),
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                       ),
                       onPressed: isBusy ? null : () => ctrl.downloadChallenge(challenge),
                       icon: isBusy

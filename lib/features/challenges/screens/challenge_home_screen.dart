@@ -62,7 +62,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
         actions: [
           IconButton(
             tooltip: 'Period Standings',
-            icon: const Icon(Iconsax.ranking_copy, color: Colors.white),
+            icon: const Icon(Icons.leaderboard_rounded, color: Colors.white),
             onPressed: () => Get.to(() => const LeaderboardScreen()),
           ),
           const SizedBox(width: 4),

@@ -57,19 +57,28 @@ class ChallengeArchiveController extends GetxController {
   }
 
   void _startRealtime() {
+    if (_realtimeChannel != null) {
+      _sb.removeChannel(_realtimeChannel!);
+    }
     final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
     _realtimeChannel = _sb
-        .channel('challenge_archive_$tag')
+        .channel('public:challenge_archive_$tag')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'leaderboard_challenges',
           callback: (payload) {
-            debugPrint('[Realtime] Archive challenge changed: ${payload.eventType}');
+            debugPrint(
+              '[Realtime] Archive challenge changed: ${payload.eventType}',
+            );
             loadArchive(isManual: false);
           },
         )
-        .subscribe();
+        .subscribe((status, [error]) {
+          debugPrint(
+            '[Realtime] Archive channel status: $status ${error ?? ''}',
+          );
+        });
   }
 
     Future<List<LeaderboardChallengeModel>> _loadLocalArchivedChallenges() async {

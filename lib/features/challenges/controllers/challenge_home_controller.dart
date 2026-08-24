@@ -149,8 +149,11 @@ class ChallengeHomeController extends GetxController {
   }
 
   void _startRealtime() {
+    if (_realtimeChannel != null) {
+      _sb.removeChannel(_realtimeChannel!);
+    }
     _realtimeChannel = _sb
-        .channel('challenge_updates')
+        .channel('public:leaderboard_challenges')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
@@ -160,7 +163,9 @@ class ChallengeHomeController extends GetxController {
             loadAllChallenges(showLoading: false);
           },
         )
-        .subscribe();
+        .subscribe((status, [error]) {
+          debugPrint('[Realtime] Challenges status: $status ${error ?? ''}');
+        });
   }
 
     Future<List<LeaderboardChallengeModel>> _loadLocalChallenges() async {

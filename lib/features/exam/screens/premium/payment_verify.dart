@@ -208,7 +208,7 @@ class PaymentVerificationScreen extends StatelessWidget {
 
               // Cancel payment text link
               TextButton(
-                onPressed: isLoading
+                onPressed: (isLoading || isFetching)
                     ? null
                     : () {
                         AppDialogBoxes.showOkCancelDialog(
@@ -225,14 +225,37 @@ class PaymentVerificationScreen extends StatelessWidget {
                           },
                         );
                       },
-                child: Text(
-                  'Cancel This Submission',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.error.withValues(alpha: 0.9),
-                  ),
-                ),
+                child: isLoading
+                    ? const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.error,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Cancelling Submission...',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        'Cancel This Submission',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.error.withValues(alpha: 0.9),
+                        ),
+                      ),
               ),
 
               const SizedBox(height: 16),

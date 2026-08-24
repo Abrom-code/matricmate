@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/data/repositories/payment/payment_repository.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/models/subscription_plan.dart';
@@ -191,14 +192,15 @@ class PremiumController extends GetxController {
         return;
       }
 
-      // Show loading immediately so the button feels responsive.
-      isUploading.value = true;
-
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         ToastHelper.warning('No Internet!');
         return;
       }
+
+      // Show full-screen loading dialog with spinner & status
+      isUploading.value = true;
+      AppFullScreenLoader.openLoadingDialog('Cancelling payment...');
 
       await _repo.cancelPayment(userId);
       await _userController.fetchUserRecord();
@@ -207,12 +209,17 @@ class PremiumController extends GetxController {
       urlFiledController.clear();
       receiptCount.value = 0;
 
-      // Pop back all the way to home (subjects screen) so the user is not
+      // Close loading dialog before navigation
+      AppFullScreenLoader.stopLoading();
+
+      // Pop back all the way to home (subjects screen)
       Get.until((route) => route.isFirst);
       ToastHelper.success('Payment cancelled');
     } catch (e) {
+      AppFullScreenLoader.stopLoading();
       AppExceptionHandler.handleResponse(e);
     } finally {
+      AppFullScreenLoader.stopLoading();
       isUploading.value = false;
     }
   }

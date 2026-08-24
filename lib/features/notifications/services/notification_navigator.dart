@@ -88,10 +88,9 @@ class NotificationTestOpener {
       final isPremium = user.isActive;
       final userStream = user.stream.toLowerCase().trim();
 
-      // 1. Premium Gate
+      // 1. Premium Gate (Redirects to challenge page where locked challenges are displayed)
       if (!isPremium) {
         Get.toNamed(Routes.challengeHome);
-        Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
         return;
       }
 

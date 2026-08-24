@@ -364,7 +364,7 @@ class _AvailableChallengeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header Row (Subject, Audience, Status Badge)
+              // Header Row (Subject, Audience, Lock Badge, Status Badge)
               Row(
                 children: [
                   Container(
@@ -398,6 +398,32 @@ class _AvailableChallengeCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (!isPremium) ...[
+                    const SizedBox(width: AppSizes.xs),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.lock_rounded, size: 10.5, color: Colors.amber),
+                          SizedBox(width: 3),
+                          Text(
+                            'PRO',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.amber,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const Spacer(),
                   _StatusBadge(challenge: challenge, dark: dark),
                 ],
@@ -468,7 +494,20 @@ class _AvailableChallengeCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Action Banner
-              if (isLive)
+              if (!isPremium)
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: isLive ? AppColors.primary : const Color(0xFF2563EB),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  onPressed: () => ctrl.onChallengeTapped(challenge),
+                  icon: const Icon(Icons.lock_rounded, size: 15),
+                  label: Text(
+                    isLive ? 'Unlock Challenge (Pro)' : 'Unlock to Join (Pro)',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
+                  ),
+                )
+              else if (isLive)
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -576,6 +615,38 @@ class _CompletedChallengeCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                Obx(() {
+                  final isPremium = ctrl.isPremium;
+                  if (!isPremium) {
+                    return Padding(
+                      padding: const EdgeInsets.only(left: AppSizes.xs),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.lock_rounded, size: 10.5, color: Colors.amber),
+                            SizedBox(width: 3),
+                            Text(
+                              'PRO',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.amber,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
                 const SizedBox(width: AppSizes.xs),
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
@@ -660,7 +731,7 @@ class _CompletedChallengeCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Action Buttons (Rankings + Review / Practice / Download)
+            // Action Buttons (Rankings + Review / Practice / Download / Unlock)
             Row(
               children: [
                 Expanded(
@@ -684,9 +755,29 @@ class _CompletedChallengeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Obx(() {
+                  final isPremium = ctrl.isPremium;
                   final isDown = ctrl.isDownloaded(challenge.id);
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   final isBusy = ctrl.isDownloading[challenge.id] == true;
+
+                  if (!isPremium) {
+                    return Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.amber.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                        onPressed: () => ctrl.downloadChallenge(challenge),
+                        icon: const Icon(Icons.lock_rounded, size: 14),
+                        label: const Text(
+                          'Unlock (Pro)',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    );
+                  }
 
                   // 1. If downloaded and completed -> show Review button
                   if (isDown && isDone) {

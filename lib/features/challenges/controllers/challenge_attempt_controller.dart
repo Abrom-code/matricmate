@@ -100,7 +100,6 @@ class ChallengeAttemptController extends GetxController {
         Get.to(() => ChallengePracticeScreen(challengeId: challengeId, title: title));
       } else if (msg.contains('premium_required')) {
         Get.toNamed(Routes.challengeHome);
-        Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
       } else if (msg.contains('stream_not_eligible') || msg.contains('audience_mismatch')) {
         ToastHelper.warning('This challenge is not available for your stream.');
         Get.toNamed(Routes.challengeHome);

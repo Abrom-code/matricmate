@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
@@ -91,8 +92,8 @@ class NotificationTile extends StatelessWidget {
     return 'ANNOUNCEMENT';
   }
 
-  Future<void> _onTap() async {
-    await NotificationsController.instance.markRead(notification.id);
+  void _onTap() {
+    unawaited(NotificationsController.instance.markRead(notification.id));
     Get.to(() => NotificationDetailScreen(notification: notification));
   }
 

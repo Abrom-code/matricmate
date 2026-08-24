@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
@@ -9,10 +10,20 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class NotificationDetailScreen extends StatelessWidget {
+class NotificationDetailScreen extends StatefulWidget {
   const NotificationDetailScreen({super.key, required this.notification});
 
   final AppNotification notification;
+
+  @override
+  State<NotificationDetailScreen> createState() =>
+      _NotificationDetailScreenState();
+}
+
+class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
+  bool _isNavigating = false;
+
+  AppNotification get notification => widget.notification;
 
   String get _paymentStatus => notification.payload['status']?.toString() ?? '';
 
@@ -72,28 +83,35 @@ class NotificationDetailScreen extends StatelessWidget {
   }
 
   Future<void> _handleAction() async {
-    if (notification.type == 'challenge' ||
-        notification.type == 'challenge_round' ||
-        notification.type == 'challenge_reward' ||
-        notification.payload.containsKey('challenge_id')) {
-      await NotificationTestOpener.open(notification.payload);
-      return;
-    }
+    if (_isNavigating) return;
+    setState(() => _isNavigating = true);
 
-    switch (notification.type) {
-      case 'payment':
-        if (_isApproved) {
-          Get.until((route) => route.isFirst);
-        } else {
-          Get.toNamed(Routes.paymentVerification);
-        }
-        break;
-      case 'new_content':
+    try {
+      if (notification.type == 'challenge' ||
+          notification.type == 'challenge_round' ||
+          notification.type == 'challenge_reward' ||
+          notification.payload.containsKey('challenge_id')) {
         await NotificationTestOpener.open(notification.payload);
-        break;
-      default:
-        Get.back();
-        break;
+        return;
+      }
+
+      switch (notification.type) {
+        case 'payment':
+          if (_isApproved) {
+            Get.until((route) => route.isFirst);
+          } else {
+            Get.toNamed(Routes.paymentVerification);
+          }
+          break;
+        case 'new_content':
+          await NotificationTestOpener.open(notification.payload);
+          break;
+        default:
+          Get.back();
+          break;
+      }
+    } finally {
+      if (mounted) setState(() => _isNavigating = false);
     }
   }
 
@@ -386,24 +404,35 @@ class NotificationDetailScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: _handleAction,
-                  icon: const Icon(Icons.play_arrow_rounded, size: 22),
-                  label: const Text(
-                    'Start Test Now',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                child: ElevatedButton(
+                  onPressed: _isNavigating ? null : _handleAction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0284C7),
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        const Color(0xFF0284C7).withValues(alpha: 0.7),
+                    disabledForegroundColor: Colors.white70,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
+                  child: _isNavigating
+                      ? const AppCircularButtonLoading(color: Colors.white)
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.play_arrow_rounded, size: 22),
+                            SizedBox(width: 8),
+                            Text(
+                              'Start Test Now',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               )
             else if (notification.type == 'challenge' ||
@@ -413,49 +442,43 @@ class NotificationDetailScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: _handleAction,
-                  icon: const Icon(Icons.emoji_events_rounded, size: 20),
-                  label: const Text(
-                    'Go to Challenge',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                child: ElevatedButton(
+                  onPressed: _isNavigating ? null : _handleAction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        const Color(0xFF8B5CF6).withValues(alpha: 0.7),
+                    disabledForegroundColor: Colors.white70,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
+                  child: _isNavigating
+                      ? const AppCircularButtonLoading(color: Colors.white)
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.emoji_events_rounded, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Go to Challenge',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               )
             else if (notification.type == 'payment')
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: _handleAction,
-                  icon: Icon(
-                    _isApproved
-                        ? Icons.bolt_rounded
-                        : Icons.account_balance_wallet_rounded,
-                    size: 20,
-                  ),
-                  label: Text(
-                    _isApproved
-                        ? 'Explore Premium Features'
-                        : _isRejected
-                            ? 'Submit Payment Again'
-                            : 'Check Verification Status',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                child: ElevatedButton(
+                  onPressed: _isNavigating ? null : _handleAction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isApproved
                         ? const Color(0xFF10B981)
@@ -463,11 +486,43 @@ class NotificationDetailScreen extends StatelessWidget {
                             ? const Color(0xFFEF4444)
                             : const Color(0xFFF59E0B),
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: (_isApproved
+                            ? const Color(0xFF10B981)
+                            : _isRejected
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFFF59E0B))
+                        .withValues(alpha: 0.7),
+                    disabledForegroundColor: Colors.white70,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
+                  child: _isNavigating
+                      ? const AppCircularButtonLoading(color: Colors.white)
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isApproved
+                                  ? Icons.bolt_rounded
+                                  : Icons.account_balance_wallet_rounded,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isApproved
+                                  ? 'Explore Premium Features'
+                                  : _isRejected
+                                      ? 'Submit Payment Again'
+                                      : 'Check Verification Status',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
 

@@ -21,20 +21,17 @@ class ChallengeRepository {
 
   // ── Fetch Visible Challenges for Student ───────────────────────────────────
 
-  /// Fetches challenges that are live, closed, or scheduled within the 12h pre-window.
+  /// Fetches challenges that are live or scheduled.
   Future<List<LeaderboardChallengeModel>> fetchVisibleChallenges({
     String? stream,
   }) async {
     await _checkConnectivity();
 
-    final twelveHoursFromNow =
-        DateTime.now().toUtc().add(const Duration(hours: 12)).toIso8601String();
-
-    // Query active/scheduled/closed rounds
+    // Query active and scheduled rounds
     final query = _sb
         .from('leaderboard_challenges')
         .select('*, subjects(name), challenge_questions(id)')
-        .or('status.in.(live,closed),and(status.eq.scheduled,starts_at.lte.$twelveHoursFromNow)')
+        .inFilter('status', ['live', 'scheduled'])
         .order('starts_at', ascending: true);
 
     final rows = await query;
@@ -121,6 +118,25 @@ class ChallengeRepository {
       'p_question_id': questionId,
       'p_selected_choice': selectedChoice,
     });
+  }
+
+  /// Batch syncs all local user answers to ensure nothing is missed before final submission.
+  Future<void> batchSubmitAnswers({
+    required String attemptId,
+    required Map<String, String> answers,
+  }) async {
+    if (answers.isEmpty) return;
+    try {
+      await _checkConnectivity();
+      final futures = answers.entries.map((entry) {
+        return _sb.rpc('rpc_submit_answer', params: {
+          'p_attempt_id': attemptId,
+          'p_question_id': entry.key,
+          'p_selected_choice': entry.value,
+        }).catchError((_) {});
+      });
+      await Future.wait(futures);
+    } catch (_) {}
   }
 
   Future<Map<String, dynamic>> submitAttempt({
@@ -424,6 +440,31 @@ class ChallengeRepository {
     }
 
     final rows = await query.order('ends_at', ascending: false);
+    final list = (rows as List)
+        .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
+        .toList();
+
+    if (stream != null && stream.isNotEmpty) {
+      final s = stream.toLowerCase();
+      return list.where((c) => c.audience.toLowerCase().trim() == 'both' || c.audience.toLowerCase().trim() == s.toLowerCase().trim()).toList();
+    }
+    return list;
+  }
+
+  /// Fetches challenges of ALL statuses for a specific subject (used by archive/list screen).
+  Future<List<LeaderboardChallengeModel>> fetchSubjectChallenges({
+    required int subjectId,
+    String? stream,
+  }) async {
+    await _checkConnectivity();
+
+    final rows = await _sb
+        .from('leaderboard_challenges')
+        .select('*, subjects(name), challenge_questions(id)')
+        .eq('subject_id', subjectId)
+        .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+        .order('created_at', ascending: false);
+
     final list = (rows as List)
         .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
         .toList();

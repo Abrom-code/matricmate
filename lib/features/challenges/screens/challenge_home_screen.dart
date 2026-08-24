@@ -26,16 +26,32 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
     with SingleTickerProviderStateMixin {
   late final ChallengeHomeController _ctrl;
   late final TabController _tabCtrl;
+  Worker? _tabWorker;
 
   @override
   void initState() {
     super.initState();
     _ctrl = Get.put(ChallengeHomeController());
-    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: _ctrl.selectedTabIndex.value.clamp(0, 1),
+    );
+    _tabCtrl.addListener(() {
+      if (!_tabCtrl.indexIsChanging) {
+        _ctrl.selectedTabIndex.value = _tabCtrl.index;
+      }
+    });
+    _tabWorker = ever(_ctrl.selectedTabIndex, (idx) {
+      if (_tabCtrl.index != idx && idx >= 0 && idx < _tabCtrl.length) {
+        _tabCtrl.animateTo(idx);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _tabWorker?.dispose();
     _tabCtrl.dispose();
     super.dispose();
   }
@@ -340,9 +356,12 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
 
                               // Subject Navigation Cards
                               ..._ctrl.studentSubjects.map((subj) {
-                                final count = _ctrl.completedChallenges
-                                    .where((c) => c.subjectId == subj.id)
-                                    .length;
+                                final count = _ctrl.availableChallenges
+                                        .where((c) => c.subjectId == subj.id)
+                                        .length +
+                                    _ctrl.completedChallenges
+                                        .where((c) => c.subjectId == subj.id)
+                                        .length;
 
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
@@ -388,32 +407,35 @@ class _AvailableChallengeCard extends StatelessWidget {
   static final _dateFormat = DateFormat('MMM dd • HH:mm');
 
   @override
+  @override
   Widget build(BuildContext context) {
-    final isPremium = ctrl.isPremium;
-    final isLive = challenge.isLive;
-    final isScheduled = challenge.isScheduled;
+    return Obx(() {
+      final _ = ctrl.now.value;
+      final isPremium = ctrl.isPremium;
+      final isLive = challenge.isLive;
+      final isScheduled = challenge.isScheduled;
 
-    Color borderColor;
-    if (!isPremium) {
-      borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
-    } else if (isLive) {
-      borderColor = AppColors.primary;
-    } else if (isScheduled) {
-      borderColor = const Color(0xFF2563EB);
-    } else {
-      borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
-    }
+      Color borderColor;
+      if (!isPremium) {
+        borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
+      } else if (isLive) {
+        borderColor = AppColors.primary;
+      } else if (isScheduled) {
+        borderColor = const Color(0xFF2563EB);
+      } else {
+        borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
+      }
 
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
-        side: BorderSide(
-          color: borderColor,
-          width: isLive && isPremium ? 1.5 : 1.0,
+      return Card(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
+          side: BorderSide(
+            color: borderColor,
+            width: isLive && isPremium ? 1.5 : 1.0,
+          ),
         ),
-      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
         onTap: () => ctrl.onChallengeTapped(challenge),
@@ -497,6 +519,40 @@ class _AvailableChallengeCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                  Obx(() {
+                    final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                    if (!isDone) return const SizedBox.shrink();
+                    return Container(
+                      margin: const EdgeInsets.only(left: AppSizes.xs),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 12,
+                            color: Color(0xFF10B981),
+                          ),
+                          SizedBox(width: 3.5),
+                          Text(
+                            'Completed',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF10B981),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
                   const Spacer(),
                   _StatusBadge(challenge: challenge, dark: dark),
                 ],
@@ -587,39 +643,136 @@ class _AvailableChallengeCard extends StatelessWidget {
 
               // Action Banner
               if (!isPremium)
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: isLive
-                        ? AppColors.primary
-                        : const Color(0xFF2563EB),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  onPressed: () => ctrl.onChallengeTapped(challenge),
-                  icon: const Icon(Icons.lock_rounded, size: 15),
-                  label: Text(
-                    isLive ? 'Unlock Challenge (Pro)' : 'Unlock to Join (Pro)',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.5,
+                Row(
+                  children: [
+                    if (isLive) ...[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            side: BorderSide(
+                              color: dark
+                                  ? AppColors.darkBorder
+                                  : AppColors.borderPrimary,
+                            ),
+                          ),
+                          onPressed: () => Get.to(
+                            () => LeaderboardScreen(
+                              challengeId: challenge.id,
+                              challengeTitle: challenge.title,
+                              audience: challenge.audience,
+                            ),
+                          ),
+                          icon: const Icon(Iconsax.ranking_copy, size: 14),
+                          label: const Text(
+                            'Standings',
+                            style: TextStyle(fontSize: 11.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      flex: isLive ? 2 : 1,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: isLive
+                              ? AppColors.primary
+                              : const Color(0xFF2563EB),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                        onPressed: () => ctrl.onChallengeTapped(challenge),
+                        icon: const Icon(Icons.lock_rounded, size: 15),
+                        label: Text(
+                          isLive
+                              ? 'Unlock (Pro)'
+                              : 'Unlock to Join (Pro)',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 )
               else if (isLive)
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  onPressed: () => ctrl.onChallengeTapped(challenge),
-                  icon: const Icon(Iconsax.play_circle_copy, size: 16),
-                  label: const Text(
-                    'Start Challenge Now',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                )
+                Obx(() {
+                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            side: BorderSide(
+                              color: dark
+                                  ? AppColors.darkBorder
+                                  : AppColors.borderPrimary,
+                            ),
+                          ),
+                          onPressed: () => Get.to(
+                            () => LeaderboardScreen(
+                              challengeId: challenge.id,
+                              challengeTitle: challenge.title,
+                              audience: challenge.audience,
+                            ),
+                          ),
+                          icon: const Icon(Iconsax.ranking_copy, size: 14),
+                          label: const Text(
+                            'Standings',
+                            style: TextStyle(fontSize: 11.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: isDone
+                            ? FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFF10B981),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onPressed: () =>
+                                    ctrl.openCompletedChallenge(challenge),
+                                icon: const Icon(
+                                  Iconsax.document_text_1_copy,
+                                  size: 16,
+                                ),
+                                label: const Text(
+                                  'Review Attempt',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              )
+                            : FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onPressed: () =>
+                                    ctrl.onChallengeTapped(challenge),
+                                icon: const Icon(
+                                  Iconsax.play_circle_copy,
+                                  size: 16,
+                                ),
+                                label: const Text(
+                                  'Start Challenge',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ],
+                  );
+                })
               else if (isScheduled && challenge.startsAt != null)
                 Obx(
                   () => Container(
@@ -657,6 +810,7 @@ class _AvailableChallengeCard extends StatelessWidget {
         ),
       ),
     );
+  });
   }
 }
 
@@ -897,7 +1051,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                     ),
                     icon: const Icon(Iconsax.ranking_copy, size: 14),
                     label: const Text(
-                      'Rankings',
+                      'Standings',
                       style: TextStyle(fontSize: 11.5),
                     ),
                   ),
@@ -1211,7 +1365,7 @@ class _SubjectNavCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       challengeCount > 0
-                          ? '$challengeCount completed rounds'
+                          ? '$challengeCount challenge rounds'
                           : 'No rounds yet',
                       style: TextStyle(
                         fontSize: 11.5,

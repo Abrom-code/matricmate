@@ -14,6 +14,7 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChallengeArchiveController extends GetxController {
   ChallengeArchiveController({this.subjectId, this.subjectTitle});
@@ -25,6 +26,7 @@ class ChallengeArchiveController extends GetxController {
 
   final _repo = ChallengeRepository();
   final _db = DatabaseService.instance;
+  final _sb = Supabase.instance.client;
 
   final isLoading = false.obs;
   final isManualRefreshing = false.obs;
@@ -33,6 +35,8 @@ class ChallengeArchiveController extends GetxController {
   final isDownloading = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
 
+  RealtimeChannel? _realtimeChannel;
+
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream.toLowerCase().trim();
 
@@ -40,7 +44,32 @@ class ChallengeArchiveController extends GetxController {
   void onInit() {
     super.onInit();
     loadArchive();
+    _startRealtime();
     ever(UserController.instance.user, (_) => loadArchive(isManual: false));
+  }
+
+  @override
+  void onClose() {
+    if (_realtimeChannel != null) {
+      _sb.removeChannel(_realtimeChannel!);
+    }
+    super.onClose();
+  }
+
+  void _startRealtime() {
+    final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
+    _realtimeChannel = _sb
+        .channel('challenge_archive_$tag')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'leaderboard_challenges',
+          callback: (payload) {
+            debugPrint('[Realtime] Archive challenge changed: ${payload.eventType}');
+            loadArchive(isManual: false);
+          },
+        )
+        .subscribe();
   }
 
     Future<List<LeaderboardChallengeModel>> _loadLocalArchivedChallenges() async {
@@ -104,7 +133,16 @@ class ChallengeArchiveController extends GetxController {
       isLoading.value = true;
     }
     try {
-      final list = await _repo.fetchClosedChallenges(stream: userStream);
+      // When opened for a specific subject, fetch ALL statuses (live, scheduled, closed, archived)
+      final List<LeaderboardChallengeModel> list;
+      if (subjectId != null) {
+        list = await _repo.fetchSubjectChallenges(
+          subjectId: subjectId!,
+          stream: userStream,
+        );
+      } else {
+        list = await _repo.fetchClosedChallenges(stream: userStream);
+      }
       final isNatural = userStream == 'natural';
 
       final subjectsList = Get.isRegistered<SubjectsController>()
@@ -112,8 +150,6 @@ class ChallengeArchiveController extends GetxController {
           : [];
 
       final filtered = list.where((c) {
-        if (subjectId != null && c.subjectId != subjectId) return false;
-
         final aud = c.audience.toLowerCase().trim();
         final matchesAudience = aud == 'both' || aud == userStream || userStream.isEmpty;
         if (!matchesAudience) return false;

@@ -34,6 +34,11 @@ class ChallengeHomeController extends GetxController {
   final isDownloading = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
   final selectedCompletedSubjectId = RxnInt(); // null = Recent 3 (default)
+  final selectedTabIndex = 0.obs;
+
+  void switchTab(int index) {
+    selectedTabIndex.value = index;
+  }
 
   List<SubjectModel> get studentSubjects {
     final isNatural = userStream.toLowerCase().trim() == 'natural';
@@ -97,7 +102,50 @@ class ChallengeHomeController extends GetxController {
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       now.value = DateTime.now();
+      _checkTimeTransitions();
     });
+  }
+
+  void _checkTimeTransitions() {
+    bool stateChanged = false;
+    final currentTime = now.value;
+
+    // 1. Check if any available challenge has now closed (endsAt passed)
+    final newlyClosed = <LeaderboardChallengeModel>[];
+    final remainingAvailable = <LeaderboardChallengeModel>[];
+
+    for (final c in availableChallenges) {
+      if (c.endsAt != null && currentTime.isAfter(c.endsAt!)) {
+        newlyClosed.add(c);
+        stateChanged = true;
+      } else {
+        remainingAvailable.add(c);
+      }
+    }
+
+    if (newlyClosed.isNotEmpty) {
+      availableChallenges.assignAll(remainingAvailable);
+      for (final c in newlyClosed) {
+        if (!completedChallenges.any((item) => item.id == c.id)) {
+          completedChallenges.insert(0, c);
+        }
+      }
+      return;
+    }
+
+    // 2. Check if any scheduled challenge crossed into live (startsAt passed)
+    for (final c in availableChallenges) {
+      if (c.startsAt != null &&
+          c.status == 'scheduled' &&
+          !currentTime.isBefore(c.startsAt!)) {
+        stateChanged = true;
+        break;
+      }
+    }
+
+    if (stateChanged) {
+      availableChallenges.refresh();
+    }
   }
 
   void _startRealtime() {
@@ -323,6 +371,11 @@ class ChallengeHomeController extends GetxController {
         const PremiumBottomSheet(),
         isScrollControlled: true,
       );
+      return;
+    }
+
+    if (isAttemptedOrPracticed(challenge.id)) {
+      openCompletedChallenge(challenge);
       return;
     }
 

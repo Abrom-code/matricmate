@@ -331,6 +331,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
 // ── Podium View ──────────────────────────────────────────────────────────────
 
+// ── Podium View ──────────────────────────────────────────────────────────────
+
 class _PodiumView extends StatelessWidget {
   const _PodiumView({required this.top3, required this.dark});
 
@@ -343,53 +345,89 @@ class _PodiumView extends StatelessWidget {
     final second = top3.length > 1 ? top3[1] : null;
     final third = top3.length > 2 ? top3[2] : null;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // #2 Silver
-          Expanded(
-            child: second != null
-                ? _PodiumStep(
-                    entry: second,
-                    rank: 2,
-                    height: 110,
-                    color: const Color(0xFF94A3B8),
-                    dark: dark,
-                  )
-                : const SizedBox.shrink(),
+    return Column(
+      children: [
+        // ── Top Podium Header Perk Banner ──────────────────────────────────
+        Container(
+          margin: const EdgeInsets.only(bottom: AppSizes.md),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.15 : 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+            ),
           ),
-          const SizedBox(width: 8),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.emoji_events_rounded, size: 16, color: Color(0xFFF59E0B)),
+              SizedBox(width: 6),
+              Text(
+                'Top 3 Finishers claim Gold, Silver & Bronze Standings',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFF59E0B),
+                ),
+              ),
+            ],
+          ),
+        ),
 
-          // #1 Gold
-          Expanded(
-            child: first != null
-                ? _PodiumStep(
-                    entry: first,
-                    rank: 1,
-                    height: 140,
-                    color: const Color(0xFFF59E0B),
-                    dark: dark,
-                  )
-                : const SizedBox.shrink(),
-          ),
-          const SizedBox(width: 8),
+        // ── 3-Step Podium ───────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.xs),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // #2 Silver
+              Expanded(
+                child: second != null
+                    ? _PodiumStep(
+                        entry: second,
+                        rank: 2,
+                        height: 115,
+                        color: const Color(0xFF94A3B8),
+                        badgeIcon: Icons.workspace_premium_rounded,
+                        dark: dark,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(width: 8),
 
-          // #3 Bronze
-          Expanded(
-            child: third != null
-                ? _PodiumStep(
-                    entry: third,
-                    rank: 3,
-                    height: 90,
-                    color: const Color(0xFFD97706),
-                    dark: dark,
-                  )
-                : const SizedBox.shrink(),
+              // #1 Gold
+              Expanded(
+                child: first != null
+                    ? _PodiumStep(
+                        entry: first,
+                        rank: 1,
+                        height: 145,
+                        color: const Color(0xFFF59E0B),
+                        badgeIcon: Icons.emoji_events_rounded,
+                        dark: dark,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(width: 8),
+
+              // #3 Bronze
+              Expanded(
+                child: third != null
+                    ? _PodiumStep(
+                        entry: third,
+                        rank: 3,
+                        height: 95,
+                        color: const Color(0xFFD97706),
+                        badgeIcon: Icons.military_tech_rounded,
+                        dark: dark,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -400,6 +438,7 @@ class _PodiumStep extends StatelessWidget {
     required this.rank,
     required this.height,
     required this.color,
+    required this.badgeIcon,
     required this.dark,
   });
 
@@ -407,6 +446,7 @@ class _PodiumStep extends StatelessWidget {
   final int rank;
   final double height;
   final Color color;
+  final IconData badgeIcon;
   final bool dark;
 
   @override
@@ -414,35 +454,66 @@ class _PodiumStep extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Trophy Badge
+        Icon(badgeIcon, size: rank == 1 ? 26 : 22, color: color),
+        const SizedBox(height: 2),
+
         // Avatar circle
         Stack(
-          alignment: Alignment.topRight,
+          alignment: Alignment.bottomRight,
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: rank == 1 ? 54 : 48,
+              height: rank == 1 ? 54 : 48,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: color.withValues(alpha: 0.15),
-                border: Border.all(color: color, width: 2),
+                gradient: LinearGradient(
+                  colors: [
+                    color.withValues(alpha: 0.3),
+                    color.withValues(alpha: 0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                border: Border.all(color: color, width: rank == 1 ? 2.5 : 2),
+                boxShadow: rank == 1
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
               ),
               child: Center(
                 child: Text(
-                  entry.fullName.isNotEmpty ? entry.fullName[0].toUpperCase() : '?',
+                  entry.fullName.isNotEmpty
+                      ? entry.fullName[0].toUpperCase()
+                      : '?',
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
+                    fontSize: rank == 1 ? 20 : 18,
+                    fontWeight: FontWeight.w900,
                     color: color,
                   ),
                 ),
               ),
             ),
-            if (rank == 1)
-              const Positioned(
-                top: -4,
-                right: -2,
-                child: Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
+            Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
               ),
+              child: Text(
+                '#$rank',
+                style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -453,32 +524,49 @@ class _PodiumStep extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11.5),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: rank == 1 ? 12 : 11,
+          ),
         ),
         const SizedBox(height: 2),
 
         // Score
-        Text(
-          '${entry.score} pts',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: color,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            '${entry.score} pts',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
 
         // Step Pillar
         Container(
           height: height,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: dark ? 0.18 : 0.12),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(8),
-              topRight: Radius.circular(8),
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: dark ? 0.22 : 0.16),
+                color.withValues(alpha: dark ? 0.08 : 0.05),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
+            ),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -486,16 +574,18 @@ class _PodiumStep extends StatelessWidget {
               Text(
                 '#$rank',
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: rank == 1 ? 26 : 22,
                   fontWeight: FontWeight.w900,
                   color: color,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
                 entry.formattedTime,
                 style: TextStyle(
                   fontSize: 10,
-                  color: dark ? Colors.white60 : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  color: dark ? Colors.white70 : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -521,6 +611,10 @@ class _StudentLeaderboardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isNatural = entry.stream.toLowerCase().contains('nat');
+    final streamBadgeColor =
+        isNatural ? const Color(0xFF0284C7) : const Color(0xFF8B5CF6);
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.sm),
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 10),
@@ -528,7 +622,7 @@ class _StudentLeaderboardTile extends StatelessWidget {
         color: isCurrentUser
             ? AppColors.primary.withValues(alpha: dark ? 0.15 : 0.07)
             : (dark ? AppColors.darkCard : AppColors.white),
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusSm),
+        borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
         border: Border.all(
           color: isCurrentUser
               ? AppColors.primary
@@ -538,21 +632,46 @@ class _StudentLeaderboardTile extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Rank Badge
           Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: dark ? AppColors.darkContainer : AppColors.grey.withValues(alpha: 0.2),
+              color: isCurrentUser
+                  ? AppColors.primary
+                  : (dark
+                      ? AppColors.darkContainer
+                      : AppColors.grey.withValues(alpha: 0.2)),
               shape: BoxShape.circle,
             ),
             child: Text(
               '#${entry.rank}',
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                color: isCurrentUser ? Colors.white : null,
+              ),
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AppSizes.sm),
 
+          // User Avatar Initial
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: streamBadgeColor.withValues(alpha: 0.14),
+            child: Text(
+              entry.fullName.isNotEmpty ? entry.fullName[0].toUpperCase() : '?',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                color: streamBadgeColor,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSizes.sm),
+
+          // Name and stream tag
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -560,19 +679,48 @@ class _StudentLeaderboardTile extends StatelessWidget {
                 Text(
                   isCurrentUser ? '${entry.fullName} (You)' : entry.fullName,
                   style: TextStyle(
-                    fontWeight: isCurrentUser ? FontWeight.w800 : FontWeight.w600,
+                    fontWeight:
+                        isCurrentUser ? FontWeight.w800 : FontWeight.w700,
                     fontSize: 13,
                     color: isCurrentUser ? AppColors.primary : null,
                   ),
                 ),
-                Text(
-                  '${entry.stream.toUpperCase()} Stream • ${entry.challengesTaken} challenges',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: streamBadgeColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        entry.stream.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: streamBadgeColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${entry.challengesTaken} round${entry.challengesTaken == 1 ? '' : 's'}',
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
+          // Points and Time
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -586,7 +734,10 @@ class _StudentLeaderboardTile extends StatelessWidget {
               ),
               Text(
                 entry.formattedTime,
-                style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),

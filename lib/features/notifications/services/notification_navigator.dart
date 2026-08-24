@@ -7,10 +7,9 @@ import 'package:matricmate/bindings/exam/grade_test_binding.dart';
 import 'package:matricmate/bindings/exam/test_binding.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
-import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
-import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
@@ -87,7 +86,7 @@ class NotificationTestOpener {
       final isPremium = user.isActive;
       final userStream = user.stream.toLowerCase().trim();
 
-      // 1. Premium Gate (Redirects to challenge page where locked challenges are displayed with navbar)
+      // 1. Premium Gate
       if (!isPremium) {
         NavigationController.navigateToTab(1);
         return;
@@ -104,6 +103,7 @@ class NotificationTestOpener {
       }
 
       // 3. Check if user already submitted an attempt
+      bool isUserSubmitted = false;
       if (user.id.isNotEmpty) {
         final repo = ChallengeRepository();
         final attemptData = await repo.fetchUserAttempt(
@@ -114,27 +114,24 @@ class NotificationTestOpener {
             attemptData['attempt'] is ChallengeAttemptModel) {
           final attempt = attemptData['attempt'] as ChallengeAttemptModel;
           if (attempt.isSubmitted) {
-            NavigationController.navigateToTab(1);
-            ToastHelper.info(
-              'You have already submitted your attempt for this challenge.',
-            );
-            return;
+            isUserSubmitted = true;
           }
         }
       }
 
-      // 4. Status & Timing Checks
-      if (challenge.isLive) {
-        Get.to(
-          () => ChallengeAttemptScreen(
-            challengeId: challenge.id,
-            title: challenge.title,
-            audience: challenge.audience,
-          ),
-        );
-      } else if (challenge.isScheduled) {
-        NavigationController.navigateToTab(1);
-        if (challenge.startsAt != null) {
+      // Navigate to Challenges tab (Tab 1 in BottomNavigationBar)
+      NavigationController.navigateToTab(1);
+
+      final homeCtrl = Get.isRegistered<ChallengeHomeController>()
+          ? ChallengeHomeController.instance
+          : Get.put(ChallengeHomeController());
+
+      // 4. Status Checks
+      // If available (live or scheduled) and not submitted -> switch to Available tab (Tab 0)
+      // Otherwise (closed, archived, or already submitted) -> switch to Completed tab (Tab 1)
+      if ((challenge.isLive || challenge.isScheduled) && !isUserSubmitted) {
+        homeCtrl.switchTab(0);
+        if (challenge.isScheduled && challenge.startsAt != null) {
           final diff = challenge.startsAt!.difference(DateTime.now());
           if (!diff.isNegative) {
             final hours = diff.inHours;
@@ -144,21 +141,18 @@ class NotificationTestOpener {
           } else {
             ToastHelper.info('This challenge will open shortly. Get ready!');
           }
-        } else {
-          ToastHelper.info('This challenge has not started yet.');
         }
-      } else if (challenge.isClosed || challenge.isArchived) {
-        Get.to(
-          () => ChallengePracticeScreen(
-            challengeId: challenge.id,
-            title: challenge.title,
-          ),
-        );
-        ToastHelper.info(
-          'This challenge round has ended. You can practice it now.',
-        );
       } else {
-        NavigationController.navigateToTab(1);
+        homeCtrl.switchTab(1);
+        if (isUserSubmitted) {
+          ToastHelper.info(
+            'You have already completed this challenge. You can review it here.',
+          );
+        } else if (challenge.isClosed || challenge.isArchived) {
+          ToastHelper.info(
+            'This challenge round has ended. You can practice it here.',
+          );
+        }
       }
     } catch (_) {
       NavigationController.navigateToTab(1);

@@ -80,16 +80,50 @@ class LeaderboardChallengeModel {
   });
 
   bool get isDraft => status == 'draft';
-  bool get isScheduled => status == 'scheduled';
-  bool get isLive => status == 'live';
-  bool get isClosed => status == 'closed';
+
+  bool get isScheduled {
+    if (status == 'scheduled') {
+      if (startsAt != null && !DateTime.now().isBefore(startsAt!)) {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool get isLive {
+    final now = DateTime.now();
+    if (status == 'live') {
+      if (endsAt != null && now.isAfter(endsAt!)) {
+        return false;
+      }
+      return true;
+    }
+    if (status == 'scheduled') {
+      if (startsAt != null && !now.isBefore(startsAt!)) {
+        if (endsAt != null && now.isAfter(endsAt!)) {
+          return false;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool get isClosed {
+    if (status == 'closed' || status == 'archived') return true;
+    if (endsAt != null && DateTime.now().isAfter(endsAt!)) return true;
+    return false;
+  }
+
   bool get isArchived => status == 'archived';
   int get durationMinutes => durationSeconds ~/ 60;
 
   /// Pre-visibility window: scheduled & starts_at is within 12 hours
   bool get isUpcomingVisible {
-    if (status != 'scheduled' || startsAt == null) return false;
+    if (startsAt == null) return false;
     final now = DateTime.now();
+    if (now.isAfter(startsAt!)) return false;
     final difference = startsAt!.difference(now);
     return difference.inHours <= 12 && difference.inSeconds > 0;
   }

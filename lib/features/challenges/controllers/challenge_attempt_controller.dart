@@ -1,9 +1,11 @@
+import 'dart:async';
+import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/data/database/database_service.dart';
-import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
-import 'dart:async';
-import 'package:get/get.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
@@ -12,7 +14,8 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class ChallengeAttemptController extends GetxController {
+class ChallengeAttemptController extends GetxController
+    with WidgetsBindingObserver {
   ChallengeAttemptController({
     required this.challengeId,
     required this.title,
@@ -44,7 +47,8 @@ class ChallengeAttemptController extends GetxController {
 
   int get totalQuestions => questions.length;
   int get answeredCount => userAnswers.length;
-  double get progress => totalQuestions > 0 ? answeredCount / totalQuestions : 0.0;
+  double get progress =>
+      totalQuestions > 0 ? answeredCount / totalQuestions : 0.0;
 
   String get formattedRemainingTime {
     final secs = remainingSeconds.value;
@@ -56,20 +60,32 @@ class ChallengeAttemptController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     startChallenge();
   }
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _syncTimerWithWallClock();
+    }
   }
 
   Future<void> startChallenge() async {
     isLoading.value = true;
     try {
       final userId = UserController.instance.user.value.id;
-      final data = await _repo.startAttempt(challengeId: challengeId, userId: userId);
+      final data = await _repo.startAttempt(
+        challengeId: challengeId,
+        userId: userId,
+      );
 
       attemptId = data['attempt_id'];
       durationSeconds = data['duration_seconds'] ?? 3600;
@@ -77,29 +93,35 @@ class ChallengeAttemptController extends GetxController {
       endsAt = data['ends_at'];
       questions.value = data['questions'] ?? [];
 
-      // Calculate initial remaining seconds
-      final elapsed = startedAt != null ? DateTime.now().difference(startedAt!).inSeconds : 0;
-      final allowed = durationSeconds - elapsed;
-      remainingSeconds.value = allowed > 0 ? allowed : 0;
-
+      _syncTimerWithWallClock();
       _startTimer();
     } catch (e) {
       Get.back();
       final msg = e.toString().toLowerCase();
       if (msg.contains('already_submitted')) {
-        ToastHelper.info('You have already submitted your attempt for this challenge.');
+        ToastHelper.info(
+          'You have already submitted your attempt for this challenge.',
+        );
         NavigationController.navigateToTab(1);
-      } else if (msg.contains('challenge_not_started') || msg.contains('not_open_yet')) {
-        ToastHelper.info('This challenge has not started yet. Check the countdown on the Challenges tab.');
+      } else if (msg.contains('challenge_not_started') ||
+          msg.contains('not_open_yet')) {
+        ToastHelper.info(
+          'This challenge has not started yet. Check the countdown on the Challenges tab.',
+        );
         NavigationController.navigateToTab(1);
       } else if (msg.contains('challenge_ended') ||
           msg.contains('challenge_closed') ||
           msg.contains('challenge_not_active')) {
-        ToastHelper.info('This challenge round has ended. You can practice it now.');
-        Get.to(() => ChallengePracticeScreen(challengeId: challengeId, title: title));
+        ToastHelper.info(
+          'This challenge round has ended. You can practice it now.',
+        );
+        Get.to(
+          () => ChallengePracticeScreen(challengeId: challengeId, title: title),
+        );
       } else if (msg.contains('premium_required')) {
         NavigationController.navigateToTab(1);
-      } else if (msg.contains('stream_not_eligible') || msg.contains('audience_mismatch')) {
+      } else if (msg.contains('stream_not_eligible') ||
+          msg.contains('audience_mismatch')) {
         ToastHelper.warning('This challenge is not available for your stream.');
         NavigationController.navigateToTab(1);
       } else {
@@ -110,20 +132,37 @@ class ChallengeAttemptController extends GetxController {
     }
   }
 
+  void _syncTimerWithWallClock() {
+    if (startedAt == null) return;
+    final elapsed = DateTime.now().difference(startedAt!).inSeconds;
+    _timeSpentSeconds = elapsed;
+    final allowed = durationSeconds - elapsed;
+
+    if (allowed <= 0) {
+      remainingSeconds.value = 0;
+      _timer?.cancel();
+      _onTimeExpired();
+    } else {
+      remainingSeconds.value = allowed;
+    }
+  }
+
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _timeSpentSeconds++;
-      if (remainingSeconds.value > 0) {
-        remainingSeconds.value--;
-      } else {
-        timer.cancel();
-        _onTimeExpired();
-      }
+    _syncTimerWithWallClock();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _syncTimerWithWallClock();
     });
   }
 
   void _onTimeExpired() {
+    if (isSubmitting.value) return;
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
+    if (Get.isBottomSheetOpen ?? false) {
+      Get.back();
+    }
     ToastHelper.warning('Time is up! Submitting your attempt...');
     submitAttempt(isAutoExpire: true);
   }
@@ -169,7 +208,20 @@ class ChallengeAttemptController extends GetxController {
     isSubmitting.value = true;
     _timer?.cancel();
 
+    AppFullScreenLoader.openLoadingDialog(
+      isAutoExpire
+          ? 'Time is up! Submitting attempt...'
+          : 'Submitting challenge attempt...',
+    );
+
     try {
+      // 1. Batch sync all local answers to guarantee 100% data integrity even after network glitches
+      await _repo.batchSubmitAnswers(
+        attemptId: attemptId!,
+        answers: userAnswers,
+      );
+
+      // 2. Finalize submission and get scored results
       final res = await _repo.submitAttempt(
         attemptId: attemptId!,
         totalTimeSeconds: _timeSpentSeconds,
@@ -180,7 +232,9 @@ class ChallengeAttemptController extends GetxController {
       List<ChallengeQuestionModel> reviewQuestions = [];
       if (rawQuestions is List && rawQuestions.isNotEmpty) {
         reviewQuestions = rawQuestions
-            .map((q) => ChallengeQuestionModel.fromJson(q as Map<String, dynamic>))
+            .map(
+              (q) => ChallengeQuestionModel.fromJson(q as Map<String, dynamic>),
+            )
             .toList();
       } else {
         try {
@@ -190,7 +244,7 @@ class ChallengeAttemptController extends GetxController {
         }
       }
 
-      // Save to local DB so it's stored and marked as Done locally
+      // 3. Save to local DB so it's stored and marked as Done locally
       try {
         final db = DatabaseService.instance;
         await db.saveChallengePracticeResult(
@@ -214,14 +268,24 @@ class ChallengeAttemptController extends GetxController {
         }
 
         if (Get.isRegistered<ChallengeHomeController>()) {
-          ChallengeHomeController.instance.markAttemptedOrPracticed(challengeId);
+          ChallengeHomeController.instance.markAttemptedOrPracticed(
+            challengeId,
+          );
+          ChallengeHomeController.instance.refreshAttemptStates();
         }
-        if (Get.isRegistered<ChallengeArchiveController>()) {
-          ChallengeArchiveController.instance.markAttemptedOrPracticed(challengeId);
-        }
+        try {
+          if (Get.isRegistered<ChallengeArchiveController>()) {
+            ChallengeArchiveController.instance.markAttemptedOrPracticed(
+              challengeId,
+            );
+            ChallengeArchiveController.instance.refreshAttemptStates();
+          }
+        } catch (_) {}
       } catch (_) {}
 
-      // Show completion feedback and transition to full review screen
+      AppFullScreenLoader.stopLoading();
+
+      // 4. Show completion feedback and transition to full review screen
       Get.off(
         () => ChallengeReviewScreen(
           title: title,
@@ -234,6 +298,7 @@ class ChallengeAttemptController extends GetxController {
         ),
       );
     } catch (e) {
+      AppFullScreenLoader.stopLoading();
       AppExceptionHandler.handleResponse(e);
     } finally {
       isSubmitting.value = false;

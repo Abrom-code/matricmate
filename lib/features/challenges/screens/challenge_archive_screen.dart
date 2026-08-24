@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
+import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -137,14 +138,20 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
               final challenge = _ctrl.challenges[idx];
               _ctrl.isDownloaded(challenge.id);
 
+              final isLive = challenge.isLive;
+              final isScheduled = challenge.isScheduled;
+
               return Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
                   side: BorderSide(
-                    color: dark
-                        ? AppColors.darkBorder
-                        : AppColors.borderPrimary,
+                    color: isLive
+                        ? AppColors.primary
+                        : isScheduled
+                            ? const Color(0xFF2563EB)
+                            : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
+                    width: isLive ? 1.5 : 1.0,
                   ),
                 ),
                 child: Padding(
@@ -223,11 +230,10 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           }),
                           const SizedBox(width: AppSizes.xs),
                           Obx(() {
-                            final isDown = _ctrl.isDownloaded(challenge.id);
                             final isDone = _ctrl.isAttemptedOrPracticed(
                               challenge.id,
                             );
-                            if (isDown && isDone) {
+                            if (isDone) {
                               return Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -297,13 +303,27 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Practice offline at your own pace with answers & explanations.',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+                      Obx(() {
+                        final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
+                        final subtitleText = isDone
+                            ? 'You have completed this challenge. Tap Review to see your answers & explanations.'
+                            : isLive
+                                ? 'This challenge is live! Tap to start your attempt now.'
+                                : isScheduled
+                                    ? 'This challenge is upcoming. Get ready!'
+                                    : 'Practice offline at your own pace with answers & explanations.';
+                        return Text(
+                          subtitleText,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: isDone
+                                ? const Color(0xFF10B981)
+                                : isLive
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                          ),
+                        );
+                      }),
                       const SizedBox(height: AppSizes.md),
 
                       // Actions (Leaderboard + Review / Practice / Download / Unlock)
@@ -325,7 +345,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               ),
                               icon: const Icon(Iconsax.ranking_copy, size: 14),
                               label: const Text(
-                                'Leaderboard',
+                                'Standings',
                                 style: TextStyle(fontSize: 11.5),
                               ),
                             ),
@@ -363,7 +383,8 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 );
                               }
 
-                              if (isDown && isDone) {
+                              // 1. If already attempted/completed -> Always show Review!
+                              if (isDone) {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFF10B981),
@@ -387,6 +408,55 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 );
                               }
 
+                              // 2. Live challenge: show Start button (if not attempted)
+                              if (isLive) {
+                                return FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  onPressed: () => Get.to(
+                                    () => ChallengeAttemptScreen(
+                                      challengeId: challenge.id,
+                                      title: challenge.title,
+                                      audience: challenge.audience,
+                                    ),
+                                  ),
+                                  icon: const Icon(Iconsax.play_circle_copy, size: 14),
+                                  label: const Text(
+                                    'Start Challenge',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              // 3. Scheduled challenge: show countdown info
+                              if (isScheduled) {
+                                return FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: const Color(0xFF2563EB),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  onPressed: null,
+                                  icon: const Icon(Iconsax.clock_copy, size: 14),
+                                  label: const Text(
+                                    'Upcoming',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              // 4. Closed challenge: Practice or Download
                               if (isDown) {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(

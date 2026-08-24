@@ -252,18 +252,41 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
                     // Next / Finish
                     if (_ctrl.currentIndex.value < _ctrl.totalQuestions - 1)
                       FilledButton.icon(
-                        onPressed: _ctrl.nextQuestion,
+                        onPressed:
+                            _ctrl.isSubmitting.value ? null : _ctrl.nextQuestion,
                         icon: const Icon(Iconsax.arrow_right_3_copy, size: 16),
                         label: const Text('Next'),
                       )
                     else
-                      FilledButton.icon(
+                      FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.success,
+                          disabledBackgroundColor:
+                              AppColors.success.withValues(alpha: 0.7),
                         ),
-                        onPressed: () => _confirmSubmit(context),
-                        icon: const Icon(Iconsax.tick_circle_copy, size: 16),
-                        label: const Text('Submit Attempt'),
+                        onPressed: _ctrl.isSubmitting.value
+                            ? null
+                            : () => _confirmSubmit(context),
+                        child: _ctrl.isSubmitting.value
+                            ? const AppCircularButtonLoading(color: Colors.white)
+                            : const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Iconsax.tick_circle_copy,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Submit Attempt',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                   ],
                 ),
@@ -291,7 +314,9 @@ class _QuestionGridSheet extends StatelessWidget {
       padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.borderRadiusLg)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppSizes.borderRadiusLg),
+        ),
       ),
       child: SafeArea(
         child: Column(
@@ -329,7 +354,9 @@ class _QuestionGridSheet extends StatelessWidget {
                   bg = AppColors.primary.withValues(alpha: 0.2);
                   fg = AppColors.primary;
                 } else {
-                  bg = dark ? AppColors.darkContainer : AppColors.grey.withValues(alpha: 0.2);
+                  bg = dark
+                      ? AppColors.darkContainer
+                      : AppColors.grey.withValues(alpha: 0.2);
                   fg = dark ? Colors.white70 : AppColors.darkGrey;
                 }
 
@@ -347,7 +374,9 @@ class _QuestionGridSheet extends StatelessWidget {
                       color: bg,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isCurrent ? AppColors.primary : Colors.transparent,
+                        color: isCurrent
+                            ? AppColors.primary
+                            : Colors.transparent,
                         width: 1.5,
                       ),
                     ),
@@ -364,12 +393,18 @@ class _QuestionGridSheet extends StatelessWidget {
               }),
             ),
             const SizedBox(height: AppSizes.lg),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(context);
-                controller.submitAttempt();
-              },
-              child: const Text('Finish & Submit Attempt'),
+            Obx(
+              () => FilledButton(
+                onPressed: controller.isSubmitting.value
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                        controller.submitAttempt();
+                      },
+                child: controller.isSubmitting.value
+                    ? const AppCircularButtonLoading(color: Colors.white)
+                    : const Text('Finish & Submit Attempt'),
+              ),
             ),
           ],
         ),

@@ -186,4 +186,62 @@ BEGIN
 END;
 $$;
 
+-- 6. RPC: Start Challenge Attempt (synonym for rpc_start_attempt)
+CREATE OR REPLACE FUNCTION public.rpc_start_challenge_attempt(
+  p_challenge_id uuid,
+  p_user_id text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN public.rpc_start_attempt(p_challenge_id, p_user_id);
+END;
+$$;
+
+-- 7. RPC: Get Challenge Answers & Explanations (Review)
+CREATE OR REPLACE FUNCTION public.rpc_get_challenge_answers(
+  p_challenge_id uuid
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_challenge record;
+  v_questions jsonb;
+BEGIN
+  SELECT * INTO v_challenge FROM public.leaderboard_challenges WHERE id = p_challenge_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'challenge_not_found';
+  END IF;
+
+  SELECT jsonb_agg(
+    jsonb_build_object(
+      'id', q.id,
+      'challenge_id', q.challenge_id,
+      'order_index', q.order_index,
+      'question_text', q.question_text,
+      'choices', q.choices,
+      'correct_choice', q.correct_choice,
+      'explanation', coalesce(q.explanation_en, q.explanation, ''),
+      'explanation_en', coalesce(q.explanation_en, q.explanation, ''),
+      'explanation_am', coalesce(q.explanation_am, ''),
+      'image_url', q.image_url
+    ) ORDER BY q.order_index ASC
+  ) INTO v_questions
+  FROM public.challenge_questions q
+  WHERE q.challenge_id = v_challenge.id;
+
+  RETURN jsonb_build_object(
+    'challenge_id', v_challenge.id,
+    'subject_id', v_challenge.subject_id,
+    'title', v_challenge.title,
+    'audience', v_challenge.audience,
+    'questions', coalesce(v_questions, '[]'::jsonb)
+  );
+END;
+$$;
+
 COMMIT;

@@ -1,10 +1,16 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:matricmate/bindings/exam/entrance_exams_binding.dart';
 import 'package:matricmate/bindings/exam/grade_test_binding.dart';
 import 'package:matricmate/bindings/exam/test_binding.dart';
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
+import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
+import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
+import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
@@ -14,7 +20,9 @@ import 'package:matricmate/features/exam/screens/entrance/entrance_exams.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 /// Handles deep-linking from notifications directly to the target test or challenge.
 class NotificationTestOpener {
@@ -28,17 +36,7 @@ class NotificationTestOpener {
         testType == 'challenge' ||
         testType == 'challenge_round' ||
         testType == 'challenge_reward') {
-      final challengeId = data['challenge_id']?.toString();
-      if (challengeId != null && challengeId.isNotEmpty) {
-        Get.to(
-          () => ChallengeAttemptScreen(
-            challengeId: challengeId,
-            title: data['title']?.toString() ?? 'Stream Challenge',
-          ),
-        );
-      } else {
-        Get.toNamed(Routes.challengeHome);
-      }
+      await _openChallenge(data);
       return;
     }
 
@@ -59,6 +57,108 @@ class NotificationTestOpener {
       default:
         // Unknown/announcement payload — nothing to navigate to.
         break;
+    }
+  }
+
+  // ── Challenge deep link ───────────────────────────────────────────────
+
+  static Future<void> _openChallenge(Map<String, dynamic> data) async {
+    final challengeId =
+        data['challenge_id']?.toString() ?? data['id']?.toString();
+    if (challengeId == null || challengeId.isEmpty) {
+      Get.toNamed(Routes.challengeHome);
+      return;
+    }
+
+    try {
+      final sb = Supabase.instance.client;
+      final row = await sb
+          .from('leaderboard_challenges')
+          .select('*, subjects(name)')
+          .eq('id', challengeId)
+          .maybeSingle();
+
+      if (row == null) {
+        Get.toNamed(Routes.challengeHome);
+        return;
+      }
+
+      final challenge = LeaderboardChallengeModel.fromJson(row);
+      final user = UserController.instance.user.value;
+      final isPremium = user.isActive;
+      final userStream = user.stream.toLowerCase().trim();
+
+      // 1. Premium Gate
+      if (!isPremium) {
+        Get.toNamed(Routes.challengeHome);
+        Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
+        return;
+      }
+
+      // 2. Stream Audience Gate
+      final aud = challenge.audience.toLowerCase().trim();
+      if (aud != 'both' && userStream.isNotEmpty && aud != userStream) {
+        Get.toNamed(Routes.challengeHome);
+        ToastHelper.warning(
+          'This challenge is open to ${challenge.audience.toUpperCase()} stream students.',
+        );
+        return;
+      }
+
+      // 3. Check if user already submitted an attempt
+      if (user.id.isNotEmpty) {
+        final repo = ChallengeRepository();
+        final attemptData = await repo.fetchUserAttempt(
+          challengeId: challenge.id,
+          userId: user.id,
+        );
+        if (attemptData != null && attemptData['attempt'] is ChallengeAttemptModel) {
+          final attempt = attemptData['attempt'] as ChallengeAttemptModel;
+          if (attempt.isSubmitted) {
+            Get.toNamed(Routes.challengeHome);
+            ToastHelper.info('You have already submitted your attempt for this challenge.');
+            return;
+          }
+        }
+      }
+
+      // 4. Status & Timing Checks
+      if (challenge.isLive) {
+        Get.to(
+          () => ChallengeAttemptScreen(
+            challengeId: challenge.id,
+            title: challenge.title,
+            audience: challenge.audience,
+          ),
+        );
+      } else if (challenge.isScheduled) {
+        Get.toNamed(Routes.challengeHome);
+        if (challenge.startsAt != null) {
+          final diff = challenge.startsAt!.difference(DateTime.now());
+          if (!diff.isNegative) {
+            final hours = diff.inHours;
+            final mins = diff.inMinutes % 60;
+            final timeStr = hours > 0 ? '${hours}h ${mins}m' : '${mins}m';
+            ToastHelper.info('This challenge opens in $timeStr. Get ready!');
+          } else {
+            ToastHelper.info('This challenge will open shortly. Get ready!');
+          }
+        } else {
+          ToastHelper.info('This challenge has not started yet.');
+        }
+      } else if (challenge.isClosed || challenge.isArchived) {
+        Get.to(
+          () => ChallengePracticeScreen(
+            challengeId: challenge.id,
+            title: challenge.title,
+          ),
+        );
+        ToastHelper.info('This challenge round has ended. You can practice it now.');
+      } else {
+        Get.toNamed(Routes.challengeHome);
+      }
+    } catch (_) {
+      Get.toNamed(Routes.challengeHome);
     }
   }
 

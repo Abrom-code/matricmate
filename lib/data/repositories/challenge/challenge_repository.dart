@@ -58,10 +58,26 @@ class ChallengeRepository {
   }) async {
     await _checkConnectivity();
 
-    final res = await _sb.rpc('rpc_start_attempt', params: {
-      'p_challenge_id': challengeId,
-      'p_user_id': userId,
-    });
+    dynamic res;
+    try {
+      res = await _sb.rpc('rpc_start_attempt', params: {
+        'p_challenge_id': challengeId,
+        'p_user_id': userId,
+      });
+    } catch (e) {
+      if (e is PostgrestException &&
+          (e.code == '42883' ||
+              e.code == 'PGRST202' ||
+              e.message.contains('does not exist') ||
+              e.message.contains('not found'))) {
+        res = await _sb.rpc('rpc_start_challenge_attempt', params: {
+          'p_challenge_id': challengeId,
+          'p_user_id': userId,
+        });
+      } else {
+        rethrow;
+      }
+    }
 
     if (res is Map<String, dynamic>) {
       final rawQuestions = res['questions'];

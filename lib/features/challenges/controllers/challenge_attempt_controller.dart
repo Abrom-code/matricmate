@@ -1,3 +1,4 @@
+import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
@@ -5,8 +6,10 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
@@ -82,8 +85,28 @@ class ChallengeAttemptController extends GetxController {
 
       _startTimer();
     } catch (e) {
-      AppExceptionHandler.handleResponse(e);
       Get.back();
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('already_submitted')) {
+        ToastHelper.info('You have already submitted your attempt for this challenge.');
+        Get.toNamed(Routes.challengeHome);
+      } else if (msg.contains('challenge_not_started') || msg.contains('not_open_yet')) {
+        ToastHelper.info('This challenge has not started yet. Check the countdown on the Challenges tab.');
+        Get.toNamed(Routes.challengeHome);
+      } else if (msg.contains('challenge_ended') ||
+          msg.contains('challenge_closed') ||
+          msg.contains('challenge_not_active')) {
+        ToastHelper.info('This challenge round has ended. You can practice it now.');
+        Get.to(() => ChallengePracticeScreen(challengeId: challengeId, title: title));
+      } else if (msg.contains('premium_required')) {
+        Get.toNamed(Routes.challengeHome);
+        Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
+      } else if (msg.contains('stream_not_eligible') || msg.contains('audience_mismatch')) {
+        ToastHelper.warning('This challenge is not available for your stream.');
+        Get.toNamed(Routes.challengeHome);
+      } else {
+        AppExceptionHandler.handleResponse(e);
+      }
     } finally {
       isLoading.value = false;
     }

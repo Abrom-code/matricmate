@@ -2,17 +2,46 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseDbExceptions implements Exception {
   final String code;
+  final String? customMessage;
 
-  SupabaseDbExceptions(this.code);
+  SupabaseDbExceptions(this.code, {this.customMessage});
 
   factory SupabaseDbExceptions.fromException(Object e) {
     if (e is PostgrestException) {
-      return SupabaseDbExceptions(e.code ?? 'unknown');
+      return SupabaseDbExceptions(e.code ?? 'unknown', customMessage: e.message);
     }
     return SupabaseDbExceptions('unknown');
   }
 
   String get message {
+    if (customMessage != null && customMessage!.isNotEmpty) {
+      final msg = customMessage!.toLowerCase();
+      if (msg.contains('challenge_not_started') || msg.contains('not_open_yet')) {
+        return 'This challenge has not started yet. Please check the scheduled start time.';
+      }
+      if (msg.contains('challenge_ended') || msg.contains('challenge_closed') || msg.contains('challenge_not_active')) {
+        return 'This challenge has ended or is no longer active.';
+      }
+      if (msg.contains('already_submitted')) {
+        return 'You have already submitted your attempt for this challenge.';
+      }
+      if (msg.contains('premium_required')) {
+        return 'A premium subscription is required to participate in challenges.';
+      }
+      if (msg.contains('stream_not_eligible') || msg.contains('audience_mismatch')) {
+        return 'This challenge is not open to your stream.';
+      }
+      if (msg.contains('challenge_not_found')) {
+        return 'Challenge not found or has been removed.';
+      }
+      if (msg.contains('user_not_found')) {
+        return 'User account not found. Please log in again.';
+      }
+      if (msg.contains('invalid_or_completed_attempt')) {
+        return 'This challenge attempt is already completed or invalid.';
+      }
+    }
+
     switch (code) {
       // --- Integrity & Constraints ---
       case '23505':

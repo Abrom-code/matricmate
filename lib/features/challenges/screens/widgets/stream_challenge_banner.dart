@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:matricmate/features/challenges/screens/challenge_home_screen.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -35,7 +34,7 @@ class StreamChallengeBanner extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
-          onTap: () => Get.to(() => const ChallengeHomeScreen()),
+          onTap: () => NavigationController.navigateToTab(1),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
             child: Row(

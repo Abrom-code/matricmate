@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:matricmate/bindings/exam/entrance_exams_binding.dart';
 import 'package:matricmate/bindings/exam/grade_test_binding.dart';
 import 'package:matricmate/bindings/exam/test_binding.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
@@ -21,7 +21,6 @@ import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
-import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 /// Handles deep-linking from notifications directly to the target test or challenge.
@@ -66,7 +65,7 @@ class NotificationTestOpener {
     final challengeId =
         data['challenge_id']?.toString() ?? data['id']?.toString();
     if (challengeId == null || challengeId.isEmpty) {
-      Get.toNamed(Routes.challengeHome);
+      NavigationController.navigateToTab(1);
       return;
     }
 
@@ -79,7 +78,7 @@ class NotificationTestOpener {
           .maybeSingle();
 
       if (row == null) {
-        Get.toNamed(Routes.challengeHome);
+        NavigationController.navigateToTab(1);
         return;
       }
 
@@ -88,16 +87,16 @@ class NotificationTestOpener {
       final isPremium = user.isActive;
       final userStream = user.stream.toLowerCase().trim();
 
-      // 1. Premium Gate (Redirects to challenge page where locked challenges are displayed)
+      // 1. Premium Gate (Redirects to challenge page where locked challenges are displayed with navbar)
       if (!isPremium) {
-        Get.toNamed(Routes.challengeHome);
+        NavigationController.navigateToTab(1);
         return;
       }
 
       // 2. Stream Audience Gate
       final aud = challenge.audience.toLowerCase().trim();
       if (aud != 'both' && userStream.isNotEmpty && aud != userStream) {
-        Get.toNamed(Routes.challengeHome);
+        NavigationController.navigateToTab(1);
         ToastHelper.warning(
           'This challenge is open to ${challenge.audience.toUpperCase()} stream students.',
         );
@@ -111,11 +110,14 @@ class NotificationTestOpener {
           challengeId: challenge.id,
           userId: user.id,
         );
-        if (attemptData != null && attemptData['attempt'] is ChallengeAttemptModel) {
+        if (attemptData != null &&
+            attemptData['attempt'] is ChallengeAttemptModel) {
           final attempt = attemptData['attempt'] as ChallengeAttemptModel;
           if (attempt.isSubmitted) {
-            Get.toNamed(Routes.challengeHome);
-            ToastHelper.info('You have already submitted your attempt for this challenge.');
+            NavigationController.navigateToTab(1);
+            ToastHelper.info(
+              'You have already submitted your attempt for this challenge.',
+            );
             return;
           }
         }
@@ -131,7 +133,7 @@ class NotificationTestOpener {
           ),
         );
       } else if (challenge.isScheduled) {
-        Get.toNamed(Routes.challengeHome);
+        NavigationController.navigateToTab(1);
         if (challenge.startsAt != null) {
           final diff = challenge.startsAt!.difference(DateTime.now());
           if (!diff.isNegative) {
@@ -152,12 +154,14 @@ class NotificationTestOpener {
             title: challenge.title,
           ),
         );
-        ToastHelper.info('This challenge round has ended. You can practice it now.');
+        ToastHelper.info(
+          'This challenge round has ended. You can practice it now.',
+        );
       } else {
-        Get.toNamed(Routes.challengeHome);
+        NavigationController.navigateToTab(1);
       }
     } catch (_) {
-      Get.toNamed(Routes.challengeHome);
+      NavigationController.navigateToTab(1);
     }
   }
 

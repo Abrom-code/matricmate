@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
+import 'package:matricmate/routes/app_routes.dart';
 
 class NavigationController extends GetxController with WidgetsBindingObserver {
   static NavigationController get instance => Get.find();
@@ -23,7 +24,7 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
   void onInit() {
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
-    pageController = PageController(initialPage: 0);
+    pageController = PageController(initialPage: selectedIdx.value);
 
     // Ensure notification permissions are requested on startup / main screen visit
     unawaited(FcmService.instance.requestPermissionIfNeeded());
@@ -58,13 +59,14 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
 
   /// Called by the nav bar tap — animates the PageView.
   void changePage(int index) {
-    if (selectedIdx.value == index) return;
     selectedIdx.value = index;
-    pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (pageController.hasClients) {
+      pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
     if (index == 0) {
       unawaited(FcmService.instance.requestPermissionIfNeeded());
     }
@@ -75,6 +77,23 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
     selectedIdx.value = index;
     if (index == 0) {
       unawaited(FcmService.instance.requestPermissionIfNeeded());
+    }
+  }
+
+  /// Navigates to a top-level tab in NavigationMenu, popping any pushed routes
+  /// so that the bottom navigation bar is always visible.
+  static void navigateToTab(int index) {
+    if (Get.isRegistered<NavigationController>()) {
+      final ctrl = Get.find<NavigationController>();
+      Get.until((route) => route.isFirst);
+      ctrl.changePage(index);
+    } else {
+      Get.offAllNamed(Routes.navigationMenu);
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (Get.isRegistered<NavigationController>()) {
+          Get.find<NavigationController>().changePage(index);
+        }
+      });
     }
   }
 }

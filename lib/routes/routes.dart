@@ -38,6 +38,7 @@ import 'package:matricmate/features/personalization/screens/analytics/analytics_
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
 import 'package:matricmate/features/personalization/screens/update/update_profile.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/bindings/exam/premium_binding.dart';
@@ -47,7 +48,6 @@ import 'package:matricmate/features/exam/screens/premium/premium.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/contact_admin.dart';
 import 'package:matricmate/bindings/challenges/challenge_binding.dart';
-import 'package:matricmate/features/challenges/screens/challenge_home_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_archive_screen.dart';
@@ -189,7 +189,12 @@ class AppRoutes {
     // ── Challenges (Stream & Leaderboard Challenges) ───────────────────
     GetPage(
       name: Routes.challengeHome,
-      page: () => const ChallengeHomeScreen(),
+      page: () {
+        if (Get.isRegistered<NavigationController>()) {
+          Get.find<NavigationController>().selectedIdx.value = 1;
+        }
+        return const NavigationMenu();
+      },
       binding: ChallengeBinding(),
     ),
     GetPage(

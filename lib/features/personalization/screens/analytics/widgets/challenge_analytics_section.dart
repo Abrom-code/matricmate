@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:matricmate/features/challenges/screens/challenge_home_screen.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -95,7 +95,7 @@ class ChallengeAnalyticsSection extends StatelessWidget {
                 ),
                 InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: () => Get.to(() => const ChallengeHomeScreen()),
+                  onTap: () => NavigationController.navigateToTab(1),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(

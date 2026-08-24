@@ -58,55 +58,72 @@ class PremiumScreen extends StatelessWidget {
 
                     // ── Selected Plan Hero Card ────────────────────
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            AppColors.primary,
-                            AppColors.primary.withValues(alpha: 0.85),
-                          ],
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF064E3B),
+                                  const Color(0xFF0F766E),
+                                ]
+                              : [
+                                  const Color(0xFF047857),
+                                  const Color(0xFF0D9488),
+                                ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
+                            color: const Color(0xFF047857).withValues(alpha: 0.25),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Header Row: Access Chip + Tier Tag
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
+                                  horizontal: 9,
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Text(
-                                  '${selectedPlan.durationMonths} MONTHS ACCESS',
-                                  style: const TextStyle(
-                                    color: AppColors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.5,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.workspace_premium_rounded,
+                                      size: 13,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 4.5),
+                                    Text(
+                                      '${selectedPlan.durationMonths} MONTHS ACCESS',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               if (selectedPlan.isFeatured || selectedPlan.badgeText != null)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
+                                    horizontal: 8,
+                                    vertical: 3.5,
                                   ),
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
@@ -117,11 +134,11 @@ class PremiumScreen extends StatelessWidget {
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFFD97706).withValues(alpha: 0.4),
-                                        blurRadius: 8,
+                                        color: const Color(0xFFD97706).withValues(alpha: 0.35),
+                                        blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
@@ -131,50 +148,76 @@ class PremiumScreen extends StatelessWidget {
                                     children: [
                                       Icon(
                                         Icons.star_rounded,
-                                        size: 13,
-                                        color: AppColors.white,
+                                        size: 11,
+                                        color: Colors.white,
                                       ),
-                                      SizedBox(width: 4),
+                                      SizedBox(width: 3),
                                       Text(
                                         'BEST VALUE',
                                         style: TextStyle(
-                                          color: AppColors.white,
-                                          fontSize: 10,
+                                          color: Colors.white,
+                                          fontSize: 9,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.5,
                                         ),
                                       ),
                                     ],
                                   ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Text(
+                                    'ONE-TIME PAYMENT',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.4,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 12),
+
+                          // Plan Name + Big Price
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${selectedPlan.title} Plan',
-                                    style: const TextStyle(
-                                      color: AppColors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.3,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${selectedPlan.title} Access',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.3,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    selectedPlan.subtitle,
-                                    style: TextStyle(
-                                      color: AppColors.white.withValues(alpha: 0.85),
-                                      fontSize: 12,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      selectedPlan.subtitle.isNotEmpty
+                                          ? selectedPlan.subtitle
+                                          : 'All subjects, tests & explanations',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.85),
+                                        fontSize: 11.5,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                               RichText(
                                 text: TextSpan(
@@ -182,22 +225,48 @@ class PremiumScreen extends StatelessWidget {
                                     TextSpan(
                                       text: '$price',
                                       style: const TextStyle(
-                                        color: AppColors.white,
-                                        fontSize: 32,
+                                        color: Colors.white,
+                                        fontSize: 26,
                                         fontWeight: FontWeight.w900,
-                                        letterSpacing: -0.8,
+                                        letterSpacing: -0.6,
                                       ),
                                     ),
                                     const TextSpan(
                                       text: ' ETB',
                                       style: TextStyle(
-                                        color: AppColors.white,
-                                        fontSize: 14,
+                                        color: Colors.white,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                   ],
                                 ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+                          Container(
+                            height: 1,
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Micro Features Row
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _HeroPerkItem(
+                                icon: Icons.check_circle_rounded,
+                                label: 'All Grades (9-12)',
+                              ),
+                              _HeroPerkItem(
+                                icon: Icons.offline_bolt_rounded,
+                                label: '100% Offline',
+                              ),
+                              _HeroPerkItem(
+                                icon: Icons.translate_rounded,
+                                label: 'Amharic + Eng',
                               ),
                             ],
                           ),
@@ -449,6 +518,32 @@ class PremiumScreen extends StatelessWidget {
           ),
         );
       }),
+    );
+  }
+}
+
+class _HeroPerkItem extends StatelessWidget {
+  const _HeroPerkItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12.5, color: const Color(0xFF6EE7B7)),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFFE6FFFA),
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

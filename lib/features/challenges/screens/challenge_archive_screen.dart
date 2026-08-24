@@ -312,8 +312,15 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           Expanded(
                             child: OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 32),
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
+                                  vertical: 5,
+                                  horizontal: 8,
+                                ),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                               onPressed: () => Get.to(
@@ -323,10 +330,10 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                   audience: challenge.audience,
                                 ),
                               ),
-                              icon: const Icon(Iconsax.ranking_copy, size: 14),
+                              icon: const Icon(Iconsax.ranking_copy, size: 13),
                               label: const Text(
                                 'Leaderboard',
-                                style: TextStyle(fontSize: 11.5),
+                                style: TextStyle(fontSize: 11),
                               ),
                             ),
                           ),
@@ -347,16 +354,23 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                   style: FilledButton.styleFrom(
                                     backgroundColor: Colors.amber.shade700,
                                     foregroundColor: Colors.white,
+                                    minimumSize: const Size(0, 32),
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
+                                      vertical: 5,
+                                      horizontal: 8,
+                                    ),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
                                   onPressed: () => _ctrl.downloadChallenge(challenge),
-                                  icon: const Icon(Icons.lock_rounded, size: 14),
+                                  icon: const Icon(Icons.lock_rounded, size: 13),
                                   label: const Text(
                                     'Unlock (Pro)',
                                     style: TextStyle(
-                                      fontSize: 11.5,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -367,20 +381,27 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFF10B981),
+                                    minimumSize: const Size(0, 32),
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
+                                      vertical: 5,
+                                      horizontal: 8,
+                                    ),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
                                   onPressed: () =>
                                       _ctrl.openCompletedChallenge(challenge),
                                   icon: const Icon(
                                     Iconsax.document_text_1_copy,
-                                    size: 14,
+                                    size: 13,
                                   ),
                                   label: const Text(
                                     'Review',
                                     style: TextStyle(
-                                      fontSize: 11.5,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -391,8 +412,15 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.primary,
+                                    minimumSize: const Size(0, 32),
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
+                                      vertical: 5,
+                                      horizontal: 8,
+                                    ),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
                                   onPressed: () => Get.to(
@@ -403,12 +431,12 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                   ),
                                   icon: const Icon(
                                     Iconsax.book_1_copy,
-                                    size: 14,
+                                    size: 13,
                                   ),
                                   label: const Text(
                                     'Practice',
                                     style: TextStyle(
-                                      fontSize: 11.5,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -418,8 +446,15 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               return FilledButton.icon(
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppColors.primary,
+                                  minimumSize: const Size(0, 32),
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
+                                    vertical: 5,
+                                    horizontal: 8,
+                                  ),
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
                                 onPressed: isDownloading
@@ -427,8 +462,8 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                     : () => _ctrl.downloadChallenge(challenge),
                                 icon: isDownloading
                                     ? const SizedBox(
-                                        width: 14,
-                                        height: 14,
+                                        width: 13,
+                                        height: 13,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                           color: Colors.white,
@@ -436,12 +471,12 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                       )
                                     : const Icon(
                                         Iconsax.document_download_copy,
-                                        size: 14,
+                                        size: 13,
                                       ),
                                 label: Text(
                                   isDownloading ? 'Downloading...' : 'Download',
                                   style: const TextStyle(
-                                    fontSize: 11.5,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),

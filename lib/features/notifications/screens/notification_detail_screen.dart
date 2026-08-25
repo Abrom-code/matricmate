@@ -524,6 +524,10 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
+                      side: const BorderSide(
+                        color: Color(0xFF0284C7),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   child: _isNavigating
@@ -534,7 +538,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                             Icon(Icons.play_arrow_rounded, size: 22),
                             SizedBox(width: 8),
                             Text(
-                              'Start Test Now',
+                              'Start Test',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -565,6 +569,12 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(
+                        color: _isChallengeClosed
+                            ? const Color(0xFFD97706)
+                            : const Color(0xFF2563EB),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   child: (_isNavigating || _isLoadingChallenge)
@@ -594,7 +604,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                             const SizedBox(width: 8),
                             Text(
                               _isChallengeClosed
-                                  ? 'See Standings & Leaderboard'
+                                  ? 'See Leaderboard'
                                   : 'Go to Challenge',
                               style: const TextStyle(
                                 fontSize: 15,
@@ -628,6 +638,14 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(
+                        color: _isApproved
+                            ? const Color(0xFF10B981)
+                            : _isRejected
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFFF59E0B),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   child: _isNavigating
@@ -644,10 +662,10 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                             const SizedBox(width: 8),
                             Text(
                               _isApproved
-                                  ? 'Explore Premium Features'
+                                  ? 'Explore Features'
                                   : _isRejected
-                                      ? 'Submit Payment Again'
-                                      : 'Check Verification Status',
+                                      ? 'Retry Payment'
+                                      : 'Check Status',
                               style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,

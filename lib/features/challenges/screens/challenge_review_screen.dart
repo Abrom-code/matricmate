@@ -200,6 +200,15 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: const Color(0xFFD97706),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: Color(0xFFD97706),
+                        width: 1.5,
+                      ),
+                    ),
                   ),
                   onPressed: () => Get.to(
                     () => LeaderboardScreen(
@@ -210,10 +219,10 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                       userTimeSeconds: widget.timeSpentSeconds,
                     ),
                   ),
-                  icon: const Icon(Iconsax.ranking_copy, size: 16),
+                  icon: const Icon(Icons.leaderboard_rounded, size: 18),
                   label: const Text(
-                    'Standings & Rankings',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    'See Leaderboard',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
                   ),
                 ),
               ),

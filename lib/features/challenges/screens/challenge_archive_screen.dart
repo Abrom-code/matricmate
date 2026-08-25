@@ -51,11 +51,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
               return const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
                 child: Center(
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2.2),
-                  ),
+                  child: AppCircularButtonLoading(color: AppColors.primary),
                 ),
               );
             }
@@ -128,27 +124,52 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               ),
                             ),
                             const SizedBox(height: AppSizes.lg),
-                            FilledButton.icon(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
+                            Obx(() {
+                              final isBusy = _ctrl.isManualRefreshing.value;
+                              return FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 22,
+                                    vertical: 11,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              onPressed: () => _ctrl.manualRefresh(),
-                              icon: const Icon(Icons.refresh_rounded, size: 18),
-                              label: const Text(
-                                'Connect & Refresh',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
+                                onPressed: isBusy ? null : () => _ctrl.manualRefresh(),
+                                child: isBusy
+                                    ? const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          AppCircularButtonLoading(color: Colors.white),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Refreshing...',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.refresh_rounded, size: 18),
+                                          SizedBox(width: 6),
+                                          Text(
+                                            'Connect & Refresh',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              );
+                            }),
                           ],
                         ),
                       ),
@@ -614,14 +635,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                     ? null
                                     : () => _ctrl.downloadChallenge(challenge),
                                 icon: isDownloading
-                                    ? const SizedBox(
-                                        width: 14,
-                                        height: 14,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
+                                    ? const AppCircularButtonLoading(color: Colors.white)
                                     : const Icon(
                                         Iconsax.document_download_copy,
                                         size: 14,

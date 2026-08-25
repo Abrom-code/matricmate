@@ -211,16 +211,15 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                   // Tab 1: Available Challenges
                   RefreshIndicator(
                     color: AppColors.primary,
-                    onRefresh: () => _ctrl.loadAllChallenges(),
+                    onRefresh: () => _ctrl.loadAllChallenges(isManual: true),
                     child: _ctrl.isOffline.value && _ctrl.availableChallenges.isEmpty
                         ? SingleChildScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             child: SizedBox(
                               height: MediaQuery.of(context).size.height * 0.68,
                               child: _OfflineAvailableState(
-                                onRefresh: () => _ctrl.loadAllChallenges(),
+                                ctrl: _ctrl,
                                 dark: dark,
-                                isLoading: _ctrl.isLoading.value,
                               ),
                             ),
                           )
@@ -256,7 +255,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                   // Tab 2: Completed / Past Challenges (Top Recent 3 + Subject TabBar)
                   RefreshIndicator(
                     color: AppColors.primary,
-                    onRefresh: () => _ctrl.loadAllChallenges(),
+                    onRefresh: () => _ctrl.loadAllChallenges(isManual: true),
                     child: _ctrl.completedChallenges.isEmpty
                         ? (_ctrl.isOffline.value
                             ? SingleChildScrollView(
@@ -1218,14 +1217,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                           ? null
                           : () => ctrl.downloadChallenge(challenge),
                       icon: isBusy
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
+                          ? const AppCircularButtonLoading(color: Colors.white)
                           : const Icon(
                               Iconsax.document_download_copy,
                               size: 14,
@@ -1378,14 +1370,12 @@ class _EmptyState extends StatelessWidget {
 
 class _OfflineAvailableState extends StatelessWidget {
   const _OfflineAvailableState({
-    required this.onRefresh,
+    required this.ctrl,
     required this.dark,
-    this.isLoading = false,
   });
 
-  final VoidCallback onRefresh;
+  final ChallengeHomeController ctrl;
   final bool dark;
-  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -1428,36 +1418,52 @@ class _OfflineAvailableState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSizes.lg),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
+            Obx(() {
+              final isBusy = ctrl.isRefreshing.value || ctrl.isLoading.value;
+              return FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 11,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: isLoading ? null : onRefresh,
-              icon: isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+                onPressed: isBusy ? null : () => ctrl.loadAllChallenges(isManual: true),
+                child: isBusy
+                    ? const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppCircularButtonLoading(color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Refreshing...',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.refresh_rounded, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            'Connect & Refresh',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
-                    )
-                  : const Icon(Icons.refresh_rounded, size: 18),
-              label: Text(
-                isLoading ? 'Refreshing...' : 'Connect & Refresh',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ),
+              );
+            }),
           ],
         ),
       ),

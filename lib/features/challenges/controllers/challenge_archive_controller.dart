@@ -230,6 +230,10 @@ class ChallengeArchiveController extends GetxController {
       _saveCachedArchiveChallenges(filtered);
       await refreshDownloadStates();
       await refreshAttemptStates();
+
+      if (isManual) {
+        ToastHelper.success('Refreshed successfully');
+      }
     } catch (e) {
       isOffline.value = true;
       // Fallback to local DB when offline or network fails
@@ -239,6 +243,10 @@ class ChallengeArchiveController extends GetxController {
       }
       await refreshDownloadStates();
       await refreshAttemptStates();
+
+      if (isManual) {
+        ToastHelper.warning('No internet connection. Showing offline data.');
+      }
     } finally {
       isLoading.value = false;
       isManualRefreshing.value = false;

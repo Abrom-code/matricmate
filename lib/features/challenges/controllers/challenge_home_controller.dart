@@ -28,6 +28,7 @@ class ChallengeHomeController extends GetxController {
   final _sb = Supabase.instance.client;
 
   final isLoading = false.obs;
+  final isRefreshing = false.obs;
   final availableChallenges = <LeaderboardChallengeModel>[].obs;
   final completedChallenges = <LeaderboardChallengeModel>[].obs;
 
@@ -275,10 +276,11 @@ class ChallengeHomeController extends GetxController {
     }
   }
 
-  Future<void> loadAllChallenges({bool showLoading = true}) async {
+  Future<void> loadAllChallenges({bool showLoading = true, bool isManual = false}) async {
     if (showLoading && completedChallenges.isEmpty && availableChallenges.isEmpty) {
       isLoading.value = true;
     }
+    isRefreshing.value = true;
     try {
       final isNatural = userStream.toLowerCase().trim() == 'natural';
       final subjectsList = Get.isRegistered<SubjectsController>()
@@ -327,6 +329,10 @@ class ChallengeHomeController extends GetxController {
       // 3. Refresh offline download states
       await refreshDownloadStates();
       await refreshAttemptStates();
+
+      if (isManual) {
+        ToastHelper.success('Challenges refreshed!');
+      }
     } catch (e) {
       isOffline.value = true;
       availableChallenges.clear();
@@ -336,8 +342,13 @@ class ChallengeHomeController extends GetxController {
       }
       await refreshDownloadStates();
       await refreshAttemptStates();
+
+      if (isManual) {
+        ToastHelper.warning('No internet connection. Showing offline data.');
+      }
     } finally {
-      if (showLoading) isLoading.value = false;
+      isLoading.value = false;
+      isRefreshing.value = false;
     }
   }
 

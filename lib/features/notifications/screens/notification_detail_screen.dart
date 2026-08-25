@@ -3,17 +3,26 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
+import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationDetailScreen extends StatefulWidget {
-  const NotificationDetailScreen({super.key, required this.notification});
+  const NotificationDetailScreen({
+    super.key,
+    required this.notification,
+    this.initialChallenge,
+  });
 
   final AppNotification notification;
+  final LeaderboardChallengeModel? initialChallenge;
 
   @override
   State<NotificationDetailScreen> createState() =>
@@ -22,6 +31,9 @@ class NotificationDetailScreen extends StatefulWidget {
 
 class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
   bool _isNavigating = false;
+  bool _isLoadingChallenge = false;
+  LeaderboardChallengeModel? _loadedChallenge;
+  Future<void>? _challengeFetchFuture;
 
   AppNotification get notification => widget.notification;
 
@@ -32,6 +44,81 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
 
   bool get _isRejected =>
       notification.type == 'payment' && _paymentStatus == 'rejected';
+
+  bool get _isChallengeNotification =>
+      notification.type == 'challenge' ||
+      notification.type == 'challenge_round' ||
+      notification.type == 'challenge_reward' ||
+      notification.payload.containsKey('challenge_id');
+
+  bool get _isChallengeClosed {
+    if (notification.type == 'challenge_reward') return true;
+    final payloadStatus =
+        notification.payload['status']?.toString().toLowerCase();
+    if (payloadStatus == 'closed' || payloadStatus == 'archived') return true;
+    if (_loadedChallenge != null) {
+      return _loadedChallenge!.isClosed || _loadedChallenge!.isArchived;
+    }
+    return false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadedChallenge = widget.initialChallenge;
+    if (_loadedChallenge == null && _isChallengeNotification) {
+      _challengeFetchFuture = _fetchChallengeIfPresent();
+    }
+  }
+
+  Future<void> _fetchChallengeIfPresent() async {
+    final challengeId = notification.payload['challenge_id']?.toString() ??
+        notification.payload['id']?.toString();
+    if (challengeId != null &&
+        challengeId.isNotEmpty &&
+        _isChallengeNotification) {
+      // 1. Check local ChallengeHomeController memory cache for 0ms instant sync
+      if (Get.isRegistered<ChallengeHomeController>()) {
+        final ctrl = ChallengeHomeController.instance;
+        final inClosed = ctrl.completedChallenges.firstWhereOrNull(
+          (c) => c.id == challengeId || c.setId == challengeId,
+        );
+        if (inClosed != null) {
+          _loadedChallenge = inClosed;
+        } else {
+          final inAvailable = ctrl.availableChallenges.firstWhereOrNull(
+            (c) => c.id == challengeId || c.setId == challengeId,
+          );
+          if (inAvailable != null) {
+            _loadedChallenge = inAvailable;
+          }
+        }
+      }
+
+      if (_loadedChallenge == null) {
+        setState(() => _isLoadingChallenge = true);
+      }
+
+      try {
+        final sb = Supabase.instance.client;
+        final row = await sb
+            .from('leaderboard_challenges')
+            .select('*, subjects(name)')
+            .eq('id', challengeId)
+            .maybeSingle();
+        if (row != null && mounted) {
+          setState(() {
+            _loadedChallenge = LeaderboardChallengeModel.fromJson(row);
+          });
+        }
+      } catch (_) {
+      } finally {
+        if (mounted && _isLoadingChallenge) {
+          setState(() => _isLoadingChallenge = false);
+        }
+      }
+    }
+  }
 
   _TypeVisuals get _visuals {
     if (_isApproved) {
@@ -49,14 +136,17 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
       );
     }
 
-    if (notification.type == 'challenge' ||
-        notification.type == 'challenge_round' ||
-        notification.type == 'challenge_reward' ||
-        notification.payload.containsKey('challenge_id')) {
-      return const _TypeVisuals(
-        icon: Icons.emoji_events_rounded,
-        color: Color(0xFF8B5CF6),
-        typeName: 'Challenge / Competition',
+    if (_isChallengeNotification) {
+      return _TypeVisuals(
+        icon: _isChallengeClosed
+            ? Icons.leaderboard_rounded
+            : Icons.emoji_events_rounded,
+        color: _isChallengeClosed
+            ? const Color(0xFF0D9488) // Distinct Standings Teal
+            : const Color(0xFF8B5CF6), // Competition Purple
+        typeName: _isChallengeClosed
+            ? 'Challenge Standings / Results'
+            : 'Challenge / Competition',
       );
     }
 
@@ -87,10 +177,27 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
     setState(() => _isNavigating = true);
 
     try {
-      if (notification.type == 'challenge' ||
-          notification.type == 'challenge_round' ||
-          notification.type == 'challenge_reward' ||
-          notification.payload.containsKey('challenge_id')) {
+      if (_isChallengeNotification) {
+        if (_challengeFetchFuture != null) {
+          await _challengeFetchFuture;
+        }
+
+        if (_isChallengeClosed) {
+          final challengeId = notification.payload['challenge_id']?.toString() ??
+              notification.payload['id']?.toString() ??
+              _loadedChallenge?.id;
+          if (challengeId != null && challengeId.isNotEmpty) {
+            Get.to(
+              () => LeaderboardScreen(
+                challengeId: challengeId,
+                challengeTitle: _loadedChallenge?.title ?? notification.title,
+                audience: _loadedChallenge?.audience ??
+                    notification.payload['audience']?.toString(),
+              ),
+            );
+            return;
+          }
+        }
         await NotificationTestOpener.open(notification.payload);
         return;
       }
@@ -166,16 +273,18 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Top Header Card ──────────────────────────────────────
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
+      body: (_isChallengeNotification && _isLoadingChallenge && _loadedChallenge == null)
+          ? const AppCircularLoading(title: 'Loading challenge details...')
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Top Header Card ──────────────────────────────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
                 color: dark ? AppColors.darkCard : AppColors.white,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
@@ -435,36 +544,59 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                         ),
                 ),
               )
-            else if (notification.type == 'challenge' ||
-                notification.type == 'challenge_round' ||
-                notification.type == 'challenge_reward' ||
-                notification.payload.containsKey('challenge_id'))
+            else if (_isChallengeNotification)
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isNavigating ? null : _handleAction,
+                  onPressed: (_isNavigating || _isLoadingChallenge)
+                      ? null
+                      : _handleAction,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
+                    backgroundColor: _isChallengeClosed
+                        ? const Color(0xFF0D9488) // Standings Teal
+                        : const Color(0xFF8B5CF6), // Challenge Purple
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        const Color(0xFF8B5CF6).withValues(alpha: 0.7),
+                    disabledBackgroundColor: (_isChallengeClosed
+                            ? const Color(0xFF0D9488)
+                            : const Color(0xFF8B5CF6))
+                        .withValues(alpha: 0.7),
                     disabledForegroundColor: Colors.white70,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: _isNavigating
-                      ? const AppCircularButtonLoading(color: Colors.white)
-                      : const Row(
+                  child: (_isNavigating || _isLoadingChallenge)
+                      ? const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.emoji_events_rounded, size: 20),
-                            SizedBox(width: 8),
+                            AppCircularButtonLoading(color: Colors.white),
+                            SizedBox(width: 10),
                             Text(
-                              'Go to Challenge',
+                              'Checking Challenge...',
                               style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isChallengeClosed
+                                  ? Icons.leaderboard_rounded
+                                  : Icons.emoji_events_rounded,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isChallengeClosed
+                                  ? 'See Standings & Leaderboard'
+                                  : 'Go to Challenge',
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                               ),

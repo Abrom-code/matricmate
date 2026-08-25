@@ -1,13 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
-import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-/// A utility class for managing a full-screen loading dialog.
+/// A utility class for managing a full-screen loading overlay.
 class AppFullScreenLoader {
-  /// Opens a full-screen loading dialog with a sleek frosted glass background and card.
+  /// Opens a clean full-screen loading dialog with 3 pulsing dots and subtitle text (no box/card).
   static void openLoadingDialog(String text, [String? _]) {
     final context = Get.overlayContext ?? Get.context;
     if (context == null) return;
@@ -17,90 +15,40 @@ class AppFullScreenLoader {
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: dark ? 0.65 : 0.35),
+      barrierColor: Colors.black.withValues(alpha: dark ? 0.75 : 0.55),
       builder: (_) => PopScope(
         canPop: false,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: Center(
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: 200,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 26,
+        child: Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // ── 3 Pulsing Dots Indicator ────────────────────────
+                const AppPulsingDots(
+                  dotSize: 10,
+                  dotSpacing: 5,
+                  color: Colors.white,
                 ),
-                decoration: BoxDecoration(
-                  color: dark ? AppColors.darkCard : AppColors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: dark
-                        ? AppColors.darkBorder
-                        : const Color(0xFFE2E8F0),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: dark ? 0.45 : 0.12,
-                      ),
-                      blurRadius: 28,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ── Glowing Spinner Badge ─────────────────────────
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary.withValues(
-                          alpha: dark ? 0.16 : 0.08,
-                        ),
-                      ),
-                      child: const Center(
-                        child: SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            strokeCap: StrokeCap.round,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-
-                    // ── Loading Status Text ───────────────────────────
-                    Text(
+                if (text.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  // ── Subtitle text ──────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
                       text,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                        color: dark ? AppColors.white : const Color(0xFF0F172A),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.2,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 8),
-
-                    // ── Pulsing Dots Indicator ────────────────────────
-                    const AppPulsingDots(
-                      dotSize: 5,
-                      dotSpacing: 3,
-                      color: AppColors.primary,
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),

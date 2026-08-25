@@ -10,6 +10,7 @@ import 'package:matricmate/data/repositories/challenge/challenge_repository.dart
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
@@ -119,6 +120,23 @@ class NotificationTestOpener {
         }
       }
 
+      // 4. Status Checks:
+      // If closed, archived, or reward notification -> redirect directly to LeaderboardScreen!
+      if (challenge.isClosed ||
+          challenge.isArchived ||
+          data['type'] == 'challenge_reward' ||
+          data['status'] == 'closed' ||
+          data['status'] == 'archived') {
+        Get.to(
+          () => LeaderboardScreen(
+            challengeId: challenge.id,
+            challengeTitle: challenge.title,
+            audience: challenge.audience,
+          ),
+        );
+        return;
+      }
+
       // Navigate to Challenges tab (Tab 1 in BottomNavigationBar)
       NavigationController.navigateToTab(1);
 
@@ -126,9 +144,6 @@ class NotificationTestOpener {
           ? ChallengeHomeController.instance
           : Get.put(ChallengeHomeController());
 
-      // 4. Status Checks
-      // If available (live or scheduled) and not submitted -> switch to Available tab (Tab 0)
-      // Otherwise (closed, archived, or already submitted) -> switch to Completed tab (Tab 1)
       if ((challenge.isLive || challenge.isScheduled) && !isUserSubmitted) {
         homeCtrl.switchTab(0);
         if (challenge.isScheduled && challenge.startsAt != null) {
@@ -147,10 +162,6 @@ class NotificationTestOpener {
         if (isUserSubmitted) {
           ToastHelper.info(
             'You have already completed this challenge. You can review it here.',
-          );
-        } else if (challenge.isClosed || challenge.isArchived) {
-          ToastHelper.info(
-            'This challenge round has ended. You can practice it here.',
           );
         }
       }

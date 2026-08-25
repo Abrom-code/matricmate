@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
+import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/screens/notification_detail_screen.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationTile extends StatelessWidget {
   const NotificationTile({
@@ -37,12 +41,22 @@ class NotificationTile extends StatelessWidget {
       notification.type == 'challenge_reward' ||
       notification.payload.containsKey('challenge_id');
 
+  bool get _isChallengeClosed {
+    if (notification.type == 'challenge_reward') return true;
+    final status = notification.payload['status']?.toString().toLowerCase();
+    return status == 'closed' || status == 'archived';
+  }
+
   Color _accentColor() {
     if (_isApproved) return const Color(0xFF10B981);
     if (_isRejected) return const Color(0xFFEF4444);
     if (notification.type == 'payment') return const Color(0xFFF59E0B);
     if (notification.type == 'new_content') return const Color(0xFF0284C7);
-    if (_isChallenge) return const Color(0xFF8B5CF6);
+    if (_isChallenge) {
+      return _isChallengeClosed
+          ? const Color(0xFF0D9488) // Standings Teal
+          : const Color(0xFF8B5CF6); // Challenge Purple
+    }
     return AppColors.primary;
   }
 
@@ -60,9 +74,13 @@ class NotificationTile extends StatelessWidget {
       );
     }
     if (_isChallenge) {
-      return const _TypeIconData(
-        Icons.emoji_events_rounded,
-        Color(0xFF8B5CF6),
+      return _TypeIconData(
+        _isChallengeClosed
+            ? Icons.leaderboard_rounded
+            : Icons.emoji_events_rounded,
+        _isChallengeClosed
+            ? const Color(0xFF0D9488)
+            : const Color(0xFF8B5CF6),
       );
     }
 
@@ -88,12 +106,61 @@ class NotificationTile extends StatelessWidget {
   String get _categoryLabel {
     if (notification.type == 'payment') return 'PAYMENT';
     if (notification.type == 'new_content') return 'NEW TEST';
-    if (_isChallenge) return 'CHALLENGE';
+    if (_isChallenge) {
+      return _isChallengeClosed ? 'STANDINGS' : 'CHALLENGE';
+    }
     return 'ANNOUNCEMENT';
   }
 
-  void _onTap() {
+  Future<void> _onTap() async {
     unawaited(NotificationsController.instance.markRead(notification.id));
+
+    if (_isChallenge) {
+      LeaderboardChallengeModel? matchedChallenge;
+      final challengeId = notification.payload['challenge_id']?.toString() ??
+          notification.payload['id']?.toString();
+
+      if (challengeId != null && challengeId.isNotEmpty) {
+        // 1. Check in-memory controller for 0ms instant match
+        if (Get.isRegistered<ChallengeHomeController>()) {
+          final ctrl = ChallengeHomeController.instance;
+          matchedChallenge = ctrl.completedChallenges.firstWhereOrNull(
+            (c) => c.id == challengeId || c.setId == challengeId,
+          ) ?? ctrl.availableChallenges.firstWhereOrNull(
+            (c) => c.id == challengeId || c.setId == challengeId,
+          );
+        }
+
+        // 2. If not found in memory, show full-screen loader and fetch
+        if (matchedChallenge == null) {
+          AppFullScreenLoader.openLoadingDialog('Opening challenge...');
+          try {
+            final sb = Supabase.instance.client;
+            final row = await sb
+                .from('leaderboard_challenges')
+                .select('*, subjects(name)')
+                .eq('id', challengeId)
+                .maybeSingle()
+                .timeout(const Duration(seconds: 4));
+            if (row != null) {
+              matchedChallenge = LeaderboardChallengeModel.fromJson(row);
+            }
+          } catch (_) {
+          } finally {
+            AppFullScreenLoader.stopLoading();
+          }
+        }
+      }
+
+      Get.to(
+        () => NotificationDetailScreen(
+          notification: notification,
+          initialChallenge: matchedChallenge,
+        ),
+      );
+      return;
+    }
+
     Get.to(() => NotificationDetailScreen(notification: notification));
   }
 

@@ -734,6 +734,28 @@ class DatabaseService extends GetxController {
       }
     });
   }
+
+  Future<void> pruneDeletedChallengeSets(Set<String> validChallengeIds) async {
+    try {
+      final db = await database;
+      final sets = await db.query('local_challenge_sets', columns: ['id', 'challenge_id']);
+      final toDelete = <String>{};
+      for (final s in sets) {
+        final id = s['id']?.toString();
+        final cId = s['challenge_id']?.toString();
+        final isIdValid = id != null && id.isNotEmpty && validChallengeIds.contains(id);
+        final isCIdValid = cId != null && cId.isNotEmpty && validChallengeIds.contains(cId);
+        if (!isIdValid && !isCIdValid) {
+          if (id != null && id.isNotEmpty) toDelete.add(id);
+          if (cId != null && cId.isNotEmpty) toDelete.add(cId);
+        }
+      }
+      for (final id in toDelete) {
+        await deleteDownloadedChallenge(id);
+      }
+    } catch (_) {}
+  }
+
   // ── Practice results persistence ──────────────────────────────────────────
   Future<void> saveChallengePracticeResult({
     required String challengeId,

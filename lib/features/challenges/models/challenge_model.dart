@@ -173,6 +173,7 @@ class LeaderboardChallengeModel {
       'status': status,
       'question_count': questionCount,
       'attempt_count': attemptCount,
+      'created_at': createdAt.toIso8601String(),
       if (createdBy != null) 'created_by': createdBy,
     };
   }

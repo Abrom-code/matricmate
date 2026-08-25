@@ -181,20 +181,30 @@ class ChallengeHomeController extends GetxController {
     }
   }
 
-  Future<void> _saveCachedClosedChallenges(List<LeaderboardChallengeModel> list) async {
+  Future<void> _saveCachedChallenges(List<LeaderboardChallengeModel> list) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final streamTag = userStream.toLowerCase().trim();
       final jsonList = list.map((c) => c.toJson()).toList();
-      await prefs.setString('cached_closed_challenges_$streamTag', jsonEncode(jsonList));
+      final encoded = jsonEncode(jsonList);
+      await prefs.setString('cached_all_challenges', encoded);
+      if (streamTag.isNotEmpty) {
+        await prefs.setString('cached_all_challenges_$streamTag', encoded);
+      }
     } catch (_) {}
   }
 
-  Future<List<LeaderboardChallengeModel>> _getCachedClosedChallenges() async {
+  Future<List<LeaderboardChallengeModel>> _getCachedChallenges() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final streamTag = userStream.toLowerCase().trim();
-      final str = prefs.getString('cached_closed_challenges_$streamTag');
+      String? str;
+      if (streamTag.isNotEmpty) {
+        str = prefs.getString('cached_all_challenges_$streamTag');
+      }
+      str ??= prefs.getString('cached_all_challenges');
+      str ??= prefs.getString('cached_closed_challenges_$streamTag');
+      str ??= prefs.getString('cached_closed_challenges');
       if (str == null || str.isEmpty) return [];
       final List decoded = jsonDecode(str);
       return decoded
@@ -210,17 +220,18 @@ class ChallengeHomeController extends GetxController {
       final subjectsList = Get.isRegistered<SubjectsController>()
           ? SubjectsController.instance.subjects
           : [];
-      final isNatural = userStream.toLowerCase().trim() == 'natural';
+      final streamTag = userStream.toLowerCase().trim();
+      final isNatural = streamTag == 'natural';
       final Map<String, LeaderboardChallengeModel> challengeMap = {};
 
-      // 1. Load previously cached closed challenges
-      final cachedList = await _getCachedClosedChallenges();
+      // 1. Load previously cached challenges
+      final cachedList = await _getCachedChallenges();
       for (final c in cachedList) {
         final aud = c.audience.toLowerCase().trim();
-        final matchesAud = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
+        final matchesAud = streamTag.isEmpty || aud == 'both' || aud == streamTag;
         if (!matchesAud) continue;
 
-        if (subjectsList.isNotEmpty) {
+        if (subjectsList.isNotEmpty && streamTag.isNotEmpty) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
           if (subj != null) {
             final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
@@ -238,10 +249,10 @@ class ChallengeHomeController extends GetxController {
         final title = r['title']?.toString() ?? 'Challenge Set';
         final aud = (r['audience']?.toString() ?? 'both').toLowerCase().trim();
 
-        final matchesAud = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
+        final matchesAud = streamTag.isEmpty || aud == 'both' || aud == streamTag;
         if (!matchesAud) continue;
 
-        if (subjectsList.isNotEmpty) {
+        if (subjectsList.isNotEmpty && streamTag.isNotEmpty) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == sId);
           if (subj != null) {
             final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
@@ -282,7 +293,8 @@ class ChallengeHomeController extends GetxController {
     }
     isRefreshing.value = true;
     try {
-      final isNatural = userStream.toLowerCase().trim() == 'natural';
+      final streamTag = userStream.toLowerCase().trim();
+      final isNatural = streamTag == 'natural';
       final subjectsList = Get.isRegistered<SubjectsController>()
           ? SubjectsController.instance.subjects
           : [];
@@ -292,10 +304,10 @@ class ChallengeHomeController extends GetxController {
       final filteredAvailable = visibleList.where((c) {
         if (c.isClosed || c.isArchived) return false;
         final aud = c.audience.toLowerCase().trim();
-        final matchesAudience = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
+        final matchesAudience = streamTag.isEmpty || aud == 'both' || aud == streamTag;
         if (!matchesAudience) return false;
 
-        if (subjectsList.isNotEmpty) {
+        if (subjectsList.isNotEmpty && streamTag.isNotEmpty) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
           if (subj != null) {
             return subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
@@ -310,10 +322,10 @@ class ChallengeHomeController extends GetxController {
       final closedList = await _repo.fetchClosedChallenges(stream: userStream);
       final filteredClosed = closedList.where((c) {
         final aud = c.audience.toLowerCase().trim();
-        final matchesAudience = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
+        final matchesAudience = streamTag.isEmpty || aud == 'both' || aud == streamTag;
         if (!matchesAudience) return false;
 
-        if (subjectsList.isNotEmpty) {
+        if (subjectsList.isNotEmpty && streamTag.isNotEmpty) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
           if (subj != null) {
             return subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
@@ -324,9 +336,19 @@ class ChallengeHomeController extends GetxController {
 
       completedChallenges.value = filteredClosed;
       isOffline.value = false;
-      _saveCachedClosedChallenges(filteredClosed);
 
-      // 3. Refresh offline download states
+      // Cache all valid challenges (both available and closed) for offline resilience
+      final allChallenges = [...filteredAvailable, ...filteredClosed];
+      _saveCachedChallenges(allChallenges);
+
+      // 3. Prune deleted/stale challenge sets from local SQLite storage
+      final validServerIds = <String>{
+        ...visibleList.map((c) => c.id),
+        ...closedList.map((c) => c.id),
+      };
+      await _db.pruneDeletedChallengeSets(validServerIds);
+
+      // 4. Refresh offline download states
       await refreshDownloadStates();
       await refreshAttemptStates();
 
@@ -337,9 +359,7 @@ class ChallengeHomeController extends GetxController {
       isOffline.value = true;
       availableChallenges.clear();
       final local = await _loadLocalChallenges();
-      if (local.isNotEmpty || completedChallenges.isEmpty) {
-        completedChallenges.value = local;
-      }
+      completedChallenges.assignAll(local);
       await refreshDownloadStates();
       await refreshAttemptStates();
 

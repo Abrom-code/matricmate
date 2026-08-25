@@ -98,7 +98,11 @@ class ChallengeArchiveController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
       final jsonList = list.map((c) => c.toJson()).toList();
-      await prefs.setString('cached_archive_${tag}_$userStream', jsonEncode(jsonList));
+      final encoded = jsonEncode(jsonList);
+      await prefs.setString('cached_$tag', encoded);
+      if (userStream.isNotEmpty) {
+        await prefs.setString('cached_${tag}_$userStream', encoded);
+      }
     } catch (_) {}
   }
 
@@ -106,12 +110,31 @@ class ChallengeArchiveController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
-      final str = prefs.getString('cached_archive_${tag}_$userStream');
+      String? str;
+      if (userStream.isNotEmpty) {
+        str = prefs.getString('cached_${tag}_$userStream');
+      }
+      str ??= prefs.getString('cached_$tag');
+
+      // If subject archive cache is empty, fallback to main all-challenges cache filtered by subject
+      if ((str == null || str.isEmpty) && subjectId != null) {
+        if (userStream.isNotEmpty) {
+          str = prefs.getString('cached_all_challenges_$userStream');
+        }
+        str ??= prefs.getString('cached_all_challenges');
+        str ??= prefs.getString('cached_closed_challenges_$userStream');
+        str ??= prefs.getString('cached_closed_challenges');
+      }
+
       if (str == null || str.isEmpty) return [];
       final List decoded = jsonDecode(str);
-      return decoded
+      final list = decoded
           .map((j) => LeaderboardChallengeModel.fromJson(j as Map<String, dynamic>))
           .toList();
+      if (subjectId != null) {
+        return list.where((c) => c.subjectId == subjectId).toList();
+      }
+      return list;
     } catch (_) {
       return [];
     }
@@ -129,10 +152,10 @@ class ChallengeArchiveController extends GetxController {
       final cachedList = await _getCachedArchiveChallenges();
       for (final c in cachedList) {
         final aud = c.audience.toLowerCase().trim();
-        final matchesAud = aud == 'both' || aud == userStream || userStream.isEmpty;
+        final matchesAud = userStream.isEmpty || aud == 'both' || aud == userStream;
         if (!matchesAud) continue;
 
-        if (subjectsList.isNotEmpty) {
+        if (subjectsList.isNotEmpty && userStream.isNotEmpty) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
           if (subj != null) {
             final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
@@ -150,10 +173,10 @@ class ChallengeArchiveController extends GetxController {
         final title = r['title']?.toString() ?? 'Challenge Set';
         final aud = (r['audience']?.toString() ?? 'both').toLowerCase().trim();
 
-        final matchesAud = aud == 'both' || aud == userStream || userStream.isEmpty;
+        final matchesAud = userStream.isEmpty || aud == 'both' || aud == userStream;
         if (!matchesAud) continue;
 
-        if (subjectsList.isNotEmpty) {
+        if (subjectsList.isNotEmpty && userStream.isNotEmpty) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == sId);
           if (subj != null) {
             final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);

@@ -142,8 +142,8 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
             ? Icons.leaderboard_rounded
             : Icons.emoji_events_rounded,
         color: _isChallengeClosed
-            ? const Color(0xFF0D9488) // Distinct Standings Teal
-            : const Color(0xFF8B5CF6), // Competition Purple
+            ? const Color(0xFFD97706) // Trophy Amber / Standings
+            : const Color(0xFF2563EB), // Challenge Royal Blue
         typeName: _isChallengeClosed
             ? 'Challenge Standings / Results'
             : 'Challenge / Competition',
@@ -554,12 +554,12 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                       : _handleAction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isChallengeClosed
-                        ? const Color(0xFF0D9488) // Standings Teal
-                        : const Color(0xFF8B5CF6), // Challenge Purple
+                        ? const Color(0xFFD97706) // Standings Trophy Amber
+                        : const Color(0xFF2563EB), // Challenge Royal Blue
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: (_isChallengeClosed
-                            ? const Color(0xFF0D9488)
-                            : const Color(0xFF8B5CF6))
+                            ? const Color(0xFFD97706)
+                            : const Color(0xFF2563EB))
                         .withValues(alpha: 0.7),
                     disabledForegroundColor: Colors.white70,
                     elevation: 0,

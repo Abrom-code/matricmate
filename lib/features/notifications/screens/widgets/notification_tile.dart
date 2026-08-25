@@ -54,8 +54,8 @@ class NotificationTile extends StatelessWidget {
     if (notification.type == 'new_content') return const Color(0xFF0284C7);
     if (_isChallenge) {
       return _isChallengeClosed
-          ? const Color(0xFF0D9488) // Standings Teal
-          : const Color(0xFF8B5CF6); // Challenge Purple
+          ? const Color(0xFFD97706) // Standings Trophy Amber
+          : const Color(0xFF2563EB); // Challenge Royal Blue
     }
     return AppColors.primary;
   }
@@ -79,8 +79,8 @@ class NotificationTile extends StatelessWidget {
             ? Icons.leaderboard_rounded
             : Icons.emoji_events_rounded,
         _isChallengeClosed
-            ? const Color(0xFF0D9488)
-            : const Color(0xFF8B5CF6),
+            ? const Color(0xFFD97706)
+            : const Color(0xFF2563EB),
       );
     }
 

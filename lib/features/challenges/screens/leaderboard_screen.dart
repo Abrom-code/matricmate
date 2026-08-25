@@ -62,6 +62,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           children: [
             Text(
               widget.challengeTitle ?? 'Leaderboard Standings',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
             Obx(() {
@@ -69,6 +71,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               final label = stream == 'social' ? 'Social Stream' : 'Natural Stream';
               return Text(
                 '$label • Top Performers',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -188,8 +192,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 );
               }
 
-              final top3 = _ctrl.entries.take(3).toList();
-              final rest = _ctrl.entries.skip(3).toList();
+              final displayed = _ctrl.displayedEntries;
+              final top3 = displayed.take(3).toList();
+              final rest = displayed.skip(3).toList();
 
               return RefreshIndicator(
                 color: AppColors.primary,
@@ -206,12 +211,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
                     // ── Remaining Rankings (#4+) ───────────────────────────
                     if (rest.isNotEmpty) ...[
-                      const Text(
-                        'All Rankings',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'All Rankings',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Showing ${displayed.length} of ${_ctrl.entries.length}',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: dark ? Colors.white60 : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: AppSizes.sm),
                       ...rest.map(
@@ -219,6 +236,41 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           entry: e,
                           isCurrentUser: e.userId == _ctrl.currentUserId,
                           dark: dark,
+                        ),
+                      ),
+                    ],
+
+                    // ── See More Button (Loads Next 10) ───────────────────
+                    if (_ctrl.hasMore) ...[
+                      const SizedBox(height: AppSizes.spaceBtwItems),
+                      Center(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                            side: BorderSide(
+                              color: dark
+                                  ? AppColors.darkBorder
+                                  : AppColors.borderPrimary,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () => _ctrl.loadMore(),
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 18,
+                          ),
+                          label: Text(
+                            'See More (${_ctrl.entries.length - _ctrl.displayLimit.value} more)',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.5,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -289,6 +341,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           ),
                           Text(
                             userEntry.fullName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 13.5,
@@ -331,8 +385,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
 // ── Podium View ──────────────────────────────────────────────────────────────
 
-// ── Podium View ──────────────────────────────────────────────────────────────
-
 class _PodiumView extends StatelessWidget {
   const _PodiumView({required this.top3, required this.dark});
 
@@ -363,12 +415,17 @@ class _PodiumView extends StatelessWidget {
             children: [
               Icon(Icons.emoji_events_rounded, size: 16, color: Color(0xFFF59E0B)),
               SizedBox(width: 6),
-              Text(
-                'Top 3 Finishers claim Gold, Silver & Bronze Standings',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFF59E0B),
+              Flexible(
+                child: Text(
+                  'Top 3 Finishers claim Gold, Silver & Bronze Standings',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFF59E0B),
+                  ),
                 ),
               ),
             ],
@@ -678,6 +735,8 @@ class _StudentLeaderboardTile extends StatelessWidget {
               children: [
                 Text(
                   isCurrentUser ? '${entry.fullName} (You)' : entry.fullName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight:
                         isCurrentUser ? FontWeight.w800 : FontWeight.w700,
@@ -707,11 +766,15 @@ class _StudentLeaderboardTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      '${entry.challengesTaken} round${entry.challengesTaken == 1 ? '' : 's'}',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        color: AppColors.textSecondary,
+                    Flexible(
+                      child: Text(
+                        '${entry.challengesTaken} round${entry.challengesTaken == 1 ? '' : 's'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ],

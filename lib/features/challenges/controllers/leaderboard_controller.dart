@@ -25,6 +25,16 @@ class LeaderboardController extends GetxController {
   final activeTab = 'challenge'.obs; // 'challenge', 'weekly', 'monthly'
   final activeStream = 'natural'.obs; // Locked to student's stream
   final entries = <ChallengeLeaderboardEntry>[].obs;
+  final displayLimit = 10.obs;
+
+  List<ChallengeLeaderboardEntry> get displayedEntries =>
+      entries.take(displayLimit.value).toList();
+
+  bool get hasMore => displayLimit.value < entries.length;
+
+  void loadMore() {
+    displayLimit.value += 10;
+  }
 
   String get currentUserId => UserController.instance.user.value.id;
 
@@ -43,6 +53,7 @@ class LeaderboardController extends GetxController {
     } else {
       isLoading.value = true;
       entries.clear();
+      displayLimit.value = 10;
     }
 
     try {
@@ -76,10 +87,12 @@ class LeaderboardController extends GetxController {
   void setTab(String tab) {
     if (activeTab.value == tab) return;
     activeTab.value = tab;
+    displayLimit.value = 10;
     loadLeaderboard(isManual: false);
   }
 
   Future<void> manualRefresh() async {
+    displayLimit.value = 10;
     await loadLeaderboard(isManual: true);
   }
 }

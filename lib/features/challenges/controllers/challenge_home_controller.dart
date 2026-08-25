@@ -17,6 +17,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChallengeHomeController extends GetxController {
@@ -35,6 +36,7 @@ class ChallengeHomeController extends GetxController {
   final attemptedIds = <String>{}.obs;
   final selectedCompletedSubjectId = RxnInt(); // null = Recent 3 (default)
   final selectedTabIndex = 0.obs;
+  final isOffline = false.obs;
 
   void switchTab(int index) {
     selectedTabIndex.value = index;
@@ -82,6 +84,7 @@ class ChallengeHomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _preloadLocalChallenges();
     loadAllChallenges();
     _startTimer();
     _startRealtime();
@@ -168,15 +171,66 @@ class ChallengeHomeController extends GetxController {
         });
   }
 
-    Future<List<LeaderboardChallengeModel>> _loadLocalChallenges() async {
+  Future<void> _preloadLocalChallenges() async {
+    final local = await _loadLocalChallenges();
+    if (local.isNotEmpty && completedChallenges.isEmpty) {
+      completedChallenges.assignAll(local);
+      await refreshDownloadStates();
+      await refreshAttemptStates();
+    }
+  }
+
+  Future<void> _saveCachedClosedChallenges(List<LeaderboardChallengeModel> list) async {
     try {
-      final rows = await _db.getDownloadedChallengeSets();
+      final prefs = await SharedPreferences.getInstance();
+      final streamTag = userStream.toLowerCase().trim();
+      final jsonList = list.map((c) => c.toJson()).toList();
+      await prefs.setString('cached_closed_challenges_$streamTag', jsonEncode(jsonList));
+    } catch (_) {}
+  }
+
+  Future<List<LeaderboardChallengeModel>> _getCachedClosedChallenges() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final streamTag = userStream.toLowerCase().trim();
+      final str = prefs.getString('cached_closed_challenges_$streamTag');
+      if (str == null || str.isEmpty) return [];
+      final List decoded = jsonDecode(str);
+      return decoded
+          .map((j) => LeaderboardChallengeModel.fromJson(j as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<LeaderboardChallengeModel>> _loadLocalChallenges() async {
+    try {
       final subjectsList = Get.isRegistered<SubjectsController>()
           ? SubjectsController.instance.subjects
           : [];
-
-      final list = <LeaderboardChallengeModel>[];
       final isNatural = userStream.toLowerCase().trim() == 'natural';
+      final Map<String, LeaderboardChallengeModel> challengeMap = {};
+
+      // 1. Load previously cached closed challenges
+      final cachedList = await _getCachedClosedChallenges();
+      for (final c in cachedList) {
+        final aud = c.audience.toLowerCase().trim();
+        final matchesAud = aud == 'both' || aud == userStream.toLowerCase().trim() || userStream.isEmpty;
+        if (!matchesAud) continue;
+
+        if (subjectsList.isNotEmpty) {
+          final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
+          if (subj != null) {
+            final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+            if (!matchesSubj) continue;
+          }
+        }
+        challengeMap[c.id] = c;
+      }
+
+      // 2. Load downloaded challenge sets from SQLite (with actual question sets)
+      final rows = await _db.getDownloadedChallengeSets();
       for (final r in rows) {
         final cId = r['challenge_id']?.toString() ?? r['id']?.toString() ?? '';
         final sId = (r['subject_id'] as num?)?.toInt() ?? 0;
@@ -202,28 +256,29 @@ class ChallengeHomeController extends GetxController {
           subjName = subj?.name;
         }
 
-        list.add(
-          LeaderboardChallengeModel(
-            id: cId,
-            setId: cId,
-            title: title,
-            subjectId: sId,
-            subjectName: subjName ?? 'Subject',
-            audience: aud,
-            questionCount: qRows.length,
-            status: 'closed',
-            createdAt: DateTime.now(),
-          ),
+        challengeMap[cId] = LeaderboardChallengeModel(
+          id: cId,
+          setId: cId,
+          title: title,
+          subjectId: sId,
+          subjectName: subjName ?? challengeMap[cId]?.subjectName ?? 'Subject',
+          audience: aud,
+          questionCount: qRows.isNotEmpty ? qRows.length : (challengeMap[cId]?.questionCount ?? 0),
+          status: 'closed',
+          createdAt: DateTime.now(),
         );
       }
-      return list;
+
+      return challengeMap.values.toList();
     } catch (_) {
       return [];
     }
   }
 
   Future<void> loadAllChallenges({bool showLoading = true}) async {
-    if (showLoading) isLoading.value = true;
+    if (showLoading && completedChallenges.isEmpty && availableChallenges.isEmpty) {
+      isLoading.value = true;
+    }
     try {
       final isNatural = userStream.toLowerCase().trim() == 'natural';
       final subjectsList = Get.isRegistered<SubjectsController>()
@@ -266,19 +321,21 @@ class ChallengeHomeController extends GetxController {
       }).toList();
 
       completedChallenges.value = filteredClosed;
+      isOffline.value = false;
+      _saveCachedClosedChallenges(filteredClosed);
 
       // 3. Refresh offline download states
       await refreshDownloadStates();
       await refreshAttemptStates();
     } catch (e) {
+      isOffline.value = true;
+      availableChallenges.clear();
       final local = await _loadLocalChallenges();
-      if (local.isNotEmpty) {
+      if (local.isNotEmpty || completedChallenges.isEmpty) {
         completedChallenges.value = local;
-        await refreshDownloadStates();
-        await refreshAttemptStates();
-      } else if (showLoading) {
-        AppExceptionHandler.handleResponse(e);
       }
+      await refreshDownloadStates();
+      await refreshAttemptStates();
     } finally {
       if (showLoading) isLoading.value = false;
     }

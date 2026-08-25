@@ -78,6 +78,87 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
         }
 
         if (_ctrl.challenges.isEmpty) {
+          if (_ctrl.isOffline.value) {
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () => _ctrl.manualRefresh(),
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSizes.xl),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 68,
+                              height: 68,
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.wifi_off_rounded,
+                                size: 32,
+                                color: Colors.amber,
+                              ),
+                            ),
+                            const SizedBox(height: AppSizes.md),
+                            Text(
+                              widget.subjectTitle != null
+                                  ? 'No Offline ${widget.subjectTitle} Challenges'
+                                  : 'No Offline Challenges',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'You are offline and have no downloaded challenges for this subject.\nConnect to the internet and tap refresh.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                height: 1.4,
+                                color: dark ? Colors.white60 : AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: AppSizes.lg),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: () => _ctrl.manualRefresh(),
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: const Text(
+                                'Connect & Refresh',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () => _ctrl.manualRefresh(),
@@ -131,11 +212,48 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
           onRefresh: () => _ctrl.manualRefresh(),
           child: ListView.separated(
             padding: const EdgeInsets.all(AppSizes.md),
-            itemCount: _ctrl.challenges.length,
+            itemCount: _ctrl.challenges.length + (_ctrl.isOffline.value ? 1 : 0),
             separatorBuilder: (_, __) =>
                 const SizedBox(height: AppSizes.spaceBtwItems),
             itemBuilder: (context, idx) {
-              final challenge = _ctrl.challenges[idx];
+              if (_ctrl.isOffline.value && idx == 0) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.amber.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.wifi_off_rounded,
+                        size: 16,
+                        color: Colors.amber,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Offline mode: Showing ${_ctrl.challenges.length} downloaded challenge(s).',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.amber,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final actualIndex = _ctrl.isOffline.value ? idx - 1 : idx;
+              final challenge = _ctrl.challenges[actualIndex];
               _ctrl.isDownloaded(challenge.id);
 
               final isLive = challenge.isLive;

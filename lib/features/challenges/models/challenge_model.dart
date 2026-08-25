@@ -164,12 +164,15 @@ class LeaderboardChallengeModel {
       if (id.isNotEmpty) 'id': id,
       'set_id': setId,
       'subject_id': subjectId,
+      'subject_name': subjectName,
       'audience': audience,
       'title': title,
       'starts_at': startsAt?.toIso8601String(),
       'ends_at': endsAt?.toIso8601String(),
       'duration_seconds': durationSeconds,
       'status': status,
+      'question_count': questionCount,
+      'attempt_count': attemptCount,
       if (createdBy != null) 'created_by': createdBy,
     };
   }

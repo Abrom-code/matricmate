@@ -14,6 +14,7 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChallengeArchiveController extends GetxController {
@@ -34,6 +35,7 @@ class ChallengeArchiveController extends GetxController {
   final downloadedIds = <String>{}.obs;
   final isDownloading = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
+  final isOffline = false.obs;
 
   RealtimeChannel? _realtimeChannel;
 
@@ -43,6 +45,7 @@ class ChallengeArchiveController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _preloadLocalArchivedChallenges();
     loadArchive();
     _startRealtime();
     ever(UserController.instance.user, (_) => loadArchive(isManual: false));
@@ -81,15 +84,66 @@ class ChallengeArchiveController extends GetxController {
         });
   }
 
-    Future<List<LeaderboardChallengeModel>> _loadLocalArchivedChallenges() async {
+  Future<void> _preloadLocalArchivedChallenges() async {
+    final local = await _loadLocalArchivedChallenges();
+    if (local.isNotEmpty && challenges.isEmpty) {
+      challenges.assignAll(local);
+      await refreshDownloadStates();
+      await refreshAttemptStates();
+    }
+  }
+
+  Future<void> _saveCachedArchiveChallenges(List<LeaderboardChallengeModel> list) async {
     try {
-      final rows = await _db.getDownloadedChallengeSets(subjectId: subjectId);
+      final prefs = await SharedPreferences.getInstance();
+      final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
+      final jsonList = list.map((c) => c.toJson()).toList();
+      await prefs.setString('cached_archive_${tag}_$userStream', jsonEncode(jsonList));
+    } catch (_) {}
+  }
+
+  Future<List<LeaderboardChallengeModel>> _getCachedArchiveChallenges() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
+      final str = prefs.getString('cached_archive_${tag}_$userStream');
+      if (str == null || str.isEmpty) return [];
+      final List decoded = jsonDecode(str);
+      return decoded
+          .map((j) => LeaderboardChallengeModel.fromJson(j as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<LeaderboardChallengeModel>> _loadLocalArchivedChallenges() async {
+    try {
       final subjectsList = Get.isRegistered<SubjectsController>()
           ? SubjectsController.instance.subjects
           : [];
-
-      final list = <LeaderboardChallengeModel>[];
       final isNatural = userStream == 'natural';
+      final Map<String, LeaderboardChallengeModel> challengeMap = {};
+
+      // 1. Load previously cached challenges
+      final cachedList = await _getCachedArchiveChallenges();
+      for (final c in cachedList) {
+        final aud = c.audience.toLowerCase().trim();
+        final matchesAud = aud == 'both' || aud == userStream || userStream.isEmpty;
+        if (!matchesAud) continue;
+
+        if (subjectsList.isNotEmpty) {
+          final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
+          if (subj != null) {
+            final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+            if (!matchesSubj) continue;
+          }
+        }
+        challengeMap[c.id] = c;
+      }
+
+      // 2. Load downloaded challenge sets from SQLite
+      final rows = await _db.getDownloadedChallengeSets(subjectId: subjectId);
       for (final r in rows) {
         final cId = r['challenge_id']?.toString() ?? r['id']?.toString() ?? '';
         final sId = (r['subject_id'] as num?)?.toInt() ?? 0;
@@ -115,21 +169,20 @@ class ChallengeArchiveController extends GetxController {
           subjName = subj?.name;
         }
 
-        list.add(
-          LeaderboardChallengeModel(
-            id: cId,
-            setId: cId,
-            title: title,
-            subjectId: sId,
-            subjectName: subjName ?? subjectTitle ?? 'Subject',
-            audience: aud,
-            questionCount: qRows.length,
-            status: 'closed',
-            createdAt: DateTime.now(),
-          ),
+        challengeMap[cId] = LeaderboardChallengeModel(
+          id: cId,
+          setId: cId,
+          title: title,
+          subjectId: sId,
+          subjectName: subjName ?? challengeMap[cId]?.subjectName ?? subjectTitle ?? 'Subject',
+          audience: aud,
+          questionCount: qRows.isNotEmpty ? qRows.length : (challengeMap[cId]?.questionCount ?? 0),
+          status: 'closed',
+          createdAt: DateTime.now(),
         );
       }
-      return list;
+
+      return challengeMap.values.toList();
     } catch (_) {
       return [];
     }
@@ -138,7 +191,7 @@ class ChallengeArchiveController extends GetxController {
   Future<void> loadArchive({bool isManual = false}) async {
     if (isManual) {
       isManualRefreshing.value = true;
-    } else {
+    } else if (challenges.isEmpty) {
       isLoading.value = true;
     }
     try {
@@ -173,18 +226,19 @@ class ChallengeArchiveController extends GetxController {
       }).toList();
 
       challenges.value = filtered;
+      isOffline.value = false;
+      _saveCachedArchiveChallenges(filtered);
       await refreshDownloadStates();
       await refreshAttemptStates();
     } catch (e) {
+      isOffline.value = true;
       // Fallback to local DB when offline or network fails
       final localChallenges = await _loadLocalArchivedChallenges();
-      if (localChallenges.isNotEmpty) {
+      if (localChallenges.isNotEmpty || challenges.isEmpty) {
         challenges.value = localChallenges;
-        await refreshDownloadStates();
-        await refreshAttemptStates();
-      } else {
-        AppExceptionHandler.handleResponse(e);
       }
+      await refreshDownloadStates();
+      await refreshAttemptStates();
     } finally {
       isLoading.value = false;
       isManualRefreshing.value = false;

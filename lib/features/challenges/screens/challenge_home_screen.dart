@@ -200,7 +200,8 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
             child: Obx(() {
               if (_ctrl.isLoading.value &&
                   _ctrl.availableChallenges.isEmpty &&
-                  _ctrl.completedChallenges.isEmpty) {
+                  _ctrl.completedChallenges.isEmpty &&
+                  !_ctrl.isOffline.value) {
                 return const AppCircularLoading(title: 'Loading challenges...');
               }
 
@@ -211,33 +212,45 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                   RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: () => _ctrl.loadAllChallenges(),
-                    child: _ctrl.availableChallenges.isEmpty
-                        ? _EmptyState(
-                            title: 'No available rounds currently',
-                            subtitle:
-                                'Upcoming challenges will appear here before they open.',
-                            dark: dark,
-                          )
-                        : ListView.separated(
-                            padding: EdgeInsets.fromLTRB(
-                              AppSizes.md,
-                              AppSizes.md,
-                              AppSizes.md,
-                              MediaQuery.paddingOf(context).bottom + 90,
-                            ),
-                            itemCount: _ctrl.availableChallenges.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: AppSizes.spaceBtwItems),
-                            itemBuilder: (context, index) {
-                              final challenge =
-                                  _ctrl.availableChallenges[index];
-                              return _AvailableChallengeCard(
-                                challenge: challenge,
-                                ctrl: _ctrl,
+                    child: _ctrl.isOffline.value && _ctrl.availableChallenges.isEmpty
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.68,
+                              child: _OfflineAvailableState(
+                                onRefresh: () => _ctrl.loadAllChallenges(),
                                 dark: dark,
-                              );
-                            },
-                          ),
+                                isLoading: _ctrl.isLoading.value,
+                              ),
+                            ),
+                          )
+                        : _ctrl.availableChallenges.isEmpty
+                            ? _EmptyState(
+                                title: 'No available rounds currently',
+                                subtitle:
+                                    'Upcoming challenges will appear here before they open.',
+                                dark: dark,
+                              )
+                            : ListView.separated(
+                                padding: EdgeInsets.fromLTRB(
+                                  AppSizes.md,
+                                  AppSizes.md,
+                                  AppSizes.md,
+                                  MediaQuery.paddingOf(context).bottom + 90,
+                                ),
+                                itemCount: _ctrl.availableChallenges.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: AppSizes.spaceBtwItems),
+                                itemBuilder: (context, index) {
+                                  final challenge =
+                                      _ctrl.availableChallenges[index];
+                                  return _AvailableChallengeCard(
+                                    challenge: challenge,
+                                    ctrl: _ctrl,
+                                    dark: dark,
+                                  );
+                                },
+                              ),
                   ),
 
                   // Tab 2: Completed / Past Challenges (Top Recent 3 + Subject TabBar)
@@ -245,12 +258,26 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                     color: AppColors.primary,
                     onRefresh: () => _ctrl.loadAllChallenges(),
                     child: _ctrl.completedChallenges.isEmpty
-                        ? _EmptyState(
-                            title: 'No completed challenges yet',
-                            subtitle:
-                                'Once live challenges end, you can review and practice them here.',
-                            dark: dark,
-                          )
+                        ? (_ctrl.isOffline.value
+                            ? SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                child: SizedBox(
+                                  height: MediaQuery.of(context).size.height * 0.68,
+                                  child: _EmptyState(
+                                    title: 'No offline challenges downloaded',
+                                    subtitle:
+                                        'You are offline. Challenge sets downloaded while online will appear here for offline practice.',
+                                    dark: dark,
+                                    icon: Icons.wifi_off_rounded,
+                                  ),
+                                ),
+                              )
+                            : _EmptyState(
+                                title: 'No completed challenges yet',
+                                subtitle:
+                                    'Once live challenges end, you can review and practice them here.',
+                                dark: dark,
+                              ))
                         : ListView(
                             padding: EdgeInsets.fromLTRB(
                               AppSizes.md,
@@ -259,70 +286,111 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                               MediaQuery.paddingOf(context).bottom + 90,
                             ),
                             children: [
+                              if (_ctrl.isOffline.value) ...[
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: AppSizes.md),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: Colors.amber.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.wifi_off_rounded,
+                                        size: 16,
+                                        color: Colors.amber,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Offline mode: Showing your downloaded challenges.',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.amber,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+
                               // ── 1. Top Section: Recent 3 Completed Rounds ──
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Iconsax.clock_copy,
-                                    size: 15,
-                                    color: AppColors.primary,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Text(
-                                    'Recent Challenges',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
+                              if (_ctrl.recentCompletedChallenges.isNotEmpty) ...[
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Iconsax.clock_copy,
+                                      size: 15,
+                                      color: AppColors.primary,
                                     ),
-                                  ),
-                                  const Spacer(),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 2.5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      'Latest ${_ctrl.recentCompletedChallenges.length}',
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _ctrl.isOffline.value
+                                          ? 'Downloaded Challenges'
+                                          : 'Recent Challenges',
                                       style: const TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
+                                    const Spacer(),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 7,
+                                        vertical: 2.5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        'Latest ${_ctrl.recentCompletedChallenges.length}',
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
 
-                              // Recent 3 Cards
-                              ..._ctrl.recentCompletedChallenges.map((
-                                challenge,
-                              ) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: AppSizes.spaceBtwItems,
-                                  ),
-                                  child: _CompletedChallengeCard(
-                                    challenge: challenge,
-                                    ctrl: _ctrl,
-                                    dark: dark,
-                                  ),
-                                );
-                              }),
+                                // Recent 3 Cards
+                                ..._ctrl.recentCompletedChallenges.map((
+                                  challenge,
+                                ) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppSizes.spaceBtwItems,
+                                    ),
+                                    child: _CompletedChallengeCard(
+                                      challenge: challenge,
+                                      ctrl: _ctrl,
+                                      dark: dark,
+                                    ),
+                                  );
+                                }),
 
-                              const SizedBox(height: AppSizes.sm),
-                              Divider(
-                                color: dark
-                                    ? AppColors.darkBorder
-                                    : AppColors.borderPrimary,
-                              ),
-                              const SizedBox(height: AppSizes.md),
+                                const SizedBox(height: AppSizes.sm),
+                                Divider(
+                                  color: dark
+                                      ? AppColors.darkBorder
+                                      : AppColors.borderPrimary,
+                                ),
+                                const SizedBox(height: AppSizes.md),
+                              ],
 
                               // ── 2. Next Section: Subjects List ───────
                               Row(
@@ -369,6 +437,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                     subject: subj,
                                     challengeCount: count,
                                     dark: dark,
+                                    isOffline: _ctrl.isOffline.value,
                                     onTap: () => Get.to(
                                       () => ChallengeArchiveScreen(
                                         subjectId: subj.id,
@@ -1259,11 +1328,13 @@ class _EmptyState extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.dark,
+    this.icon,
   });
 
   final String title;
   final String subtitle;
   final bool dark;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -1274,7 +1345,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Iconsax.cup_copy,
+              icon ?? Iconsax.cup_copy,
               size: 48,
               color: dark ? Colors.white24 : AppColors.textSecondary,
             ),
@@ -1303,6 +1374,97 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
+// ── Offline Available State ──────────────────────────────────────────────────
+
+class _OfflineAvailableState extends StatelessWidget {
+  const _OfflineAvailableState({
+    required this.onRefresh,
+    required this.dark,
+    this.isLoading = false,
+  });
+
+  final VoidCallback onRefresh;
+  final bool dark;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.wifi_off_rounded,
+                size: 32,
+                color: Colors.amber,
+              ),
+            ),
+            const SizedBox(height: AppSizes.md),
+            const Text(
+              'Connect to Internet & Refresh',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 15.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Active and upcoming live challenges require an internet connection.\nPlease connect to the internet and tap refresh.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.4,
+                color: dark ? Colors.white60 : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSizes.lg),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: isLoading ? null : onRefresh,
+              icon: isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.refresh_rounded, size: 18),
+              label: Text(
+                isLoading ? 'Refreshing...' : 'Connect & Refresh',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Subject Navigation Card ──────────────────────────────────────────────────
 
 class _SubjectNavCard extends StatelessWidget {
@@ -1311,15 +1473,28 @@ class _SubjectNavCard extends StatelessWidget {
     required this.challengeCount,
     required this.dark,
     required this.onTap,
+    this.isOffline = false,
   });
 
   final SubjectModel subject;
   final int challengeCount;
   final bool dark;
   final VoidCallback onTap;
+  final bool isOffline;
 
   @override
   Widget build(BuildContext context) {
+    String subtitleText;
+    if (isOffline) {
+      subtitleText = challengeCount > 0
+          ? '$challengeCount ${challengeCount == 1 ? 'challenge' : 'challenges'} loaded'
+          : '0 challenges loaded';
+    } else {
+      subtitleText = challengeCount > 0
+          ? '$challengeCount challenge rounds'
+          : '0 rounds';
+    }
+
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -1364,9 +1539,7 @@ class _SubjectNavCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      challengeCount > 0
-                          ? '$challengeCount challenge rounds'
-                          : 'No rounds yet',
+                      subtitleText,
                       style: TextStyle(
                         fontSize: 11.5,
                         color: dark ? Colors.white60 : AppColors.textSecondary,
@@ -1375,27 +1548,42 @@ class _SubjectNavCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (challengeCount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: dark
-                        ? AppColors.darkContainer
-                        : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$challengeCount',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: dark ? Colors.white70 : AppColors.textPrimary,
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: isOffline
+                      ? (dark
+                          ? (challengeCount > 0
+                              ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                              : Colors.white10)
+                          : (challengeCount > 0
+                              ? const Color(0xFFD1FAE5)
+                              : const Color(0xFFF1F5F9)))
+                      : (dark
+                          ? AppColors.darkContainer
+                          : const Color(0xFFF1F5F9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$challengeCount',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isOffline
+                        ? (dark
+                            ? (challengeCount > 0
+                                ? const Color(0xFF34D399)
+                                : Colors.white60)
+                            : (challengeCount > 0
+                                ? const Color(0xFF059669)
+                                : AppColors.textSecondary))
+                        : (dark ? Colors.white70 : AppColors.textPrimary),
                   ),
                 ),
+              ),
               const SizedBox(width: 8),
               const Icon(
                 Iconsax.arrow_right_3_copy,

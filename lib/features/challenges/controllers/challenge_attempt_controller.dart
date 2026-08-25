@@ -244,7 +244,7 @@ class ChallengeAttemptController extends GetxController
         }
       }
 
-      // 3. Save to local DB so it's stored and marked as Done locally
+      // 3. Auto-cache attempt results and questions locally to SQLite for instant offline review
       try {
         final db = DatabaseService.instance;
         await db.saveChallengePracticeResult(
@@ -259,6 +259,7 @@ class ChallengeAttemptController extends GetxController
           final isDown = await db.isChallengeDownloaded(challengeId);
           if (!isDown) {
             await db.insertDownloadedChallengeBundle({
+              'id': challengeId,
               'challenge_id': challengeId,
               'title': title,
               'audience': audience ?? 'both',
@@ -268,19 +269,17 @@ class ChallengeAttemptController extends GetxController
         }
 
         if (Get.isRegistered<ChallengeHomeController>()) {
-          ChallengeHomeController.instance.markAttemptedOrPracticed(
-            challengeId,
-          );
-          ChallengeHomeController.instance.refreshAttemptStates();
+          final hCtrl = ChallengeHomeController.instance;
+          hCtrl.markAttemptedOrPracticed(challengeId);
+          hCtrl.downloadedIds.add(challengeId);
+          hCtrl.refreshAttemptStates();
         }
-        try {
-          if (Get.isRegistered<ChallengeArchiveController>()) {
-            ChallengeArchiveController.instance.markAttemptedOrPracticed(
-              challengeId,
-            );
-            ChallengeArchiveController.instance.refreshAttemptStates();
-          }
-        } catch (_) {}
+        if (Get.isRegistered<ChallengeArchiveController>()) {
+          final aCtrl = ChallengeArchiveController.instance;
+          aCtrl.markAttemptedOrPracticed(challengeId);
+          aCtrl.downloadedIds.add(challengeId);
+          aCtrl.refreshAttemptStates();
+        }
       } catch (_) {}
 
       AppFullScreenLoader.stopLoading();

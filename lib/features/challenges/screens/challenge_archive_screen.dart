@@ -9,6 +9,7 @@ import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ChallengeArchiveScreen extends StatefulWidget {
   const ChallengeArchiveScreen({super.key, this.subjectId, this.subjectTitle});
@@ -524,6 +525,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
 
                               // 1. If already attempted/completed -> Always show Review!
                               if (isDone) {
+                                final isReviewing = _ctrl.isOpeningReview[challenge.id] == true;
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFF10B981),
@@ -531,15 +533,18 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                       vertical: 8,
                                     ),
                                   ),
-                                  onPressed: () =>
-                                      _ctrl.openCompletedChallenge(challenge),
-                                  icon: const Icon(
-                                    Iconsax.document_text_1_copy,
-                                    size: 14,
-                                  ),
-                                  label: const Text(
-                                    'Review',
-                                    style: TextStyle(
+                                  onPressed: isReviewing
+                                      ? null
+                                      : () => _ctrl.openCompletedChallenge(challenge),
+                                  icon: isReviewing
+                                      ? const AppCircularButtonLoading(color: Colors.white)
+                                      : const Icon(
+                                          Iconsax.document_text_1_copy,
+                                          size: 14,
+                                        ),
+                                  label: Text(
+                                    isReviewing ? 'Loading...' : 'Review',
+                                    style: const TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -549,6 +554,27 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
 
                               // 2. Live challenge: show Start button (if not attempted)
                               if (isLive) {
+                                if (_ctrl.isOffline.value) {
+                                  return FilledButton.icon(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.grey.shade600,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                    onPressed: () => ToastHelper.warning(
+                                      'Live challenges require an internet connection.',
+                                    ),
+                                    icon: const Icon(Icons.wifi_off_rounded, size: 14),
+                                    label: const Text(
+                                      'Needs Internet',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }
                                 return FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.primary,

@@ -1,14 +1,14 @@
-import 'package:matricmate/utils/constants/colors.dart';
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
-import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -34,6 +34,7 @@ class ChallengeArchiveController extends GetxController {
   final challenges = <LeaderboardChallengeModel>[].obs;
   final downloadedIds = <String>{}.obs;
   final isDownloading = <String, bool>{}.obs;
+  final isOpeningReview = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
   final isOffline = false.obs;
 
@@ -151,6 +152,9 @@ class ChallengeArchiveController extends GetxController {
       // 1. Load previously cached challenges
       final cachedList = await _getCachedArchiveChallenges();
       for (final c in cachedList) {
+        // When offline, only closed or archived challenges can be practiced/reviewed
+        if (!c.isClosed && !c.isArchived) continue;
+
         final aud = c.audience.toLowerCase().trim();
         final matchesAud = userStream.isEmpty || aud == 'both' || aud == userStream;
         if (!matchesAud) continue;
@@ -373,11 +377,15 @@ class ChallengeArchiveController extends GetxController {
   }
 
   Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+    if (isOpeningReview[challenge.id] == true) return;
+    isOpeningReview[challenge.id] = true;
     try {
-      final userId = UserController.instance.user.value.id;
+      final userId = UserController.instance.user.value.id.isNotEmpty
+          ? UserController.instance.user.value.id
+          : (FirebaseAuth.instance.currentUser?.uid ?? '');
 
-      // 1. Check local practice results first (fastest)
-      final localPractice = await _db.getChallengePracticeResult(challenge.id);
+      // 1. Check local practice results first (fastest & offline)
+      final localPractice = await _db.getChallengePracticeResult(challenge.id, setId: challenge.setId);
       if (localPractice != null) {
         final answersStr = localPractice['user_answers']?.toString() ?? '{}';
         Map<String, String> userAnswers = {};
@@ -387,11 +395,24 @@ class ChallengeArchiveController extends GetxController {
         } catch (_) {}
 
         List<ChallengeQuestionModel> questions = [];
-        final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
+        final localRows = await _db.getDownloadedChallengeQuestions(challenge.id, setId: challenge.setId);
         if (localRows.isNotEmpty) {
           questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
         } else {
-          questions = await _repo.fetchQuestionsForReview(challenge.id);
+          try {
+            questions = await _repo.fetchQuestionsForReview(challenge.id, setId: challenge.setId);
+            if (questions.isNotEmpty) {
+              await _db.insertDownloadedChallengeBundle({
+                'id': challenge.id,
+                'challenge_id': challenge.id,
+                'set_id': challenge.setId,
+                'subject_id': challenge.subjectId,
+                'title': challenge.title,
+                'audience': challenge.audience,
+                'questions': questions.map((q) => q.toJson()).toList(),
+              });
+            }
+          } catch (_) {}
         }
 
         if (questions.isNotEmpty) {
@@ -422,44 +443,54 @@ class ChallengeArchiveController extends GetxController {
           final userAnswers = attemptData['user_answers'] as Map<String, String>;
 
           List<ChallengeQuestionModel> questions = [];
-          final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
+          final localRows = await _db.getDownloadedChallengeQuestions(challenge.id, setId: challenge.setId);
           if (localRows.isNotEmpty) {
             questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
           } else {
-            questions = await _repo.fetchQuestionsForReview(challenge.id);
+            questions = await _repo.fetchQuestionsForReview(challenge.id, setId: challenge.setId);
           }
 
-          Get.to(
-            () => ChallengeReviewScreen(
+          if (questions.isNotEmpty) {
+            // Cache to local practice DB & SQLite question bundle for instant subsequent review
+            await _db.saveChallengePracticeResult(
               challengeId: challenge.id,
-              title: challenge.title,
-              audience: challenge.audience,
-              questions: questions,
-              userAnswers: userAnswers,
               score: attempt.score,
+              totalQuestions: questions.length,
+              userAnswers: userAnswers,
               timeSpentSeconds: attempt.totalTimeSeconds,
-            ),
-          );
-          return;
+            );
+
+            await _db.insertDownloadedChallengeBundle({
+              'id': challenge.id,
+              'challenge_id': challenge.id,
+              'set_id': challenge.setId,
+              'subject_id': challenge.subjectId,
+              'title': challenge.title,
+              'audience': challenge.audience,
+              'questions': questions.map((q) => q.toJson()).toList(),
+            });
+
+            Get.to(
+              () => ChallengeReviewScreen(
+                challengeId: challenge.id,
+                title: challenge.title,
+                audience: challenge.audience,
+                questions: questions,
+                userAnswers: userAnswers,
+                score: attempt.score,
+                timeSpentSeconds: attempt.totalTimeSeconds,
+              ),
+            );
+            return;
+          }
         }
       }
 
-      // 3. Fallback to Practice mode
-      Get.to(
-        () => ChallengePracticeScreen(
-          challengeId: challenge.id,
-          title: challenge.title,
-          setId: challenge.setId,
-        ),
-      );
-    } catch (_) {
-      Get.to(
-        () => ChallengePracticeScreen(
-          challengeId: challenge.id,
-          title: challenge.title,
-          setId: challenge.setId,
-        ),
-      );
+      ToastHelper.warning('No completed attempt found to review.');
+    } catch (e) {
+      ToastHelper.error('Could not load review. Please check your connection.');
+    } finally {
+      isOpeningReview[challenge.id] = false;
     }
   }
 }

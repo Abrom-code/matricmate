@@ -10,8 +10,8 @@ class ChallengeRepository {
   final _sb = Supabase.instance.client;
 
   Future<void> _checkConnectivity() async {
-    final connected = await NetworkManager.instance.isConnected();
-    if (!connected) {
+    final hasInterface = await NetworkManager.instance.hasNetworkInterface();
+    if (!hasInterface) {
       throw const AppFailure(
         title: 'No Connection',
         message: 'Challenges require an active internet connection.',
@@ -20,6 +20,32 @@ class ChallengeRepository {
   }
 
   // ── Fetch Visible Challenges for Student ───────────────────────────────────
+
+  /// Fetches all published challenges (live, scheduled, closed, archived).
+  Future<List<LeaderboardChallengeModel>> fetchAllChallenges({
+    String? stream,
+  }) async {
+    await _checkConnectivity();
+
+    final rows = await _sb
+        .from('leaderboard_challenges')
+        .select('*, subjects(name), challenge_questions(id)')
+        .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+        .order('created_at', ascending: false);
+
+    final list = (rows as List)
+        .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
+        .toList();
+
+    if (stream != null && stream.isNotEmpty) {
+      final s = stream.toLowerCase().trim();
+      return list.where((c) {
+        final aud = c.audience.toLowerCase().trim();
+        return aud == 'both' || aud == s || aud.isEmpty;
+      }).toList();
+    }
+    return list;
+  }
 
   /// Fetches challenges that are live or scheduled.
   Future<List<LeaderboardChallengeModel>> fetchVisibleChallenges({
@@ -156,12 +182,29 @@ class ChallengeRepository {
     return {'success': true};
   }
 
-  Future<List<ChallengeQuestionModel>> fetchQuestionsForReview(String challengeId) async {
+  Future<List<ChallengeQuestionModel>> fetchQuestionsForReview(
+    String challengeId, {
+    String? setId,
+  }) async {
     await _checkConnectivity();
+    String targetSetId = setId ?? '';
+    if (targetSetId.isEmpty) {
+      final chRow = await _sb
+          .from('leaderboard_challenges')
+          .select('set_id')
+          .eq('id', challengeId)
+          .maybeSingle();
+      if (chRow != null) {
+        targetSetId = chRow['set_id']?.toString() ?? challengeId;
+      } else {
+        targetSetId = challengeId;
+      }
+    }
+
     final rows = await _sb
         .from('challenge_questions')
         .select('*')
-        .eq('challenge_id', challengeId)
+        .eq('set_id', targetSetId)
         .order('order_index', ascending: true);
 
     return (rows as List)
@@ -488,15 +531,18 @@ class ChallengeRepository {
         .eq('id', challengeId)
         .single();
 
+    final targetSetId = chRow['set_id']?.toString() ?? challengeId;
+
     final qRows = await _sb
         .from('challenge_questions')
         .select('*')
-        .eq('challenge_id', challengeId)
+        .eq('set_id', targetSetId)
         .order('order_index', ascending: true);
 
     return {
       'id': chRow['id']?.toString() ?? '',
       'challenge_id': chRow['id']?.toString() ?? '',
+      'set_id': targetSetId,
       'subject_id': (chRow['subject_id'] as num?)?.toInt() ?? 0,
       'title': chRow['title']?.toString() ?? 'Challenge',
       'audience': chRow['audience']?.toString() ?? 'both',

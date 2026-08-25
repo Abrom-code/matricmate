@@ -129,17 +129,30 @@ class LeaderboardChallengeModel {
   }
 
   factory LeaderboardChallengeModel.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id']?.toString() ?? json['challenge_id']?.toString() ?? '';
+    final rawSetId = json['set_id']?.toString() ?? rawId;
+    final finalId = rawId.isNotEmpty ? rawId : rawSetId;
+
+    int sId = (json['subject_id'] as num?)?.toInt() ?? 0;
+    if (sId == 0 && json['subjects'] != null && json['subjects'] is Map) {
+      sId = (json['subjects']['id'] as num?)?.toInt() ?? 0;
+    }
+
+    final subjName = json['subjects'] != null && json['subjects'] is Map
+        ? json['subjects']['name']?.toString()
+        : json['subject_name']?.toString();
+
+    final sTitle = json['challenge_question_sets'] != null &&
+            json['challenge_question_sets'] is Map
+        ? json['challenge_question_sets']['title']?.toString()
+        : json['set_title']?.toString();
+
     return LeaderboardChallengeModel(
-      id: json['id']?.toString() ?? '',
-      setId: json['set_id']?.toString() ?? '',
-      subjectId: (json['subject_id'] as num?)?.toInt() ?? 0,
-      subjectName: json['subjects'] != null && json['subjects'] is Map
-          ? json['subjects']['name']?.toString()
-          : json['subject_name']?.toString(),
-      setTitle: json['challenge_question_sets'] != null &&
-              json['challenge_question_sets'] is Map
-          ? json['challenge_question_sets']['title']?.toString()
-          : json['set_title']?.toString(),
+      id: finalId,
+      setId: rawSetId,
+      subjectId: sId,
+      subjectName: subjName,
+      setTitle: sTitle,
       audience: json['audience']?.toString() ?? 'both',
       title: json['title']?.toString() ?? '',
       startsAt: json['starts_at'] != null
@@ -161,10 +174,11 @@ class LeaderboardChallengeModel {
 
   Map<String, dynamic> toJson() {
     return {
-      if (id.isNotEmpty) 'id': id,
+      'id': id,
       'set_id': setId,
       'subject_id': subjectId,
       'subject_name': subjectName,
+      'set_title': setTitle,
       'audience': audience,
       'title': title,
       'starts_at': startsAt?.toIso8601String(),

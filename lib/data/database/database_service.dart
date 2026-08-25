@@ -686,12 +686,14 @@ class DatabaseService extends GetxController {
     return await db.query('local_challenge_sets', orderBy: 'downloaded_at DESC');
   }
 
-  Future<List<Map<String, dynamic>>> getDownloadedChallengeQuestions(String challengeId) async {
+  Future<List<Map<String, dynamic>>> getDownloadedChallengeQuestions(String challengeId, {String? setId}) async {
     final db = await database;
+    final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
+    final placeholders = List.filled(ids.length, '?').join(',');
     return await db.query(
       'local_challenge_questions',
-      where: 'set_id = ? OR id = ?',
-      whereArgs: [challengeId, challengeId],
+      where: 'set_id IN ($placeholders) OR id IN ($placeholders)',
+      whereArgs: [...ids, ...ids],
       orderBy: 'order_index ASC',
     );
   }
@@ -792,13 +794,16 @@ class DatabaseService extends GetxController {
     );
   }
 
-  Future<Map<String, dynamic>?> getChallengePracticeResult(String challengeId) async {
+  Future<Map<String, dynamic>?> getChallengePracticeResult(String challengeId, {String? setId}) async {
     final db = await database;
     try {
+      final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
+      final placeholders = List.filled(ids.length, '?').join(',');
       final res = await db.query(
         'local_challenge_practice',
-        where: 'challenge_id = ?',
-        whereArgs: [challengeId],
+        where: 'challenge_id IN ($placeholders)',
+        whereArgs: [...ids],
+        orderBy: 'completed_at DESC',
         limit: 1,
       );
       if (res.isNotEmpty) {

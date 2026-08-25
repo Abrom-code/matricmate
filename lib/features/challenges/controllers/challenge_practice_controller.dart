@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
@@ -130,6 +131,7 @@ class ChallengePracticeController extends GetxController {
       final isDown = await _db.isChallengeDownloaded(challengeId);
       if (!isDown) {
         await _db.insertDownloadedChallengeBundle({
+          'id': challengeId,
           'challenge_id': challengeId,
           'title': title,
           'questions': questions.map((q) => q.toJson()).toList(),
@@ -137,9 +139,18 @@ class ChallengePracticeController extends GetxController {
       }
     }
 
-    // Notify home controller
+    // Notify controllers of completion and downloaded availability
     if (Get.isRegistered<ChallengeHomeController>()) {
-      ChallengeHomeController.instance.markAttemptedOrPracticed(challengeId);
+      final hCtrl = ChallengeHomeController.instance;
+      hCtrl.markAttemptedOrPracticed(challengeId);
+      hCtrl.downloadedIds.add(challengeId);
+      hCtrl.refreshAttemptStates();
+    }
+    if (Get.isRegistered<ChallengeArchiveController>()) {
+      final aCtrl = ChallengeArchiveController.instance;
+      aCtrl.markAttemptedOrPracticed(challengeId);
+      aCtrl.downloadedIds.add(challengeId);
+      aCtrl.refreshAttemptStates();
     }
 
     // Navigate to Review Screen

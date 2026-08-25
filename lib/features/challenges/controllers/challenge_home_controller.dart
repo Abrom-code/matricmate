@@ -1,6 +1,7 @@
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'dart:convert';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
@@ -34,6 +35,7 @@ class ChallengeHomeController extends GetxController {
 
   final downloadedIds = <String>{}.obs;
   final isDownloading = <String, bool>{}.obs;
+  final isOpeningReview = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
   final selectedCompletedSubjectId = RxnInt(); // null = Recent 3 (default)
   final selectedTabIndex = 0.obs;
@@ -44,9 +46,13 @@ class ChallengeHomeController extends GetxController {
   }
 
   List<SubjectModel> get studentSubjects {
-    final isNatural = userStream.toLowerCase().trim() == 'natural';
+    final streamTag = userStream.toLowerCase().trim();
+    final isNatural = streamTag == 'natural';
     if (Get.isRegistered<SubjectsController>()) {
-      return SubjectsController.instance.subjects.where((s) {
+      final list = SubjectsController.instance.subjects;
+      if (list.isEmpty) return [];
+      if (streamTag.isEmpty) return list;
+      return list.where((s) {
         return s.isCommon || (isNatural ? s.isNatural : !s.isNatural);
       }).toList();
     }
@@ -191,6 +197,11 @@ class ChallengeHomeController extends GetxController {
       if (streamTag.isNotEmpty) {
         await prefs.setString('cached_all_challenges_$streamTag', encoded);
       }
+      // Clean up legacy cache keys to prevent stale challenges from re-appearing
+      await prefs.remove('cached_closed_challenges');
+      if (streamTag.isNotEmpty) {
+        await prefs.remove('cached_closed_challenges_$streamTag');
+      }
     } catch (_) {}
   }
 
@@ -224,11 +235,14 @@ class ChallengeHomeController extends GetxController {
       final isNatural = streamTag == 'natural';
       final Map<String, LeaderboardChallengeModel> challengeMap = {};
 
-      // 1. Load previously cached challenges
+      // 1. Load previously cached challenges from SharedPreferences
       final cachedList = await _getCachedChallenges();
       for (final c in cachedList) {
+        // Only closed or archived challenges belong in completed/past challenges
+        if (!c.isClosed && !c.isArchived) continue;
+
         final aud = c.audience.toLowerCase().trim();
-        final matchesAud = streamTag.isEmpty || aud == 'both' || aud == streamTag;
+        final matchesAud = streamTag.isEmpty || aud == 'both' || aud == streamTag || aud.isEmpty;
         if (!matchesAud) continue;
 
         if (subjectsList.isNotEmpty && streamTag.isNotEmpty) {
@@ -238,21 +252,31 @@ class ChallengeHomeController extends GetxController {
             if (!matchesSubj) continue;
           }
         }
-        challengeMap[c.id] = c;
+        final key = c.id.isNotEmpty ? c.id : c.setId;
+        if (key.isNotEmpty) {
+          challengeMap[key] = c;
+        }
       }
 
-      // 2. Load downloaded challenge sets from SQLite (with actual question sets)
+      // 2. Load downloaded challenge sets from SQLite
       final rows = await _db.getDownloadedChallengeSets();
       for (final r in rows) {
         final cId = r['challenge_id']?.toString() ?? r['id']?.toString() ?? '';
-        final sId = (r['subject_id'] as num?)?.toInt() ?? 0;
+        if (cId.isEmpty) continue;
+
+        int sId = (r['subject_id'] as num?)?.toInt() ?? 0;
         final title = r['title']?.toString() ?? 'Challenge Set';
         final aud = (r['audience']?.toString() ?? 'both').toLowerCase().trim();
 
-        final matchesAud = streamTag.isEmpty || aud == 'both' || aud == streamTag;
+        final matchesAud = streamTag.isEmpty || aud == 'both' || aud == streamTag || aud.isEmpty;
         if (!matchesAud) continue;
 
-        if (subjectsList.isNotEmpty && streamTag.isNotEmpty) {
+        // If subject_id is missing from SQLite row, preserve subject_id from cached model
+        if (sId == 0 && challengeMap.containsKey(cId)) {
+          sId = challengeMap[cId]!.subjectId;
+        }
+
+        if (subjectsList.isNotEmpty && streamTag.isNotEmpty && sId != 0) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == sId);
           if (subj != null) {
             final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
@@ -263,7 +287,7 @@ class ChallengeHomeController extends GetxController {
         final qRows = await _db.getDownloadedChallengeQuestions(cId);
 
         String? subjName;
-        if (subjectsList.isNotEmpty) {
+        if (subjectsList.isNotEmpty && sId != 0) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == sId);
           subjName = subj?.name;
         }
@@ -272,12 +296,12 @@ class ChallengeHomeController extends GetxController {
           id: cId,
           setId: cId,
           title: title,
-          subjectId: sId,
+          subjectId: sId != 0 ? sId : (challengeMap[cId]?.subjectId ?? 0),
           subjectName: subjName ?? challengeMap[cId]?.subjectName ?? 'Subject',
           audience: aud,
           questionCount: qRows.isNotEmpty ? qRows.length : (challengeMap[cId]?.questionCount ?? 0),
           status: 'closed',
-          createdAt: DateTime.now(),
+          createdAt: challengeMap[cId]?.createdAt ?? DateTime.now(),
         );
       }
 
@@ -299,12 +323,12 @@ class ChallengeHomeController extends GetxController {
           ? SubjectsController.instance.subjects
           : [];
 
-      // 1. Fetch available & live challenges
-      final visibleList = await _repo.fetchVisibleChallenges(stream: userStream);
-      final filteredAvailable = visibleList.where((c) {
-        if (c.isClosed || c.isArchived) return false;
+      // Fetch all published challenges from Supabase in one roundtrip
+      final allPublished = await _repo.fetchAllChallenges(stream: userStream);
+
+      final validFiltered = allPublished.where((c) {
         final aud = c.audience.toLowerCase().trim();
-        final matchesAudience = streamTag.isEmpty || aud == 'both' || aud == streamTag;
+        final matchesAudience = streamTag.isEmpty || aud == 'both' || aud == streamTag || aud.isEmpty;
         if (!matchesAudience) return false;
 
         if (subjectsList.isNotEmpty && streamTag.isNotEmpty) {
@@ -316,39 +340,33 @@ class ChallengeHomeController extends GetxController {
         return true;
       }).toList();
 
-      availableChallenges.value = filteredAvailable;
+      // Partition into Available (live/scheduled) and Completed (closed/ended/archived)
+      final available = <LeaderboardChallengeModel>[];
+      final closed = <LeaderboardChallengeModel>[];
 
-      // 2. Fetch completed / closed challenges
-      final closedList = await _repo.fetchClosedChallenges(stream: userStream);
-      final filteredClosed = closedList.where((c) {
-        final aud = c.audience.toLowerCase().trim();
-        final matchesAudience = streamTag.isEmpty || aud == 'both' || aud == streamTag;
-        if (!matchesAudience) return false;
-
-        if (subjectsList.isNotEmpty && streamTag.isNotEmpty) {
-          final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
-          if (subj != null) {
-            return subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
-          }
+      for (final c in validFiltered) {
+        if (c.isClosed || c.isArchived) {
+          closed.add(c);
+        } else {
+          available.add(c);
         }
-        return true;
-      }).toList();
+      }
 
-      completedChallenges.value = filteredClosed;
+      availableChallenges.assignAll(available);
+      completedChallenges.assignAll(closed);
       isOffline.value = false;
 
-      // Cache all valid challenges (both available and closed) for offline resilience
-      final allChallenges = [...filteredAvailable, ...filteredClosed];
-      _saveCachedChallenges(allChallenges);
+      // Cache all valid challenges for offline resilience
+      _saveCachedChallenges(validFiltered);
 
-      // 3. Prune deleted/stale challenge sets from local SQLite storage
+      // Prune deleted/stale challenge sets from local SQLite storage
       final validServerIds = <String>{
-        ...visibleList.map((c) => c.id),
-        ...closedList.map((c) => c.id),
+        ...validFiltered.map((c) => c.id),
+        ...validFiltered.map((c) => c.setId),
       };
       await _db.pruneDeletedChallengeSets(validServerIds);
 
-      // 4. Refresh offline download states
+      // Refresh offline download states & attempt states
       await refreshDownloadStates();
       await refreshAttemptStates();
 
@@ -513,12 +531,16 @@ class ChallengeHomeController extends GetxController {
     } catch (_) {}
   }
 
-    Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+  Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+    if (isOpeningReview[challenge.id] == true) return;
+    isOpeningReview[challenge.id] = true;
     try {
-      final userId = UserController.instance.user.value.id;
+      final userId = UserController.instance.user.value.id.isNotEmpty
+          ? UserController.instance.user.value.id
+          : (FirebaseAuth.instance.currentUser?.uid ?? '');
 
-      // 1. Check local practice results first (fastest)
-      final localPractice = await _db.getChallengePracticeResult(challenge.id);
+      // 1. Check local practice results first (fastest & offline)
+      final localPractice = await _db.getChallengePracticeResult(challenge.id, setId: challenge.setId);
       if (localPractice != null) {
         final answersStr = localPractice['user_answers']?.toString() ?? '{}';
         Map<String, String> userAnswers = {};
@@ -528,11 +550,24 @@ class ChallengeHomeController extends GetxController {
         } catch (_) {}
 
         List<ChallengeQuestionModel> questions = [];
-        final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
+        final localRows = await _db.getDownloadedChallengeQuestions(challenge.id, setId: challenge.setId);
         if (localRows.isNotEmpty) {
           questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
         } else {
-          questions = await _repo.fetchQuestionsForReview(challenge.id);
+          try {
+            questions = await _repo.fetchQuestionsForReview(challenge.id, setId: challenge.setId);
+            if (questions.isNotEmpty) {
+              await _db.insertDownloadedChallengeBundle({
+                'id': challenge.id,
+                'challenge_id': challenge.id,
+                'set_id': challenge.setId,
+                'subject_id': challenge.subjectId,
+                'title': challenge.title,
+                'audience': challenge.audience,
+                'questions': questions.map((q) => q.toJson()).toList(),
+              });
+            }
+          } catch (_) {}
         }
 
         if (questions.isNotEmpty) {
@@ -563,44 +598,54 @@ class ChallengeHomeController extends GetxController {
           final userAnswers = attemptData['user_answers'] as Map<String, String>;
 
           List<ChallengeQuestionModel> questions = [];
-          final localRows = await _db.getDownloadedChallengeQuestions(challenge.id);
+          final localRows = await _db.getDownloadedChallengeQuestions(challenge.id, setId: challenge.setId);
           if (localRows.isNotEmpty) {
             questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
           } else {
-            questions = await _repo.fetchQuestionsForReview(challenge.id);
+            questions = await _repo.fetchQuestionsForReview(challenge.id, setId: challenge.setId);
           }
 
-          Get.to(
-            () => ChallengeReviewScreen(
+          if (questions.isNotEmpty) {
+            // Save to local practice cache and SQLite bundle for instant future reviews
+            await _db.saveChallengePracticeResult(
               challengeId: challenge.id,
-              title: challenge.title,
-              audience: challenge.audience,
-              questions: questions,
-              userAnswers: userAnswers,
               score: attempt.score,
+              totalQuestions: questions.length,
+              userAnswers: userAnswers,
               timeSpentSeconds: attempt.totalTimeSeconds,
-            ),
-          );
-          return;
+            );
+
+            await _db.insertDownloadedChallengeBundle({
+              'id': challenge.id,
+              'challenge_id': challenge.id,
+              'set_id': challenge.setId,
+              'subject_id': challenge.subjectId,
+              'title': challenge.title,
+              'audience': challenge.audience,
+              'questions': questions.map((q) => q.toJson()).toList(),
+            });
+
+            Get.to(
+              () => ChallengeReviewScreen(
+                challengeId: challenge.id,
+                title: challenge.title,
+                audience: challenge.audience,
+                questions: questions,
+                userAnswers: userAnswers,
+                score: attempt.score,
+                timeSpentSeconds: attempt.totalTimeSeconds,
+              ),
+            );
+            return;
+          }
         }
       }
 
-      // 3. Fallback to Practice mode
-      Get.to(
-        () => ChallengePracticeScreen(
-          challengeId: challenge.id,
-          title: challenge.title,
-          setId: challenge.setId,
-        ),
-      );
-    } catch (_) {
-      Get.to(
-        () => ChallengePracticeScreen(
-          challengeId: challenge.id,
-          title: challenge.title,
-          setId: challenge.setId,
-        ),
-      );
+      ToastHelper.warning('No completed attempt found to review.');
+    } catch (e) {
+      ToastHelper.error('Could not load review. Please check your connection.');
+    } finally {
+      isOpeningReview[challenge.id] = false;
     }
   }
 }

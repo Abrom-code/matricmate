@@ -133,36 +133,6 @@ BEGIN
         NOW()
       );
 
-    -- Live -> Closed / Archived
-    ELSIF (OLD.status IS DISTINCT FROM NEW.status) AND (NEW.status IN ('closed', 'archived')) THEN
-      v_notif_title := '🏆 Challenge Results Are In!';
-      v_notif_body := NEW.title || ' (' || v_subj_name || ') has closed. Check the final leaderboard standings and practice offline!';
-
-      INSERT INTO public.notifications (
-        user_id,
-        title,
-        body,
-        type,
-        target_stream,
-        payload,
-        is_read,
-        created_at
-      ) VALUES (
-        NULL,
-        v_notif_title,
-        v_notif_body,
-        'challenge',
-        v_target_stream,
-        jsonb_build_object(
-          'type', 'challenge_closed',
-          'challenge_id', NEW.id::text,
-          'status', 'closed',
-          'title', NEW.title,
-          'audience', COALESCE(NEW.audience, 'both')
-        ),
-        false,
-        NOW()
-      );
     END IF;
   END IF;
 

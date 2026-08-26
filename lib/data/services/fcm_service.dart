@@ -318,6 +318,11 @@ class FcmService {
             ? 'challenge_${type}_$challengeIdStr'
             : 'text_${title}_$body');
 
+    if (type == 'challenge_closed') {
+      debugPrint('[FcmService] Suppressing push notification banner for challenge_closed');
+      return;
+    }
+
     if (!_shouldShowBanner(dedupKey)) {
       debugPrint('[FcmService] Suppressing duplicate foreground banner: key=$dedupKey');
       return;

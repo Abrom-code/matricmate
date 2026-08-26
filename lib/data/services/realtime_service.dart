@@ -220,16 +220,25 @@ class RealtimeService {
         'is_read': 0,
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
-      // Show OS banner for this notification
-      try {
-        await FcmService.instance.showBanner(
-          id: n.id,
-          title: n.title,
-          body: n.body,
-          payload: record,
-        );
-      } catch (e) {
-        debugPrint('[Realtime] showBanner failed: $e');
+      // Show OS banner for this notification (suppress challenge_closed)
+      final payloadData = record['payload'];
+      final payloadType = payloadData is Map
+          ? payloadData['type']?.toString()
+          : (payloadData is String && payloadData.contains('challenge_closed')
+              ? 'challenge_closed'
+              : null);
+
+      if (payloadType != 'challenge_closed') {
+        try {
+          await FcmService.instance.showBanner(
+            id: n.id,
+            title: n.title,
+            body: n.body,
+            payload: record,
+          );
+        } catch (e) {
+          debugPrint('[Realtime] showBanner failed: $e');
+        }
       }
 
       // Refresh the controller so the bell badge + list update live.

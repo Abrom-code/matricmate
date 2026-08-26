@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
@@ -10,6 +9,7 @@ import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_status_pill.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/ethiopian_time_helper.dart';
 
 class AvailableChallengeCard extends StatelessWidget {
   const AvailableChallengeCard({
@@ -22,8 +22,6 @@ class AvailableChallengeCard extends StatelessWidget {
   final LeaderboardChallengeModel challenge;
   final ChallengeHomeController ctrl;
   final bool dark;
-
-  static final _dateFormat = DateFormat('MMM dd • HH:mm');
 
   @override
   Widget build(BuildContext context) {
@@ -246,8 +244,10 @@ class AvailableChallengeCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             isLive
-                                ? 'Ends: ${challenge.endsAt != null ? _dateFormat.format(challenge.endsAt!) : '--'}'
-                                : 'Starts: ${_dateFormat.format(challenge.startsAt!)}',
+                                ? (challenge.endsAt != null
+                                    ? EthiopianTimeHelper.formatEndsAt(challenge.endsAt!)
+                                    : 'Ends: --')
+                                : EthiopianTimeHelper.formatStartsAt(challenge.startsAt!),
                             style: TextStyle(
                               fontSize: 11.5,
                               color: dark

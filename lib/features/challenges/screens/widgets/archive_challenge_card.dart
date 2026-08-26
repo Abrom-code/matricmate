@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
@@ -11,6 +10,7 @@ import 'package:matricmate/features/challenges/screens/challenge_practice_screen
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/ethiopian_time_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ArchiveChallengeCard extends StatelessWidget {
@@ -275,7 +275,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        DateFormat('MMM dd, yyyy').format(challenge.endsAt!),
+                        EthiopianTimeHelper.formatClosedOn(challenge.endsAt!),
                         style: TextStyle(
                           fontSize: 11.5,
                           color: dark ? Colors.white60 : AppColors.textSecondary,

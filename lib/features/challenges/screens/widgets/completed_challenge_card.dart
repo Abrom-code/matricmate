@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
@@ -10,6 +9,7 @@ import 'package:matricmate/features/challenges/screens/challenge_practice_screen
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/ethiopian_time_helper.dart';
 
 class CompletedChallengeCard extends StatelessWidget {
   const CompletedChallengeCard({
@@ -22,8 +22,6 @@ class CompletedChallengeCard extends StatelessWidget {
   final LeaderboardChallengeModel challenge;
   final ChallengeHomeController ctrl;
   final bool dark;
-
-  static final _dateFormat = DateFormat('MMM dd, yyyy');
 
   @override
   Widget build(BuildContext context) {
@@ -226,31 +224,49 @@ class CompletedChallengeCard extends StatelessWidget {
             const SizedBox(height: 8),
 
             // Date & Meta
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                const Icon(
-                  Iconsax.calendar_tick_copy,
-                  size: 13,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  challenge.endsAt != null
-                      ? 'Closed on ${_dateFormat.format(challenge.endsAt!)}'
-                      : 'Closed Round',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: dark ? Colors.white70 : AppColors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                if (challenge.questionCount > 0)
-                  Text(
-                    '${challenge.questionCount} Questions',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: dark ? Colors.white60 : AppColors.textSecondary,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Iconsax.calendar_tick_copy,
+                      size: 13,
+                      color: AppColors.textSecondary,
                     ),
+                    const SizedBox(width: 4),
+                    Text(
+                      challenge.endsAt != null
+                          ? EthiopianTimeHelper.formatClosedOn(challenge.endsAt!)
+                          : 'Closed Round',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: dark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                if (challenge.questionCount > 0)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Iconsax.document_copy,
+                        size: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${challenge.questionCount} Questions',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: dark ? Colors.white60 : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),

@@ -222,73 +222,76 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
               ),
 
               // ── Bottom Navigation & Submit Bar ────────────────────
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
-                decoration: BoxDecoration(
-                  color: dark ? AppColors.darkCard : AppColors.white,
-                  border: Border(
-                    top: BorderSide(
-                      color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+              SafeArea(
+                top: false,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: dark ? AppColors.darkCard : AppColors.white,
+                    border: Border(
+                      top: BorderSide(
+                        color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+                      ),
                     ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    // Previous
-                    IconButton.outlined(
-                      onPressed: _ctrl.currentIndex.value > 0 ? _ctrl.prevQuestion : null,
-                      icon: const Icon(Iconsax.arrow_left_2_copy, size: 18),
-                    ),
-                    const SizedBox(width: AppSizes.sm),
+                  child: Row(
+                    children: [
+                      // Previous
+                      IconButton.outlined(
+                        onPressed: _ctrl.currentIndex.value > 0 ? _ctrl.prevQuestion : null,
+                        icon: const Icon(Iconsax.arrow_left_2_copy, size: 18),
+                      ),
+                      const SizedBox(width: AppSizes.sm),
 
-                    // Grid / Sheet button
-                    OutlinedButton.icon(
-                      onPressed: () => _showQuestionGrid(context),
-                      icon: const Icon(Iconsax.grid_4_copy, size: 16),
-                      label: Text('${_ctrl.currentIndex.value + 1}/${_ctrl.totalQuestions}'),
-                    ),
-                    const Spacer(),
+                      // Grid / Sheet button
+                      OutlinedButton.icon(
+                        onPressed: () => _showQuestionGrid(context),
+                        icon: const Icon(Iconsax.grid_4_copy, size: 16),
+                        label: Text('${_ctrl.currentIndex.value + 1}/${_ctrl.totalQuestions}'),
+                      ),
+                      const Spacer(),
 
-                    // Next / Finish
-                    if (_ctrl.currentIndex.value < _ctrl.totalQuestions - 1)
-                      FilledButton.icon(
-                        onPressed:
-                            _ctrl.isSubmitting.value ? null : _ctrl.nextQuestion,
-                        icon: const Icon(Iconsax.arrow_right_3_copy, size: 16),
-                        label: const Text('Next'),
-                      )
-                    else
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          disabledBackgroundColor:
-                              AppColors.success.withValues(alpha: 0.7),
-                        ),
-                        onPressed: _ctrl.isSubmitting.value
-                            ? null
-                            : () => _confirmSubmit(context),
-                        child: _ctrl.isSubmitting.value
-                            ? const AppCircularButtonLoading(color: Colors.white)
-                            : const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Iconsax.tick_circle_copy,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Submit Attempt',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                      // Next / Finish
+                      if (_ctrl.currentIndex.value < _ctrl.totalQuestions - 1)
+                        FilledButton.icon(
+                          onPressed:
+                              _ctrl.isSubmitting.value ? null : _ctrl.nextQuestion,
+                          icon: const Icon(Iconsax.arrow_right_3_copy, size: 16),
+                          label: const Text('Next'),
+                        )
+                      else
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.success,
+                            disabledBackgroundColor:
+                                AppColors.success.withValues(alpha: 0.7),
+                          ),
+                          onPressed: _ctrl.isSubmitting.value
+                              ? null
+                              : () => _confirmSubmit(context),
+                          child: _ctrl.isSubmitting.value
+                              ? const AppCircularButtonLoading(color: Colors.white)
+                              : const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Iconsax.tick_circle_copy,
+                                      size: 16,
                                       color: Colors.white,
                                     ),
-                                  ),
-                                ],
-                              ),
-                      ),
-                  ],
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Submit Attempt',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ],

@@ -221,25 +221,45 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                     color: AppColors.primary,
                     onRefresh: () => _ctrl.loadAllChallenges(isManual: true),
                     child: _ctrl.isOffline.value && _ctrl.availableChallenges.isEmpty
-                        ? SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.68,
-                              child: ChallengeOfflineState(
-                                dark: dark,
-                                isRefreshing: _ctrl.isRefreshing.value ||
-                                    _ctrl.isLoading.value,
-                                onRefresh: () =>
-                                    _ctrl.loadAllChallenges(isManual: true),
+                        ? LayoutBuilder(
+                            builder: (context, constraints) => SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight,
+                                ),
+                                child: Center(
+                                  child: ChallengeOfflineState(
+                                    dark: dark,
+                                    isRefreshing: _ctrl.isRefreshing.value ||
+                                        _ctrl.isLoading.value,
+                                    onRefresh: () =>
+                                        _ctrl.loadAllChallenges(isManual: true),
+                                  ),
+                                ),
                               ),
                             ),
                           )
                         : _ctrl.availableChallenges.isEmpty
-                            ? ChallengeEmptyState(
-                                title: 'No available rounds currently',
-                                subtitle:
-                                    'Upcoming challenges will appear here before they open.',
-                                dark: dark,
+                            ? LayoutBuilder(
+                                builder: (context, constraints) =>
+                                    SingleChildScrollView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight: constraints.maxHeight,
+                                    ),
+                                    child: Center(
+                                      child: ChallengeEmptyState(
+                                        title: 'No available rounds currently',
+                                        subtitle:
+                                            'Upcoming challenges will appear here before they open.',
+                                        dark: dark,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               )
                             : ListView.separated(
                                 padding: EdgeInsets.fromLTRB(
@@ -268,27 +288,34 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                     color: AppColors.primary,
                     onRefresh: () => _ctrl.loadAllChallenges(isManual: true),
                     child: _ctrl.completedChallenges.isEmpty
-                        ? (_ctrl.isOffline.value
-                            ? SingleChildScrollView(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                child: SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.68,
-                                  child: ChallengeEmptyState(
-                                    title: 'No offline challenges downloaded',
-                                    subtitle:
-                                        'You are offline. Challenge sets downloaded while online will appear here for offline practice.',
-                                    dark: dark,
-                                    icon: Icons.wifi_off_rounded,
-                                  ),
+                        ? LayoutBuilder(
+                            builder: (context, constraints) =>
+                                SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight,
                                 ),
-                              )
-                            : ChallengeEmptyState(
-                                title: 'No completed challenges yet',
-                                subtitle:
-                                    'Once live challenges end, you can review and practice them here.',
-                                dark: dark,
-                              ))
+                                child: Center(
+                                  child: _ctrl.isOffline.value
+                                      ? ChallengeEmptyState(
+                                          title:
+                                              'No offline challenges downloaded',
+                                          subtitle:
+                                              'You are offline. Challenge sets downloaded while online will appear here for offline practice.',
+                                          dark: dark,
+                                          icon: Icons.wifi_off_rounded,
+                                        )
+                                      : ChallengeEmptyState(
+                                          title: 'No completed challenges yet',
+                                          subtitle:
+                                              'Once live challenges end, you can review and practice them here.',
+                                          dark: dark,
+                                        ),
+                                ),
+                              ),
+                            ),
+                          )
                         : ListView(
                             padding: EdgeInsets.fromLTRB(
                               AppSizes.md,

@@ -134,42 +134,45 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
             ),
 
             // ── Bottom Controls ────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
-              decoration: BoxDecoration(
-                color: dark ? AppColors.darkCard : AppColors.white,
-                border: Border(
-                  top: BorderSide(
-                    color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+            SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 10),
+                decoration: BoxDecoration(
+                  color: dark ? AppColors.darkCard : AppColors.white,
+                  border: Border(
+                    top: BorderSide(
+                      color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+                    ),
                   ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  IconButton.outlined(
-                    onPressed: _ctrl.currentIndex.value > 0 ? _ctrl.prevQuestion : null,
-                    icon: const Icon(Iconsax.arrow_left_2_copy, size: 18),
-                  ),
-                  const SizedBox(width: AppSizes.sm),
-                  OutlinedButton.icon(
-                    onPressed: () => _showQuestionGrid(context),
-                    icon: const Icon(Iconsax.grid_4_copy, size: 16),
-                    label: Text('${_ctrl.currentIndex.value + 1}/${_ctrl.totalQuestions}'),
-                  ),
-                  const Spacer(),
-                  if (_ctrl.currentIndex.value < _ctrl.totalQuestions - 1)
-                    FilledButton.icon(
-                      onPressed: _ctrl.nextQuestion,
-                      icon: const Icon(Iconsax.arrow_right_3_copy, size: 16),
-                      label: const Text('Next'),
-                    )
-                  else
-                    FilledButton.icon(
-                      onPressed: _ctrl.finishPracticeAndReview,
-                      icon: const Icon(Iconsax.tick_circle_copy, size: 16),
-                      label: const Text('Finish & Review'),
+                child: Row(
+                  children: [
+                    IconButton.outlined(
+                      onPressed: _ctrl.currentIndex.value > 0 ? _ctrl.prevQuestion : null,
+                      icon: const Icon(Iconsax.arrow_left_2_copy, size: 18),
                     ),
-                ],
+                    const SizedBox(width: AppSizes.sm),
+                    OutlinedButton.icon(
+                      onPressed: () => _showQuestionGrid(context),
+                      icon: const Icon(Iconsax.grid_4_copy, size: 16),
+                      label: Text('${_ctrl.currentIndex.value + 1}/${_ctrl.totalQuestions}'),
+                    ),
+                    const Spacer(),
+                    if (_ctrl.currentIndex.value < _ctrl.totalQuestions - 1)
+                      FilledButton.icon(
+                        onPressed: _ctrl.nextQuestion,
+                        icon: const Icon(Iconsax.arrow_right_3_copy, size: 16),
+                        label: const Text('Next'),
+                      )
+                    else
+                      FilledButton.icon(
+                        onPressed: _ctrl.finishPracticeAndReview,
+                        icon: const Icon(Iconsax.tick_circle_copy, size: 16),
+                        label: const Text('Finish & Review'),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],

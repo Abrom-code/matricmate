@@ -126,25 +126,30 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
               ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                ReviewStatBadge(
-                  label: 'Time Taken',
-                  value: formattedTime,
-                  color: ChallengeColors.accent,
-                  icon: Iconsax.timer_1_copy,
+                Expanded(
+                  child: ReviewStatBadge(
+                    label: 'Time Taken',
+                    value: formattedTime,
+                    color: ChallengeColors.accent,
+                    icon: Iconsax.timer_1_copy,
+                  ),
                 ),
-                ReviewStatBadge(
-                  label: 'Score',
-                  value: '$correctCount / $total',
-                  color: AppColors.primary,
-                  icon: Iconsax.award_copy,
+                Expanded(
+                  child: ReviewStatBadge(
+                    label: 'Score',
+                    value: '$correctCount / $total',
+                    color: AppColors.primary,
+                    icon: Iconsax.award_copy,
+                  ),
                 ),
-                ReviewStatBadge(
-                  label: 'Accuracy',
-                  value: '$accuracyPercent%',
-                  color: ChallengeColors.completed,
-                  icon: Iconsax.chart_2_copy,
+                Expanded(
+                  child: ReviewStatBadge(
+                    label: 'Accuracy',
+                    value: '$accuracyPercent%',
+                    color: ChallengeColors.completed,
+                    icon: Iconsax.chart_2_copy,
+                  ),
                 ),
               ],
             ),

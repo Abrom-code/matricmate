@@ -292,7 +292,9 @@ class ArchiveChallengeCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                      minimumSize: const Size(0, 31),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       backgroundColor: dark
                           ? Colors.white.withValues(alpha: 0.04)
                           : const Color(0xFFF8FAFC),
@@ -316,13 +318,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                     ),
                     icon: const Icon(
                       Icons.leaderboard_rounded,
-                      size: 15,
+                      size: 14,
                       color: Color(0xFFF59E0B),
                     ),
                     label: const Text(
                       'Standings',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -343,11 +345,17 @@ class ArchiveChallengeCard extends StatelessWidget {
                           backgroundColor: Colors.amber.shade700,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                            vertical: 8,
+                            vertical: 4.5,
+                            horizontal: 8,
+                          ),
+                          minimumSize: const Size(0, 31),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         onPressed: () => ctrl.downloadChallenge(challenge),
-                        icon: const Icon(Icons.lock_rounded, size: 14),
+                        icon: const Icon(Icons.lock_rounded, size: 13),
                         label: const Text(
                           'Unlock (Pro)',
                           style: TextStyle(
@@ -366,7 +374,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                               style: FilledButton.styleFrom(
                                 backgroundColor: ChallengeColors.completed,
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
+                                  vertical: 4.5,
+                                  horizontal: 8,
+                                ),
+                                minimumSize: const Size(0, 31),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                               onPressed: null,
@@ -376,7 +390,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                               style: FilledButton.styleFrom(
                                 backgroundColor: ChallengeColors.completed,
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
+                                  vertical: 4.5,
+                                  horizontal: 8,
+                                ),
+                                minimumSize: const Size(0, 31),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                               onPressed: () => ctrl.openCompletedChallenge(challenge),
@@ -401,7 +421,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.grey.shade600,
                             padding: const EdgeInsets.symmetric(
-                              vertical: 8,
+                              vertical: 4.5,
+                              horizontal: 8,
+                            ),
+                            minimumSize: const Size(0, 31),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           onPressed: () => ToastHelper.warning(
@@ -421,7 +447,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           padding: const EdgeInsets.symmetric(
-                            vertical: 8,
+                            vertical: 4.5,
+                            horizontal: 8,
+                          ),
+                          minimumSize: const Size(0, 31),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         onPressed: () => Get.to(
@@ -448,7 +480,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                         style: FilledButton.styleFrom(
                           backgroundColor: ChallengeColors.scheduled,
                           padding: const EdgeInsets.symmetric(
-                            vertical: 8,
+                            vertical: 4.5,
+                            horizontal: 8,
+                          ),
+                          minimumSize: const Size(0, 31),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         onPressed: null,
@@ -469,7 +507,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                         style: FilledButton.styleFrom(
                           backgroundColor: ChallengeColors.completed,
                           padding: const EdgeInsets.symmetric(
-                            vertical: 8,
+                            vertical: 4.5,
+                            horizontal: 8,
+                          ),
+                          minimumSize: const Size(0, 31),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         onPressed: () => Get.to(
@@ -497,7 +541,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               padding: const EdgeInsets.symmetric(
-                                vertical: 8,
+                                vertical: 4.5,
+                                horizontal: 8,
+                              ),
+                              minimumSize: const Size(0, 31),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                             onPressed: null,
@@ -507,7 +557,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               padding: const EdgeInsets.symmetric(
-                                vertical: 8,
+                                vertical: 4.5,
+                                horizontal: 8,
+                              ),
+                              minimumSize: const Size(0, 31),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                             onPressed: () => ctrl.downloadChallenge(challenge),

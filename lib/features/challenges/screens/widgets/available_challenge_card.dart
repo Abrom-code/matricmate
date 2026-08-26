@@ -267,7 +267,9 @@ class AvailableChallengeCard extends StatelessWidget {
                         Expanded(
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                              minimumSize: const Size(0, 31),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               backgroundColor: dark
                                   ? Colors.white.withValues(alpha: 0.04)
                                   : const Color(0xFFF8FAFC),
@@ -291,13 +293,13 @@ class AvailableChallengeCard extends StatelessWidget {
                             ),
                             icon: const Icon(
                               Icons.leaderboard_rounded,
-                              size: 15,
+                              size: 14,
                               color: Color(0xFFF59E0B),
                             ),
                             label: const Text(
                               'Standings',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -312,17 +314,23 @@ class AvailableChallengeCard extends StatelessWidget {
                             backgroundColor: isLive
                                 ? AppColors.primary
                                 : ChallengeColors.scheduled,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                            minimumSize: const Size(0, 31),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           onPressed: () => ctrl.onChallengeTapped(challenge),
-                          icon: const Icon(Icons.lock_rounded, size: 15),
+                          icon: const Icon(Icons.lock_rounded, size: 13),
                           label: Text(
                             isLive
                                 ? 'Unlock (Pro)'
                                 : 'Unlock to Join (Pro)',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 11.5,
                             ),
                           ),
                         ),
@@ -337,7 +345,9 @@ class AvailableChallengeCard extends StatelessWidget {
                         Expanded(
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                              minimumSize: const Size(0, 31),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               backgroundColor: dark
                                   ? Colors.white.withValues(alpha: 0.04)
                                   : const Color(0xFFF8FAFC),
@@ -361,13 +371,13 @@ class AvailableChallengeCard extends StatelessWidget {
                             ),
                             icon: const Icon(
                               Icons.leaderboard_rounded,
-                              size: 15,
+                              size: 14,
                               color: Color(0xFFF59E0B),
                             ),
                             label: const Text(
                               'Standings',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -384,7 +394,12 @@ class AvailableChallengeCard extends StatelessWidget {
                                         ? FilledButton(
                                             style: FilledButton.styleFrom(
                                               backgroundColor: ChallengeColors.completed,
-                                              padding: const EdgeInsets.symmetric(vertical: 8),
+                                              padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                                              minimumSize: const Size(0, 31),
+                                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
                                             ),
                                             onPressed: null,
                                             child: const AppCircularButtonLoading(color: Colors.white),
@@ -392,18 +407,23 @@ class AvailableChallengeCard extends StatelessWidget {
                                         : FilledButton.icon(
                                             style: FilledButton.styleFrom(
                                               backgroundColor: ChallengeColors.completed,
-                                              padding: const EdgeInsets.symmetric(vertical: 8),
+                                              padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                                              minimumSize: const Size(0, 31),
+                                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
                                             ),
                                             onPressed: () => ctrl.openCompletedChallenge(challenge),
                                             icon: const Icon(
                                               Iconsax.document_text_1_copy,
-                                              size: 16,
+                                              size: 14,
                                             ),
                                             label: const Text(
-                                              'Review Attempt',
+                                              'Review',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 12,
+                                                fontSize: 11.5,
                                               ),
                                             ),
                                           );
@@ -412,20 +432,24 @@ class AvailableChallengeCard extends StatelessWidget {
                               : FilledButton.icon(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.primary,
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                                    minimumSize: const Size(0, 31),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
                                   onPressed: () =>
                                       ctrl.onChallengeTapped(challenge),
                                   icon: const Icon(
                                     Iconsax.play_circle_copy,
-                                    size: 16,
+                                    size: 14,
                                   ),
                                   label: const Text(
                                     'Start Challenge',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                                      fontSize: 11.5,
                                     ),
                                   ),
                                 ),

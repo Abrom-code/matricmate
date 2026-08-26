@@ -14,11 +14,15 @@ class ChallengeAttemptScreen extends StatefulWidget {
     required this.challengeId,
     required this.title,
     this.audience,
+    this.endsAt,
+    this.durationMinutes,
   });
 
   final String challengeId;
   final String title;
   final String? audience;
+  final DateTime? endsAt;
+  final int? durationMinutes;
 
   @override
   State<ChallengeAttemptScreen> createState() => _ChallengeAttemptScreenState();
@@ -36,6 +40,8 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
         challengeId: widget.challengeId,
         title: widget.title,
         audience: widget.audience,
+        endsAt: widget.endsAt,
+        durationMinutes: widget.durationMinutes,
       ),
       tag: 'challenge_attempt_${widget.challengeId}',
     );

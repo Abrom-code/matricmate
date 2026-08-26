@@ -172,6 +172,29 @@ class AvailableChallengeCard extends StatelessWidget {
                       );
                     }),
                     const Spacer(),
+                    Obx(() {
+                      final isDown = ctrl.isDownloaded(challenge.id);
+                      final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                      if (isDown || isDone) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: IconButton(
+                            tooltip: isDone ? 'Delete challenge practice data' : 'Remove offline download',
+                            icon: const Icon(
+                              Iconsax.trash_copy,
+                              size: 15,
+                              color: AppColors.error,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () =>
+                                ctrl.confirmDeleteDownload(context, challenge),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
                     ChallengeStatusPill(challenge: challenge, dark: dark),
                   ],
                 ),

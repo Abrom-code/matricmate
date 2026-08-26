@@ -813,6 +813,19 @@ class DatabaseService extends GetxController {
     return null;
   }
 
+  Future<void> deleteChallengePracticeResult(String challengeId, {String? setId}) async {
+    final db = await database;
+    try {
+      final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
+      final placeholders = List.filled(ids.length, '?').join(',');
+      await db.delete(
+        'local_challenge_practice',
+        where: 'challenge_id IN ($placeholders)',
+        whereArgs: [...ids],
+      );
+    } catch (_) {}
+  }
+
   Future<Set<String>> getCompletedPracticeChallengeIds() async {
     final db = await database;
     try {

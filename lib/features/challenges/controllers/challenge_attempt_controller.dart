@@ -20,7 +20,15 @@ class ChallengeAttemptController extends GetxController
     required this.challengeId,
     required this.title,
     this.audience,
-  });
+    this.endsAt,
+    int? durationMinutes,
+  }) {
+    if (durationMinutes != null && durationMinutes > 0) {
+      durationSeconds = durationMinutes * 60;
+    }
+    startedAt = DateTime.now();
+    _syncTimerWithWallClock();
+  }
 
   final String challengeId;
   final String title;
@@ -134,9 +142,21 @@ class ChallengeAttemptController extends GetxController
 
   void _syncTimerWithWallClock() {
     if (startedAt == null) return;
-    final elapsed = DateTime.now().difference(startedAt!).inSeconds;
+    final now = DateTime.now();
+    final elapsed = now.difference(startedAt!).inSeconds;
     _timeSpentSeconds = elapsed;
-    final allowed = durationSeconds - elapsed;
+
+    // 1. Standard remaining time based on challenge duration (e.g., 30 mins)
+    final allowedByDuration = durationSeconds - elapsed;
+
+    // 2. Hard cutoff: clamp to challenge window closing time (endsAt, e.g., 4:00 PM)
+    int allowed = allowedByDuration;
+    if (endsAt != null) {
+      final secondsUntilClose = endsAt!.difference(now).inSeconds;
+      if (secondsUntilClose < allowed) {
+        allowed = secondsUntilClose;
+      }
+    }
 
     if (allowed <= 0) {
       remainingSeconds.value = 0;

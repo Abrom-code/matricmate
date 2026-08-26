@@ -188,12 +188,13 @@ class ArchiveChallengeCard extends StatelessWidget {
                 const Spacer(),
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
-                  if (isDown) {
+                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                  if (isDown || isDone) {
                     return IconButton(
-                      tooltip: 'Remove offline download',
+                      tooltip: isDone ? 'Delete challenge practice data' : 'Remove offline download',
                       icon: const Icon(
                         Iconsax.trash_copy,
-                        size: 16,
+                        size: 15,
                         color: AppColors.error,
                       ),
                       visualDensity: VisualDensity.compact,
@@ -461,6 +462,8 @@ class ArchiveChallengeCard extends StatelessWidget {
                             challengeId: challenge.id,
                             title: challenge.title,
                             audience: challenge.audience,
+                            endsAt: challenge.endsAt,
+                            durationMinutes: challenge.durationMinutes,
                           ),
                         ),
                         icon: const Icon(Iconsax.play_circle_copy, size: 14),

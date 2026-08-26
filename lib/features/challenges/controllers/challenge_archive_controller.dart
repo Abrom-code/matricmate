@@ -382,11 +382,26 @@ class ChallengeArchiveController extends GetxController {
   }
 
   Future<void> confirmDeleteDownload(BuildContext context, LeaderboardChallengeModel challenge) async {
+    final isDone = isAttemptedOrPracticed(challenge.id);
+    final isDown = isDownloaded(challenge.id);
+
+    final titleText = isDown && isDone
+        ? 'Delete Challenge Data'
+        : isDone
+            ? 'Delete Challenge Practice Data'
+            : 'Delete Downloaded Challenge';
+
+    final contentText = isDown && isDone
+        ? 'Are you sure you want to remove "${challenge.title}" offline bundle and local practice data from this device?'
+        : isDone
+            ? 'Are you sure you want to remove your local practice record for "${challenge.title}" from this device?'
+            : 'Are you sure you want to remove "${challenge.title}" offline data from this device?';
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Downloaded Challenge'),
-        content: Text('Are you sure you want to remove "${challenge.title}" offline data and local practice from this device?'),
+        title: Text(titleText),
+        content: Text(contentText),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -404,6 +419,7 @@ class ChallengeArchiveController extends GetxController {
     if (confirmed == true) {
       try {
         await _db.deleteDownloadedChallenge(challenge.id, setId: challenge.setId);
+        await _db.deleteChallengePracticeResult(challenge.id, setId: challenge.setId);
         downloadedIds.remove(challenge.id);
         attemptedIds.remove(challenge.id);
         if (Get.isRegistered<ChallengeHomeController>()) {
@@ -417,7 +433,7 @@ class ChallengeArchiveController extends GetxController {
         if (isOffline.value) {
           challenges.removeWhere((c) => c.id == challenge.id);
         }
-        ToastHelper.info('Removed offline download.');
+        ToastHelper.info('Challenge data removed from device.');
       } catch (e) {
         AppExceptionHandler.handleResponse(e);
       }

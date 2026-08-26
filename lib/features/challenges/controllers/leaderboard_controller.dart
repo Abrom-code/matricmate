@@ -31,6 +31,7 @@ class LeaderboardController extends GetxController {
       entries.take(displayLimit.value).toList();
 
   bool get hasMore => displayLimit.value < entries.length;
+  int get remainingCount => (entries.length - displayLimit.value).clamp(0, entries.length);
 
   void loadMore() {
     displayLimit.value += 10;

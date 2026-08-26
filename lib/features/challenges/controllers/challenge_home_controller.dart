@@ -41,6 +41,8 @@ class ChallengeHomeController extends GetxController {
   final selectedTabIndex = 0.obs;
   final isOffline = false.obs;
 
+  bool get hasLiveChallenges => availableChallenges.any((c) => c.isLive);
+
   void switchTab(int index) {
     selectedTabIndex.value = index;
   }

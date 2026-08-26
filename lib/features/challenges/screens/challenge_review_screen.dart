@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
+import 'package:matricmate/features/challenges/screens/widgets/review_stat_badge.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -72,13 +74,15 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
     }
 
     final total = widget.questions.length;
-    final accuracyPercent = total > 0 ? ((correctCount / total) * 100).toStringAsFixed(0) : '0';
+    final accuracyPercent =
+        total > 0 ? ((correctCount / total) * 100).toStringAsFixed(0) : '0';
 
     String formattedTime = '--';
     if (widget.timeSpentSeconds != null && widget.timeSpentSeconds! > 0) {
       final m = widget.timeSpentSeconds! ~/ 60;
       final s = widget.timeSpentSeconds! % 60;
-      formattedTime = '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+      formattedTime =
+          '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
     }
 
     return Scaffold(
@@ -96,7 +100,11 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
               widget.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.normal),
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.normal,
+              ),
             ),
           ],
         ),
@@ -105,7 +113,10 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
         children: [
           // ── Top Summary Header Card (Time Taken, Score, Accuracy) ──
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.md,
+              vertical: 12,
+            ),
             decoration: BoxDecoration(
               color: dark ? AppColors.darkCard : AppColors.white,
               border: Border(
@@ -117,22 +128,22 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _StatBadge(
+                ReviewStatBadge(
                   label: 'Time Taken',
                   value: formattedTime,
-                  color: const Color(0xFF0284C7),
+                  color: ChallengeColors.accent,
                   icon: Iconsax.timer_1_copy,
                 ),
-                _StatBadge(
+                ReviewStatBadge(
                   label: 'Score',
                   value: '$correctCount / $total',
                   color: AppColors.primary,
                   icon: Iconsax.award_copy,
                 ),
-                _StatBadge(
+                ReviewStatBadge(
                   label: 'Accuracy',
                   value: '$accuracyPercent%',
-                  color: const Color(0xFF10B981),
+                  color: ChallengeColors.completed,
                   icon: Iconsax.chart_2_copy,
                 ),
               ],
@@ -148,45 +159,52 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Iconsax.document_copy, size: 44, color: dark ? Colors.white24 : AppColors.textSecondary),
+                          Icon(
+                            Iconsax.document_copy,
+                            size: 44,
+                            color: dark
+                                ? Colors.white24
+                                : AppColors.textSecondary,
+                          ),
                           const SizedBox(height: AppSizes.md),
                           const Text(
                             'No questions available for review',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
                     ),
                   )
-                : Scrollbar(
+                : ListView.separated(
                     controller: _scrollCtrl,
-                    child: ListView.separated(
-                      controller: _scrollCtrl,
-                      padding: const EdgeInsets.all(AppSizes.md),
-                      itemCount: widget.questions.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.spaceBtwItems),
-                      itemBuilder: (context, idx) {
-                        final q = widget.questions[idx];
-                        final selected = widget.userAnswers[q.id];
+                    padding: const EdgeInsets.all(AppSizes.md),
+                    itemCount: widget.questions.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: AppSizes.spaceBtwItems),
+                    itemBuilder: (context, index) {
+                      final question = widget.questions[index];
+                      final userAnswer = widget.userAnswers[question.id];
 
-                        return ChallengeQuestionBox(
-                          question: q,
-                          orderIndex: idx + 1,
-                          totalQuestions: total,
-                          selectedChoice: selected,
-                          isChecked: true,
-                          showExplanation: true,
-                          initialExplanationExpanded: false, // Closed by default, user can toggle open/close
-                        );
-                      },
-                    ),
+                      return ChallengeQuestionBox(
+                        question: question,
+                        orderIndex: index + 1,
+                        totalQuestions: widget.questions.length,
+                        selectedChoice: userAnswer,
+                        isChecked: true,
+                        showExplanation: true,
+                        initialExplanationExpanded: false,
+                      );
+                    },
                   ),
           ),
 
-          // ── Bottom Action Bar (Standings & Rankings) ───────
+          // ── Bottom Action Button (See Standings) ────────────────
           if (widget.challengeId != null)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
+              padding: const EdgeInsets.all(AppSizes.md),
               decoration: BoxDecoration(
                 color: dark ? AppColors.darkCard : AppColors.white,
                 border: Border(
@@ -195,90 +213,45 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                   ),
                 ),
               ),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: const Color(0xFFD97706),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(
-                        color: Color(0xFFD97706),
-                        width: 1.5,
+              child: SafeArea(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: ChallengeColors.bronze,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: const BorderSide(
+                          color: ChallengeColors.bronze,
+                          width: 1.5,
+                        ),
                       ),
                     ),
-                  ),
-                  onPressed: () => Get.to(
-                    () => LeaderboardScreen(
-                      challengeId: widget.challengeId,
-                      challengeTitle: widget.title,
-                      audience: widget.audience,
-                      userScore: correctCount,
-                      userTimeSeconds: widget.timeSpentSeconds,
+                    onPressed: () => Get.to(
+                      () => LeaderboardScreen(
+                        challengeId: widget.challengeId,
+                        challengeTitle: widget.title,
+                        audience: widget.audience,
+                        userScore: correctCount,
+                        userTimeSeconds: widget.timeSpentSeconds,
+                      ),
                     ),
-                  ),
-                  icon: const Icon(Icons.leaderboard_rounded, size: 18),
-                  label: const Text(
-                    'See Leaderboard',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                    icon: const Icon(Icons.leaderboard_rounded, size: 18),
+                    label: const Text(
+                      'See Leaderboard',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.5,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
         ],
       ),
-    );
-  }
-}
-
-class _StatBadge extends StatelessWidget {
-  const _StatBadge({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 16, color: color),
-        ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: color,
-              ),
-            ),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

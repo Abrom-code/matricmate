@@ -542,30 +542,44 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               // 1. If already attempted/completed -> Always show Review!
                               if (isDone) {
                                 final isReviewing = _ctrl.isOpeningReview[challenge.id] == true;
-                                return FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: const Color(0xFF10B981),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                  ),
-                                  onPressed: isReviewing
-                                      ? null
-                                      : () => _ctrl.openCompletedChallenge(challenge),
-                                  icon: isReviewing
-                                      ? const AppCircularButtonLoading(color: Colors.white)
-                                      : const Icon(
+                                return isReviewing
+                                    ? FilledButton(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: const Color(0xFF10B981),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                        ),
+                                        onPressed: null,
+                                        child: const SizedBox(
+                                          height: 14,
+                                          width: 14,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : FilledButton.icon(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: const Color(0xFF10B981),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                        ),
+                                        onPressed: () => _ctrl.openCompletedChallenge(challenge),
+                                        icon: const Icon(
                                           Iconsax.document_text_1_copy,
                                           size: 14,
                                         ),
-                                  label: Text(
-                                    isReviewing ? 'Loading...' : 'Review',
-                                    style: const TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
+                                        label: const Text(
+                                          'Review',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      );
                               }
 
                               // 2. Live challenge: show Start button (if not attempted)
@@ -666,30 +680,44 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                 );
                               }
 
-                              return FilledButton.icon(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                ),
-                                onPressed: isDownloading
-                                    ? null
-                                    : () => _ctrl.downloadChallenge(challenge),
-                                icon: isDownloading
-                                    ? const AppCircularButtonLoading(color: Colors.white)
-                                    : const Icon(
+                              return isDownloading
+                                  ? FilledButton(
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                      onPressed: null,
+                                      child: const SizedBox(
+                                        height: 14,
+                                        width: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : FilledButton.icon(
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                      onPressed: () => _ctrl.downloadChallenge(challenge),
+                                      icon: const Icon(
                                         Iconsax.document_download_copy,
                                         size: 14,
                                       ),
-                                label: Text(
-                                  isDownloading ? 'Downloading...' : 'Download',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
+                                      label: const Text(
+                                        'Download',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    );
                             }),
                           ),
                         ],

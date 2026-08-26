@@ -120,6 +120,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                 }),
                 const SizedBox(width: AppSizes.xs),
                 Obx(() {
+                  final isDown = ctrl.isDownloaded(challenge.id);
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   if (isDone) {
                     return Container(
@@ -142,6 +143,36 @@ class ArchiveChallengeCard extends StatelessWidget {
                           SizedBox(width: 3.5),
                           Text(
                             'Done',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: ChallengeColors.completed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (isDown) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ChallengeColors.completed.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.download_done_rounded,
+                            size: 12,
+                            color: ChallengeColors.completed,
+                          ),
+                          SizedBox(width: 3.5),
+                          Text(
+                            'Downloaded',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -418,7 +449,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                     if (isDown) {
                       return FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: ChallengeColors.completed,
                           padding: const EdgeInsets.symmetric(
                             vertical: 8,
                           ),

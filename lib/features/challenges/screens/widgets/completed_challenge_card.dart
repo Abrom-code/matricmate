@@ -126,7 +126,7 @@ class CompletedChallengeCard extends StatelessWidget {
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-                  if (isDown && isDone) {
+                  if (isDone) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
@@ -147,6 +147,36 @@ class CompletedChallengeCard extends StatelessWidget {
                           SizedBox(width: 3.5),
                           Text(
                             'Done',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: ChallengeColors.completed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (isDown) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ChallengeColors.completed.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.download_done_rounded,
+                            size: 12,
+                            color: ChallengeColors.completed,
+                          ),
+                          SizedBox(width: 3.5),
+                          Text(
+                            'Downloaded',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -322,7 +352,7 @@ class CompletedChallengeCard extends StatelessWidget {
                       flex: 2,
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: ChallengeColors.completed,
                           padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                         onPressed: () => Get.to(

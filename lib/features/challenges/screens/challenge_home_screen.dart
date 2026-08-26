@@ -397,7 +397,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                   const Icon(
                                     Iconsax.book_1_copy,
                                     size: 15,
-                                    color: Color(0xFF8B5CF6),
+                                    color: Color(0xFF0284C7),
                                   ),
                                   const SizedBox(width: 6),
                                   const Text(
@@ -427,7 +427,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                 child: _SubjectNavCard(
                                   customTitle: 'All Subjects',
                                   customIcon: Iconsax.category_copy,
-                                  customAccentColor: const Color(0xFF8B5CF6),
+                                  customAccentColor: const Color(0xFF0284C7),
                                   challengeCount: _ctrl.availableChallenges.length +
                                       _ctrl.completedChallenges.length,
                                   dark: dark,

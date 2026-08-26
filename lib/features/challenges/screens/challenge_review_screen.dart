@@ -120,7 +120,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                 _StatBadge(
                   label: 'Time Taken',
                   value: formattedTime,
-                  color: const Color(0xFF8B5CF6),
+                  color: const Color(0xFF0284C7),
                   icon: Iconsax.timer_1_copy,
                 ),
                 _StatBadge(

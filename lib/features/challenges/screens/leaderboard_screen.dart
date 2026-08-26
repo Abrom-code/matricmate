@@ -670,7 +670,7 @@ class _StudentLeaderboardTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isNatural = entry.stream.toLowerCase().contains('nat');
     final streamBadgeColor =
-        isNatural ? const Color(0xFF0284C7) : const Color(0xFF8B5CF6);
+        isNatural ? const Color(0xFF0284C7) : const Color(0xFF0EA5E9);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.sm),

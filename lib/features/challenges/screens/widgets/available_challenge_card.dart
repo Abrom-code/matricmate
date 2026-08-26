@@ -236,23 +236,40 @@ class AvailableChallengeCard extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Iconsax.calendar_1_copy,
-                            size: 14,
-                            color: AppColors.textSecondary,
+                          Icon(
+                            isLive ? Iconsax.calendar_tick_copy : Iconsax.calendar_1_copy,
+                            size: 13,
+                            color: isLive ? AppColors.success : AppColors.textSecondary,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            isLive
-                                ? (challenge.endsAt != null
-                                    ? EthiopianTimeHelper.formatEndsAt(challenge.endsAt!)
-                                    : 'Ends: --')
-                                : EthiopianTimeHelper.formatStartsAt(challenge.startsAt!),
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: dark
-                                  ? Colors.white70
-                                  : AppColors.textSecondary,
+                          Text.rich(
+                            TextSpan(
+                              text: isLive ? 'Ends: ' : 'Starts: ',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: dark ? Colors.white70 : AppColors.textSecondary,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: EthiopianTimeHelper.formatDate(isLive ? (challenge.endsAt ?? challenge.startsAt!) : challenge.startsAt!),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: dark ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' • ${EthiopianTimeHelper.formatGregorianTime(isLive ? (challenge.endsAt ?? challenge.startsAt!) : challenge.startsAt!)} ',
+                                ),
+                                TextSpan(
+                                  text: '(${EthiopianTimeHelper.formatEthiopianTime(isLive ? (challenge.endsAt ?? challenge.startsAt!) : challenge.startsAt!)} ET)',
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

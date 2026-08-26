@@ -274,11 +274,34 @@ class ArchiveChallengeCard extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        EthiopianTimeHelper.formatClosedOn(challenge.endsAt!),
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: dark ? Colors.white60 : AppColors.textSecondary,
+                      Text.rich(
+                        TextSpan(
+                          text: 'Closed: ',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: dark ? Colors.white60 : AppColors.textSecondary,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: EthiopianTimeHelper.formatDate(challenge.endsAt!),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: dark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' • ${EthiopianTimeHelper.formatGregorianTime(challenge.endsAt!)} ',
+                            ),
+                            TextSpan(
+                              text: '(${EthiopianTimeHelper.formatEthiopianTime(challenge.endsAt!)} ET)',
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

@@ -45,42 +45,59 @@ class EthiopianTimeHelper {
     return '$ethHour:$minuteStr $period';
   }
 
+  /// Formats date smartly (omits year if it matches the current year).
+  /// e.g. "Aug 27" for current year, "Aug 27, 2025" for a different year.
+  static String formatDate(DateTime dateTime) {
+    final local = dateTime.toLocal();
+    final isCurrentYear = local.year == DateTime.now().year;
+    return isCurrentYear
+        ? DateFormat('MMM dd').format(local)
+        : DateFormat('MMM dd, yyyy').format(local);
+  }
+
+  /// Formats standard local 12-hour time (e.g. "4:00 PM").
+  static String formatGregorianTime(DateTime dateTime) {
+    return DateFormat('h:mm a').format(dateTime.toLocal());
+  }
+
   /// Formats both standard time and Ethiopian time side-by-side.
-  /// e.g. "3:00 PM (9:00 AM ET)"
+  /// e.g. "4:00 PM (10:00 AM ET)"
   static String formatCombinedTime(DateTime dateTime) {
     final local = dateTime.toLocal();
-    final gregTime = DateFormat('h:mm a').format(local);
+    final gregTime = formatGregorianTime(local);
     final ethTime = formatEthiopianTime(local);
     return '$gregTime ($ethTime ET)';
   }
 
   /// Formats standard date + time with Ethiopian time suffix.
-  /// e.g. "Aug 27, 2026 • 4:00 PM (10:00 AM ET)"
+  /// e.g. "Aug 27 • 4:00 PM (10:00 AM ET)"
   static String formatDateTimeWithEth(
     DateTime dateTime, {
-    bool includeYear = true,
+    bool? includeYear,
   }) {
     final local = dateTime.toLocal();
-    final datePattern = includeYear ? 'MMM dd, yyyy' : 'MMM dd';
+    final isCurrentYear = local.year == DateTime.now().year;
+    final showYear = includeYear ?? !isCurrentYear;
+    final datePattern = showYear ? 'MMM dd, yyyy' : 'MMM dd';
     final dateStr = DateFormat(datePattern).format(local);
-    final gregTime = DateFormat('h:mm a').format(local);
+    final gregTime = formatGregorianTime(local);
     final ethTime = formatEthiopianTime(local);
 
     return '$dateStr • $gregTime ($ethTime ET)';
   }
 
-  /// Formats "Closed on MMM dd, yyyy • 4:00 PM (10:00 AM ET)"
+  /// Formats "Closed: Aug 27 • 4:00 PM (10:00 AM ET)"
   static String formatClosedOn(DateTime dateTime) {
-    return 'Closed on ${formatDateTimeWithEth(dateTime, includeYear: true)}';
+    return 'Closed: ${formatDateTimeWithEth(dateTime)}';
   }
 
-  /// Formats "Starts: MMM dd, yyyy • 3:00 PM (9:00 AM ET)"
+  /// Formats "Starts: Aug 27 • 3:00 PM (9:00 AM ET)"
   static String formatStartsAt(DateTime dateTime) {
-    return 'Starts: ${formatDateTimeWithEth(dateTime, includeYear: true)}';
+    return 'Starts: ${formatDateTimeWithEth(dateTime)}';
   }
 
-  /// Formats "Ends: MMM dd, yyyy • 4:00 PM (10:00 AM ET)"
+  /// Formats "Ends: Aug 27 • 4:00 PM (10:00 AM ET)"
   static String formatEndsAt(DateTime dateTime) {
-    return 'Ends: ${formatDateTimeWithEth(dateTime, includeYear: true)}';
+    return 'Ends: ${formatDateTimeWithEth(dateTime)}';
   }
 }

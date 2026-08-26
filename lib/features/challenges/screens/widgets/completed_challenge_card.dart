@@ -238,15 +238,45 @@ class CompletedChallengeCard extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      challenge.endsAt != null
-                          ? EthiopianTimeHelper.formatClosedOn(challenge.endsAt!)
-                          : 'Closed Round',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: dark ? Colors.white70 : AppColors.textSecondary,
+                    if (challenge.endsAt != null)
+                      Text.rich(
+                        TextSpan(
+                          text: 'Closed: ',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: dark ? Colors.white70 : AppColors.textSecondary,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: EthiopianTimeHelper.formatDate(challenge.endsAt!),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: dark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' • ${EthiopianTimeHelper.formatGregorianTime(challenge.endsAt!)} ',
+                            ),
+                            TextSpan(
+                              text: '(${EthiopianTimeHelper.formatEthiopianTime(challenge.endsAt!)} ET)',
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Text(
+                        'Closed Round',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: dark ? Colors.white70 : AppColors.textSecondary,
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 if (challenge.questionCount > 0)

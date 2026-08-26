@@ -1192,14 +1192,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(vertical: 8),
                               ),
                               onPressed: null,
-                              child: const SizedBox(
-                                height: 14,
-                                width: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              child: const AppCircularButtonLoading(color: Colors.white),
                             )
                           : FilledButton.icon(
                               style: FilledButton.styleFrom(
@@ -1259,14 +1252,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 8),
                             ),
                             onPressed: null,
-                            child: const SizedBox(
-                              height: 14,
-                              width: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: const AppCircularButtonLoading(color: Colors.white),
                           )
                         : FilledButton.icon(
                             style: FilledButton.styleFrom(

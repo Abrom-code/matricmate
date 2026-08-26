@@ -540,6 +540,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               }
 
                               // 1. If already attempted/completed -> Always show Review!
+                              // 1. If already attempted/completed -> Always show Review!
                               if (isDone) {
                                 final isReviewing = _ctrl.isOpeningReview[challenge.id] == true;
                                 return isReviewing
@@ -551,14 +552,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                           ),
                                         ),
                                         onPressed: null,
-                                        child: const SizedBox(
-                                          height: 14,
-                                          width: 14,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        ),
+                                        child: const AppCircularButtonLoading(color: Colors.white),
                                       )
                                     : FilledButton.icon(
                                         style: FilledButton.styleFrom(
@@ -689,14 +683,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                         ),
                                       ),
                                       onPressed: null,
-                                      child: const SizedBox(
-                                        height: 14,
-                                        width: 14,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      ),
+                                      child: const AppCircularButtonLoading(color: Colors.white),
                                     )
                                   : FilledButton.icon(
                                       style: FilledButton.styleFrom(

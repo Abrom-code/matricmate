@@ -9,6 +9,7 @@ import 'package:matricmate/data/repositories/challenge/challenge_repository.dart
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
@@ -361,6 +362,9 @@ class ChallengeArchiveController extends GetxController {
 
       await _db.insertDownloadedChallengeBundle(bundle);
       downloadedIds.add(challenge.id);
+      if (Get.isRegistered<ChallengeHomeController>()) {
+        Get.find<ChallengeHomeController>().downloadedIds.add(challenge.id);
+      }
       ToastHelper.success('Downloaded for offline practice!');
     } catch (e) {
       // Fallback to local DB when offline or network fails
@@ -402,6 +406,17 @@ class ChallengeArchiveController extends GetxController {
         await _db.deleteDownloadedChallenge(challenge.id, setId: challenge.setId);
         downloadedIds.remove(challenge.id);
         attemptedIds.remove(challenge.id);
+        if (Get.isRegistered<ChallengeHomeController>()) {
+          final hCtrl = Get.find<ChallengeHomeController>();
+          hCtrl.downloadedIds.remove(challenge.id);
+          hCtrl.attemptedIds.remove(challenge.id);
+          if (hCtrl.isOffline.value) {
+            hCtrl.completedChallenges.removeWhere((c) => c.id == challenge.id);
+          }
+        }
+        if (isOffline.value) {
+          challenges.removeWhere((c) => c.id == challenge.id);
+        }
         ToastHelper.info('Removed offline download.');
       } catch (e) {
         AppExceptionHandler.handleResponse(e);

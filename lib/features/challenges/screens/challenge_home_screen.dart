@@ -474,12 +474,16 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                           _ctrl.completedChallenges.length,
                                   dark: dark,
                                   isOffline: _ctrl.isOffline.value,
-                                  onTap: () => Get.to(
-                                    () => const ChallengeArchiveScreen(
-                                      subjectId: null,
-                                      subjectTitle: 'All Subjects',
-                                    ),
-                                  ),
+                                  onTap: () async {
+                                    await Get.to(
+                                      () => const ChallengeArchiveScreen(
+                                        subjectId: null,
+                                        subjectTitle: 'All Subjects',
+                                      ),
+                                    );
+                                    _ctrl.refreshDownloadStates();
+                                    _ctrl.refreshAttemptStates();
+                                  },
                                 ),
                               ),
 
@@ -499,12 +503,16 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                     challengeCount: count,
                                     dark: dark,
                                     isOffline: _ctrl.isOffline.value,
-                                    onTap: () => Get.to(
-                                      () => ChallengeArchiveScreen(
-                                        subjectId: subj.id,
-                                        subjectTitle: subj.name,
-                                      ),
-                                    ),
+                                    onTap: () async {
+                                      await Get.to(
+                                        () => ChallengeArchiveScreen(
+                                          subjectId: subj.id,
+                                          subjectTitle: subj.name,
+                                        ),
+                                      );
+                                      _ctrl.refreshDownloadStates();
+                                      _ctrl.refreshAttemptStates();
+                                    },
                                   ),
                                 );
                               }),

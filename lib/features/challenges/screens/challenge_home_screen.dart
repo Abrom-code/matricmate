@@ -409,7 +409,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                   ),
                                   const Spacer(),
                                   Text(
-                                    '${_ctrl.studentSubjects.length} subjects',
+                                    'All + ${_ctrl.studentSubjects.length} subjects',
                                     style: TextStyle(
                                       fontSize: 11.5,
                                       color: dark
@@ -420,6 +420,26 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                 ],
                               ),
                               const SizedBox(height: 10),
+
+                              // "All Subjects" Navigation Card
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _SubjectNavCard(
+                                  customTitle: 'All Subjects',
+                                  customIcon: Iconsax.category_copy,
+                                  customAccentColor: const Color(0xFF8B5CF6),
+                                  challengeCount: _ctrl.availableChallenges.length +
+                                      _ctrl.completedChallenges.length,
+                                  dark: dark,
+                                  isOffline: _ctrl.isOffline.value,
+                                  onTap: () => Get.to(
+                                    () => const ChallengeArchiveScreen(
+                                      subjectId: null,
+                                      subjectTitle: 'All Subjects',
+                                    ),
+                                  ),
+                                ),
+                              ),
 
                               // Subject Navigation Cards
                               ..._ctrl.studentSubjects.map((subj) {
@@ -1505,14 +1525,20 @@ class _OfflineAvailableState extends StatelessWidget {
 
 class _SubjectNavCard extends StatelessWidget {
   const _SubjectNavCard({
-    required this.subject,
+    this.subject,
+    this.customTitle,
+    this.customIcon,
+    this.customAccentColor,
     required this.challengeCount,
     required this.dark,
     required this.onTap,
     this.isOffline = false,
   });
 
-  final SubjectModel subject;
+  final SubjectModel? subject;
+  final String? customTitle;
+  final IconData? customIcon;
+  final Color? customAccentColor;
   final int challengeCount;
   final bool dark;
   final VoidCallback onTap;
@@ -1520,6 +1546,10 @@ class _SubjectNavCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final title = customTitle ?? subject?.name ?? 'Subject';
+    final icon = customIcon ?? Iconsax.book_copy;
+    final accent = customAccentColor ?? AppColors.primary;
+
     String subtitleText;
     if (isOffline) {
       subtitleText = challengeCount > 0
@@ -1551,13 +1581,13 @@ class _SubjectNavCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: accent.withValues(alpha: dark ? 0.22 : 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
-                  Iconsax.book_copy,
+                child: Icon(
+                  icon,
                   size: 19,
-                  color: AppColors.primary,
+                  color: accent,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1567,7 +1597,7 @@ class _SubjectNavCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      subject.name,
+                      title,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -1598,33 +1628,25 @@ class _SubjectNavCard extends StatelessWidget {
                           : (challengeCount > 0
                               ? const Color(0xFFD1FAE5)
                               : const Color(0xFFF1F5F9)))
-                      : (dark
-                          ? AppColors.darkContainer
-                          : const Color(0xFFF1F5F9)),
-                  borderRadius: BorderRadius.circular(12),
+                      : (dark ? Colors.white10 : const Color(0xFFF1F5F9)),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   '$challengeCount',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isOffline
-                        ? (dark
-                            ? (challengeCount > 0
-                                ? const Color(0xFF34D399)
-                                : Colors.white60)
-                            : (challengeCount > 0
-                                ? const Color(0xFF059669)
-                                : AppColors.textSecondary))
-                        : (dark ? Colors.white70 : AppColors.textPrimary),
+                    color: isOffline && challengeCount > 0
+                        ? const Color(0xFF10B981)
+                        : (dark ? Colors.white70 : AppColors.textSecondary),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              const Icon(
-                Iconsax.arrow_right_3_copy,
-                size: 15,
-                color: AppColors.textSecondary,
+              const SizedBox(width: 6),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: dark ? Colors.white38 : AppColors.textSecondary.withValues(alpha: 0.6),
               ),
             ],
           ),

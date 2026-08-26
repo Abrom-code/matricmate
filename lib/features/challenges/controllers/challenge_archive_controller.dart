@@ -11,6 +11,7 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
+import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -24,6 +25,8 @@ class ChallengeArchiveController extends GetxController {
 
   final int? subjectId;
   final String? subjectTitle;
+
+  late final RxnInt selectedSubjectId = RxnInt(subjectId);
 
   final _repo = ChallengeRepository();
   final _db = DatabaseService.instance;
@@ -42,6 +45,44 @@ class ChallengeArchiveController extends GetxController {
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream.toLowerCase().trim();
+
+  List<SubjectModel> get studentSubjects {
+    final streamTag = userStream;
+    final isNatural = streamTag == 'natural';
+    if (Get.isRegistered<SubjectsController>()) {
+      final list = SubjectsController.instance.subjects;
+      if (list.isEmpty) return [];
+      if (streamTag.isEmpty) return list;
+      return list.where((s) {
+        return s.isCommon || (isNatural ? s.isNatural : !s.isNatural);
+      }).toList();
+    }
+    return [];
+  }
+
+  String get selectedSubjectTitle {
+    if (selectedSubjectId.value == null) return 'All Challenges';
+    final subj = studentSubjects.firstWhereOrNull((s) => s.id == selectedSubjectId.value);
+    return subj != null ? '${subj.name} Challenges' : (subjectTitle ?? 'Challenges');
+  }
+
+  List<LeaderboardChallengeModel> get displayedChallenges {
+    if (selectedSubjectId.value == null) {
+      return challenges;
+    }
+    return challenges
+        .where((c) => c.subjectId == selectedSubjectId.value)
+        .toList();
+  }
+
+  void selectSubject(int? id) {
+    selectedSubjectId.value = id;
+  }
+
+  int countForSubject(int? subjId) {
+    if (subjId == null) return challenges.length;
+    return challenges.where((c) => c.subjectId == subjId).length;
+  }
 
   @override
   void onInit() {
@@ -222,16 +263,8 @@ class ChallengeArchiveController extends GetxController {
       isLoading.value = true;
     }
     try {
-      // When opened for a specific subject, fetch ALL statuses (live, scheduled, closed, archived)
-      final List<LeaderboardChallengeModel> list;
-      if (subjectId != null) {
-        list = await _repo.fetchSubjectChallenges(
-          subjectId: subjectId!,
-          stream: userStream,
-        );
-      } else {
-        list = await _repo.fetchClosedChallenges(stream: userStream);
-      }
+      // Fetch all challenges across subjects for student stream so tabs work seamlessly
+      final list = await _repo.fetchAllSubjectChallenges(stream: userStream);
       final isNatural = userStream == 'natural';
 
       final subjectsList = Get.isRegistered<SubjectsController>()

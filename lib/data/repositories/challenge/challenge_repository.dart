@@ -481,20 +481,23 @@ class ChallengeRepository {
     return list;
   }
 
-  /// Fetches challenges of ALL statuses for a specific subject (used by archive/list screen).
-  Future<List<LeaderboardChallengeModel>> fetchSubjectChallenges({
-    required int subjectId,
+  /// Fetches challenges of ALL statuses across all subjects or a specific subject (used by archive/list screen).
+  Future<List<LeaderboardChallengeModel>> fetchAllSubjectChallenges({
+    int? subjectId,
     String? stream,
   }) async {
     await _checkConnectivity();
 
-    final rows = await _sb
+    var query = _sb
         .from('leaderboard_challenges')
         .select('*, subjects(name), challenge_questions(id)')
-        .eq('subject_id', subjectId)
-        .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
-        .order('created_at', ascending: false);
+        .inFilter('status', ['live', 'scheduled', 'closed', 'archived']);
 
+    if (subjectId != null) {
+      query = query.eq('subject_id', subjectId);
+    }
+
+    final rows = await query.order('created_at', ascending: false);
     final list = (rows as List)
         .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
         .toList();
@@ -505,6 +508,12 @@ class ChallengeRepository {
     }
     return list;
   }
+
+  /// Fetches challenges of ALL statuses for a specific subject (used by archive/list screen).
+  Future<List<LeaderboardChallengeModel>> fetchSubjectChallenges({
+    required int subjectId,
+    String? stream,
+  }) => fetchAllSubjectChallenges(subjectId: subjectId, stream: stream);
 
   Future<Map<String, dynamic>> fetchChallengeBundle({
     required String challengeId,

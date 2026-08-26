@@ -292,8 +292,19 @@ class ArchiveChallengeCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      backgroundColor: dark
+                          ? Colors.white.withValues(alpha: 0.04)
+                          : const Color(0xFFF8FAFC),
+                      foregroundColor:
+                          dark ? Colors.white : const Color(0xFF0F172A),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      side: BorderSide(
+                        color: dark
+                            ? AppColors.darkBorder
+                            : AppColors.borderPrimary,
                       ),
                     ),
                     onPressed: () => Get.to(
@@ -303,10 +314,17 @@ class ArchiveChallengeCard extends StatelessWidget {
                         audience: challenge.audience,
                       ),
                     ),
-                    icon: const Icon(Iconsax.ranking_copy, size: 14),
+                    icon: const Icon(
+                      Icons.leaderboard_rounded,
+                      size: 15,
+                      color: Color(0xFFF59E0B),
+                    ),
                     label: const Text(
                       'Standings',
-                      style: TextStyle(fontSize: 11.5),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),

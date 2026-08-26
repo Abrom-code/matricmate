@@ -187,24 +187,11 @@ class ChallengeRepository {
     String? setId,
   }) async {
     await _checkConnectivity();
-    String targetSetId = setId ?? '';
-    if (targetSetId.isEmpty) {
-      final chRow = await _sb
-          .from('leaderboard_challenges')
-          .select('set_id')
-          .eq('id', challengeId)
-          .maybeSingle();
-      if (chRow != null) {
-        targetSetId = chRow['set_id']?.toString() ?? challengeId;
-      } else {
-        targetSetId = challengeId;
-      }
-    }
 
     final rows = await _sb
         .from('challenge_questions')
         .select('*')
-        .eq('set_id', targetSetId)
+        .eq('challenge_id', challengeId)
         .order('order_index', ascending: true);
 
     return (rows as List)
@@ -531,18 +518,16 @@ class ChallengeRepository {
         .eq('id', challengeId)
         .single();
 
-    final targetSetId = chRow['set_id']?.toString() ?? challengeId;
-
     final qRows = await _sb
         .from('challenge_questions')
         .select('*')
-        .eq('set_id', targetSetId)
+        .eq('challenge_id', challengeId)
         .order('order_index', ascending: true);
 
     return {
       'id': chRow['id']?.toString() ?? '',
       'challenge_id': chRow['id']?.toString() ?? '',
-      'set_id': targetSetId,
+      'set_id': chRow['set_id']?.toString() ?? challengeId,
       'subject_id': (chRow['subject_id'] as num?)?.toInt() ?? 0,
       'title': chRow['title']?.toString() ?? 'Challenge',
       'audience': chRow['audience']?.toString() ?? 'both',

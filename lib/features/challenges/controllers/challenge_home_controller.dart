@@ -38,6 +38,7 @@ class ChallengeHomeController extends GetxController {
   final isDownloading = <String, bool>{}.obs;
   final isOpeningReview = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
+  final inProgressIds = <String>{}.obs;
   final selectedCompletedSubjectId = RxnInt(); // null = Recent 3 (default)
   final selectedTabIndex = 0.obs;
   final isOffline = false.obs;
@@ -473,10 +474,12 @@ class ChallengeHomeController extends GetxController {
         await _db.deleteChallengePracticeResult(challenge.id, setId: challenge.setId);
         downloadedIds.remove(challenge.id);
         attemptedIds.remove(challenge.id);
+        inProgressIds.remove(challenge.id);
         if (Get.isRegistered<ChallengeArchiveController>()) {
           final aCtrl = Get.find<ChallengeArchiveController>();
           aCtrl.downloadedIds.remove(challenge.id);
           aCtrl.attemptedIds.remove(challenge.id);
+          aCtrl.inProgressIds.remove(challenge.id);
           if (aCtrl.isOffline.value) {
             aCtrl.challenges.removeWhere((c) => c.id == challenge.id);
           }
@@ -549,9 +552,20 @@ class ChallengeHomeController extends GetxController {
   
   void markAttemptedOrPracticed(String challengeId) {
     attemptedIds.add(challengeId);
+    inProgressIds.remove(challengeId);
   }
 
   bool isAttemptedOrPracticed(String challengeId) => attemptedIds.contains(challengeId);
+
+  bool isInProgress(String challengeId) => inProgressIds.contains(challengeId);
+
+  void markInProgress(String challengeId) {
+    inProgressIds.add(challengeId);
+  }
+
+  void clearInProgress(String challengeId) {
+    inProgressIds.remove(challengeId);
+  }
 
   Future<void> refreshAttemptStates() async {
     try {
@@ -562,6 +576,10 @@ class ChallengeHomeController extends GetxController {
       if (userId.isNotEmpty) {
         final online = await _repo.fetchUserSubmittedChallengeIds(userId);
         attemptedIds.addAll(online);
+
+        final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
+        inProgressIds.clear();
+        inProgressIds.addAll(inProg);
       }
     } catch (_) {}
   }

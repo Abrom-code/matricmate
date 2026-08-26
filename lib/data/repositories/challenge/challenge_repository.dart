@@ -558,4 +558,20 @@ class ChallengeRepository {
       return {};
     }
   }
+
+  Future<Set<String>> fetchUserInProgressChallengeIds(String userId) async {
+    try {
+      final rows = await _sb
+          .from('challenge_attempts')
+          .select('challenge_id')
+          .eq('user_id', userId)
+          .eq('status', 'in_progress');
+      return rows
+          .map((r) => r['challenge_id']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet();
+    } catch (_) {
+      return {};
+    }
+  }
 }

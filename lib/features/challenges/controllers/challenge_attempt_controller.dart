@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/data/database/database_service.dart';
@@ -101,6 +102,47 @@ class ChallengeAttemptController extends GetxController
       endsAt = data['ends_at'];
       questions.value = data['questions'] ?? [];
 
+      if (Get.isRegistered<ChallengeHomeController>()) {
+        ChallengeHomeController.instance.markInProgress(challengeId);
+      }
+      if (Get.isRegistered<ChallengeArchiveController>()) {
+        ChallengeArchiveController.instance.markInProgress(challengeId);
+      }
+
+      // Restore existing answers if resuming an ongoing attempt
+      try {
+        final existing = await _repo.fetchUserAttempt(
+          challengeId: challengeId,
+          userId: userId,
+        );
+        if (existing != null && existing['user_answers'] is Map) {
+          final map = existing['user_answers'] as Map;
+          for (final e in map.entries) {
+            if (e.key != null && e.value != null) {
+              userAnswers[e.key.toString()] = e.value.toString();
+            }
+          }
+        }
+      } catch (_) {}
+
+      // Restore last question position where user left off
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final savedIdx = prefs.getInt('last_q_index_$challengeId');
+        if (savedIdx != null && savedIdx >= 0 && savedIdx < questions.length) {
+          currentIndex.value = savedIdx;
+        } else if (userAnswers.isNotEmpty) {
+          final firstUnanswered = questions.indexWhere(
+            (q) => !userAnswers.containsKey(q.id),
+          );
+          if (firstUnanswered != -1) {
+            currentIndex.value = firstUnanswered;
+          } else {
+            currentIndex.value = (questions.length - 1).clamp(0, questions.length - 1);
+          }
+        }
+      } catch (_) {}
+
       _syncTimerWithWallClock();
       _startTimer();
     } catch (e) {
@@ -187,10 +229,25 @@ class ChallengeAttemptController extends GetxController
     submitAttempt(isAutoExpire: true);
   }
 
+  Future<void> _saveLastQuestionIndex(int index) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('last_q_index_$challengeId', index);
+    } catch (_) {}
+  }
+
+  Future<void> _clearLastQuestionIndex() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('last_q_index_$challengeId');
+    } catch (_) {}
+  }
+
   void selectChoice(String questionId, String choice) {
     if (userAnswers[questionId] == choice) return;
 
     userAnswers[questionId] = choice;
+    _saveLastQuestionIndex(currentIndex.value);
 
     // Send answer asynchronously to server
     if (attemptId != null) {
@@ -207,18 +264,21 @@ class ChallengeAttemptController extends GetxController
   void nextQuestion() {
     if (currentIndex.value < totalQuestions - 1) {
       currentIndex.value++;
+      _saveLastQuestionIndex(currentIndex.value);
     }
   }
 
   void prevQuestion() {
     if (currentIndex.value > 0) {
       currentIndex.value--;
+      _saveLastQuestionIndex(currentIndex.value);
     }
   }
 
   void goToQuestion(int index) {
     if (index >= 0 && index < totalQuestions) {
       currentIndex.value = index;
+      _saveLastQuestionIndex(index);
     }
   }
 
@@ -227,6 +287,7 @@ class ChallengeAttemptController extends GetxController
 
     isSubmitting.value = true;
     _timer?.cancel();
+    _clearLastQuestionIndex();
 
     AppFullScreenLoader.openLoadingDialog(
       isAutoExpire

@@ -467,6 +467,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                           ),
                         );
                       }
+                      final inProgress = ctrl.isInProgress(challenge.id);
                       return FilledButton.icon(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -489,10 +490,10 @@ class ArchiveChallengeCard extends StatelessWidget {
                             durationMinutes: challenge.durationMinutes,
                           ),
                         ),
-                        icon: const Icon(Iconsax.play_circle_copy, size: 14),
-                        label: const Text(
-                          'Start Challenge',
-                          style: TextStyle(
+                        icon: Icon(inProgress ? Iconsax.play_copy : Iconsax.play_circle_copy, size: 14),
+                        label: Text(
+                          inProgress ? 'Continue' : 'Start Challenge',
+                          style: const TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.bold,
                           ),

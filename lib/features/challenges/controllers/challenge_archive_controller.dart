@@ -40,6 +40,7 @@ class ChallengeArchiveController extends GetxController {
   final isDownloading = <String, bool>{}.obs;
   final isOpeningReview = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
+  final inProgressIds = <String>{}.obs;
   final isOffline = false.obs;
 
   RealtimeChannel? _realtimeChannel;
@@ -334,15 +335,29 @@ class ChallengeArchiveController extends GetxController {
       if (userId.isNotEmpty) {
         final online = await _repo.fetchUserSubmittedChallengeIds(userId);
         attemptedIds.addAll(online);
+
+        final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
+        inProgressIds.clear();
+        inProgressIds.addAll(inProg);
       }
     } catch (_) {}
   }
 
   bool isDownloaded(String challengeId) => downloadedIds.contains(challengeId);
   bool isAttemptedOrPracticed(String challengeId) => attemptedIds.contains(challengeId);
+  bool isInProgress(String challengeId) => inProgressIds.contains(challengeId);
+
+  void markInProgress(String challengeId) {
+    inProgressIds.add(challengeId);
+  }
+
+  void clearInProgress(String challengeId) {
+    inProgressIds.remove(challengeId);
+  }
 
   void markAttemptedOrPracticed(String challengeId) {
     attemptedIds.add(challengeId);
+    inProgressIds.remove(challengeId);
   }
 
   Future<void> downloadChallenge(LeaderboardChallengeModel challenge) async {
@@ -422,10 +437,12 @@ class ChallengeArchiveController extends GetxController {
         await _db.deleteChallengePracticeResult(challenge.id, setId: challenge.setId);
         downloadedIds.remove(challenge.id);
         attemptedIds.remove(challenge.id);
+        inProgressIds.remove(challenge.id);
         if (Get.isRegistered<ChallengeHomeController>()) {
           final hCtrl = Get.find<ChallengeHomeController>();
           hCtrl.downloadedIds.remove(challenge.id);
           hCtrl.attemptedIds.remove(challenge.id);
+          hCtrl.inProgressIds.remove(challenge.id);
           if (hCtrl.isOffline.value) {
             hCtrl.completedChallenges.removeWhere((c) => c.id == challenge.id);
           }

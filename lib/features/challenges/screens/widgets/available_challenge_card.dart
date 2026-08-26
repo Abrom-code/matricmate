@@ -469,30 +469,33 @@ class AvailableChallengeCard extends StatelessWidget {
                                           );
                                   },
                                 )
-                              : FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
-                                    minimumSize: const Size(0, 31),
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                              : Obx(() {
+                                  final inProgress = ctrl.isInProgress(challenge.id);
+                                  return FilledButton.icon(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                                      minimumSize: const Size(0, 31),
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
-                                  ),
-                                  onPressed: () =>
-                                      ctrl.onChallengeTapped(challenge),
-                                  icon: const Icon(
-                                    Iconsax.play_circle_copy,
-                                    size: 14,
-                                  ),
-                                  label: const Text(
-                                    'Start Challenge',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 11.5,
+                                    onPressed: () =>
+                                        ctrl.onChallengeTapped(challenge),
+                                    icon: Icon(
+                                      inProgress ? Iconsax.play_copy : Iconsax.play_circle_copy,
+                                      size: 14,
                                     ),
-                                  ),
-                                ),
+                                    label: Text(
+                                      inProgress ? 'Continue' : 'Start Challenge',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11.5,
+                                      ),
+                                    ),
+                                  );
+                                }),
                         ),
                       ],
                     );

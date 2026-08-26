@@ -1,6 +1,6 @@
 // supabase/functions/challenge-scheduler/index.ts
 // Cron job edge function: flips scheduled -> live at starts_at, and live -> closed at ends_at.
-// Triggers notifications on status transitions.
+// Triggers notifications on status transitions (only if not already notified).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -103,7 +103,6 @@ async function getAccessToken(): Promise<string | null> {
 
 async function sendFcmToStream(
   stream: string | null,
-  notification: { title: string; body: string },
   data: Record<string, string>,
 ) {
   try {
@@ -128,6 +127,10 @@ async function sendFcmToStream(
     const accessToken = await getAccessToken();
     if (!accessToken) return;
 
+    console.log(`Scheduler FCM: sending to ${tokens.length} token(s), stream=${stream ?? "all"}`);
+
+    // Data-only FCM messages — no notification field.
+    // The Flutter app handles display via background handler and foreground listener.
     const batchSize = 50;
     for (let i = 0; i < tokens.length; i += batchSize) {
       const batch = tokens.slice(i, i + batchSize);
@@ -144,25 +147,18 @@ async function sendFcmToStream(
               body: JSON.stringify({
                 message: {
                   token,
-                  notification,
                   data,
                   android: {
                     priority: "high",
-                    notification: {
-                      channel_id: "matricmate_default",
-                      notification_priority: "PRIORITY_MAX",
-                      default_sound: true,
-                      default_vibrate_timings: true,
-                    },
                   },
                   apns: {
-                    headers: { "apns-priority": "10" },
+                    headers: {
+                      "apns-priority": "10",
+                      "apns-push-type": "background",
+                    },
                     payload: {
                       aps: {
-                        alert: {
-                          title: notification.title,
-                          body: notification.body,
-                        },
+                        "content-available": 1,
                         sound: "default",
                       },
                     },
@@ -200,6 +196,19 @@ Deno.serve(async (req: Request) => {
       console.log(`Flipped ${newlyLive.length} challenges to live`);
 
       for (const ch of newlyLive) {
+        // Check if admin already sent a notification for this challenge
+        const { data: existing } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("type", "challenge")
+          .contains("payload", { challenge_id: String(ch.id) })
+          .limit(1);
+
+        if (existing && existing.length > 0) {
+          console.log(`Skipping notification for challenge ${ch.id} — admin already notified (notification ${existing[0].id})`);
+          continue;
+        }
+
         const { data: subject } = await supabase
           .from("subjects")
           .select("name")
@@ -229,14 +238,15 @@ Deno.serve(async (req: Request) => {
           .select("id")
           .single();
 
-        // Send FCM push to student devices
+        // Send data-only FCM push to student devices
         await sendFcmToStream(
           targetStream,
-          { title: notifTitle, body: notifBody },
           {
             type: "challenge_live",
             challenge_id: String(ch.id),
             notification_id: String(inserted?.id ?? ""),
+            title: notifTitle,
+            body: notifBody,
           },
         );
       }
@@ -279,11 +289,12 @@ Deno.serve(async (req: Request) => {
 
         await sendFcmToStream(
           targetStream,
-          { title: notifTitle, body: notifBody },
           {
             type: "challenge_closed",
             challenge_id: String(ch.id),
             notification_id: String(inserted?.id ?? ""),
+            title: notifTitle,
+            body: notifBody,
           },
         );
       }

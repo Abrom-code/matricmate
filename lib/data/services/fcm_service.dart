@@ -24,9 +24,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     );
   }
 
-  // Skip notification messages — FCM SDK already shows them
-  if (message.notification != null) return;
-
+  // All FCM messages are data-only (no notification field), so we always
+  // need to show a local notification manually.
   // Data-only message: show OS banner manually
   const channel = AndroidNotificationChannel(
     'matricmate_default',
@@ -158,11 +157,13 @@ class FcmService {
 
     await requestPermissionIfNeeded();
 
-    // iOS: show heads-up banner in foreground
+    // DISABLE foreground notification presentation — we send data-only FCM
+    // messages, so there's nothing for the SDK to auto-show. All display is
+    // handled manually in _onForegroundMessage and the Realtime listener.
     await _messaging.setForegroundNotificationPresentationOptions(
-      alert: true,
+      alert: false,
       badge: true,
-      sound: true,
+      sound: false,
     );
 
     await _localNotifications

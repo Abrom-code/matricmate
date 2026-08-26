@@ -296,7 +296,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
           body: RefreshIndicator(
             color: AppColors.primary,
-            onRefresh: () => ctrl.loadNotifications(syncRemote: true),
+            onRefresh: ctrl.refreshAndMarkAllRead,
             child: Obx(() {
               if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
                 return const AppCircularLoading(title: 'Loading notifications...');

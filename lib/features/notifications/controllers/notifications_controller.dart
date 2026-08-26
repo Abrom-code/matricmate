@@ -108,6 +108,12 @@ class NotificationsController extends GetxController {
     await _repo.markAllRead(_userId);
   }
 
+  /// Pull-to-refresh: Syncs from remote and automatically marks all as read.
+  Future<void> refreshAndMarkAllRead() async {
+    await loadNotifications(syncRemote: true);
+    await markAllRead();
+  }
+
   Future<void> insertFromPush(AppNotification n) async {
     await _repo.insertLocal(n);
     await loadNotifications();

@@ -1348,18 +1348,33 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon ?? Iconsax.cup_copy,
-              size: 48,
-              color: dark ? Colors.white24 : AppColors.textSecondary,
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: dark ? 0.18 : 0.08),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: dark ? 0.30 : 0.18),
+                  width: 1.5,
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  icon ?? Iconsax.cup_copy,
+                  size: 36,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
             const SizedBox(height: AppSizes.md),
             Text(
               title,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14.5,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                letterSpacing: -0.2,
               ),
             ),
             const SizedBox(height: 6),
@@ -1367,8 +1382,9 @@ class _EmptyState extends StatelessWidget {
               subtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12,
-                color: dark ? Colors.white60 : AppColors.textSecondary,
+                fontSize: 12.5,
+                height: 1.45,
+                color: dark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
           ],
@@ -1398,16 +1414,22 @@ class _OfflineAvailableState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 68,
-              height: 68,
+              width: 76,
+              height: 76,
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+                color: Colors.amber.withValues(alpha: dark ? 0.18 : 0.10),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.amber.withValues(alpha: dark ? 0.40 : 0.25),
+                  width: 1.5,
+                ),
               ),
-              child: const Icon(
-                Icons.wifi_off_rounded,
-                size: 32,
-                color: Colors.amber,
+              child: const Center(
+                child: Icon(
+                  Icons.wifi_off_rounded,
+                  size: 36,
+                  color: Colors.amber,
+                ),
               ),
             ),
             const SizedBox(height: AppSizes.md),
@@ -1415,8 +1437,9 @@ class _OfflineAvailableState extends StatelessWidget {
               'Connect to Internet & Refresh',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 15.5,
+                fontWeight: FontWeight.w800,
+                fontSize: 16.5,
+                letterSpacing: -0.3,
               ),
             ),
             const SizedBox(height: 8),
@@ -1425,55 +1448,50 @@ class _OfflineAvailableState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12.5,
-                height: 1.4,
-                color: dark ? Colors.white60 : AppColors.textSecondary,
+                height: 1.45,
+                color: dark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: AppSizes.lg),
             Obx(() {
               final isBusy = ctrl.isRefreshing.value || ctrl.isLoading.value;
-              return FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 11,
+              return SizedBox(
+                height: 44,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  onPressed: isBusy ? null : () => ctrl.loadAllChallenges(isManual: true),
+                  icon: isBusy
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.refresh_rounded, size: 18),
+                  label: Text(
+                    isBusy ? 'Refreshing...' : 'Connect & Refresh',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
                   ),
                 ),
-                onPressed: isBusy ? null : () => ctrl.loadAllChallenges(isManual: true),
-                child: isBusy
-                    ? const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppCircularButtonLoading(color: Colors.white),
-                          SizedBox(width: 8),
-                          Text(
-                            'Refreshing...',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      )
-                    : const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.refresh_rounded, size: 18),
-                          SizedBox(width: 6),
-                          Text(
-                            'Connect & Refresh',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
               );
             }),
           ],

@@ -518,16 +518,16 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0284C7),
                     foregroundColor: Colors.white,
+                    side: const BorderSide(
+                      color: Color(0xFF0284C7),
+                      width: 1.5,
+                    ),
                     disabledBackgroundColor:
                         const Color(0xFF0284C7).withValues(alpha: 0.7),
                     disabledForegroundColor: Colors.white70,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
-                      side: const BorderSide(
-                        color: Color(0xFF0284C7),
-                        width: 1.5,
-                      ),
                     ),
                   ),
                   child: _isNavigating
@@ -561,6 +561,12 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                         ? const Color(0xFFD97706) // Standings Trophy Amber
                         : const Color(0xFF2563EB), // Challenge Royal Blue
                     foregroundColor: Colors.white,
+                    side: BorderSide(
+                      color: _isChallengeClosed
+                          ? const Color(0xFFD97706)
+                          : const Color(0xFF2563EB),
+                      width: 1.5,
+                    ),
                     disabledBackgroundColor: (_isChallengeClosed
                             ? const Color(0xFFD97706)
                             : const Color(0xFF2563EB))
@@ -569,12 +575,6 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(
-                        color: _isChallengeClosed
-                            ? const Color(0xFFD97706)
-                            : const Color(0xFF2563EB),
-                        width: 1.5,
-                      ),
                     ),
                   ),
                   child: (_isNavigating || _isLoadingChallenge)
@@ -628,6 +628,14 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                             ? const Color(0xFFEF4444)
                             : const Color(0xFFF59E0B),
                     foregroundColor: Colors.white,
+                    side: BorderSide(
+                      color: _isApproved
+                          ? const Color(0xFF10B981)
+                          : _isRejected
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFFF59E0B),
+                      width: 1.5,
+                    ),
                     disabledBackgroundColor: (_isApproved
                             ? const Color(0xFF10B981)
                             : _isRejected
@@ -638,14 +646,6 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(
-                        color: _isApproved
-                            ? const Color(0xFF10B981)
-                            : _isRejected
-                                ? const Color(0xFFEF4444)
-                                : const Color(0xFFF59E0B),
-                        width: 1.5,
-                      ),
                     ),
                   ),
                   child: _isNavigating

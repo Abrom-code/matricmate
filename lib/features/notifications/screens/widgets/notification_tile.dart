@@ -113,6 +113,12 @@ class NotificationTile extends StatelessWidget {
   }
 
   Future<void> _onTap() async {
+    final ctrl = NotificationsController.instance;
+    if (ctrl.isSelectionMode) {
+      ctrl.toggleSelection(notification.id);
+      return;
+    }
+
     unawaited(NotificationsController.instance.markRead(notification.id));
 
     if (_isChallenge) {
@@ -123,10 +129,10 @@ class NotificationTile extends StatelessWidget {
       if (challengeId != null && challengeId.isNotEmpty) {
         // 1. Check in-memory controller for 0ms instant match
         if (Get.isRegistered<ChallengeHomeController>()) {
-          final ctrl = ChallengeHomeController.instance;
-          matchedChallenge = ctrl.completedChallenges.firstWhereOrNull(
+          final hCtrl = ChallengeHomeController.instance;
+          matchedChallenge = hCtrl.completedChallenges.firstWhereOrNull(
             (c) => c.id == challengeId || c.setId == challengeId,
-          ) ?? ctrl.availableChallenges.firstWhereOrNull(
+          ) ?? hCtrl.availableChallenges.firstWhereOrNull(
             (c) => c.id == challengeId || c.setId == challengeId,
           );
         }
@@ -170,67 +176,113 @@ class NotificationTile extends StatelessWidget {
     final iconData = _typeIcon;
     final accent = _accentColor();
     final isUnread = !notification.isRead;
+    final ctrl = NotificationsController.instance;
 
-    return Dismissible(
-      key: ValueKey(notification.id),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) => onDismissed(),
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEF4444),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.delete_outline_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-            SizedBox(width: 6),
-            Text(
-              'Delete',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-      child: GestureDetector(
-        onTap: _onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return Obx(() {
+      final isSelected = ctrl.selectedIds.contains(notification.id);
+      final isSelectionMode = ctrl.isSelectionMode;
+
+      return Dismissible(
+        key: ValueKey(notification.id),
+        direction: isSelectionMode
+            ? DismissDirection.none
+            : DismissDirection.endToStart,
+        onDismissed: (_) => onDismissed(),
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
-            color: isUnread
-                ? (dark
-                    ? const Color(0xFF1E232E)
-                    : const Color(0xFFF8FAFC))
-                : (dark ? AppColors.darkCard : AppColors.white),
+            color: const Color(0xFFEF4444),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isUnread
-                  ? accent.withValues(alpha: dark ? 0.40 : 0.28)
-                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
-              width: isUnread ? 1.4 : 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              SizedBox(width: 6),
+              Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ── Type icon squircle ─────────────────────────────────
+        ),
+        child: GestureDetector(
+          onTap: _onTap,
+          onLongPress: () => ctrl.toggleSelection(notification.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: dark ? 0.22 : 0.10)
+                  : (isUnread
+                      ? (dark
+                          ? const Color(0xFF1E232E)
+                          : const Color(0xFFF8FAFC))
+                      : (dark ? AppColors.darkCard : AppColors.white)),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.primary
+                    : (isUnread
+                        ? accent.withValues(alpha: dark ? 0.40 : 0.28)
+                        : (dark
+                            ? AppColors.darkBorder
+                            : const Color(0xFFE2E8F0))),
+                width: (isSelected || isUnread) ? 1.4 : 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ── Multi-select Checkbox ───────────────────────────
+                if (isSelectionMode) ...[
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : (dark ? Colors.white38 : Colors.black26),
+                        width: 2,
+                      ),
+                    ),
+                    child: isSelected
+                        ? const Center(
+                            child: Icon(
+                              Icons.check_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          )
+                        : null,
+                  ),
+                ],
+
+                // ── Type icon squircle ─────────────────────────────────
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -380,7 +432,8 @@ class NotificationTile extends StatelessWidget {
         ),
       ),
     );
-  }
+  });
+}
 }
 
 // ── Type icon helper ──────────────────────────────────────────────────────────

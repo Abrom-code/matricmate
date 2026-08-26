@@ -114,178 +114,304 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return widgets;
   }
 
+    void _deleteSelectedWithUndo() {
+    final count = ctrl.selectedIds.length;
+    if (count == 0) return;
+
+    ctrl.deleteSelected();
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            '$count notification${count == 1 ? '' : 's'} deleted',
+          ),
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          action: SnackBarAction(
+            label: 'Undo',
+            textColor: const Color(0xFF5EEAD4),
+            onPressed: () => ctrl.undoDeleteSelected(),
+          ),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
-    return Scaffold(
-      backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
-      appBar: ModernAppbarWithBuilder(
-        title: 'Notifications',
-        showBackArrow: true,
-        subtitleBuilder: (_) => Obx(() {
-          final unread = ctrl.unreadCount.value;
-          final total = ctrl.notifications.length;
-          if (total == 0) {
-            return const Text(
-              'All caught up',
-              style: TextStyle(
-                color: Color(0xFFD1FAE5),
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
-              ),
-            );
+    return Obx(() {
+      final isSelectionMode = ctrl.isSelectionMode;
+      final selectedCount = ctrl.selectedIds.length;
+      final totalCount = ctrl.notifications.length;
+      final allSelected = selectedCount > 0 && selectedCount == totalCount;
+
+      return PopScope(
+        canPop: !isSelectionMode,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && isSelectionMode) {
+            ctrl.clearSelection();
           }
-          return Text(
-            unread > 0 ? '$unread unread · $total total' : '$total notifications',
-            style: const TextStyle(
-              color: Color(0xFFD1FAE5),
-              fontSize: 11.5,
-              fontWeight: FontWeight.w500,
-            ),
-          );
-        }),
-        actions: [
-          Obx(() {
-            if (ctrl.notifications.isEmpty) return const SizedBox.shrink();
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (ctrl.unreadCount.value > 0) ...[
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: ctrl.markAllRead,
-                      borderRadius: BorderRadius.circular(10),
+        },
+        child: Scaffold(
+          backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
+          appBar: isSelectionMode
+              ? ModernAppbarWithBuilder(
+                  title: '$selectedCount Selected',
+                  showBackArrow: false,
+                  leadingIcon: Icons.close_rounded,
+                  leadingOnPressed: ctrl.clearSelection,
+                  subtitleBuilder: (_) => Text(
+                    allSelected ? 'All notifications selected' : '$totalCount total',
+                    style: const TextStyle(
+                      color: Color(0xFFD1FAE5),
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  actions: [
+                    // Toggle Select All / Deselect All
+                    IconButton(
+                      tooltip: allSelected ? 'Deselect All' : 'Select All',
+                      icon: Icon(
+                        allSelected
+                            ? Icons.deselect_rounded
+                            : Icons.select_all_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: allSelected ? ctrl.clearSelection : ctrl.selectAll,
+                    ),
+                    // Mark Selected as Read
+                    IconButton(
+                      tooltip: 'Mark as read',
+                      icon: const Icon(
+                        Icons.mark_email_read_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: ctrl.markSelectedAsRead,
+                    ),
+                    // Delete Selected
+                    IconButton(
+                      tooltip: 'Delete selected',
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: _deleteSelectedWithUndo,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                )
+              : ModernAppbarWithBuilder(
+                  title: 'Notifications',
+                  showBackArrow: true,
+                  subtitleBuilder: (_) => Obx(() {
+                    final unread = ctrl.unreadCount.value;
+                    final total = ctrl.notifications.length;
+                    if (total == 0) {
+                      return const Text(
+                        'All caught up',
+                        style: TextStyle(
+                          color: Color(0xFFD1FAE5),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }
+                    return Text(
+                      unread > 0 ? '$unread unread · $total total' : '$total notifications',
+                      style: const TextStyle(
+                        color: Color(0xFFD1FAE5),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    );
+                  }),
+                  actions: [
+                    Obx(() {
+                      if (ctrl.notifications.isEmpty) return const SizedBox.shrink();
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (ctrl.unreadCount.value > 0) ...[
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: ctrl.markAllRead,
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.done_all_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _confirmClearAll(context),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.delete_sweep_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+          body: RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () => ctrl.loadNotifications(syncRemote: true),
+            child: Obx(() {
+              if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
+                return const AppCircularLoading(title: 'Loading notifications...');
+              }
+
+              if (ctrl.notifications.isEmpty) {
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    const SizedBox(height: 80),
+                    Center(
                       child: Container(
-                        width: 34,
-                        height: 34,
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
+                          color: AppColors.primary.withValues(alpha: dark ? 0.20 : 0.10),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: dark ? 0.35 : 0.20),
+                            width: 1.5,
+                          ),
                         ),
                         child: const Center(
                           child: Icon(
-                            Icons.done_all_rounded,
-                            color: Colors.white,
-                            size: 18,
+                            Icons.notifications_none_rounded,
+                            size: 40,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _confirmClearAll(context),
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.delete_sweep_rounded,
-                          color: Colors.white,
-                          size: 18,
+                    const SizedBox(height: 20),
+                    const Center(
+                      child: Text(
+                        'All Caught Up!',
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
                         ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-              ],
-            );
-          }),
-        ],
-      ),
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: () => ctrl.loadNotifications(syncRemote: true),
-        child: Obx(() {
-          if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
-            return const AppCircularLoading(title: 'Loading notifications...');
-          }
-
-          if (ctrl.notifications.isEmpty) {
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                const SizedBox(height: 100),
-                Center(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: dark ? 0.22 : 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.notifications_none_rounded,
-                        size: 36,
-                        color: AppColors.primary,
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Text(
+                        'You have no notifications right now.\nCheck back later for test announcements, updates, and results.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.5,
+                          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                const Center(
-                  child: Text(
-                    'All Caught Up!',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
+                    const SizedBox(height: 28),
+                    Center(
+                      child: Obx(() {
+                        final isBusy = ctrl.isLoading.value;
+                        return SizedBox(
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            onPressed: isBusy
+                                ? null
+                                : () => ctrl.loadNotifications(syncRemote: true),
+                            icon: isBusy
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.sync_rounded, size: 18),
+                            label: Text(
+                              isBusy ? 'Checking...' : 'Check for Updates',
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 22,
+                                vertical: 10,
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Text(
-                    'You have no notifications right now. Check back later for test announcements, updates, and results.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.45,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () => ctrl.loadNotifications(syncRemote: true),
-                    icon: const Icon(Icons.sync_rounded, size: 16),
-                    label: const Text('Check for Updates'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }
+                  ],
+                );
+              }
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-            children: _buildGroupedList(ctrl.notifications),
-          );
-        }),
-      ),
-    );
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                children: _buildGroupedList(ctrl.notifications),
+              );
+            }),
+          ),
+        ),
+      );
+    });
   }
 }
 

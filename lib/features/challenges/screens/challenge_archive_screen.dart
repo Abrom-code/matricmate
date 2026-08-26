@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
@@ -442,28 +443,71 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                           fontSize: 14.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Obx(() {
-                        final isDone = _ctrl.isAttemptedOrPracticed(challenge.id);
-                        final subtitleText = isDone
-                            ? 'You have completed this challenge. Tap Review to see your answers & explanations.'
-                            : isLive
-                                ? 'This challenge is live! Tap to start your attempt now.'
-                                : isScheduled
-                                    ? 'This challenge is upcoming. Get ready!'
-                                    : 'Practice offline at your own pace with answers & explanations.';
-                        return Text(
-                          subtitleText,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: isDone
-                                ? const Color(0xFF10B981)
-                                : isLive
-                                    ? AppColors.primary
-                                    : AppColors.textSecondary,
-                          ),
-                        );
-                      }),
+                      // Meta Details (Duration, Questions, Date)
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 4,
+                        children: [
+                          if (challenge.durationMinutes > 0)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Iconsax.timer_1_copy,
+                                  size: 13,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${challenge.durationMinutes} mins',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: dark ? Colors.white70 : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (challenge.questionCount > 0)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Iconsax.document_copy,
+                                  size: 13,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${challenge.questionCount} Qs',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: dark ? Colors.white60 : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (challenge.endsAt != null)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Iconsax.calendar_tick_copy,
+                                  size: 13,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  DateFormat('MMM dd, yyyy').format(challenge.endsAt!),
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: dark ? Colors.white60 : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
                       const SizedBox(height: AppSizes.md),
 
                       // Actions (Leaderboard + Review / Practice / Download / Unlock)

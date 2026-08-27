@@ -1,8 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_leaderboard_entry.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
@@ -104,11 +106,19 @@ class ChallengeRepository {
 
     if (res is Map<String, dynamic>) {
       final rawQuestions = res['questions'];
-      List<ChallengeQuestionModel> questions = [];
+      final List<ChallengeQuestionModel> questions = [];
       if (rawQuestions is List) {
-        questions = rawQuestions
-            .map((q) => ChallengeQuestionModel.fromJson(q as Map<String, dynamic>))
-            .toList();
+        for (final item in rawQuestions) {
+          if (item is Map<String, dynamic>) {
+            final q = ChallengeQuestionModel.fromJson(item);
+            if (q.passageId != null && q.passage == null) {
+              final p = await getPassage(q.passageId);
+              questions.add(q.copyWith(passage: p));
+            } else {
+              questions.add(q);
+            }
+          }
+        }
       }
 
       return {
@@ -188,15 +198,25 @@ class ChallengeRepository {
   }) async {
     await _checkConnectivity();
 
-    final rows = await _sb
-        .from('challenge_questions')
-        .select('*')
-        .eq('challenge_id', challengeId)
-        .order('order_index', ascending: true);
+    var query = _sb.from('challenge_questions').select('*');
+    if (setId != null && setId.isNotEmpty) {
+      query = query.or('challenge_id.eq.$challengeId,set_id.eq.$setId');
+    } else {
+      query = query.eq('challenge_id', challengeId);
+    }
+    final rows = await query.order('order_index', ascending: true);
 
-    return (rows as List)
-        .map((r) => ChallengeQuestionModel.fromJson(r as Map<String, dynamic>))
-        .toList();
+    final list = <ChallengeQuestionModel>[];
+    for (final r in rows) {
+      final q = ChallengeQuestionModel.fromJson(r);
+      if (q.passageId != null && q.passage == null) {
+        final p = await getPassage(q.passageId);
+        list.add(q.copyWith(passage: p));
+      } else {
+        list.add(q);
+      }
+    }
+    return list;
   }
 
   Future<Map<String, dynamic>?> fetchUserAttempt({
@@ -515,6 +535,37 @@ class ChallengeRepository {
     String? stream,
   }) => fetchAllSubjectChallenges(subjectId: subjectId, stream: stream);
 
+  final Map<int, PassageModel> _passageCache = {};
+
+  Future<PassageModel?> getPassage(int? passageId) async {
+    if (passageId == null) return null;
+    if (_passageCache.containsKey(passageId)) return _passageCache[passageId];
+
+    // 1. Try local SQLite
+    try {
+      final local = await DatabaseService.instance.getPassage(passageId);
+      if (local.id != -1 && local.content.isNotEmpty && local.content != 'No passage found') {
+        _passageCache[passageId] = local;
+        return local;
+      }
+    } catch (_) {}
+
+    // 2. Try Supabase
+    try {
+      final row = await _sb.from('passages').select().eq('id', passageId).maybeSingle();
+      if (row != null) {
+        final p = PassageModel.fromJson(row);
+        _passageCache[passageId] = p;
+        try {
+          await DatabaseService.instance.insetData('passages', p.toMap());
+        } catch (_) {}
+        return p;
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
   Future<Map<String, dynamic>> fetchChallengeBundle({
     required String challengeId,
     required String userId,
@@ -533,6 +584,19 @@ class ChallengeRepository {
         .eq('challenge_id', challengeId)
         .order('order_index', ascending: true);
 
+    final questionsList = <Map<String, dynamic>>[];
+    for (final rawQ in qRows) {
+      final qMap = Map<String, dynamic>.from(rawQ);
+      final pId = (qMap['passage_id'] as num?)?.toInt();
+      if (pId != null) {
+        final p = await getPassage(pId);
+        if (p != null) {
+          qMap['passage'] = p.toMap();
+        }
+      }
+      questionsList.add(qMap);
+    }
+
     return {
       'id': chRow['id']?.toString() ?? '',
       'challenge_id': chRow['id']?.toString() ?? '',
@@ -540,9 +604,10 @@ class ChallengeRepository {
       'subject_id': (chRow['subject_id'] as num?)?.toInt() ?? 0,
       'title': chRow['title']?.toString() ?? 'Challenge',
       'audience': chRow['audience']?.toString() ?? 'both',
-      'questions': qRows,
+      'questions': questionsList,
     };
   }
+
   Future<Set<String>> fetchUserSubmittedChallengeIds(String userId) async {
     try {
       final rows = await _sb

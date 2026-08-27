@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:matricmate/features/exam/models/passage_model.dart';
 
 class ChallengeQuestionModel {
   final String id;
@@ -11,6 +12,8 @@ class ChallengeQuestionModel {
   final String explanationEn;
   final String explanationAm;
   final String? imageUrl;
+  final int? passageId;
+  final PassageModel? passage;
 
   ChallengeQuestionModel({
     required this.id,
@@ -23,6 +26,8 @@ class ChallengeQuestionModel {
     this.explanationEn = '',
     this.explanationAm = '',
     this.imageUrl,
+    this.passageId,
+    this.passage,
   });
 
   bool get hasExplanation => explanation.isNotEmpty || explanationEn.isNotEmpty || explanationAm.isNotEmpty;
@@ -54,6 +59,13 @@ class ChallengeQuestionModel {
     final rawExp = json['explanation']?.toString() ?? '';
     final defaultExp = rawExp.isNotEmpty ? rawExp : (expEn.isNotEmpty ? expEn : expAm);
 
+    PassageModel? parsedPassage;
+    if (json['passage'] is Map<String, dynamic>) {
+      parsedPassage = PassageModel.fromJson(json['passage'] as Map<String, dynamic>);
+    } else if (json['passages'] is Map<String, dynamic>) {
+      parsedPassage = PassageModel.fromJson(json['passages'] as Map<String, dynamic>);
+    }
+
     return ChallengeQuestionModel(
       id: json['id']?.toString() ?? '',
       setId: json['set_id']?.toString() ?? '',
@@ -65,6 +77,8 @@ class ChallengeQuestionModel {
       explanationEn: expEn.isNotEmpty ? expEn : rawExp,
       explanationAm: expAm,
       imageUrl: json['image_url']?.toString(),
+      passageId: (json['passage_id'] as num?)?.toInt(),
+      passage: parsedPassage,
     );
   }
 
@@ -81,6 +95,8 @@ class ChallengeQuestionModel {
       if (explanationEn.isNotEmpty) 'explanation_en': explanationEn,
       if (explanationAm.isNotEmpty) 'explanation_am': explanationAm,
       'image_url': imageUrl,
+      if (passageId != null) 'passage_id': passageId,
+      if (passage != null) 'passage': passage!.toMap(),
     };
   }
 
@@ -95,6 +111,8 @@ class ChallengeQuestionModel {
     String? explanationEn,
     String? explanationAm,
     String? imageUrl,
+    int? passageId,
+    PassageModel? passage,
   }) {
     return ChallengeQuestionModel(
       id: id ?? this.id,
@@ -107,6 +125,8 @@ class ChallengeQuestionModel {
       explanationEn: explanationEn ?? this.explanationEn,
       explanationAm: explanationAm ?? this.explanationAm,
       imageUrl: imageUrl ?? this.imageUrl,
+      passageId: passageId ?? this.passageId,
+      passage: passage ?? this.passage,
     );
   }
 }

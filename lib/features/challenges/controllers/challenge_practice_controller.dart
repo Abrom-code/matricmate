@@ -5,6 +5,7 @@ import 'package:matricmate/data/repositories/challenge/challenge_repository.dart
 import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
@@ -25,6 +26,24 @@ class ChallengePracticeController extends GetxController {
   final isLoading = true.obs;
   final questions = <ChallengeQuestionModel>[].obs;
   final currentIndex = 0.obs;
+
+  // ── Passage States ──────────────────────────────────────────────────────────
+  final isFullScreenPassage = false.obs;
+  final isPassageHidden = false.obs;
+  final textScale = 1.0.obs;
+
+  void increaseTextScale() =>
+      textScale.value < 1.4 ? textScale.value += 0.1 : null;
+  void decreaseTextScale() =>
+      textScale.value > 0.8 ? textScale.value -= 0.1 : null;
+  void togglePassage() => isPassageHidden.value = !isPassageHidden.value;
+  void togglePassageSize() =>
+      isFullScreenPassage.value = !isFullScreenPassage.value;
+
+  PassageModel? get currentPassage =>
+      questions.isNotEmpty && currentIndex.value < questions.length
+          ? questions[currentIndex.value].passage
+          : null;
 
   // Selected answers: { question_id: selected_choice_index_or_text }
   final userAnswers = <String, String>{}.obs;
@@ -49,15 +68,28 @@ class ChallengePracticeController extends GetxController {
   Future<void> loadQuestions() async {
     isLoading.value = true;
     try {
+      List<ChallengeQuestionModel> loaded = [];
       final rows = await _db.getDownloadedChallengeQuestions(challengeId);
       if (rows.isNotEmpty) {
-        questions.value = rows
+        loaded = rows
             .map((r) => ChallengeQuestionModel.fromJson(r))
             .toList();
       } else {
         // Fallback to online repository if not downloaded
-        questions.value = await _repo.fetchQuestionsForReview(challengeId);
+        loaded = await _repo.fetchQuestionsForReview(challengeId);
       }
+
+      // Ensure any question with passageId has its passage loaded
+      final fullList = <ChallengeQuestionModel>[];
+      for (final q in loaded) {
+        if (q.passageId != null && q.passage == null) {
+          final p = await _repo.getPassage(q.passageId);
+          fullList.add(q.copyWith(passage: p));
+        } else {
+          fullList.add(q);
+        }
+      }
+      questions.value = fullList;
 
       // Check if past practice exists to restore answers
       final pastPractice = await _db.getChallengePracticeResult(challengeId);

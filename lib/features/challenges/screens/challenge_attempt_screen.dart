@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_attempt_controller.dart';
+import 'package:matricmate/features/challenges/screens/widgets/challenge_passage_container.dart';
+import 'package:matricmate/features/challenges/screens/widgets/challenge_passage_layout_ctrl.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -130,6 +132,20 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
           actions: [
+            // ── Reading Passage Toggle (if question has a passage) ──
+            Obx(() {
+              final passage = _ctrl.currentPassage;
+              if (passage == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(right: AppSizes.xs),
+                child: ChallengePassageLayoutCtrl(
+                  passage: passage,
+                  isHidden: _ctrl.isPassageHidden,
+                  onToggle: _ctrl.togglePassage,
+                ),
+              );
+            }),
+
             // ── Live Timer Badge ────────────────────────────────────
             Obx(() {
               final isUrgent = _ctrl.remainingSeconds.value < 300; // < 5 mins
@@ -180,6 +196,7 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
 
           final currentQ = _ctrl.questions[_ctrl.currentIndex.value];
           final selectedChoice = _ctrl.userAnswers[currentQ.id];
+          final currentPassage = _ctrl.currentPassage;
 
           return Column(
             children: [
@@ -191,38 +208,58 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
 
-              // ── Question Header Info ──────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: AppSizes.sm),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Question ${_ctrl.currentIndex.value + 1} of ${_ctrl.totalQuestions}',
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                    ),
-                    Text(
-                      '${_ctrl.answeredCount} Answered',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ── Question Box Template ────────────────────────────
+              // ── Question & Passage Scrollable Content ─────────────
               Expanded(
                 child: SingleChildScrollView(
                   controller: _scrollCtrl,
                   padding: const EdgeInsets.all(AppSizes.md),
-                  child: ChallengeQuestionBox(
-                    key: ValueKey('attempt_box_${currentQ.id}'),
-                    question: currentQ,
-                    orderIndex: _ctrl.currentIndex.value + 1,
-                    totalQuestions: _ctrl.totalQuestions,
-                    selectedChoice: selectedChoice,
-                    onSelectChoice: (choice) => _ctrl.selectChoice(currentQ.id, choice),
-                    isChecked: false,
-                    showExplanation: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Optional Passage Container (for mixed challenges) ─
+                      if (currentPassage != null)
+                        ChallengePassageContainer(
+                          passage: currentPassage,
+                          isFullScreen: _ctrl.isFullScreenPassage,
+                          isHidden: _ctrl.isPassageHidden,
+                          textScale: _ctrl.textScale,
+                          outerScrollController: _scrollCtrl,
+                          onToggleSize: _ctrl.togglePassageSize,
+                          onToggleHidden: _ctrl.togglePassage,
+                          onIncreaseScale: _ctrl.increaseTextScale,
+                          onDecreaseScale: _ctrl.decreaseTextScale,
+                        ),
+
+                      // ── Question Header Info ──────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSizes.sm, top: AppSizes.xs),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Question ${_ctrl.currentIndex.value + 1} of ${_ctrl.totalQuestions}',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                            ),
+                            Text(
+                              '${_ctrl.answeredCount} Answered',
+                              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ── Question Box Template ────────────────────────────
+                      ChallengeQuestionBox(
+                        key: ValueKey('attempt_box_${currentQ.id}'),
+                        question: currentQ,
+                        orderIndex: _ctrl.currentIndex.value + 1,
+                        totalQuestions: _ctrl.totalQuestions,
+                        selectedChoice: selectedChoice,
+                        onSelectChoice: (choice) => _ctrl.selectChoice(currentQ.id, choice),
+                        isChecked: false,
+                        showExplanation: false,
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -9,6 +9,7 @@ import 'package:matricmate/features/exam/screens/result/widgets/correct_check_bu
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// Reusable app-standard question template box for Challenge attempts, practice, and review.
 class ChallengeQuestionBox extends StatefulWidget {
@@ -22,6 +23,7 @@ class ChallengeQuestionBox extends StatefulWidget {
     this.isChecked = false,
     this.showExplanation = false,
     this.initialExplanationExpanded = false,
+    this.showInlinePassage = false,
   });
 
   final ChallengeQuestionModel question;
@@ -32,6 +34,7 @@ class ChallengeQuestionBox extends StatefulWidget {
   final bool isChecked;
   final bool showExplanation;
   final bool initialExplanationExpanded;
+  final bool showInlinePassage;
 
   @override
   State<ChallengeQuestionBox> createState() => _ChallengeQuestionBoxState();
@@ -39,6 +42,7 @@ class ChallengeQuestionBox extends StatefulWidget {
 
 class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
   late bool _explanationExpanded;
+  bool _passageExpanded = false;
   final _languageSelected = 'en'.obs;
 
   @override
@@ -144,6 +148,18 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
             color: dark ? AppColors.darkBorder : const Color(0xFFF1F5F9),
           ),
 
+          // ── Optional Inline Passage Accordion ──────────────────────
+          if (widget.showInlinePassage && (q.passage != null || q.passageId != null)) ...[
+            _InlinePassageSection(
+              dark: dark,
+              title: q.passage?.title,
+              content: q.passage?.content,
+              expanded: _passageExpanded,
+              onToggle: () => setState(() => _passageExpanded = !_passageExpanded),
+            ),
+            const SizedBox(height: AppSizes.spaceBtwItems),
+          ],
+
           // ── Question Text ──────────────────────────────────────────
           QuestionSection(
             qnNumber: widget.orderIndex,
@@ -186,6 +202,107 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _InlinePassageSection extends StatelessWidget {
+  const _InlinePassageSection({
+    required this.dark,
+    required this.title,
+    required this.content,
+    required this.expanded,
+    required this.onToggle,
+  });
+
+  final bool dark;
+  final String? title;
+  final String? content;
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final displayTitle = (title != null && title!.isNotEmpty)
+        ? title!
+        : 'Reading Passage';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: onToggle,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.md,
+              vertical: AppSizes.sm,
+            ),
+            decoration: BoxDecoration(
+              color: dark
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppSizes.sm),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.menu_book_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: AppSizes.sm),
+                    Text(
+                      displayTitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                Icon(
+                  expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (expanded) ...[
+          const SizedBox(height: AppSizes.sm),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSizes.md),
+            decoration: BoxDecoration(
+              color: dark ? AppColors.darkContainer : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(AppSizes.sm),
+              border: Border.all(
+                color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: RichTextParser.widget(
+              content?.isNotEmpty == true ? content! : 'No passage content.',
+              baseStyle: TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w400,
+                height: 1.65,
+                color: dark ? AppColors.grey : AppColors.darkerGrey,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

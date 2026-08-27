@@ -9,6 +9,7 @@ import 'package:matricmate/features/challenges/controllers/challenge_archive_con
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -53,6 +54,26 @@ class ChallengeAttemptController extends GetxController
   final remainingSeconds = 0.obs;
   Timer? _timer;
   int _timeSpentSeconds = 0;
+
+  // ── Passage States ──────────────────────────────────────────────────────────
+  final isFullScreenPassage = false.obs;
+  final isPassageHidden = false.obs;
+  final textScale = 1.0.obs;
+
+  void increaseTextScale() =>
+      textScale.value < 1.4 ? textScale.value += 0.1 : null;
+  void decreaseTextScale() =>
+      textScale.value > 0.8 ? textScale.value -= 0.1 : null;
+  void togglePassage() => isPassageHidden.value = !isPassageHidden.value;
+  void togglePassageSize() =>
+      isFullScreenPassage.value = !isFullScreenPassage.value;
+
+  ChallengeQuestionModel? get currentQ =>
+      questions.isNotEmpty && currentIndex.value < questions.length
+          ? questions[currentIndex.value]
+          : null;
+
+  PassageModel? get currentPassage => currentQ?.passage;
 
   int get totalQuestions => questions.length;
   int get answeredCount => userAnswers.length;

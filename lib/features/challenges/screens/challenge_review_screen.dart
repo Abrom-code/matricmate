@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
@@ -36,6 +37,36 @@ class ChallengeReviewScreen extends StatefulWidget {
 
 class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
   final _scrollCtrl = ScrollController();
+  late List<ChallengeQuestionModel> _reviewQuestions;
+
+  @override
+  void initState() {
+    super.initState();
+    _reviewQuestions = List.from(widget.questions);
+    _loadPassagesIfNeeded();
+  }
+
+  Future<void> _loadPassagesIfNeeded() async {
+    final repo = ChallengeRepository();
+    bool updated = false;
+    final updatedList = <ChallengeQuestionModel>[];
+    for (final q in _reviewQuestions) {
+      if (q.passageId != null && q.passage == null) {
+        final p = await repo.getPassage(q.passageId);
+        if (p != null) {
+          updatedList.add(q.copyWith(passage: p));
+          updated = true;
+          continue;
+        }
+      }
+      updatedList.add(q);
+    }
+    if (updated && mounted) {
+      setState(() {
+        _reviewQuestions = updatedList;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -67,13 +98,13 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
 
     // Compute statistics
     int correctCount = 0;
-    for (final q in widget.questions) {
+    for (final q in _reviewQuestions) {
       if (!(_isQuestionSkipped(q)) && _isQuestionCorrect(q)) {
         correctCount++;
       }
     }
 
-    final total = widget.questions.length;
+    final total = _reviewQuestions.length;
     final accuracyPercent =
         total > 0 ? ((correctCount / total) * 100).toStringAsFixed(0) : '0';
 
@@ -157,7 +188,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
 
           // ── Questions Review List ────────────────────────────────
           Expanded(
-            child: widget.questions.isEmpty
+            child: _reviewQuestions.isEmpty
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(AppSizes.xl),
@@ -186,21 +217,22 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                 : ListView.separated(
                     controller: _scrollCtrl,
                     padding: const EdgeInsets.all(AppSizes.md),
-                    itemCount: widget.questions.length,
+                    itemCount: _reviewQuestions.length,
                     separatorBuilder: (_, __) =>
                         const SizedBox(height: AppSizes.spaceBtwItems),
                     itemBuilder: (context, index) {
-                      final question = widget.questions[index];
+                      final question = _reviewQuestions[index];
                       final userAnswer = widget.userAnswers[question.id];
 
                       return ChallengeQuestionBox(
                         question: question,
                         orderIndex: index + 1,
-                        totalQuestions: widget.questions.length,
+                        totalQuestions: _reviewQuestions.length,
                         selectedChoice: userAnswer,
                         isChecked: true,
                         showExplanation: true,
                         initialExplanationExpanded: false,
+                        showInlinePassage: true,
                       );
                     },
                   ),

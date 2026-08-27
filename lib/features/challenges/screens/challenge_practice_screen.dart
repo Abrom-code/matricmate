@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_practice_controller.dart';
+import 'package:matricmate/features/challenges/screens/widgets/challenge_passage_container.dart';
+import 'package:matricmate/features/challenges/screens/widgets/challenge_passage_layout_ctrl.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -68,6 +70,21 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          // ── Reading Passage Toggle (if question has a passage) ──
+          Obx(() {
+            final passage = _ctrl.currentPassage;
+            if (passage == null) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(right: AppSizes.md),
+              child: ChallengePassageLayoutCtrl(
+                passage: passage,
+                isHidden: _ctrl.isPassageHidden,
+                onToggle: _ctrl.togglePassage,
+              ),
+            );
+          }),
+        ],
       ),
       body: Obx(() {
         if (_ctrl.isLoading.value) {
@@ -81,6 +98,7 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
         final q = _ctrl.currentQuestion;
         final selectedChoice = _ctrl.userAnswers[q.id];
         final isAnswered = selectedChoice != null;
+        final currentPassage = _ctrl.currentPassage;
 
         return Column(
           children: [
@@ -119,16 +137,33 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
               child: SingleChildScrollView(
                 controller: _scrollCtrl,
                 padding: const EdgeInsets.all(AppSizes.md),
-                child: ChallengeQuestionBox(
-                  key: ValueKey('practice_box_${q.id}'),
-                  question: q,
-                  orderIndex: _ctrl.currentIndex.value + 1,
-                  totalQuestions: _ctrl.totalQuestions,
-                  selectedChoice: selectedChoice,
-                  onSelectChoice: (choice) => _ctrl.selectOption(choice),
-                  isChecked: isAnswered,
-                  showExplanation: isAnswered,
-                  initialExplanationExpanded: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (currentPassage != null)
+                      ChallengePassageContainer(
+                        passage: currentPassage,
+                        isFullScreen: _ctrl.isFullScreenPassage,
+                        isHidden: _ctrl.isPassageHidden,
+                        textScale: _ctrl.textScale,
+                        outerScrollController: _scrollCtrl,
+                        onToggleSize: _ctrl.togglePassageSize,
+                        onToggleHidden: _ctrl.togglePassage,
+                        onIncreaseScale: _ctrl.increaseTextScale,
+                        onDecreaseScale: _ctrl.decreaseTextScale,
+                      ),
+                    ChallengeQuestionBox(
+                      key: ValueKey('practice_box_${q.id}'),
+                      question: q,
+                      orderIndex: _ctrl.currentIndex.value + 1,
+                      totalQuestions: _ctrl.totalQuestions,
+                      selectedChoice: selectedChoice,
+                      onSelectChoice: (choice) => _ctrl.selectOption(choice),
+                      isChecked: isAnswered,
+                      showExplanation: isAnswered,
+                      initialExplanationExpanded: true,
+                    ),
+                  ],
                 ),
               ),
             ),

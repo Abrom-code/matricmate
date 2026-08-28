@@ -24,9 +24,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     );
   }
 
-  // Skip notification messages — FCM SDK already shows them
-  if (message.notification != null) return;
-
+  // All FCM messages are data-only (no notification field), so we always
+  // need to show a local notification manually.
   // Data-only message: show OS banner manually
   const channel = AndroidNotificationChannel(
     'matricmate_default',
@@ -158,11 +157,13 @@ class FcmService {
 
     await requestPermissionIfNeeded();
 
-    // iOS: show heads-up banner in foreground
+    // DISABLE foreground notification presentation — we send data-only FCM
+    // messages, so there's nothing for the SDK to auto-show. All display is
+    // handled manually in _onForegroundMessage and the Realtime listener.
     await _messaging.setForegroundNotificationPresentationOptions(
-      alert: true,
+      alert: false,
       badge: true,
-      sound: true,
+      sound: false,
     );
 
     await _localNotifications
@@ -249,6 +250,21 @@ class FcmService {
     await _subscribeToStreamTopics();
   }
 
+  /// Cache of recently shown banner keys within a 15-second window to prevent duplicate popups
+  final Map<String, DateTime> _recentlyShownBanners = {};
+
+  bool _shouldShowBanner(String key) {
+    final now = DateTime.now();
+    _recentlyShownBanners.removeWhere(
+      (_, time) => now.difference(time).inSeconds > 15,
+    );
+    if (_recentlyShownBanners.containsKey(key)) {
+      return false;
+    }
+    _recentlyShownBanners[key] = now;
+    return true;
+  }
+
   /// Shows a local notification banner with full payload for deep-link routing.
   Future<void> showBanner({
     required int id,
@@ -256,6 +272,12 @@ class FcmService {
     required String body,
     Map<String, dynamic>? payload,
   }) async {
+    final dedupKey = 'id_$id';
+    if (!_shouldShowBanner(dedupKey)) {
+      debugPrint('[FcmService] Suppressing duplicate banner for id=$id');
+      return;
+    }
+
     try {
       // Encode full payload for tap routing
       final encoded = jsonEncode(payload ?? {'type': 'announcement'});
@@ -283,41 +305,57 @@ class FcmService {
   Future<void> _onForegroundMessage(RemoteMessage message) async {
     final type = message.data['type']?.toString() ?? '';
     final notification = message.notification;
+    final title = notification?.title ?? message.data['title']?.toString();
+    final body = notification?.body ?? message.data['body']?.toString();
+
+    final notifIdStr = message.data['notification_id']?.toString();
+    final challengeIdStr = message.data['challenge_id']?.toString();
+
+    // Deduplicate by notification_id, challenge_id, or title+body
+    final dedupKey = notifIdStr != null && notifIdStr.isNotEmpty
+        ? 'id_$notifIdStr'
+        : (challengeIdStr != null && challengeIdStr.isNotEmpty
+            ? 'challenge_${type}_$challengeIdStr'
+            : 'text_${title}_$body');
+
+    if (type == 'challenge_closed') {
+      debugPrint('[FcmService] Suppressing push notification banner for challenge_closed');
+      return;
+    }
+
+    if (!_shouldShowBanner(dedupKey)) {
+      debugPrint('[FcmService] Suppressing duplicate foreground banner: key=$dedupKey');
+      return;
+    }
 
     // Skip snackbar for types already handled by Realtime
-    if (type != 'announcement' && type != 'new_content') {
+    if (type != 'announcement' && type != 'new_content' && type != 'challenge') {
       // Show in-app snackbar for payment/test notifications
       if (type == 'payment_status' || type == 'payment') {
-        final title =
-            notification?.title ??
-            message.data['title']?.toString() ??
-            'Payment Update';
-        final body =
-            notification?.body ?? message.data['body']?.toString() ?? '';
         Get.snackbar(
-          title,
-          body,
+          title ?? 'Payment Update',
+          body ?? '',
           duration: const Duration(seconds: 5),
           snackPosition: SnackPosition.TOP,
         );
       } else if (type == 'new_test') {
-        final title = notification?.title ?? 'New Test Available';
-        final body = notification?.body ?? '';
         Get.snackbar(
-          title,
-          body,
+          title ?? 'New Test Available',
+          body ?? '',
           duration: const Duration(seconds: 4),
           snackPosition: SnackPosition.TOP,
         );
       }
     }
 
-    // Show OS banner manually — FCM suppresses it in foreground
-    final title = notification?.title ?? message.data['title']?.toString();
-    final body = notification?.body ?? message.data['body']?.toString();
+    // Show OS banner manually — using deterministic ID so Android merges identical notifications
     if (title != null && body != null) {
+      final notifId = notifIdStr != null && int.tryParse(notifIdStr) != null
+          ? int.parse(notifIdStr)
+          : (message.hashCode & 0x7FFFFFFF);
+
       await _localNotifications.show(
-        id: message.hashCode & 0x7FFFFFFF,
+        id: notifId & 0x7FFFFFFF,
         title: title,
         body: body,
         notificationDetails: NotificationDetails(
@@ -337,7 +375,16 @@ class FcmService {
 
   void _handleTap(Map<String, dynamic> data) {
     // Route tap to appropriate screen based on notification type
-    switch (data['type']) {
+    final type = data['type']?.toString();
+    if (data.containsKey('challenge_id') ||
+        type == 'challenge' ||
+        type == 'challenge_round' ||
+        type == 'challenge_reward') {
+      NotificationTestOpener.open(data);
+      return;
+    }
+
+    switch (type) {
       case 'payment':
       case 'payment_status':
         Get.toNamed(Routes.paymentVerification);

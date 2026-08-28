@@ -2,17 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
+import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class NotificationDetailScreen extends StatelessWidget {
-  const NotificationDetailScreen({super.key, required this.notification});
+class NotificationDetailScreen extends StatefulWidget {
+  const NotificationDetailScreen({
+    super.key,
+    required this.notification,
+    this.initialChallenge,
+  });
 
   final AppNotification notification;
+  final LeaderboardChallengeModel? initialChallenge;
+
+  @override
+  State<NotificationDetailScreen> createState() =>
+      _NotificationDetailScreenState();
+}
+
+class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
+  bool _isNavigating = false;
+  bool _isLoadingChallenge = false;
+  LeaderboardChallengeModel? _loadedChallenge;
+  Future<void>? _challengeFetchFuture;
+
+  AppNotification get notification => widget.notification;
 
   String get _paymentStatus => notification.payload['status']?.toString() ?? '';
 
@@ -21,6 +44,81 @@ class NotificationDetailScreen extends StatelessWidget {
 
   bool get _isRejected =>
       notification.type == 'payment' && _paymentStatus == 'rejected';
+
+  bool get _isChallengeNotification =>
+      notification.type == 'challenge' ||
+      notification.type == 'challenge_round' ||
+      notification.type == 'challenge_reward' ||
+      notification.payload.containsKey('challenge_id');
+
+  bool get _isChallengeClosed {
+    if (notification.type == 'challenge_reward') return true;
+    final payloadStatus =
+        notification.payload['status']?.toString().toLowerCase();
+    if (payloadStatus == 'closed' || payloadStatus == 'archived') return true;
+    if (_loadedChallenge != null) {
+      return _loadedChallenge!.isClosed || _loadedChallenge!.isArchived;
+    }
+    return false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadedChallenge = widget.initialChallenge;
+    if (_loadedChallenge == null && _isChallengeNotification) {
+      _challengeFetchFuture = _fetchChallengeIfPresent();
+    }
+  }
+
+  Future<void> _fetchChallengeIfPresent() async {
+    final challengeId = notification.payload['challenge_id']?.toString() ??
+        notification.payload['id']?.toString();
+    if (challengeId != null &&
+        challengeId.isNotEmpty &&
+        _isChallengeNotification) {
+      // 1. Check local ChallengeHomeController memory cache for 0ms instant sync
+      if (Get.isRegistered<ChallengeHomeController>()) {
+        final ctrl = ChallengeHomeController.instance;
+        final inClosed = ctrl.completedChallenges.firstWhereOrNull(
+          (c) => c.id == challengeId || c.setId == challengeId,
+        );
+        if (inClosed != null) {
+          _loadedChallenge = inClosed;
+        } else {
+          final inAvailable = ctrl.availableChallenges.firstWhereOrNull(
+            (c) => c.id == challengeId || c.setId == challengeId,
+          );
+          if (inAvailable != null) {
+            _loadedChallenge = inAvailable;
+          }
+        }
+      }
+
+      if (_loadedChallenge == null) {
+        setState(() => _isLoadingChallenge = true);
+      }
+
+      try {
+        final sb = Supabase.instance.client;
+        final row = await sb
+            .from('leaderboard_challenges')
+            .select('*, subjects(name)')
+            .eq('id', challengeId)
+            .maybeSingle();
+        if (row != null && mounted) {
+          setState(() {
+            _loadedChallenge = LeaderboardChallengeModel.fromJson(row);
+          });
+        }
+      } catch (_) {
+      } finally {
+        if (mounted && _isLoadingChallenge) {
+          setState(() => _isLoadingChallenge = false);
+        }
+      }
+    }
+  }
 
   _TypeVisuals get _visuals {
     if (_isApproved) {
@@ -35,6 +133,20 @@ class NotificationDetailScreen extends StatelessWidget {
         icon: Icons.cancel_rounded,
         color: Color(0xFFEF4444),
         typeName: 'Payment Issue',
+      );
+    }
+
+    if (_isChallengeNotification) {
+      return _TypeVisuals(
+        icon: _isChallengeClosed
+            ? Icons.leaderboard_rounded
+            : Icons.emoji_events_rounded,
+        color: _isChallengeClosed
+            ? const Color(0xFFD97706) // Trophy Amber / Standings
+            : const Color(0xFF2563EB), // Challenge Royal Blue
+        typeName: _isChallengeClosed
+            ? 'Challenge Standings / Results'
+            : 'Challenge / Competition',
       );
     }
 
@@ -61,20 +173,52 @@ class NotificationDetailScreen extends StatelessWidget {
   }
 
   Future<void> _handleAction() async {
-    switch (notification.type) {
-      case 'payment':
-        if (_isApproved) {
-          Get.until((route) => route.isFirst);
-        } else {
-          Get.toNamed(Routes.paymentVerification);
+    if (_isNavigating) return;
+    setState(() => _isNavigating = true);
+
+    try {
+      if (_isChallengeNotification) {
+        if (_challengeFetchFuture != null) {
+          await _challengeFetchFuture;
         }
-        break;
-      case 'new_content':
+
+        if (_isChallengeClosed) {
+          final challengeId = notification.payload['challenge_id']?.toString() ??
+              notification.payload['id']?.toString() ??
+              _loadedChallenge?.id;
+          if (challengeId != null && challengeId.isNotEmpty) {
+            Get.to(
+              () => LeaderboardScreen(
+                challengeId: challengeId,
+                challengeTitle: _loadedChallenge?.title ?? notification.title,
+                audience: _loadedChallenge?.audience ??
+                    notification.payload['audience']?.toString(),
+              ),
+            );
+            return;
+          }
+        }
         await NotificationTestOpener.open(notification.payload);
-        break;
-      default:
-        Get.back();
-        break;
+        return;
+      }
+
+      switch (notification.type) {
+        case 'payment':
+          if (_isApproved) {
+            Get.until((route) => route.isFirst);
+          } else {
+            Get.toNamed(Routes.paymentVerification);
+          }
+          break;
+        case 'new_content':
+          await NotificationTestOpener.open(notification.payload);
+          break;
+        default:
+          Get.back();
+          break;
+      }
+    } finally {
+      if (mounted) setState(() => _isNavigating = false);
     }
   }
 
@@ -129,16 +273,18 @@ class NotificationDetailScreen extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Top Header Card ──────────────────────────────────────
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
+      body: (_isChallengeNotification && _isLoadingChallenge && _loadedChallenge == null)
+          ? const AppCircularLoading(title: 'Loading challenge details...')
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Top Header Card ──────────────────────────────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
                 color: dark ? AppColors.darkCard : AppColors.white,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
@@ -367,49 +513,114 @@ class NotificationDetailScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: _handleAction,
-                  icon: const Icon(Icons.play_arrow_rounded, size: 22),
-                  label: const Text(
-                    'Start Test Now',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                child: ElevatedButton(
+                  onPressed: _isNavigating ? null : _handleAction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0284C7),
                     foregroundColor: Colors.white,
+                    side: const BorderSide(
+                      color: Color(0xFF0284C7),
+                      width: 1.5,
+                    ),
+                    disabledBackgroundColor:
+                        const Color(0xFF0284C7).withValues(alpha: 0.7),
+                    disabledForegroundColor: Colors.white70,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
+                  child: _isNavigating
+                      ? const AppCircularButtonLoading(color: Colors.white)
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.play_arrow_rounded, size: 22),
+                            SizedBox(width: 8),
+                            Text(
+                              'Start Test',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              )
+            else if (_isChallengeNotification)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: (_isNavigating || _isLoadingChallenge)
+                      ? null
+                      : _handleAction,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isChallengeClosed
+                        ? const Color(0xFFD97706) // Standings Trophy Amber
+                        : const Color(0xFF2563EB), // Challenge Royal Blue
+                    foregroundColor: Colors.white,
+                    side: BorderSide(
+                      color: _isChallengeClosed
+                          ? const Color(0xFFD97706)
+                          : const Color(0xFF2563EB),
+                      width: 1.5,
+                    ),
+                    disabledBackgroundColor: (_isChallengeClosed
+                            ? const Color(0xFFD97706)
+                            : const Color(0xFF2563EB))
+                        .withValues(alpha: 0.7),
+                    disabledForegroundColor: Colors.white70,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: (_isNavigating || _isLoadingChallenge)
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AppCircularButtonLoading(color: Colors.white),
+                            SizedBox(width: 10),
+                            Text(
+                              'Checking Challenge...',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isChallengeClosed
+                                  ? Icons.leaderboard_rounded
+                                  : Icons.emoji_events_rounded,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isChallengeClosed
+                                  ? 'See Leaderboard'
+                                  : 'Go to Challenge',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               )
             else if (notification.type == 'payment')
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: _handleAction,
-                  icon: Icon(
-                    _isApproved
-                        ? Icons.bolt_rounded
-                        : Icons.account_balance_wallet_rounded,
-                    size: 20,
-                  ),
-                  label: Text(
-                    _isApproved
-                        ? 'Explore Premium Features'
-                        : _isRejected
-                            ? 'Submit Payment Again'
-                            : 'Check Verification Status',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                child: ElevatedButton(
+                  onPressed: _isNavigating ? null : _handleAction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isApproved
                         ? const Color(0xFF10B981)
@@ -417,11 +628,51 @@ class NotificationDetailScreen extends StatelessWidget {
                             ? const Color(0xFFEF4444)
                             : const Color(0xFFF59E0B),
                     foregroundColor: Colors.white,
+                    side: BorderSide(
+                      color: _isApproved
+                          ? const Color(0xFF10B981)
+                          : _isRejected
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFFF59E0B),
+                      width: 1.5,
+                    ),
+                    disabledBackgroundColor: (_isApproved
+                            ? const Color(0xFF10B981)
+                            : _isRejected
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFFF59E0B))
+                        .withValues(alpha: 0.7),
+                    disabledForegroundColor: Colors.white70,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
+                  child: _isNavigating
+                      ? const AppCircularButtonLoading(color: Colors.white)
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isApproved
+                                  ? Icons.bolt_rounded
+                                  : Icons.account_balance_wallet_rounded,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isApproved
+                                  ? 'Explore Features'
+                                  : _isRejected
+                                      ? 'Retry Payment'
+                                      : 'Check Status',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
 

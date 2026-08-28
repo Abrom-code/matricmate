@@ -16,10 +16,16 @@ class NotificationsController extends GetxController {
   final RxInt unreadCount = 0.obs;
   final RxBool isLoading = false.obs;
 
+  // ── Multi-selection state ───────────────────────────────────────────
+  final RxSet<int> selectedIds = <int>{}.obs;
+  bool get isSelectionMode => selectedIds.isNotEmpty;
+
   // ── Undo snapshots ──────────────────────────────────────────────────
   AppNotification? _lastDeletedOne;
   int? _lastDeletedOneIndex;
   List<AppNotification>? _lastDeletedAll;
+  List<AppNotification>? _lastDeletedSelected;
+  Map<int, int>? _lastDeletedSelectedIndexes;
 
   String get _userId => UserController.instance.user.value.id;
   String get _userStream => UserController.instance.user.value.stream;
@@ -102,6 +108,12 @@ class NotificationsController extends GetxController {
     await _repo.markAllRead(_userId);
   }
 
+  /// Pull-to-refresh: Syncs from remote and automatically marks all as read.
+  Future<void> refreshAndMarkAllRead() async {
+    await loadNotifications(syncRemote: true);
+    await markAllRead();
+  }
+
   Future<void> insertFromPush(AppNotification n) async {
     await _repo.insertLocal(n);
     await loadNotifications();
@@ -175,6 +187,83 @@ class NotificationsController extends GetxController {
     _recalcUnread();
 
     _lastDeletedAll = null;
+  }
+
+  // ── Multi-selection actions ─────────────────────────────────────────
+
+  void toggleSelection(int id) {
+    if (selectedIds.contains(id)) {
+      selectedIds.remove(id);
+    } else {
+      selectedIds.add(id);
+    }
+  }
+
+  void selectAll() {
+    selectedIds.assignAll(notifications.map((n) => n.id));
+  }
+
+  void clearSelection() {
+    selectedIds.clear();
+  }
+
+  Future<void> markSelectedAsRead() async {
+    if (selectedIds.isEmpty) return;
+
+    final targetIds = selectedIds.toSet();
+    for (int i = 0; i < notifications.length; i++) {
+      if (targetIds.contains(notifications[i].id) && !notifications[i].isRead) {
+        notifications[i] = notifications[i].copyWith(isRead: true);
+      }
+    }
+    notifications.refresh();
+    _recalcUnread();
+    clearSelection();
+
+    // Persist to server & local DB
+    for (final id in targetIds) {
+      await _repo.markRead(id);
+    }
+  }
+
+  /// Optimistically deletes all currently selected notifications with undo.
+  Future<void> deleteSelected() async {
+    if (selectedIds.isEmpty) return;
+
+    final targetIds = selectedIds.toSet();
+    _lastDeletedSelected = notifications.where((n) => targetIds.contains(n.id)).toList();
+    _lastDeletedSelectedIndexes = {
+      for (int i = 0; i < notifications.length; i++)
+        if (targetIds.contains(notifications[i].id)) notifications[i].id: i,
+    };
+
+    // Remove from in-memory list immediately
+    notifications.removeWhere((n) => targetIds.contains(n.id));
+    _recalcUnread();
+    clearSelection();
+
+    // Persist deletion in background
+    for (final item in _lastDeletedSelected!) {
+      await _repo.deleteNotification(item);
+    }
+  }
+
+  /// Restores multi-selected deleted notifications (called from "Undo" SnackBar).
+  Future<void> undoDeleteSelected() async {
+    final items = _lastDeletedSelected;
+    final indexes = _lastDeletedSelectedIndexes;
+    if (items == null || items.isEmpty) return;
+
+    for (final item in items) {
+      await _repo.insertLocal(item);
+      final originalIndex = indexes?[item.id] ?? notifications.length;
+      final clampedIndex = originalIndex.clamp(0, notifications.length);
+      notifications.insert(clampedIndex, item);
+    }
+
+    _recalcUnread();
+    _lastDeletedSelected = null;
+    _lastDeletedSelectedIndexes = null;
   }
 
   /// Recalculates unread count from the in-memory list.

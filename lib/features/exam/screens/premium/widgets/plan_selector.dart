@@ -57,11 +57,11 @@ class PlanSelector extends StatelessWidget {
 
         // Horizontal scrollable list of plan cards
         SizedBox(
-          height: 160,
+          height: 168,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
             itemCount: SubscriptionPlan.all.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
@@ -109,12 +109,10 @@ class _ModernPlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFeatured = plan.isFeatured;
 
-    final activeBorderColor = isFeatured
-        ? (isSelected ? AppColors.primary : AppColors.amberAccent)
-        : AppColors.primary;
+    final activeBorderColor = AppColors.primary;
 
     final inactiveBorderColor = isFeatured
-        ? AppColors.amberAccent.withValues(alpha: 0.6)
+        ? const Color(0xFFF59E0B).withValues(alpha: 0.5)
         : (isDark ? AppColors.darkBorder : AppColors.borderPrimary);
 
     final cardBg = isSelected
@@ -129,41 +127,32 @@ class _ModernPlanCard extends StatelessWidget {
         GestureDetector(
           onTap: onTap,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 180),
             curve: Curves.easeInOut,
             width: 142,
             padding: const EdgeInsets.fromLTRB(14, 18, 14, 14),
             decoration: BoxDecoration(
               color: cardBg,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: isSelected ? activeBorderColor : inactiveBorderColor,
-                width: isSelected ? 2 : (isFeatured ? 1.5 : 1),
+                width: isSelected ? 2 : (isFeatured ? 1.4 : 1),
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: (isFeatured ? AppColors.amberAccent : AppColors.primary)
-                            .withValues(alpha: 0.25),
-                        blurRadius: 12,
+                        color: AppColors.primary.withValues(alpha: 0.18),
+                        blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
                     ]
-                  : (isFeatured
-                      ? [
-                          BoxShadow(
-                            color: AppColors.amberAccent.withValues(alpha: 0.12),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]),
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,9 +1,16 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:matricmate/bindings/exam/entrance_exams_binding.dart';
 import 'package:matricmate/bindings/exam/grade_test_binding.dart';
 import 'package:matricmate/bindings/exam/test_binding.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
+import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
+import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
+import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
@@ -13,13 +20,25 @@ import 'package:matricmate/features/exam/screens/entrance/entrance_exams.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-/// Handles deep-linking from notifications directly to the target test dialog.
+/// Handles deep-linking from notifications directly to the target test or challenge.
 class NotificationTestOpener {
   NotificationTestOpener._();
 
   static Future<void> open(Map<String, dynamic> data) async {
     final testType = data['test_type'] as String? ?? data['type'] as String?;
+    
+    // Handle challenge deep links
+    if (data.containsKey('challenge_id') ||
+        testType == 'challenge' ||
+        testType == 'challenge_round' ||
+        testType == 'challenge_reward') {
+      await _openChallenge(data);
+      return;
+    }
+
     final testId = int.tryParse('${data['test_id']}');
     if (testType == null || testId == null) return;
 
@@ -37,6 +56,117 @@ class NotificationTestOpener {
       default:
         // Unknown/announcement payload — nothing to navigate to.
         break;
+    }
+  }
+
+  // ── Challenge deep link ───────────────────────────────────────────────
+
+  static Future<void> _openChallenge(Map<String, dynamic> data) async {
+    final challengeId =
+        data['challenge_id']?.toString() ?? data['id']?.toString();
+    if (challengeId == null || challengeId.isEmpty) {
+      NavigationController.navigateToTab(1);
+      return;
+    }
+
+    try {
+      final sb = Supabase.instance.client;
+      final row = await sb
+          .from('leaderboard_challenges')
+          .select('*, subjects(name)')
+          .eq('id', challengeId)
+          .maybeSingle();
+
+      if (row == null) {
+        NavigationController.navigateToTab(1);
+        return;
+      }
+
+      final challenge = LeaderboardChallengeModel.fromJson(row);
+      final user = UserController.instance.user.value;
+      final isPremium = user.isActive;
+      final userStream = user.stream.toLowerCase().trim();
+
+      // 1. Premium Gate
+      if (!isPremium) {
+        NavigationController.navigateToTab(1);
+        return;
+      }
+
+      // 2. Stream Audience Gate
+      final aud = challenge.audience.toLowerCase().trim();
+      if (aud != 'both' && userStream.isNotEmpty && aud != userStream) {
+        NavigationController.navigateToTab(1);
+        ToastHelper.warning(
+          'This challenge is open to ${challenge.audience.toUpperCase()} stream students.',
+        );
+        return;
+      }
+
+      // 3. Check if user already submitted an attempt
+      bool isUserSubmitted = false;
+      if (user.id.isNotEmpty) {
+        final repo = ChallengeRepository();
+        final attemptData = await repo.fetchUserAttempt(
+          challengeId: challenge.id,
+          userId: user.id,
+        );
+        if (attemptData != null &&
+            attemptData['attempt'] is ChallengeAttemptModel) {
+          final attempt = attemptData['attempt'] as ChallengeAttemptModel;
+          if (attempt.isSubmitted) {
+            isUserSubmitted = true;
+          }
+        }
+      }
+
+      // 4. Status Checks:
+      // If closed, archived, or reward notification -> redirect directly to LeaderboardScreen!
+      if (challenge.isClosed ||
+          challenge.isArchived ||
+          data['type'] == 'challenge_reward' ||
+          data['status'] == 'closed' ||
+          data['status'] == 'archived') {
+        Get.to(
+          () => LeaderboardScreen(
+            challengeId: challenge.id,
+            challengeTitle: challenge.title,
+            audience: challenge.audience,
+          ),
+        );
+        return;
+      }
+
+      // Navigate to Challenges tab (Tab 1 in BottomNavigationBar)
+      NavigationController.navigateToTab(1);
+
+      final homeCtrl = Get.isRegistered<ChallengeHomeController>()
+          ? ChallengeHomeController.instance
+          : Get.put(ChallengeHomeController());
+
+      if ((challenge.isLive || challenge.isScheduled) && !isUserSubmitted) {
+        homeCtrl.switchTab(0);
+        if (challenge.isScheduled && challenge.startsAt != null) {
+          final diff = challenge.startsAt!.difference(DateTime.now());
+          if (!diff.isNegative) {
+            final hours = diff.inHours;
+            final mins = diff.inMinutes % 60;
+            final timeStr = hours > 0 ? '${hours}h ${mins}m' : '${mins}m';
+            ToastHelper.info('This challenge opens in $timeStr. Get ready!');
+          } else {
+            ToastHelper.info('This challenge will open shortly. Get ready!');
+          }
+        }
+      } else {
+        homeCtrl.switchTab(1);
+        if (isUserSubmitted) {
+          ToastHelper.info(
+            'You have already completed this challenge. You can review it here.',
+          );
+        }
+      }
+    } catch (_) {
+      NavigationController.navigateToTab(1);
     }
   }
 

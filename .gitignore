@@ -40,6 +40,8 @@ build/
 .svn/
 .swiftpm/
 migrate_working_dir/
+supabase/.temp/
+.temp/
 
 # ------------------------------
 # Symbolication / Obfuscation

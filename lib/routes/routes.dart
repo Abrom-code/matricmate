@@ -38,6 +38,7 @@ import 'package:matricmate/features/personalization/screens/analytics/analytics_
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
 import 'package:matricmate/features/personalization/screens/update/update_profile.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/bindings/exam/premium_binding.dart';
@@ -46,6 +47,11 @@ import 'package:matricmate/features/exam/screens/premium/payment.dart';
 import 'package:matricmate/features/exam/screens/premium/premium.dart';
 import 'package:matricmate/features/exam/screens/premium/payment_verify.dart';
 import 'package:matricmate/features/exam/screens/premium/contact_admin.dart';
+import 'package:matricmate/bindings/challenges/challenge_binding.dart';
+import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
+import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_archive_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 
 class AppRoutes {
   static final pages = [
@@ -178,6 +184,55 @@ class AppRoutes {
     GetPage(
       name: Routes.notifications,
       page: () => const NotificationsScreen(),
+    ),
+
+    // ── Challenges (Stream & Leaderboard Challenges) ───────────────────
+    GetPage(
+      name: Routes.challengeHome,
+      page: () {
+        if (Get.isRegistered<NavigationController>()) {
+          Get.find<NavigationController>().selectedIdx.value = 1;
+        }
+        return const NavigationMenu();
+      },
+      binding: ChallengeBinding(),
+    ),
+    GetPage(
+      name: Routes.challengeAttempt,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>? ?? {};
+        return ChallengeAttemptScreen(
+          challengeId: args['challenge_id']?.toString() ?? '',
+          title: args['title']?.toString() ?? 'Challenge Attempt',
+        );
+      },
+    ),
+    GetPage(
+      name: Routes.challengeLeaderboard,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>? ?? {};
+        return LeaderboardScreen(
+          challengeId: args['challenge_id']?.toString(),
+          challengeTitle: args['title']?.toString(),
+          audience: args['audience']?.toString(),
+        );
+      },
+    ),
+    GetPage(
+      name: Routes.challengeArchive,
+      page: () => const ChallengeArchiveScreen(),
+      binding: ChallengeBinding(),
+    ),
+    GetPage(
+      name: Routes.challengePractice,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>? ?? {};
+        return ChallengePracticeScreen(
+          challengeId: args['challenge_id']?.toString() ?? args['id']?.toString() ?? args['set_id']?.toString() ?? '',
+          setId: args['set_id']?.toString(),
+          title: args['title']?.toString() ?? 'Practice Challenge',
+        );
+      },
     ),
   ];
 }

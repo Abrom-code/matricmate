@@ -12,6 +12,8 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.showBackArrow = false,
     this.showNotification = false,
+    this.leadingIcon,
+    this.leadingOnPressed,
   });
 
   final String title;
@@ -19,6 +21,8 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final bool showBackArrow;
   final bool showNotification;
+  final IconData? leadingIcon;
+  final VoidCallback? leadingOnPressed;
 
   @override
   Size get preferredSize {
@@ -33,6 +37,8 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
       showBackArrow: showBackArrow,
       actions: actions,
       showNotification: showNotification,
+      leadingIcon: leadingIcon,
+      leadingOnPressed: leadingOnPressed,
       title: _TitleColumn(
         title: title,
         subtitle: subtitle != null && subtitle!.isNotEmpty
@@ -53,6 +59,8 @@ class ModernAppbarWithBuilder extends StatelessWidget
     this.actions,
     this.showBackArrow = false,
     this.showNotification = false,
+    this.leadingIcon,
+    this.leadingOnPressed,
   });
 
   final String title;
@@ -60,6 +68,8 @@ class ModernAppbarWithBuilder extends StatelessWidget
   final List<Widget>? actions;
   final bool showBackArrow;
   final bool showNotification;
+  final IconData? leadingIcon;
+  final VoidCallback? leadingOnPressed;
 
   @override
   Size get preferredSize {
@@ -74,6 +84,8 @@ class ModernAppbarWithBuilder extends StatelessWidget
       showBackArrow: showBackArrow,
       actions: actions,
       showNotification: showNotification,
+      leadingIcon: leadingIcon,
+      leadingOnPressed: leadingOnPressed,
       title: _TitleColumn(
         title: title,
         subtitle: subtitleBuilder != null

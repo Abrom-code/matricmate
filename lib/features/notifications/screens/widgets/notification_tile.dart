@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
+import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/screens/notification_detail_screen.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationTile extends StatelessWidget {
   const NotificationTile({
@@ -30,11 +35,28 @@ class NotificationTile extends StatelessWidget {
   bool get _isRejected =>
       notification.type == 'payment' && _paymentStatus == 'rejected';
 
+  bool get _isChallenge =>
+      notification.type == 'challenge' ||
+      notification.type == 'challenge_round' ||
+      notification.type == 'challenge_reward' ||
+      notification.payload.containsKey('challenge_id');
+
+  bool get _isChallengeClosed {
+    if (notification.type == 'challenge_reward') return true;
+    final status = notification.payload['status']?.toString().toLowerCase();
+    return status == 'closed' || status == 'archived';
+  }
+
   Color _accentColor() {
     if (_isApproved) return const Color(0xFF10B981);
     if (_isRejected) return const Color(0xFFEF4444);
     if (notification.type == 'payment') return const Color(0xFFF59E0B);
     if (notification.type == 'new_content') return const Color(0xFF0284C7);
+    if (_isChallenge) {
+      return _isChallengeClosed
+          ? const Color(0xFFD97706) // Standings Trophy Amber
+          : const Color(0xFF2563EB); // Challenge Royal Blue
+    }
     return AppColors.primary;
   }
 
@@ -49,6 +71,16 @@ class NotificationTile extends StatelessWidget {
       return const _TypeIconData(
         Icons.cancel_rounded,
         Color(0xFFEF4444),
+      );
+    }
+    if (_isChallenge) {
+      return _TypeIconData(
+        _isChallengeClosed
+            ? Icons.leaderboard_rounded
+            : Icons.emoji_events_rounded,
+        _isChallengeClosed
+            ? const Color(0xFFD97706)
+            : const Color(0xFF2563EB),
       );
     }
 
@@ -74,11 +106,67 @@ class NotificationTile extends StatelessWidget {
   String get _categoryLabel {
     if (notification.type == 'payment') return 'PAYMENT';
     if (notification.type == 'new_content') return 'NEW TEST';
+    if (_isChallenge) {
+      return _isChallengeClosed ? 'STANDINGS' : 'CHALLENGE';
+    }
     return 'ANNOUNCEMENT';
   }
 
   Future<void> _onTap() async {
-    await NotificationsController.instance.markRead(notification.id);
+    final ctrl = NotificationsController.instance;
+    if (ctrl.isSelectionMode) {
+      ctrl.toggleSelection(notification.id);
+      return;
+    }
+
+    unawaited(NotificationsController.instance.markRead(notification.id));
+
+    if (_isChallenge) {
+      LeaderboardChallengeModel? matchedChallenge;
+      final challengeId = notification.payload['challenge_id']?.toString() ??
+          notification.payload['id']?.toString();
+
+      if (challengeId != null && challengeId.isNotEmpty) {
+        // 1. Check in-memory controller for 0ms instant match
+        if (Get.isRegistered<ChallengeHomeController>()) {
+          final hCtrl = ChallengeHomeController.instance;
+          matchedChallenge = hCtrl.completedChallenges.firstWhereOrNull(
+            (c) => c.id == challengeId || c.setId == challengeId,
+          ) ?? hCtrl.availableChallenges.firstWhereOrNull(
+            (c) => c.id == challengeId || c.setId == challengeId,
+          );
+        }
+
+        // 2. If not found in memory, show full-screen loader and fetch
+        if (matchedChallenge == null) {
+          AppFullScreenLoader.openLoadingDialog('Opening challenge...');
+          try {
+            final sb = Supabase.instance.client;
+            final row = await sb
+                .from('leaderboard_challenges')
+                .select('*, subjects(name)')
+                .eq('id', challengeId)
+                .maybeSingle()
+                .timeout(const Duration(seconds: 4));
+            if (row != null) {
+              matchedChallenge = LeaderboardChallengeModel.fromJson(row);
+            }
+          } catch (_) {
+          } finally {
+            AppFullScreenLoader.stopLoading();
+          }
+        }
+      }
+
+      Get.to(
+        () => NotificationDetailScreen(
+          notification: notification,
+          initialChallenge: matchedChallenge,
+        ),
+      );
+      return;
+    }
+
     Get.to(() => NotificationDetailScreen(notification: notification));
   }
 
@@ -88,67 +176,113 @@ class NotificationTile extends StatelessWidget {
     final iconData = _typeIcon;
     final accent = _accentColor();
     final isUnread = !notification.isRead;
+    final ctrl = NotificationsController.instance;
 
-    return Dismissible(
-      key: ValueKey(notification.id),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) => onDismissed(),
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEF4444),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.delete_outline_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-            SizedBox(width: 6),
-            Text(
-              'Delete',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-      child: GestureDetector(
-        onTap: _onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return Obx(() {
+      final isSelected = ctrl.selectedIds.contains(notification.id);
+      final isSelectionMode = ctrl.isSelectionMode;
+
+      return Dismissible(
+        key: ValueKey(notification.id),
+        direction: isSelectionMode
+            ? DismissDirection.none
+            : DismissDirection.endToStart,
+        onDismissed: (_) => onDismissed(),
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
-            color: isUnread
-                ? (dark
-                    ? const Color(0xFF1E232E)
-                    : const Color(0xFFF8FAFC))
-                : (dark ? AppColors.darkCard : AppColors.white),
+            color: const Color(0xFFEF4444),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isUnread
-                  ? accent.withValues(alpha: dark ? 0.40 : 0.28)
-                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
-              width: isUnread ? 1.4 : 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              SizedBox(width: 6),
+              Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ── Type icon squircle ─────────────────────────────────
+        ),
+        child: GestureDetector(
+          onTap: _onTap,
+          onLongPress: () => ctrl.toggleSelection(notification.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: dark ? 0.22 : 0.10)
+                  : (isUnread
+                      ? (dark
+                          ? const Color(0xFF1E232E)
+                          : const Color(0xFFF8FAFC))
+                      : (dark ? AppColors.darkCard : AppColors.white)),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.primary
+                    : (isUnread
+                        ? accent.withValues(alpha: dark ? 0.40 : 0.28)
+                        : (dark
+                            ? AppColors.darkBorder
+                            : const Color(0xFFE2E8F0))),
+                width: (isSelected || isUnread) ? 1.4 : 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ── Multi-select Checkbox ───────────────────────────
+                if (isSelectionMode) ...[
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : (dark ? Colors.white38 : Colors.black26),
+                        width: 2,
+                      ),
+                    ),
+                    child: isSelected
+                        ? const Center(
+                            child: Icon(
+                              Icons.check_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          )
+                        : null,
+                  ),
+                ],
+
+                // ── Type icon squircle ─────────────────────────────────
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -298,7 +432,8 @@ class NotificationTile extends StatelessWidget {
         ),
       ),
     );
-  }
+  });
+}
 }
 
 // ── Type icon helper ──────────────────────────────────────────────────────────

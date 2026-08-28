@@ -1,3 +1,4 @@
+import 'package:matricmate/features/personalization/screens/analytics/widgets/challenge_analytics_section.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
@@ -217,6 +218,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                     // 1. Hero Readiness & Summary Stats
                     AnalyticsSummaryGrid(controller: controller),
+                    const SizedBox(height: 14),
+
+                    // 2. Challenge Arena Analytics (Weekly & Monthly activity)
+                    ChallengeAnalyticsSection(controller: controller),
                     const SizedBox(height: 14),
 
                     // 2. Score Trajectory Trend Chart

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/features/exam/models/chapter_progress_model.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -11,6 +12,7 @@ class ChapterTile extends StatelessWidget {
     this.hasSubTitle = true,
     this.chapterNumber,
     this.isSection = false,
+    this.progress,
   });
 
   final String chapter, chapterTitle;
@@ -18,10 +20,17 @@ class ChapterTile extends StatelessWidget {
   final bool hasSubTitle;
   final int? chapterNumber;
   final bool isSection;
+  final ChapterProgressModel? progress;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
+    final isCompleted = progress?.isCompleted ?? false;
+    final hasTests = progress?.hasTests ?? true;
+    final totalTests = progress?.totalTests ?? 0;
+    final completedTests = progress?.completedTests ?? 0;
+    final progressVal = progress?.progressPercentage ?? 0.0;
+    final percentInt = (progressVal * 100).toInt();
 
     // Extract chapter number badge string, e.g. "01"
     String badgeText = isSection ? '01' : 'CH';
@@ -40,7 +49,10 @@ class ChapterTile extends StatelessWidget {
         color: dark ? AppColors.darkCard : AppColors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+          color: isCompleted
+              ? AppColors.success.withValues(alpha: dark ? 0.35 : 0.25)
+              : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
+          width: isCompleted ? 1.3 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
@@ -61,23 +73,35 @@ class ChapterTile extends StatelessWidget {
               children: [
                 // ── Left Chapter / Section Squircle Badge ─────────────────────
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(
-                      alpha: dark ? 0.18 : 0.10,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
+                    color: isCompleted
+                        ? AppColors.success.withValues(
+                            alpha: dark ? 0.20 : 0.12,
+                          )
+                        : AppColors.primary.withValues(
+                            alpha: dark ? 0.18 : 0.10,
+                          ),
+                    borderRadius: BorderRadius.circular(15),
+                    border: isCompleted
+                        ? Border.all(
+                            color: AppColors.success.withValues(alpha: 0.4),
+                            width: 1,
+                          )
+                        : null,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         isSection ? 'SEC' : 'CH',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 8.0,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
+                          color: isCompleted
+                              ? AppColors.success
+                              : AppColors.primary,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -87,9 +111,11 @@ class ChapterTile extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.5,
-                          color: dark
-                              ? AppColors.textWhite
-                              : AppColors.primary,
+                          color: isCompleted
+                              ? AppColors.success
+                              : (dark
+                                  ? AppColors.textWhite
+                                  : AppColors.primary),
                         ),
                       ),
                     ],
@@ -98,7 +124,7 @@ class ChapterTile extends StatelessWidget {
 
                 const SizedBox(width: 14),
 
-                // ── Chapter Title & Subtitle ────────────────────────
+                // ── Chapter Title, Subtitle, and Progress Bar ────────────────
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +145,9 @@ class ChapterTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        chapter,
+                        totalTests > 0
+                            ? '$chapter • $totalTests ${totalTests == 1 ? "Test" : "Tests"}'
+                            : chapter,
                         style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w500,
@@ -128,18 +156,116 @@ class ChapterTile extends StatelessWidget {
                               : AppColors.textSecondary,
                         ),
                       ),
+
+                      // Progress bar when tests exist
+                      if (totalTests > 0) ...[
+                        const SizedBox(height: 7),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progressVal,
+                                  minHeight: 4.5,
+                                  backgroundColor: dark
+                                      ? AppColors.darkSurface
+                                      : AppColors.primary
+                                          .withValues(alpha: 0.10),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    isCompleted
+                                        ? AppColors.success
+                                        : AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              isCompleted
+                                  ? 'Done'
+                                  : '$completedTests/$totalTests ($percentInt%)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: isCompleted
+                                    ? AppColors.success
+                                    : (dark
+                                        ? AppColors.darkGrey
+                                        : AppColors.textSecondary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
 
                 const SizedBox(width: 8),
 
-                // ── Trailing Chevron ────────────────────────────────
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 22,
-                  color: dark ? AppColors.darkGrey : AppColors.grey,
-                ),
+                // ── Trailing Status Pill or Chevron ──────────────────────────
+                if (isCompleted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(
+                        alpha: dark ? 0.20 : 0.12,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.check_circle_rounded,
+                          size: 13,
+                          color: AppColors.success,
+                        ),
+                        SizedBox(width: 3),
+                        Text(
+                          'Done',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (!hasTests)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: dark
+                          ? AppColors.darkSurface
+                          : AppColors.lightGrey,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Soon',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: dark
+                            ? AppColors.darkGrey
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 22,
+                    color: dark ? AppColors.darkGrey : AppColors.grey,
+                  ),
               ],
             ),
           ),

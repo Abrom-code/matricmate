@@ -5,14 +5,40 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
+import 'package:matricmate/features/exam/screens/chapter/widgets/chapter_progress_hero_card.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/chapter_tile.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
-class ChapterScreen extends GetView<ChapterController> {
+class ChapterScreen extends StatefulWidget {
   const ChapterScreen({super.key});
+
+  @override
+  State<ChapterScreen> createState() => _ChapterScreenState();
+}
+
+class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
+  ChapterController get controller => ChapterController.instance;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    appRouteObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  /// Automatically refresh chapter progress when user returns from a test
+  @override
+  void didPopNext() {
+    controller.loadChapterProgress(controller.subjectId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,13 +225,27 @@ class ChapterScreen extends GetView<ChapterController> {
         );
       }
 
+      final overallSummary = controller.overallSectionsProgress;
+
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-        itemCount: sections.length,
+        itemCount: sections.length + 1,
         itemBuilder: (context, index) {
-          final section = sections[index];
-          final hasTests =
-              controller.chapterHasTests[section.id] ?? false;
+          // Top Hero Progress Card
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ChapterProgressHeroCard(
+                summary: overallSummary,
+                categoryTitle: '$title Mastery',
+                isSection: true,
+              ),
+            );
+          }
+
+          final section = sections[index - 1];
+          final hasTests = controller.chapterHasTests[section.id] ?? false;
+          final progress = controller.chapterProgress[section.id];
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -214,6 +254,7 @@ class ChapterScreen extends GetView<ChapterController> {
               chapter: 'Section ${section.chapterNumber}',
               chapterTitle: section.title,
               chapterNumber: section.chapterNumber,
+              progress: progress,
               onTap: () {
                 if (hasTests) {
                   Get.toNamed(
@@ -306,12 +347,26 @@ class ChapterScreen extends GetView<ChapterController> {
             );
           }
 
+          final gradeSummary = controller.getGradeProgress(grade);
+
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-            itemCount: chapters.length + 1,
+            itemCount: chapters.length + 2,
             itemBuilder: (context, chapterIndex) {
-              // Top item: All Chapters Practice Test
+              // Item 0: Hero Progress Card
               if (chapterIndex == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: ChapterProgressHeroCard(
+                    summary: gradeSummary,
+                    categoryTitle: 'Grade $grade Progress',
+                    isSection: false,
+                  ),
+                );
+              }
+
+              // Item 1: All Chapters Practice Test
+              if (chapterIndex == 1) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: AllChaptersButton(
@@ -327,9 +382,10 @@ class ChapterScreen extends GetView<ChapterController> {
                 );
               }
 
-              final chapter = chapters[chapterIndex - 1];
+              final chapter = chapters[chapterIndex - 2];
               final hasTests =
                   controller.chapterHasTests[chapter.id] ?? false;
+              final progress = controller.chapterProgress[chapter.id];
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -339,6 +395,7 @@ class ChapterScreen extends GetView<ChapterController> {
                   ),
                   chapterTitle: chapter.title,
                   chapterNumber: chapter.chapterNumber,
+                  progress: progress,
                   onTap: () {
                     if (hasTests) {
                       Get.toNamed(

@@ -403,6 +403,30 @@ class DatabaseService extends GetxController {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getChapterProgress(int subjectId) async {
+    try {
+      final db = await database;
+      final userId = UserController.instance.user.value.id;
+
+      return await db.rawQuery('''
+        SELECT 
+          c.id AS chapter_id,
+          c.grade AS grade,
+          COUNT(t.id) AS total_tests,
+          COUNT(CASE WHEN r.isCompleted = 1 THEN 1 END) AS completed_tests,
+          COUNT(CASE WHEN r.isCompleted = 0 THEN 1 END) AS in_progress_tests,
+          AVG(CASE WHEN r.isCompleted = 1 AND r.correctAnswers IS NOT NULL THEN (CAST(r.correctAnswers AS REAL) / MAX(1, t.question_count)) * 100 END) AS avg_score
+        FROM chapters c
+        LEFT JOIN tests t ON t.chapter_id = c.id
+        LEFT JOIN results r ON r.test_id = t.id AND r.user_id = ?
+        WHERE c.subject_id = ?
+        GROUP BY c.id
+      ''', [userId, subjectId]);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> hasQuestions(int testId) async {
     try {
       final db = await database;

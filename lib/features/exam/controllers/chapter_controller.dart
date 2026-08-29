@@ -15,13 +15,18 @@ class ChapterController extends GetxController {
 
   late String title;
   late int subjectId;
+  late bool isCommon;
 
   @override
   void onInit() {
     super.onInit();
 
-    title = Get.arguments['title'] ?? 'Default Title';
-    subjectId = Get.arguments['id'] ?? 0;
+    final args = Get.arguments ?? {};
+    title = args['title'] ?? 'Default Title';
+    subjectId = args['id'] ?? 0;
+    isCommon = args['is_common'] == true ||
+        title.toLowerCase() == 'sat' ||
+        title.toLowerCase() == 'english';
 
     loadSubjectChapters(subjectId);
   }
@@ -49,8 +54,10 @@ class ChapterController extends GetxController {
     }
   }
 
+  List<ChapterModel> get allSections => subjectChapters;
+
   List<ChapterModel> getChaptersByGrade(int? grade) {
-    if (grade == null) return subjectChapters;
+    if (grade == null || isCommon) return subjectChapters;
     return subjectChapters.where((e) => e.grade == grade).toList();
   }
 

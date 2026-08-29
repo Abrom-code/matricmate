@@ -167,8 +167,12 @@ class SubjectDetailScreen extends StatelessWidget {
                 icon: Iconsax.book_1_copy,
                 iconGradient: const [AppColors.primary, Color(0xFF00796B)],
                 title: 'Tests',
-                subtitle: 'Chapter and grade based tests',
-                chips: const ['Grades 9 – 12', 'Chapter Tests'],
+                subtitle: subject.isCommon
+                    ? 'Section and practice tests'
+                    : 'Chapter and grade based tests',
+                chips: subject.isCommon
+                    ? const ['All Sections', 'Section Tests']
+                    : const ['Grades 9 – 12', 'Chapter Tests'],
                 isDownloaded: subject.isDownloaded,
                 isDownloading: isStudyDownloading,
                 progress: studyProgress,
@@ -181,6 +185,7 @@ class SubjectDetailScreen extends StatelessWidget {
                           arguments: {
                             'title': subject.name,
                             'id': subject.id,
+                            'is_common': subject.isCommon,
                           },
                         )
                     : () => ctrl.downloadSubject(subject.name, subject.id),

@@ -172,13 +172,21 @@ class SubjectModeModal extends StatelessWidget {
                         Color(0xFF00796B),
                       ],
                       title: 'Tests',
-                      subtitle: 'Chapter and grade based tests',
-                      chips: const ['Grades 9 – 12', 'Chapter Tests'],
+                      subtitle: subject.isCommon
+                          ? 'Section and practice tests'
+                          : 'Chapter and grade based tests',
+                      chips: subject.isCommon
+                          ? const ['All Sections', 'Section Tests']
+                          : const ['Grades 9 – 12', 'Chapter Tests'],
                       onTap: () {
                         Navigator.of(context).pop();
                         Get.toNamed(
                           Routes.chapter,
-                          arguments: {'title': subject.name, 'id': subject.id},
+                          arguments: {
+                            'title': subject.name,
+                            'id': subject.id,
+                            'is_common': subject.isCommon,
+                          },
                         );
                       },
                     ),

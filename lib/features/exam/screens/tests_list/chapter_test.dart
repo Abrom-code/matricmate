@@ -91,12 +91,14 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            Text(
-              '$subject • Chapter Tests',
-              style: const TextStyle(
-                color: Color(0xFFD1FAE5),
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
+            Obx(
+              () => Text(
+                '$subject • ${ctrl.isCommon.value ? "Section Tests" : "Chapter Tests"}',
+                style: const TextStyle(
+                  color: Color(0xFFD1FAE5),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -138,10 +140,12 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Tests for this chapter are coming soon.',
+                  Text(
+                    ctrl.isCommon.value
+                        ? 'Tests for this section are coming soon.'
+                        : 'Tests for this chapter are coming soon.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12.5,
                     ),
@@ -167,7 +171,7 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Chapter Tests',
+                      ctrl.isCommon.value ? 'Section Tests' : 'Chapter Tests',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,

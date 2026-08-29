@@ -10,19 +10,21 @@ class ChapterTile extends StatelessWidget {
     required this.onTap,
     this.hasSubTitle = true,
     this.chapterNumber,
+    this.isSection = false,
   });
 
   final String chapter, chapterTitle;
   final VoidCallback onTap;
   final bool hasSubTitle;
   final int? chapterNumber;
+  final bool isSection;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
     // Extract chapter number badge string, e.g. "01"
-    String badgeText = 'CH';
+    String badgeText = isSection ? '01' : 'CH';
     if (chapterNumber != null) {
       badgeText = chapterNumber! < 10 ? '0$chapterNumber' : '$chapterNumber';
     } else {
@@ -57,7 +59,7 @@ class ChapterTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             child: Row(
               children: [
-                // ── Left Chapter Squircle Badge ─────────────────────
+                // ── Left Chapter / Section Squircle Badge ─────────────────────
                 Container(
                   width: 48,
                   height: 48,
@@ -70,10 +72,10 @@ class ChapterTile extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        'CH',
-                        style: TextStyle(
-                          fontSize: 8.5,
+                      Text(
+                        isSection ? 'SEC' : 'CH',
+                        style: const TextStyle(
+                          fontSize: 8.0,
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary,
                           letterSpacing: 0.5,

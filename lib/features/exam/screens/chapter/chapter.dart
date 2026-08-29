@@ -347,26 +347,12 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
             );
           }
 
-          final gradeSummary = controller.getGradeProgress(grade);
-
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-            itemCount: chapters.length + 2,
+            itemCount: chapters.length + 1,
             itemBuilder: (context, chapterIndex) {
-              // Item 0: Hero Progress Card
+              // Top item: All Chapters Practice Test
               if (chapterIndex == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: ChapterProgressHeroCard(
-                    summary: gradeSummary,
-                    categoryTitle: 'Grade $grade Progress',
-                    isSection: false,
-                  ),
-                );
-              }
-
-              // Item 1: All Chapters Practice Test
-              if (chapterIndex == 1) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: AllChaptersButton(
@@ -382,7 +368,7 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
                 );
               }
 
-              final chapter = chapters[chapterIndex - 2];
+              final chapter = chapters[chapterIndex - 1];
               final hasTests =
                   controller.chapterHasTests[chapter.id] ?? false;
               final progress = controller.chapterProgress[chapter.id];

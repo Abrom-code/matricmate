@@ -34,10 +34,10 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
     super.dispose();
   }
 
-  /// Automatically refresh chapter progress when user returns from a test
+  /// Automatically refresh chapter and grade progress when user returns from a test
   @override
   void didPopNext() {
-    controller.loadChapterProgress(controller.subjectId);
+    controller.refreshAllProgress();
   }
 
   @override
@@ -255,9 +255,9 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
               chapterTitle: section.title,
               chapterNumber: section.chapterNumber,
               progress: progress,
-              onTap: () {
+              onTap: () async {
                 if (hasTests) {
-                  Get.toNamed(
+                  await Get.toNamed(
                     Routes.testLists,
                     arguments: {
                       'subject_id': subjectId,
@@ -269,6 +269,7 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
                       'is_common': true,
                     },
                   );
+                  controller.refreshAllProgress();
                 } else {
                   ToastHelper.info(
                     'No tests added for this section yet!',
@@ -347,6 +348,8 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
             );
           }
 
+          final combinedGradeProgress = controller.gradeTestProgress[grade];
+
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
             itemCount: chapters.length + 1,
@@ -356,14 +359,18 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: AllChaptersButton(
-                    onPressed: () => Get.toNamed(
-                      Routes.gradeTests,
-                      arguments: {
-                        'subject_id': subjectId,
-                        'grade': grade,
-                        'subject': title,
-                      },
-                    ),
+                    progress: combinedGradeProgress,
+                    onPressed: () async {
+                      await Get.toNamed(
+                        Routes.gradeTests,
+                        arguments: {
+                          'subject_id': subjectId,
+                          'grade': grade,
+                          'subject': title,
+                        },
+                      );
+                      controller.refreshAllProgress();
+                    },
                   ),
                 );
               }
@@ -382,9 +389,9 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
                   chapterTitle: chapter.title,
                   chapterNumber: chapter.chapterNumber,
                   progress: progress,
-                  onTap: () {
+                  onTap: () async {
                     if (hasTests) {
-                      Get.toNamed(
+                      await Get.toNamed(
                         Routes.testLists,
                         arguments: {
                           'subject_id': subjectId,
@@ -395,6 +402,7 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
                           'chapter_number': chapter.chapterNumber,
                         },
                       );
+                      controller.refreshAllProgress();
                     } else {
                       ToastHelper.info(
                         'No tests added for this chapter yet!',

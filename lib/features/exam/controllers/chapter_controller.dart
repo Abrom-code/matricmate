@@ -13,6 +13,8 @@ class ChapterController extends GetxController {
   final RxMap<int, bool> chapterHasTests = <int, bool>{}.obs;
   final RxMap<int, ChapterProgressModel> chapterProgress =
       <int, ChapterProgressModel>{}.obs;
+  final RxMap<int, ChapterProgressModel> gradeTestProgress =
+      <int, ChapterProgressModel>{}.obs;
 
   final RxBool isChapterLoading = false.obs;
 
@@ -40,6 +42,7 @@ class ChapterController extends GetxController {
       subjectChapters.clear();
       chapterHasTests.clear();
       chapterProgress.clear();
+      gradeTestProgress.clear();
 
       List<ChapterModel> data = [];
 
@@ -53,12 +56,20 @@ class ChapterController extends GetxController {
       await Future.wait([
         loadChapterTestFlags(data),
         loadChapterProgress(subjectId),
+        loadGradeTestProgress(subjectId),
       ]);
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isChapterLoading.value = false;
     }
+  }
+
+  Future<void> refreshAllProgress() async {
+    await Future.wait([
+      loadChapterProgress(subjectId),
+      loadGradeTestProgress(subjectId),
+    ]);
   }
 
   Future<void> loadChapterProgress(int subjectId) async {
@@ -72,6 +83,20 @@ class ChapterController extends GetxController {
       chapterProgress.assignAll(map);
     } catch (_) {
       // Non-fatal, progress falls back to 0
+    }
+  }
+
+  Future<void> loadGradeTestProgress(int subjectId) async {
+    try {
+      final rows = await _repo.getGradeTestProgress(subjectId);
+      final Map<int, ChapterProgressModel> map = {};
+      for (final r in rows) {
+        final grade = r['grade'] as int? ?? 9;
+        map[grade] = ChapterProgressModel.fromMap(r);
+      }
+      gradeTestProgress.assignAll(map);
+    } catch (_) {
+      // Non-fatal
     }
   }
 

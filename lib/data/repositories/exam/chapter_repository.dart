@@ -31,6 +31,14 @@ class ChapterRepository {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getGradeTestProgress(int subjectId) async {
+    try {
+      return await _dbService.getGradeTestProgress(subjectId);
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
   Future<void> addChapter(ChapterModel chapter) async {
     try {
       await _dbService.insetData('chapters', chapter.toMap());

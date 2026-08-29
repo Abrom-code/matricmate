@@ -17,7 +17,7 @@ class ChapterProgressModel {
 
   factory ChapterProgressModel.fromMap(Map<String, dynamic> map) {
     return ChapterProgressModel(
-      chapterId: map['chapter_id'] as int,
+      chapterId: map['chapter_id'] as int? ?? (map['grade'] as int? ?? 0),
       grade: map['grade'] as int? ?? 9,
       totalTests: map['total_tests'] as int? ?? 0,
       completedTests: map['completed_tests'] as int? ?? 0,

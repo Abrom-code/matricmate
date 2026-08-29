@@ -71,7 +71,7 @@ class _PausedTestsScreenState extends State<PausedTestsScreen> {
         ),
       ),
       body: Obx(() {
-        final all = ctrl.pausedTests;
+        final all = ctrl.filteredPausedTests;
         final tests = filterTypes == null
             ? all
             : all.where((t) => filterTypes.contains(t.testType)).toList();

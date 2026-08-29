@@ -63,7 +63,7 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
           }),
           // Paused tests (entrance + model only)
           Obx(() {
-            final count = ctrl.pausedTests
+            final count = ctrl.filteredPausedTests
                 .where((t) => t.testType == 'entrance' || t.testType == 'model')
                 .length;
             if (count == 0) return const SizedBox.shrink();

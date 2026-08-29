@@ -15,7 +15,7 @@ class PausedTestBanner extends StatelessWidget {
     final isDark = AppHelperFunctions.isDark(context);
 
     return Obx(() {
-      final paused = controller.pausedTests;
+      final paused = controller.filteredPausedTests;
       if (paused.isEmpty) return const SizedBox.shrink();
 
       final count = paused.length;

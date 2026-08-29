@@ -326,4 +326,16 @@ class SubjectsController extends GetxController {
       return subject.isCommon || subject.isNatural == isNatural;
     }).toList();
   }
+
+  List<PausedTestInfoModel> get filteredPausedTests {
+    final isNatural = selectedStream.value == 'natural';
+
+    return pausedTests.where((p) {
+      if (p.subjectIsCommon == true) return true;
+      if (p.subjectIsNatural != null) {
+        return p.subjectIsNatural == isNatural;
+      }
+      return true;
+    }).toList();
+  }
 }

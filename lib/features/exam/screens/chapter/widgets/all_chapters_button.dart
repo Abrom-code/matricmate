@@ -17,6 +17,7 @@ class AllChaptersButton extends StatelessWidget {
     final hasTests = progress?.hasTests ?? false;
     final totalTests = progress?.totalTests ?? 0;
     final completedTests = progress?.completedTests ?? 0;
+    final inProgressTests = progress?.inProgressTests ?? 0;
     final isCompleted = progress?.isCompleted ?? false;
     final progressVal = progress?.progressPercentage ?? 0.0;
     final percentInt = (progressVal * 100).toInt();
@@ -62,7 +63,7 @@ class AllChaptersButton extends StatelessWidget {
 
                 const SizedBox(width: 14),
 
-                // ── Title, Subtitle, & Progress Bar ──────────────────
+                // ── Title, Subtitle, & Dual Progress Bar ─────────────
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,14 +98,56 @@ class AllChaptersButton extends StatelessWidget {
                             Expanded(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: progressVal,
-                                  minHeight: 4.5,
-                                  backgroundColor:
-                                      Colors.white.withValues(alpha: 0.22),
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
+                                child: Container(
+                                  height: 4.5,
+                                  color: Colors.white.withValues(alpha: 0.22),
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final totalWidth = constraints.maxWidth;
+                                      final completedWidth =
+                                          (progressVal * totalWidth)
+                                              .clamp(0.0, totalWidth);
+                                      final inProgWidth = totalTests > 0
+                                          ? ((inProgressTests / totalTests) *
+                                                  totalWidth)
+                                              .clamp(
+                                                  0.0,
+                                                  totalWidth - completedWidth)
+                                          : 0.0;
+
+                                      return Row(
+                                        children: [
+                                          if (completedWidth > 0)
+                                            Container(
+                                              width: completedWidth,
+                                              height: 4.5,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                  inProgWidth > 0 ? 0 : 4,
+                                                ),
+                                              ),
+                                            ),
+                                          if (inProgWidth > 0)
+                                            Container(
+                                              width: inProgWidth,
+                                              height: 4.5,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF67E8F9),
+                                                borderRadius:
+                                                    BorderRadius.horizontal(
+                                                  left: completedWidth > 0
+                                                      ? Radius.zero
+                                                      : const Radius.circular(4),
+                                                  right:
+                                                      const Radius.circular(4),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -113,9 +156,13 @@ class AllChaptersButton extends StatelessWidget {
                             Text(
                               isCompleted
                                   ? 'Done'
-                                  : '$completedTests/$totalTests ($percentInt%)',
+                                  : (inProgressTests > 0 && completedTests > 0
+                                      ? '$completedTests done • $inProgressTests in progress'
+                                      : (inProgressTests > 0
+                                          ? '$inProgressTests in progress'
+                                          : '$completedTests/$totalTests ($percentInt%)')),
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 9.5,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white.withValues(alpha: 0.95),
                               ),
@@ -157,6 +204,40 @@ class AllChaptersButton extends StatelessWidget {
                           'Done',
                           style: TextStyle(
                             fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (inProgressTests > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.bolt_rounded,
+                          size: 13,
+                          color: Color(0xFF67E8F9),
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '$inProgressTests Active',
+                          style: const TextStyle(
+                            fontSize: 10,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),

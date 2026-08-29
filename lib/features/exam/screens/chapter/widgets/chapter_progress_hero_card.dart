@@ -223,10 +223,15 @@ class ChapterProgressHeroCard extends StatelessWidget {
                       children: [
                         Text(
                           summary.totalTests > 0
-                              ? '${summary.completedTests} of ${summary.totalTests} Tests'
+                              ? (summary.inProgressTests > 0 &&
+                                      summary.completedTests > 0
+                                  ? '${summary.completedTests} Done • ${summary.inProgressTests} In Progress'
+                                  : (summary.inProgressTests > 0
+                                      ? '${summary.inProgressTests} In Progress of ${summary.totalTests}'
+                                      : '${summary.completedTests} of ${summary.totalTests} Tests'))
                               : 'No Tests Available',
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 14.5,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.3,
                             color: dark
@@ -249,17 +254,58 @@ class ChapterProgressHeroCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
 
-                    // Linear bar
+                    // Dual Linear bar
                     ClipRRect(
                       borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: percentage,
-                        minHeight: 6,
-                        backgroundColor: dark
+                      child: Container(
+                        height: 6,
+                        color: dark
                             ? AppColors.darkSurface
                             : AppColors.primary.withValues(alpha: 0.10),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isMastered ? AppColors.success : AppColors.primary,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final totalWidth = constraints.maxWidth;
+                            final completedWidth =
+                                (percentage * totalWidth).clamp(0.0, totalWidth);
+                            final inProgWidth = summary.totalTests > 0
+                                ? ((summary.inProgressTests /
+                                            summary.totalTests) *
+                                        totalWidth)
+                                    .clamp(0.0, totalWidth - completedWidth)
+                                : 0.0;
+
+                            return Row(
+                              children: [
+                                if (completedWidth > 0)
+                                  Container(
+                                    width: completedWidth,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: isMastered
+                                          ? AppColors.success
+                                          : AppColors.primary,
+                                      borderRadius: BorderRadius.circular(
+                                        inProgWidth > 0 ? 0 : 6,
+                                      ),
+                                    ),
+                                  ),
+                                if (inProgWidth > 0)
+                                  Container(
+                                    width: inProgWidth,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF3B82F6),
+                                      borderRadius: BorderRadius.horizontal(
+                                        left: completedWidth > 0
+                                            ? Radius.zero
+                                            : const Radius.circular(6),
+                                        right: const Radius.circular(6),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),

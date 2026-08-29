@@ -242,6 +242,12 @@ class DatabaseService extends GetxController {
               image_url TEXT
             )
           ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS user_deleted_challenges (
+              challenge_id TEXT PRIMARY KEY,
+              deleted_at TEXT NOT NULL
+            )
+          ''');
         } catch (_) {}
       },
     );
@@ -884,5 +890,51 @@ class DatabaseService extends GetxController {
     } catch (_) {
       return {};
     }
+  }
+
+  /// Marks a challenge and/or set ID as deleted by the user on this device.
+  Future<void> markChallengeAsDeleted(String challengeId, {String? setId}) async {
+    final db = await database;
+    try {
+      final now = DateTime.now().toIso8601String();
+      final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
+      for (final id in ids) {
+        await db.insert(
+          'user_deleted_challenges',
+          {
+            'challenge_id': id,
+            'deleted_at': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await deleteDownloadedChallenge(challengeId, setId: setId);
+      await deleteChallengePracticeResult(challengeId, setId: setId);
+    } catch (_) {}
+  }
+
+  /// Returns the set of all challenge IDs deleted by the user.
+  Future<Set<String>> getDeletedChallengeIds() async {
+    final db = await database;
+    try {
+      final res = await db.query('user_deleted_challenges', columns: ['challenge_id']);
+      return res.map((r) => r['challenge_id']?.toString() ?? '').where((id) => id.isNotEmpty).toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Unmarks a challenge as deleted if the user re-downloads or re-attempts it.
+  Future<void> unmarkChallengeAsDeleted(String challengeId, {String? setId}) async {
+    final db = await database;
+    try {
+      final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
+      final placeholders = List.filled(ids.length, '?').join(',');
+      await db.delete(
+        'user_deleted_challenges',
+        where: 'challenge_id IN ($placeholders)',
+        whereArgs: [...ids],
+      );
+    } catch (_) {}
   }
 }

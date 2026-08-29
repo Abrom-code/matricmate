@@ -18,9 +18,6 @@ class AllChaptersButton extends StatelessWidget {
     final totalTests = progress?.totalTests ?? 0;
     final completedTests = progress?.completedTests ?? 0;
     final inProgressTests = progress?.inProgressTests ?? 0;
-    final isCompleted = progress?.isCompleted ?? false;
-    final progressVal = progress?.progressPercentage ?? 0.0;
-    final percentInt = (progressVal * 100).toInt();
 
     return Container(
       decoration: BoxDecoration(
@@ -63,7 +60,7 @@ class AllChaptersButton extends StatelessWidget {
 
                 const SizedBox(width: 14),
 
-                // ── Title, Subtitle, & Dual Progress Bar ─────────────
+                // ── Title, Subtitle, & Uniform Progress Bar ──────────
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,60 +87,44 @@ class AllChaptersButton extends StatelessWidget {
                         ),
                       ),
 
-                      // Progress bar when combined grade tests exist
+                      // Equal-length progress bar (Completed + In-Progress + Not-Started) with numbers only
                       if (hasTests) ...[
-                        const SizedBox(height: 7),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Expanded(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
                                 child: Container(
-                                  height: 4.5,
-                                  color: Colors.white.withValues(alpha: 0.22),
+                                  height: 5,
+                                  color: Colors.white.withValues(alpha: 0.25),
                                   child: LayoutBuilder(
                                     builder: (context, constraints) {
                                       final totalWidth = constraints.maxWidth;
                                       final completedWidth =
-                                          (progressVal * totalWidth)
+                                          ((completedTests / totalTests) *
+                                                  totalWidth)
                                               .clamp(0.0, totalWidth);
-                                      final inProgWidth = totalTests > 0
-                                          ? ((inProgressTests / totalTests) *
+                                      final inProgWidth =
+                                          ((inProgressTests / totalTests) *
                                                   totalWidth)
                                               .clamp(
                                                   0.0,
-                                                  totalWidth - completedWidth)
-                                          : 0.0;
+                                                  totalWidth - completedWidth);
 
                                       return Row(
                                         children: [
                                           if (completedWidth > 0)
                                             Container(
                                               width: completedWidth,
-                                              height: 4.5,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                  inProgWidth > 0 ? 0 : 4,
-                                                ),
-                                              ),
+                                              height: 5,
+                                              color: Colors.white,
                                             ),
                                           if (inProgWidth > 0)
                                             Container(
                                               width: inProgWidth,
-                                              height: 4.5,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF67E8F9),
-                                                borderRadius:
-                                                    BorderRadius.horizontal(
-                                                  left: completedWidth > 0
-                                                      ? Radius.zero
-                                                      : const Radius.circular(4),
-                                                  right:
-                                                      const Radius.circular(4),
-                                                ),
-                                              ),
+                                              height: 5,
+                                              color: const Color(0xFF67E8F9),
                                             ),
                                         ],
                                       );
@@ -152,19 +133,17 @@ class AllChaptersButton extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              isCompleted
-                                  ? 'Done'
-                                  : (inProgressTests > 0 && completedTests > 0
-                                      ? '$completedTests done • $inProgressTests in progress'
-                                      : (inProgressTests > 0
-                                          ? '$inProgressTests in progress'
-                                          : '$completedTests/$totalTests ($percentInt%)')),
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white.withValues(alpha: 0.95),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 36,
+                              child: Text(
+                                '$completedTests/$totalTests',
+                                textAlign: TextAlign.end,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white.withValues(alpha: 0.95),
+                                ),
                               ),
                             ),
                           ],
@@ -176,81 +155,12 @@ class AllChaptersButton extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // ── Status Pill or Chevron ───────────────────────────
-                if (isCompleted)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          size: 13,
-                          color: Colors.white,
-                        ),
-                        SizedBox(width: 3),
-                        Text(
-                          'Done',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else if (inProgressTests > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.bolt_rounded,
-                          size: 13,
-                          color: Color(0xFF67E8F9),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '$inProgressTests Active',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.white,
-                    size: 24,
-                  ),
+                // ── Trailing Chevron ─────────────────────────────────
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.white,
+                  size: 24,
+                ),
               ],
             ),
           ),

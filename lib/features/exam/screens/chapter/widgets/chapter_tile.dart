@@ -30,8 +30,6 @@ class ChapterTile extends StatelessWidget {
     final totalTests = progress?.totalTests ?? 0;
     final completedTests = progress?.completedTests ?? 0;
     final inProgressTests = progress?.inProgressTests ?? 0;
-    final progressVal = progress?.progressPercentage ?? 0.0;
-    final percentInt = (progressVal * 100).toInt();
 
     // Extract chapter number badge string, e.g. "01"
     String badgeText = isSection ? '01' : 'CH';
@@ -52,10 +50,8 @@ class ChapterTile extends StatelessWidget {
         border: Border.all(
           color: isCompleted
               ? AppColors.success.withValues(alpha: dark ? 0.35 : 0.25)
-              : (inProgressTests > 0
-                  ? const Color(0xFF3B82F6).withValues(alpha: dark ? 0.40 : 0.30)
-                  : (dark ? AppColors.darkBorder : AppColors.borderPrimary)),
-          width: isCompleted || inProgressTests > 0 ? 1.3 : 1.0,
+              : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
+          width: isCompleted ? 1.3 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
@@ -83,26 +79,16 @@ class ChapterTile extends StatelessWidget {
                         ? AppColors.success.withValues(
                             alpha: dark ? 0.20 : 0.12,
                           )
-                        : (inProgressTests > 0
-                            ? const Color(0xFF3B82F6).withValues(
-                                alpha: dark ? 0.20 : 0.12,
-                              )
-                            : AppColors.primary.withValues(
-                                alpha: dark ? 0.18 : 0.10,
-                              )),
+                        : AppColors.primary.withValues(
+                            alpha: dark ? 0.18 : 0.10,
+                          ),
                     borderRadius: BorderRadius.circular(15),
                     border: isCompleted
                         ? Border.all(
                             color: AppColors.success.withValues(alpha: 0.4),
                             width: 1,
                           )
-                        : (inProgressTests > 0
-                            ? Border.all(
-                                color: const Color(0xFF3B82F6)
-                                    .withValues(alpha: 0.4),
-                                width: 1,
-                              )
-                            : null),
+                        : null,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -114,9 +100,7 @@ class ChapterTile extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                           color: isCompleted
                               ? AppColors.success
-                              : (inProgressTests > 0
-                                  ? const Color(0xFF3B82F6)
-                                  : AppColors.primary),
+                              : AppColors.primary,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -128,11 +112,9 @@ class ChapterTile extends StatelessWidget {
                           letterSpacing: -0.5,
                           color: isCompleted
                               ? AppColors.success
-                              : (inProgressTests > 0
-                                  ? const Color(0xFF3B82F6)
-                                  : (dark
-                                      ? AppColors.textWhite
-                                      : AppColors.primary)),
+                              : (dark
+                                  ? AppColors.textWhite
+                                  : AppColors.primary),
                         ),
                       ),
                     ],
@@ -141,7 +123,7 @@ class ChapterTile extends StatelessWidget {
 
                 const SizedBox(width: 14),
 
-                // ── Chapter Title, Subtitle, and Dual Progress Bar ───────────
+                // ── Chapter Title, Subtitle, & Uniform Progress Bar ──────────
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,65 +156,48 @@ class ChapterTile extends StatelessWidget {
                         ),
                       ),
 
-                      // Progress bar & detailed status when tests exist
+                      // Equal-length progress bar (Completed + In-Progress + Not-Started) with numbers only
                       if (totalTests > 0) ...[
-                        const SizedBox(height: 7),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Expanded(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
                                 child: Container(
-                                  height: 4.5,
+                                  height: 5,
                                   color: dark
-                                      ? AppColors.darkSurface
-                                      : AppColors.primary
-                                          .withValues(alpha: 0.10),
+                                      ? const Color(0xFF2A2A2A)
+                                      : const Color(0xFFE5E7EB),
                                   child: LayoutBuilder(
                                     builder: (context, constraints) {
                                       final totalWidth = constraints.maxWidth;
                                       final completedWidth =
-                                          (progressVal * totalWidth)
+                                          ((completedTests / totalTests) *
+                                                  totalWidth)
                                               .clamp(0.0, totalWidth);
-                                      final inProgWidth = totalTests > 0
-                                          ? ((inProgressTests / totalTests) *
+                                      final inProgWidth =
+                                          ((inProgressTests / totalTests) *
                                                   totalWidth)
                                               .clamp(
                                                   0.0,
-                                                  totalWidth - completedWidth)
-                                          : 0.0;
+                                                  totalWidth - completedWidth);
 
                                       return Row(
                                         children: [
                                           if (completedWidth > 0)
                                             Container(
                                               width: completedWidth,
-                                              height: 4.5,
-                                              decoration: BoxDecoration(
-                                                color: isCompleted
-                                                    ? AppColors.success
-                                                    : AppColors.primary,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                  inProgWidth > 0 ? 0 : 4,
-                                                ),
-                                              ),
+                                              height: 5,
+                                              color: isCompleted
+                                                  ? AppColors.success
+                                                  : AppColors.primary,
                                             ),
                                           if (inProgWidth > 0)
                                             Container(
                                               width: inProgWidth,
-                                              height: 4.5,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF3B82F6),
-                                                borderRadius:
-                                                    BorderRadius.horizontal(
-                                                  left: completedWidth > 0
-                                                      ? Radius.zero
-                                                      : const Radius.circular(4),
-                                                  right:
-                                                      const Radius.circular(4),
-                                                ),
-                                              ),
+                                              height: 5,
+                                              color: const Color(0xFF3B82F6),
                                             ),
                                         ],
                                       );
@@ -241,25 +206,21 @@ class ChapterTile extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              isCompleted
-                                  ? 'Done'
-                                  : (inProgressTests > 0 && completedTests > 0
-                                      ? '$completedTests done • $inProgressTests in progress'
-                                      : (inProgressTests > 0
-                                          ? '$inProgressTests in progress'
-                                          : '$completedTests/$totalTests ($percentInt%)')),
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: isCompleted
-                                    ? AppColors.success
-                                    : (inProgressTests > 0
-                                        ? const Color(0xFF3B82F6)
-                                        : (dark
-                                            ? AppColors.darkGrey
-                                            : AppColors.textSecondary)),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 36,
+                              child: Text(
+                                '$completedTests/$totalTests',
+                                textAlign: TextAlign.end,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: isCompleted
+                                      ? AppColors.success
+                                      : (dark
+                                          ? AppColors.darkGrey
+                                          : AppColors.textSecondary),
+                                ),
                               ),
                             ),
                           ],
@@ -271,72 +232,8 @@ class ChapterTile extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // ── Trailing Status Pill or Chevron ──────────────────────────
-                if (isCompleted)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(
-                        alpha: dark ? 0.20 : 0.12,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          size: 13,
-                          color: AppColors.success,
-                        ),
-                        SizedBox(width: 3),
-                        Text(
-                          'Done',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.success,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else if (inProgressTests > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withValues(
-                        alpha: dark ? 0.20 : 0.12,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.bolt_rounded,
-                          size: 13,
-                          color: Color(0xFF3B82F6),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '$inProgressTests Active',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF3B82F6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else if (!hasTests)
+                // ── Trailing Chevron or Soon Pill ────────────────────────────
+                if (!hasTests)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 7,
@@ -363,7 +260,9 @@ class ChapterTile extends StatelessWidget {
                   Icon(
                     Icons.chevron_right_rounded,
                     size: 22,
-                    color: dark ? AppColors.darkGrey : AppColors.grey,
+                    color: isCompleted
+                        ? AppColors.success
+                        : (dark ? AppColors.darkGrey : AppColors.grey),
                   ),
               ],
             ),

@@ -5,7 +5,6 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
-import 'package:matricmate/features/exam/screens/chapter/widgets/chapter_progress_hero_card.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/chapter_tile.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -225,25 +224,11 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
         );
       }
 
-      final overallSummary = controller.overallSectionsProgress;
-
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-        itemCount: sections.length + 1,
+        itemCount: sections.length,
         itemBuilder: (context, index) {
-          // Top Hero Progress Card
-          if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: ChapterProgressHeroCard(
-                summary: overallSummary,
-                categoryTitle: '$title Mastery',
-                isSection: true,
-              ),
-            );
-          }
-
-          final section = sections[index - 1];
+          final section = sections[index];
           final hasTests = controller.chapterHasTests[section.id] ?? false;
           final progress = controller.chapterProgress[section.id];
 

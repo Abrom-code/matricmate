@@ -46,7 +46,8 @@ class ReadyDialog extends StatelessWidget {
     bool resume = false,
   }) {
     Get.delete<QuestionController>(force: true);
-    Get.offNamed(
+    Get.back(); // Cleanly dismiss ReadyDialog
+    Get.toNamed(
       Routes.questions,
       arguments: {
         'test_id': testId,

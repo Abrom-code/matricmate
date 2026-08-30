@@ -7,6 +7,8 @@ class PausedTestInfoModel {
   final int testTime;
   final String testType;
   final String subjectName;
+  final bool? subjectIsNatural;
+  final bool? subjectIsCommon;
 
   PausedTestInfoModel({
     required this.result,
@@ -14,6 +16,8 @@ class PausedTestInfoModel {
     required this.testTime,
     required this.testType,
     required this.subjectName,
+    this.subjectIsNatural,
+    this.subjectIsCommon,
   });
 
   factory PausedTestInfoModel.fromMap(Map<String, dynamic> map) {
@@ -23,6 +27,12 @@ class PausedTestInfoModel {
       testTime: map['test_time'] as int? ?? -1,
       testType: map['test_type'] as String? ?? '',
       subjectName: map['subject_name'] as String? ?? '',
+      subjectIsNatural: map['subject_is_natural'] != null
+          ? (map['subject_is_natural'] == 1)
+          : null,
+      subjectIsCommon: map['subject_is_common'] != null
+          ? (map['subject_is_common'] == 1)
+          : null,
     );
   }
 }

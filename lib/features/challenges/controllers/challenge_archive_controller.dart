@@ -41,6 +41,7 @@ class ChallengeArchiveController extends GetxController {
   final isOpeningReview = <String, bool>{}.obs;
   final attemptedIds = <String>{}.obs;
   final inProgressIds = <String>{}.obs;
+  final deletedChallengeIds = <String>{}.obs;
   final isOffline = false.obs;
 
   RealtimeChannel? _realtimeChannel;
@@ -192,10 +193,13 @@ class ChallengeArchiveController extends GetxController {
       final isNatural = userStream == 'natural';
       final Map<String, LeaderboardChallengeModel> challengeMap = {};
 
-      // 1. Load previously cached challenges
+      final deleted = await _db.getDeletedChallengeIds();
+      deletedChallengeIds.assignAll(deleted);
+
+      // 1. Load previously cached challenges from SharedPreferences
       final cachedList = await _getCachedArchiveChallenges();
       for (final c in cachedList) {
-        // When offline, only closed or archived challenges can be practiced/reviewed
+        if (deleted.contains(c.id) || (c.setId.isNotEmpty && deleted.contains(c.setId))) continue;
         if (!c.isClosed && !c.isArchived) continue;
 
         final aud = c.audience.toLowerCase().trim();
@@ -216,6 +220,7 @@ class ChallengeArchiveController extends GetxController {
       final rows = await _db.getDownloadedChallengeSets(subjectId: subjectId);
       for (final r in rows) {
         final cId = r['challenge_id']?.toString() ?? r['id']?.toString() ?? '';
+        if (cId.isEmpty || deleted.contains(cId)) continue;
         final sId = (r['subject_id'] as num?)?.toInt() ?? 0;
         final title = r['title']?.toString() ?? 'Challenge Set';
         final aud = (r['audience']?.toString() ?? 'both').toLowerCase().trim();
@@ -265,6 +270,9 @@ class ChallengeArchiveController extends GetxController {
       isLoading.value = true;
     }
     try {
+      final deleted = await _db.getDeletedChallengeIds();
+      deletedChallengeIds.assignAll(deleted);
+
       // Fetch all challenges across subjects for student stream so tabs work seamlessly
       final list = await _repo.fetchAllSubjectChallenges(stream: userStream);
       final isNatural = userStream == 'natural';
@@ -274,6 +282,9 @@ class ChallengeArchiveController extends GetxController {
           : [];
 
       final filtered = list.where((c) {
+        if (deleted.contains(c.id) || (c.setId.isNotEmpty && deleted.contains(c.setId))) {
+          return false;
+        }
         final aud = c.audience.toLowerCase().trim();
         final matchesAudience = aud == 'both' || aud == userStream || userStream.isEmpty;
         if (!matchesAudience) return false;
@@ -328,17 +339,19 @@ class ChallengeArchiveController extends GetxController {
 
   Future<void> refreshAttemptStates() async {
     try {
+      final deleted = await _db.getDeletedChallengeIds();
+      deletedChallengeIds.assignAll(deleted);
+
       final local = await _db.getCompletedPracticeChallengeIds();
-      attemptedIds.addAll(local);
+      attemptedIds.assignAll(local.difference(deleted));
 
       final userId = UserController.instance.user.value.id;
       if (userId.isNotEmpty) {
         final online = await _repo.fetchUserSubmittedChallengeIds(userId);
-        attemptedIds.addAll(online);
+        attemptedIds.addAll(online.difference(deleted));
 
         final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
-        inProgressIds.clear();
-        inProgressIds.addAll(inProg);
+        inProgressIds.assignAll(inProg.difference(deleted));
       }
     } catch (_) {}
   }
@@ -397,20 +410,9 @@ class ChallengeArchiveController extends GetxController {
   }
 
   Future<void> confirmDeleteDownload(BuildContext context, LeaderboardChallengeModel challenge) async {
-    final isDone = isAttemptedOrPracticed(challenge.id);
-    final isDown = isDownloaded(challenge.id);
-
-    final titleText = isDown && isDone
-        ? 'Delete Challenge Data'
-        : isDone
-            ? 'Delete Challenge Practice Data'
-            : 'Delete Downloaded Challenge';
-
-    final contentText = isDown && isDone
-        ? 'Are you sure you want to remove "${challenge.title}" offline bundle and local practice data from this device?'
-        : isDone
-            ? 'Are you sure you want to remove your local practice record for "${challenge.title}" from this device?'
-            : 'Are you sure you want to remove "${challenge.title}" offline data from this device?';
+    final titleText = 'Delete Challenge';
+    final contentText =
+        'Are you sure you want to delete "${challenge.title}"? It will be removed from your challenges list.';
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -433,24 +435,76 @@ class ChallengeArchiveController extends GetxController {
 
     if (confirmed == true) {
       try {
-        await _db.deleteDownloadedChallenge(challenge.id, setId: challenge.setId);
-        await _db.deleteChallengePracticeResult(challenge.id, setId: challenge.setId);
+        final userId = UserController.instance.user.value.id;
+
+        // 1. Permanently record deletion in local DB
+        await _db.markChallengeAsDeleted(challenge.id, setId: challenge.setId);
+
+        // 2. Best-effort delete attempt from Supabase
+        if (userId.isNotEmpty) {
+          await _repo.deleteChallengeAttempt(
+            challengeId: challenge.id,
+            userId: userId,
+          );
+        }
+
+        // 3. Update reactive state sets
+        deletedChallengeIds.add(challenge.id);
+        if (challenge.setId.isNotEmpty) deletedChallengeIds.add(challenge.setId);
+
         downloadedIds.remove(challenge.id);
+        downloadedIds.remove(challenge.setId);
         attemptedIds.remove(challenge.id);
+        attemptedIds.remove(challenge.setId);
         inProgressIds.remove(challenge.id);
+        inProgressIds.remove(challenge.setId);
+
+        // 4. Immediately remove from UI list so it disappears!
+        challenges.removeWhere(
+          (c) =>
+              c.id == challenge.id ||
+              c.setId == challenge.id ||
+              (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+        );
+
+        // 5. Update cached SharedPreferences
+        final cached = await _getCachedArchiveChallenges();
+        final updatedCache = cached
+            .where(
+              (c) =>
+                  c.id != challenge.id &&
+                  c.setId != challenge.id &&
+                  (challenge.setId.isEmpty || (c.id != challenge.setId && c.setId != challenge.setId)),
+            )
+            .toList();
+        await _saveCachedArchiveChallenges(updatedCache);
+
+        // 6. Update home controller if registered
         if (Get.isRegistered<ChallengeHomeController>()) {
           final hCtrl = Get.find<ChallengeHomeController>();
+          hCtrl.deletedChallengeIds.add(challenge.id);
+          if (challenge.setId.isNotEmpty) hCtrl.deletedChallengeIds.add(challenge.setId);
           hCtrl.downloadedIds.remove(challenge.id);
+          hCtrl.downloadedIds.remove(challenge.setId);
           hCtrl.attemptedIds.remove(challenge.id);
+          hCtrl.attemptedIds.remove(challenge.setId);
           hCtrl.inProgressIds.remove(challenge.id);
-          if (hCtrl.isOffline.value) {
-            hCtrl.completedChallenges.removeWhere((c) => c.id == challenge.id);
-          }
+          hCtrl.inProgressIds.remove(challenge.setId);
+          hCtrl.availableChallenges.removeWhere(
+            (c) =>
+                c.id == challenge.id ||
+                c.setId == challenge.id ||
+                (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+          );
+          hCtrl.completedChallenges.removeWhere(
+            (c) =>
+                c.id == challenge.id ||
+                c.setId == challenge.id ||
+                (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+          );
         }
-        if (isOffline.value) {
-          challenges.removeWhere((c) => c.id == challenge.id);
-        }
-        ToastHelper.info('Challenge data removed from device.');
+
+        ToastHelper.success('Challenge removed.');
       } catch (e) {
         AppExceptionHandler.handleResponse(e);
       }

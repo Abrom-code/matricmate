@@ -39,6 +39,22 @@ class _QuestionScreenState extends State<QuestionScreen> {
     super.dispose();
   }
 
+  void _handleExit(QuestionController controller) {
+    if (controller.exitDialogOpen) return;
+    controller.pauseTimer();
+    AppHelperFunctions.showAppDialog(
+      context,
+      controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
+      'Your progress will be saved. You can resume later.',
+      () {
+        controller.resumeTimer();
+        Get.back(); // Dismiss dialog
+        Get.back(); // Return to previous screen
+      },
+      onCancel: () => controller.resumeTimer(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<QuestionController>();
@@ -48,18 +64,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        if (controller.exitDialogOpen) return;
-        controller.pauseTimer();
-        AppHelperFunctions.showAppDialog(
-          context,
-          controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
-          'Your progress will be saved. You can resume later.',
-          () {
-            Navigator.pop(context);
-            Navigator.pop(context);
-          },
-          onCancel: () => controller.resumeTimer(),
-        );
+        _handleExit(controller);
       },
       child: Obx(() {
         final bool hasData = controller.testQuestions.isNotEmpty;
@@ -83,20 +88,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
             leading: Padding(
               padding: const EdgeInsets.only(left: 4),
               child: IconButton(
-                onPressed: () {
-                  if (controller.exitDialogOpen) return;
-                  controller.pauseTimer();
-                  AppHelperFunctions.showAppDialog(
-                    context,
-                    controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
-                    'Your progress will be saved. You can resume later.',
-                    () {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                    onCancel: () => controller.resumeTimer(),
-                  );
-                },
+                onPressed: () => _handleExit(controller),
                 tooltip: controller.isExamMode ? 'Pause' : 'Exit',
                 icon: Container(
                   width: 34,

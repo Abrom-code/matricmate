@@ -242,6 +242,12 @@ class DatabaseService extends GetxController {
               image_url TEXT
             )
           ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS user_deleted_challenges (
+              challenge_id TEXT PRIMARY KEY,
+              deleted_at TEXT NOT NULL
+            )
+          ''');
         } catch (_) {}
       },
     );
@@ -398,6 +404,52 @@ class DatabaseService extends GetxController {
         limit: 1,
       );
       return result.isNotEmpty;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getChapterProgress(int subjectId) async {
+    try {
+      final db = await database;
+      final userId = UserController.instance.user.value.id;
+
+      return await db.rawQuery('''
+        SELECT 
+          c.id AS chapter_id,
+          c.grade AS grade,
+          COUNT(t.id) AS total_tests,
+          COUNT(CASE WHEN r.isCompleted = 1 THEN 1 END) AS completed_tests,
+          COUNT(CASE WHEN r.isCompleted = 0 THEN 1 END) AS in_progress_tests,
+          AVG(CASE WHEN r.isCompleted = 1 AND r.correctAnswers IS NOT NULL THEN (CAST(r.correctAnswers AS REAL) / MAX(1, t.question_count)) * 100 END) AS avg_score
+        FROM chapters c
+        LEFT JOIN tests t ON t.chapter_id = c.id
+        LEFT JOIN results r ON r.test_id = t.id AND r.user_id = ?
+        WHERE c.subject_id = ?
+        GROUP BY c.id
+      ''', [userId, subjectId]);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getGradeTestProgress(int subjectId) async {
+    try {
+      final db = await database;
+      final userId = UserController.instance.user.value.id;
+
+      return await db.rawQuery('''
+        SELECT 
+          t.grade AS grade,
+          COUNT(t.id) AS total_tests,
+          COUNT(CASE WHEN r.isCompleted = 1 THEN 1 END) AS completed_tests,
+          COUNT(CASE WHEN r.isCompleted = 0 THEN 1 END) AS in_progress_tests,
+          AVG(CASE WHEN r.isCompleted = 1 AND r.correctAnswers IS NOT NULL THEN (CAST(r.correctAnswers AS REAL) / MAX(1, t.question_count)) * 100 END) AS avg_score
+        FROM tests t
+        LEFT JOIN results r ON r.test_id = t.id AND r.user_id = ?
+        WHERE t.subject_id = ? AND t.type = 'grade'
+        GROUP BY t.grade
+      ''', [userId, subjectId]);
     } catch (e) {
       rethrow;
     }
@@ -601,7 +653,8 @@ class DatabaseService extends GetxController {
       return await db.rawQuery(
         '''
         SELECT r.*, t.title AS test_title, t.time AS test_time,
-               t.type AS test_type, s.name AS subject_name
+               t.type AS test_type, s.name AS subject_name,
+               s.is_natural AS subject_is_natural, s.is_common AS subject_is_common
         FROM results r
         JOIN tests t ON r.test_id = t.id
         LEFT JOIN subjects s ON t.subject_id = s.id
@@ -837,5 +890,51 @@ class DatabaseService extends GetxController {
     } catch (_) {
       return {};
     }
+  }
+
+  /// Marks a challenge and/or set ID as deleted by the user on this device.
+  Future<void> markChallengeAsDeleted(String challengeId, {String? setId}) async {
+    final db = await database;
+    try {
+      final now = DateTime.now().toIso8601String();
+      final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
+      for (final id in ids) {
+        await db.insert(
+          'user_deleted_challenges',
+          {
+            'challenge_id': id,
+            'deleted_at': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await deleteDownloadedChallenge(challengeId, setId: setId);
+      await deleteChallengePracticeResult(challengeId, setId: setId);
+    } catch (_) {}
+  }
+
+  /// Returns the set of all challenge IDs deleted by the user.
+  Future<Set<String>> getDeletedChallengeIds() async {
+    final db = await database;
+    try {
+      final res = await db.query('user_deleted_challenges', columns: ['challenge_id']);
+      return res.map((r) => r['challenge_id']?.toString() ?? '').where((id) => id.isNotEmpty).toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Unmarks a challenge as deleted if the user re-downloads or re-attempts it.
+  Future<void> unmarkChallengeAsDeleted(String challengeId, {String? setId}) async {
+    final db = await database;
+    try {
+      final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
+      final placeholders = List.filled(ids.length, '?').join(',');
+      await db.delete(
+        'user_deleted_challenges',
+        where: 'challenge_id IN ($placeholders)',
+        whereArgs: [...ids],
+      );
+    } catch (_) {}
   }
 }

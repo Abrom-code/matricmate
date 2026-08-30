@@ -116,147 +116,156 @@ class AppHelperFunctions {
   }) {
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        final dark = isDark(context);
-        return Dialog(
-          backgroundColor: dark ? AppColors.darkCard : AppColors.white,
-          elevation: 12,
-          shadowColor: Colors.black.withValues(alpha: dark ? 0.4 : 0.12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-              width: 1.2,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        final dark = isDark(dialogContext);
+        return PopScope(
+          canPop: true,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop) {
+              onCancel?.call();
+            }
+          },
+          child: Dialog(
+            backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+            elevation: 12,
+            shadowColor: Colors.black.withValues(alpha: dark ? 0.4 : 0.12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                width: 1.2,
+              ),
             ),
-          ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // ── Icon ─────────────────────────────────────────────
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withValues(
-                        alpha: dark ? 0.20 : 0.12,
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ── Icon ─────────────────────────────────────────────
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withValues(
+                          alpha: dark ? 0.20 : 0.12,
+                        ),
+                        shape: BoxShape.circle,
                       ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.pause_rounded,
-                        color: AppColors.secondary,
-                        size: 26,
+                      child: const Center(
+                        child: Icon(
+                          Icons.pause_rounded,
+                          color: AppColors.secondary,
+                          size: 26,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // ── Title ───────────────────────────────────────────
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: dark ? AppColors.white : const Color(0xFF0F172A),
+                    // ── Title ───────────────────────────────────────────
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-                  // ── Message ─────────────────────────────────────────
-                  Text(
-                    message,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      height: 1.45,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    // ── Message ─────────────────────────────────────────
+                    Text(
+                      message,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 1.45,
+                        color:
+                            dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  // ── Actions ─────────────────────────────────────────
-                  Row(
-                    children: [
-                      // Secondary button (Cancel)
-                      Expanded(
-                        child: SizedBox(
-                          height: 44,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              onCancel?.call();
-                            },
-                            style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              side: BorderSide(
-                                color: dark
-                                    ? AppColors.darkInputBorder
-                                    : const Color(0xFFCBD5E1),
-                                width: 1.2,
+                    // ── Actions ─────────────────────────────────────────
+                    Row(
+                      children: [
+                        // Secondary button (Cancel)
+                        Expanded(
+                          child: SizedBox(
+                            height: 44,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pop(dialogContext);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                side: BorderSide(
+                                  color: dark
+                                      ? AppColors.darkInputBorder
+                                      : const Color(0xFFCBD5E1),
+                                  width: 1.2,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                height: 1.0,
-                                color: dark
-                                    ? AppColors.white
-                                    : const Color(0xFF334155),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.0,
+                                  color: dark
+                                      ? AppColors.white
+                                      : const Color(0xFF334155),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
+                        const SizedBox(width: 12),
 
-                      // Primary button (Ok / Resume)
-                      Expanded(
-                        child: SizedBox(
-                          height: 44,
-                          child: ElevatedButton(
-                            onPressed: onOkPressed,
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        // Primary button (Ok / Resume)
+                        Expanded(
+                          child: SizedBox(
+                            height: 44,
+                            child: ElevatedButton(
+                              onPressed: onOkPressed,
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                            ),
-                            child: const Text(
-                              'OK',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                height: 1.0,
-                                color: Colors.white,
+                              child: const Text(
+                                'OK',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.0,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -21,6 +21,7 @@ class ChapterTestController extends GetxController {
   final RxString chapter = ''.obs;
   final RxInt chapterNumber = 0.obs;
   final RxBool isLoading = false.obs;
+  final RxBool isCommon = false.obs;
 
   final RxMap<int, int> testQuestionCounts = <int, int>{}.obs;
 
@@ -34,6 +35,9 @@ class ChapterTestController extends GetxController {
     chapterId.value = args['chapter_id'] ?? 0;
     chapterNumber.value = args['chapter_number'] ?? 0;
     grade.value = args['grade'] ?? 9;
+    isCommon.value = args['is_common'] == true ||
+        title.value.toLowerCase() == 'sat' ||
+        title.value.toLowerCase() == 'english';
 
     loadGradeTests(subjectId.value, grade.value);
 
@@ -49,7 +53,7 @@ class ChapterTestController extends GetxController {
 
       final dbChapterTests = await _testRepository.getLocalTests(
         subjectId: subjectId,
-        grade: grade,
+        grade: isCommon.value ? null : grade,
         chapterId: chapterId.value,
       );
 

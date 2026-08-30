@@ -639,4 +639,19 @@ class ChallengeRepository {
       return {};
     }
   }
+
+  Future<void> deleteChallengeAttempt({
+    required String challengeId,
+    required String userId,
+  }) async {
+    try {
+      await _sb
+          .from('challenge_attempts')
+          .delete()
+          .eq('challenge_id', challengeId)
+          .eq('user_id', userId);
+    } catch (_) {
+      // Best-effort if offline or RLS restrictions
+    }
+  }
 }

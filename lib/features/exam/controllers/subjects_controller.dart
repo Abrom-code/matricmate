@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
@@ -18,6 +19,11 @@ class SubjectsController extends GetxController {
   final SubjectRepository _repo = SubjectRepository();
 
   final RxBool isLoading = false.obs;
+
+  /// True when the last load attempt found no usable connection.
+  /// Drives the offline variant of the home-screen empty state.
+  final RxBool isOffline = false.obs;
+
   final RxMap<String, bool> downloadingMap = <String, bool>{}.obs;
 
   // Subject download progress: subjectName → {step, progress}
@@ -36,6 +42,13 @@ class SubjectsController extends GetxController {
 
   final RxList<PausedTestInfoModel> pausedTests = <PausedTestInfoModel>[].obs;
 
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+
+  /// In-flight [ensureSubjectsLoaded] call, used to dedupe concurrent runs.
+  /// SyncRepository keeps a single shared batch that is not reentrant, so two
+  /// overlapping syncs would corrupt it.
+  Future<void>? _ensureInFlight;
+
   @override
   void onInit() {
     // Data is preloaded by AuthenticationController._init()
@@ -43,7 +56,79 @@ class SubjectsController extends GetxController {
       selectedStream.value = user.stream;
     });
 
+    // Auto-retry: if we came up with nothing cached (e.g. first login while
+    // offline), load subjects as soon as a connection appears.
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((result) {
+      final hasInterface = !result.contains(ConnectivityResult.none);
+      if (hasInterface && subjects.isEmpty) {
+        unawaited(ensureSubjectsLoaded());
+      }
+    });
+
     super.onInit();
+  }
+
+  @override
+  void onClose() {
+    _connectivitySub?.cancel();
+    super.onClose();
+  }
+
+  /// Single entry point for getting subjects on screen.
+  ///
+  /// Loads the local cache first so the grid paints immediately, then tops up
+  /// from Supabase when online. Never throws — startup must not be blocked by
+  /// a network failure.
+  ///
+  /// [forceRemote] re-fetches from Supabase even when subjects are already
+  /// cached (used by the empty-state retry button).
+  Future<void> ensureSubjectsLoaded({bool forceRemote = false}) async {
+    // Coalesce concurrent calls (startup + connectivity listener + retry tap).
+    final inFlight = _ensureInFlight;
+    if (inFlight != null) return inFlight;
+
+    final run = _ensureSubjectsLoaded(forceRemote: forceRemote);
+    _ensureInFlight = run;
+    try {
+      await run;
+    } finally {
+      _ensureInFlight = null;
+    }
+  }
+
+  Future<void> _ensureSubjectsLoaded({required bool forceRemote}) async {
+    try {
+      // Keep the stream filter in step with the current user. selectedStream is
+      // captured at construction, which for a fresh signup is still ''.
+      final currentStream = UserController.instance.user.value.stream;
+      if (currentStream.isNotEmpty && selectedStream.value != currentStream) {
+        selectedStream.value = currentStream;
+      }
+
+      // 1. Paint from cache.
+      await loadLocalSubjects();
+
+      // 2. Subjects are public content — never gate this on the user record.
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) {
+        isOffline.value = true;
+        return;
+      }
+      isOffline.value = false;
+
+      // 3. Top up from remote when the cache is empty or a refresh was asked for.
+      if (subjects.isEmpty || forceRemote) {
+        isLoading.value = true;
+        try {
+          await SyncingController.instance.syncSubjects();
+          await loadLocalSubjects();
+        } finally {
+          isLoading.value = false;
+        }
+      }
+    } catch (_) {
+      // Best-effort: whatever is cached stays on screen.
+    }
   }
 
   Future<void> loadPausedTests() async {
@@ -69,40 +154,6 @@ class SubjectsController extends GetxController {
       );
       // loadTestNumbers reads persisted entrance_count/model_count from the
       await loadTestNumbers(subjects);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  /// Initial remote fetch when local SQLite database is empty.
-  Future<void> initFromRemote() async {
-    try {
-      isLoading.value = true;
-
-      // Fetch subjects and save to local DB
-      await SyncingController.instance.syncSubjects();
-
-      // Now load from local (just written) + fetch entrance counts (awaited)
-      final dbSubjects = await _repo.getLocalSubjects();
-      subjects.assignAll(
-        dbSubjects.map((e) => SubjectModel.fromMap(e)).toList(),
-      );
-
-      if (subjects.isNotEmpty) {
-        // Load local counts (all 0 at this point for a first-run user)
-        await Future.wait(
-          subjects.map((s) async {
-            entranceTestNumbers[s.id] = await _repo.testNumbers(
-              s.id,
-              'entrance',
-            );
-            modelTestNumbers[s.id] = await _repo.testNumbers(s.id, 'model');
-          }),
-        );
-        // Remote counts are fetched by the caller (_runInitThenNavigate)
-      }
-    } catch (_) {
-      // Non-fatal
     } finally {
       isLoading.value = false;
     }

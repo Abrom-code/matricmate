@@ -13,9 +13,11 @@ import 'package:matricmate/features/challenges/models/challenge_question_model.d
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
+import 'package:matricmate/features/challenges/screens/widgets/challenge_manage_sheet.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -419,6 +421,10 @@ class ChallengeHomeController extends GetxController {
 
   Future<void> downloadChallenge(LeaderboardChallengeModel challenge) async {
     if (!isPremium) {
+      if (UserController.instance.user.value.isPending) {
+        Get.toNamed(Routes.paymentVerification);
+        return;
+      }
       Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
       return;
     }
@@ -441,20 +447,75 @@ class ChallengeHomeController extends GetxController {
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
-      isDownloading[challenge.id] = false;
+isDownloading[challenge.id] = false;
     }
   }
 
   Future<void> confirmDeleteDownload(BuildContext context, LeaderboardChallengeModel challenge) async {
-    final titleText = 'Delete Challenge';
-    final contentText =
-        'Are you sure you want to delete "${challenge.title}"? It will be removed from your challenges list.';
+    await showChallengeManageSheet(context, challenge);
+  }
 
+  Future<void> showChallengeManageSheet(BuildContext context, LeaderboardChallengeModel challenge) async {
+    final isDown = isDownloaded(challenge.id);
+    final isDone = isAttemptedOrPracticed(challenge.id);
+
+    await ChallengeManageSheet.show(
+      context: context,
+      challenge: challenge,
+      isDownloaded: isDown,
+      isAttemptedOrPracticed: isDone,
+      onRemoveDownload: () => removeChallengeDownload(challenge),
+      onClearPractice: () => clearPracticeProgress(challenge),
+      onHideChallenge: () => hideChallenge(context, challenge),
+    );
+  }
+
+  Future<void> removeChallengeDownload(LeaderboardChallengeModel challenge) async {
+    try {
+      await _db.deleteDownloadedChallenge(
+        challenge.id,
+        setId: challenge.setId,
+        keepPracticeResult: true,
+      );
+      downloadedIds.remove(challenge.id);
+      if (challenge.setId.isNotEmpty) downloadedIds.remove(challenge.setId);
+
+      if (Get.isRegistered<ChallengeArchiveController>()) {
+        final aCtrl = Get.find<ChallengeArchiveController>();
+        aCtrl.downloadedIds.remove(challenge.id);
+        if (challenge.setId.isNotEmpty) aCtrl.downloadedIds.remove(challenge.setId);
+      }
+      ToastHelper.success('Downloaded questions removed.');
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
+  }
+
+  Future<void> clearPracticeProgress(LeaderboardChallengeModel challenge) async {
+    try {
+      await _db.deleteChallengePracticeResult(challenge.id, setId: challenge.setId);
+      attemptedIds.remove(challenge.id);
+      if (challenge.setId.isNotEmpty) attemptedIds.remove(challenge.setId);
+
+      if (Get.isRegistered<ChallengeArchiveController>()) {
+        final aCtrl = Get.find<ChallengeArchiveController>();
+        aCtrl.attemptedIds.remove(challenge.id);
+        if (challenge.setId.isNotEmpty) aCtrl.attemptedIds.remove(challenge.setId);
+      }
+      ToastHelper.success('Practice progress cleared.');
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
+  }
+
+  Future<void> hideChallenge(BuildContext context, LeaderboardChallengeModel challenge) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(titleText),
-        content: Text(contentText),
+        title: const Text('Hide Challenge'),
+        content: Text(
+          'Are you sure you want to hide "${challenge.title}"? It will be removed from your challenges list.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -463,87 +524,87 @@ class ChallengeHomeController extends GetxController {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            child: const Text('Hide'),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      try {
-        final userId = UserController.instance.user.value.id;
+    if (confirmed != true) return;
 
-        // 1. Permanently record deletion in local DB
-        await _db.markChallengeAsDeleted(challenge.id, setId: challenge.setId);
+    try {
+      final userId = UserController.instance.user.value.id;
 
-        // 2. Best-effort delete attempt from Supabase
-        if (userId.isNotEmpty) {
-          await _repo.deleteChallengeAttempt(
-            challengeId: challenge.id,
-            userId: userId,
-          );
-        }
+      // 1. Permanently record deletion in local DB
+      await _db.markChallengeAsDeleted(challenge.id, setId: challenge.setId);
 
-        // 3. Update reactive state sets
-        deletedChallengeIds.add(challenge.id);
-        if (challenge.setId.isNotEmpty) deletedChallengeIds.add(challenge.setId);
-
-        downloadedIds.remove(challenge.id);
-        downloadedIds.remove(challenge.setId);
-        attemptedIds.remove(challenge.id);
-        attemptedIds.remove(challenge.setId);
-        inProgressIds.remove(challenge.id);
-        inProgressIds.remove(challenge.setId);
-
-        // 4. Immediately remove from UI lists so it disappears!
-        availableChallenges.removeWhere(
-          (c) =>
-              c.id == challenge.id ||
-              c.setId == challenge.id ||
-              (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+      // 2. Best-effort delete attempt from Supabase
+      if (userId.isNotEmpty) {
+        await _repo.deleteChallengeAttempt(
+          challengeId: challenge.id,
+          userId: userId,
         );
-        completedChallenges.removeWhere(
-          (c) =>
-              c.id == challenge.id ||
-              c.setId == challenge.id ||
-              (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
-        );
-
-        // 5. Update cached SharedPreferences
-        final cached = await _getCachedChallenges();
-        final updatedCache = cached
-            .where(
-              (c) =>
-                  c.id != challenge.id &&
-                  c.setId != challenge.id &&
-                  (challenge.setId.isEmpty || (c.id != challenge.setId && c.setId != challenge.setId)),
-            )
-            .toList();
-        await _saveCachedChallenges(updatedCache);
-
-        // 6. Update archive controller if registered
-        if (Get.isRegistered<ChallengeArchiveController>()) {
-          final aCtrl = Get.find<ChallengeArchiveController>();
-          aCtrl.deletedChallengeIds.add(challenge.id);
-          if (challenge.setId.isNotEmpty) aCtrl.deletedChallengeIds.add(challenge.setId);
-          aCtrl.downloadedIds.remove(challenge.id);
-          aCtrl.downloadedIds.remove(challenge.setId);
-          aCtrl.attemptedIds.remove(challenge.id);
-          aCtrl.attemptedIds.remove(challenge.setId);
-          aCtrl.inProgressIds.remove(challenge.id);
-          aCtrl.inProgressIds.remove(challenge.setId);
-          aCtrl.challenges.removeWhere(
-            (c) =>
-                c.id == challenge.id ||
-                c.setId == challenge.id ||
-                (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
-          );
-        }
-
-        ToastHelper.success('Challenge removed.');
-      } catch (e) {
-        AppExceptionHandler.handleResponse(e);
       }
+
+      // 3. Update reactive state sets
+      deletedChallengeIds.add(challenge.id);
+      if (challenge.setId.isNotEmpty) deletedChallengeIds.add(challenge.setId);
+
+      downloadedIds.remove(challenge.id);
+      downloadedIds.remove(challenge.setId);
+      attemptedIds.remove(challenge.id);
+      attemptedIds.remove(challenge.setId);
+      inProgressIds.remove(challenge.id);
+      inProgressIds.remove(challenge.setId);
+
+      // 4. Immediately remove from UI lists so it disappears!
+      availableChallenges.removeWhere(
+        (c) =>
+            c.id == challenge.id ||
+            c.setId == challenge.id ||
+            (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+      );
+      completedChallenges.removeWhere(
+        (c) =>
+            c.id == challenge.id ||
+            c.setId == challenge.id ||
+            (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+      );
+
+      // 5. Update cached SharedPreferences
+      final cached = await _getCachedChallenges();
+      final updatedCache = cached
+          .where(
+            (c) =>
+                c.id != challenge.id &&
+                c.setId != challenge.id &&
+                (challenge.setId.isEmpty || (c.id != challenge.setId && c.setId != challenge.setId)),
+          )
+          .toList();
+      await _saveCachedChallenges(updatedCache);
+
+      // 6. Update archive controller if registered
+      if (Get.isRegistered<ChallengeArchiveController>()) {
+        final aCtrl = Get.find<ChallengeArchiveController>();
+        aCtrl.deletedChallengeIds.add(challenge.id);
+        if (challenge.setId.isNotEmpty) aCtrl.deletedChallengeIds.add(challenge.setId);
+        aCtrl.downloadedIds.remove(challenge.id);
+        aCtrl.downloadedIds.remove(challenge.setId);
+        aCtrl.attemptedIds.remove(challenge.id);
+        aCtrl.attemptedIds.remove(challenge.setId);
+        aCtrl.inProgressIds.remove(challenge.id);
+        aCtrl.inProgressIds.remove(challenge.setId);
+        aCtrl.challenges.removeWhere(
+          (c) =>
+              c.id == challenge.id ||
+              c.setId == challenge.id ||
+              (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+        );
+      }
+
+      ToastHelper.success('Challenge hidden from list.');
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
     }
   }
 
@@ -567,6 +628,10 @@ class ChallengeHomeController extends GetxController {
 
   void onChallengeTapped(LeaderboardChallengeModel challenge) {
     if (!isPremium) {
+      if (UserController.instance.user.value.isPending) {
+        Get.toNamed(Routes.paymentVerification);
+        return;
+      }
       Get.bottomSheet(
         const PremiumBottomSheet(),
         isScrollControlled: true,

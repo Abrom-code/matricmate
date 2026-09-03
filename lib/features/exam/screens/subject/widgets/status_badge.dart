@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 /// Picks the right badge based on user status string.
 class StatusBadge extends StatelessWidget {
@@ -70,22 +71,28 @@ class _PendingBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
+    final accentColor = dark ? const Color(0xFFFFB020) : const Color(0xFFD97706);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.2),
+        color: accentColor.withValues(alpha: dark ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.amber, width: 1),
+        border: Border.all(
+          color: accentColor.withValues(alpha: dark ? 0.8 : 0.4),
+          width: 1,
+        ),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.access_time_rounded, size: 11, color: Colors.amber),
-          SizedBox(width: 3),
+          Icon(Icons.access_time_rounded, size: 11, color: accentColor),
+          const SizedBox(width: 3),
           Text(
             'PENDING',
             style: TextStyle(
-              color: Colors.amber,
+              color: accentColor,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
@@ -104,24 +111,45 @@ class _FreeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
+
+    final textColor = dark ? Colors.white70 : const Color(0xFF475569);
+    final borderColor = dark
+        ? Colors.white.withValues(alpha: 0.22)
+        : const Color(0xFFCBD5E1);
+    final bgColor = dark
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFF1F5F9);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
+          color: borderColor,
           width: 1,
         ),
       ),
-      child: const Text(
-        'FREE',
-        style: TextStyle(
-          color: Colors.white70,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.school_rounded,
+            size: 11,
+            color: textColor,
+          ),
+          const SizedBox(width: 3.5),
+          Text(
+            'FREE',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -231,15 +231,18 @@ class SubjectRepository {
   }
 
   //get supabase subject
+  /// Always fetches every subject row.
+  ///
+  /// [since] is accepted for call-site symmetry with the other sync methods
+  /// but is intentionally ignored: the `subjects` table has no `updated_at`
+  /// column, so filtering on it raises Postgres 42703 and breaks every sync
+  /// after the first. The table is tiny (a handful of rows), so a full fetch
+  /// costs nothing.
   Future<List<Map<String, dynamic>>> getSupabaseSubjects({
     DateTime? since,
   }) async {
     try {
-      var q = supabase.from('subjects').select();
-      if (since != null) {
-        q = q.gt('updated_at', since.toUtc().toIso8601String());
-      }
-      return await q;
+      return await supabase.from('subjects').select();
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

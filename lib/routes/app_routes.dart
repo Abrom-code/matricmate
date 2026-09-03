@@ -39,7 +39,6 @@ class Routes {
 
   // auth
   static const signup = '/signup';
-  static const verifyEmail = '/verify-email';
   static const signIn = '/sign-in';
   static const changePassword = '/change-password';
   static const forgotPassword = '/forgot-password';

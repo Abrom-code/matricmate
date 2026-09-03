@@ -764,16 +764,22 @@ class DatabaseService extends GetxController {
     return res.isNotEmpty;
   }
 
-  Future<void> deleteDownloadedChallenge(String challengeId, {String? setId}) async {
+  Future<void> deleteDownloadedChallenge(
+    String challengeId, {
+    String? setId,
+    bool keepPracticeResult = false,
+  }) async {
     final db = await database;
     await db.transaction((txn) async {
-      try {
-        await txn.delete(
-          'local_challenge_practice',
-          where: 'challenge_id = ?',
-          whereArgs: [challengeId],
-        );
-      } catch (_) {}
+      if (!keepPracticeResult) {
+        try {
+          await txn.delete(
+            'local_challenge_practice',
+            where: 'challenge_id = ?',
+            whereArgs: [challengeId],
+          );
+        } catch (_) {}
+      }
       final ids = {challengeId, if (setId != null && setId.isNotEmpty) setId};
       for (final id in ids) {
         await txn.delete(

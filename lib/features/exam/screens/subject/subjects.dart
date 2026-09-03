@@ -86,6 +86,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
         final isPending = UserController.instance.user.value.isPending;
         final filteredSubjects = ctrl.filteredSubjects;
         final syncing = syncController.refreshing.value;
+        final isOffline = ctrl.isOffline.value;
 
         if (filteredSubjects.isEmpty && ctrl.isLoading.value) {
           return const AppCircularLoading(title: 'Loading subjects...');
@@ -174,25 +175,33 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                                   color: AppColors.primary.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
-                                  Icons.menu_book_rounded,
+                                child: Icon(
+                                  isOffline
+                                      ? Icons.wifi_off_rounded
+                                      : Icons.menu_book_rounded,
                                   size: 40,
                                   color: AppColors.primary,
                                 ),
                               ),
                               const SizedBox(height: 14),
-                              const Text(
-                                'No subjects found',
-                                style: TextStyle(
+                              Text(
+                                isOffline
+                                    ? "You're offline"
+                                    : 'No subjects found',
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              const Text(
-                                'Tap the sync button to load your stream subjects.',
+                              Text(
+                                isOffline
+                                    ? 'Subjects will load automatically once '
+                                          "you're back online."
+                                    : 'Tap the button below to load your '
+                                          'stream subjects.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 12,
                                 ),
@@ -206,9 +215,12 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                onPressed: () => ctrl.syncAll(),
+                                onPressed: () =>
+                                    ctrl.ensureSubjectsLoaded(forceRemote: true),
                                 icon: const Icon(Icons.sync_rounded, size: 16),
-                                label: const Text('Sync Subjects'),
+                                label: Text(
+                                  isOffline ? 'Retry' : 'Load Subjects',
+                                ),
                               ),
                             ],
                           ),

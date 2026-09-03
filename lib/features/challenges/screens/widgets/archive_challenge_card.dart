@@ -8,6 +8,8 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/ethiopian_time_helper.dart';
@@ -27,126 +29,182 @@ class ArchiveChallengeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ctrl.isDownloaded(challenge.id);
     final isLive = challenge.isLive;
     final isScheduled = challenge.isScheduled;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
-        side: BorderSide(
-          color: isLive
-              ? AppColors.primary
-              : isScheduled
-                  ? ChallengeColors.scheduled
-                  : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
-          width: isLive ? 1.5 : 1.0,
+    return Container(
+      decoration: BoxDecoration(
+        color: dark ? AppColors.darkCard : AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: dark
+                ? Colors.black.withValues(alpha: 0.28)
+                : const Color(0xFF64748B).withValues(alpha: 0.07),
+            blurRadius: 14,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header: Subject & Stream & PRO Badge & Delete Button
+            // ── Top Header Row: Subject, Audience, Dynamic Status Pill, Manage Button ──
             Row(
               children: [
+                // Subject Tag
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    challenge.subjectName ?? 'Subject',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+                    color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: dark ? 0.3 : 0.15),
+                      width: 0.8,
                     ),
                   ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Iconsax.book_1_copy,
+                        size: 11,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        challenge.subjectName ?? 'Subject',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: AppSizes.xs),
+                const SizedBox(width: 6),
+
+                // Audience Tag
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                   decoration: BoxDecoration(
-                    color: dark ? Colors.white10 : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(4),
+                    color: dark
+                        ? Colors.white.withValues(alpha: 0.07)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     challenge.audience.toUpperCase(),
                     style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
                       color: dark ? Colors.white70 : AppColors.textSecondary,
                     ),
                   ),
                 ),
-                Obx(() {
-                  final isPremium = ctrl.isPremium;
-                  if (!isPremium) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: AppSizes.xs),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.lock_rounded, size: 10.5, color: Colors.amber),
-                            SizedBox(width: 3),
-                            Text(
-                              'PRO',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.amber,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }),
-                const SizedBox(width: AppSizes.xs),
+                const SizedBox(width: 6),
+
+                // Dynamic Status Pill
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+
                   if (isDone) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2.5,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                       decoration: BoxDecoration(
-                        color: ChallengeColors.completed.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(6),
+                        color: ChallengeColors.completed.withValues(alpha: dark ? 0.2 : 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: ChallengeColors.completed.withValues(alpha: 0.25),
+                          width: 0.8,
+                        ),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.check_circle_rounded,
-                            size: 12,
+                            size: 11.5,
                             color: ChallengeColors.completed,
                           ),
                           SizedBox(width: 3.5),
                           Text(
-                            'Done',
+                            'Completed',
                             style: TextStyle(
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               color: ChallengeColors.completed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (isLive) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                      decoration: BoxDecoration(
+                        color: ChallengeColors.live.withValues(alpha: dark ? 0.2 : 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: ChallengeColors.live.withValues(alpha: 0.3),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.bolt_rounded,
+                            size: 11.5,
+                            color: ChallengeColors.live,
+                          ),
+                          SizedBox(width: 2.5),
+                          Text(
+                            'LIVE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: ChallengeColors.live,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (isScheduled) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                      decoration: BoxDecoration(
+                        color: ChallengeColors.scheduled.withValues(alpha: dark ? 0.2 : 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: ChallengeColors.scheduled.withValues(alpha: 0.3),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Iconsax.clock_copy,
+                            size: 11.5,
+                            color: ChallengeColors.scheduled,
+                          ),
+                          SizedBox(width: 3.5),
+                          Text(
+                            'Upcoming',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: ChallengeColors.scheduled,
                             ),
                           ),
                         ],
@@ -154,29 +212,30 @@ class ArchiveChallengeCard extends StatelessWidget {
                     );
                   } else if (isDown) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2.5,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                       decoration: BoxDecoration(
-                        color: ChallengeColors.completed.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(6),
+                        color: const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                          width: 0.8,
+                        ),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.download_done_rounded,
-                            size: 12,
-                            color: ChallengeColors.completed,
+                            size: 11.5,
+                            color: Color(0xFF0284C7),
                           ),
                           SizedBox(width: 3.5),
                           Text(
                             'Downloaded',
                             style: TextStyle(
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: ChallengeColors.completed,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0284C7),
                             ),
                           ),
                         ],
@@ -185,24 +244,32 @@ class ArchiveChallengeCard extends StatelessWidget {
                   }
                   return const SizedBox.shrink();
                 }),
+
                 const Spacer(),
+
+                // Manage / Delete Button
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   if (isDown || isDone) {
-                    return IconButton(
-                      tooltip: isDone ? 'Delete challenge practice data' : 'Remove offline download',
-                      icon: const Icon(
-                        Iconsax.trash_copy,
-                        size: 15,
-                        color: AppColors.error,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => ctrl.confirmDeleteDownload(
-                        context,
-                        challenge,
+                    return Tooltip(
+                      message: 'Manage challenge data',
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () =>
+                            ctrl.showChallengeManageSheet(context, challenge),
+                        child: Container(
+                          padding: const EdgeInsets.all(5.5),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: dark ? 0.16 : 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Iconsax.trash_copy,
+                            size: 13.5,
+                            color: AppColors.error,
+                          ),
+                        ),
                       ),
                     );
                   }
@@ -210,127 +277,157 @@ class ArchiveChallengeCard extends StatelessWidget {
                 }),
               ],
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: 12),
 
-            // Title
+            // ── Challenge Title ───────────────────────────────────────
             Text(
               challenge.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
-                fontSize: 14.5,
+                height: 1.3,
+                letterSpacing: -0.2,
               ),
             ),
-            // Meta Details (Duration, Questions, Date)
+            const SizedBox(height: 10),
+
+            // ── Metadata Chips Row ────────────────────────────────────
             Wrap(
-              spacing: 12,
-              runSpacing: 4,
+              spacing: 8,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                if (challenge.durationMinutes > 0)
-                  Row(
+                // Date chip
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: dark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(7),
+                    border: Border.all(
+                      color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
-                        Iconsax.timer_1_copy,
-                        size: 13,
-                        color: AppColors.primary,
+                        Iconsax.calendar_tick_copy,
+                        size: 12.5,
+                        color: AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       Text(
-                        '${challenge.durationMinutes} mins',
+                        isLive && challenge.endsAt != null
+                            ? 'Ends ${EthiopianTimeHelper.formatDate(challenge.endsAt!)}'
+                            : isScheduled && challenge.startsAt != null
+                                ? 'Starts ${EthiopianTimeHelper.formatDate(challenge.startsAt!)}'
+                                : challenge.endsAt != null
+                                    ? 'Closed ${EthiopianTimeHelper.formatDate(challenge.endsAt!)}'
+                                    : 'Challenge Round',
                         style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
                           color: dark ? Colors.white70 : AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
+                ),
+
+                // Question Count chip
                 if (challenge.questionCount > 0)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Iconsax.document_copy,
-                        size: 13,
-                        color: AppColors.textSecondary,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: dark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(
+                        color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                        width: 0.8,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${challenge.questionCount} Qs',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: dark ? Colors.white60 : AppColors.textSecondary,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Iconsax.document_copy,
+                          size: 12.5,
+                          color: AppColors.textSecondary,
                         ),
-                      ),
-                    ],
-                  ),
-                if (challenge.endsAt != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Iconsax.calendar_tick_copy,
-                        size: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text.rich(
-                        TextSpan(
-                          text: 'Closed: ',
+                        const SizedBox(width: 5),
+                        Text(
+                          '${challenge.questionCount} Questions',
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: dark ? Colors.white60 : AppColors.textSecondary,
+                            color: dark ? Colors.white70 : AppColors.textSecondary,
                           ),
-                          children: [
-                            TextSpan(
-                              text: EthiopianTimeHelper.formatDate(challenge.endsAt!),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: dark ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' • ${EthiopianTimeHelper.formatGregorianTime(challenge.endsAt!)} ',
-                            ),
-                            TextSpan(
-                              text: '(${EthiopianTimeHelper.formatEthiopianTime(challenge.endsAt!)} ET)',
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ],
                         ),
+                      ],
+                    ),
+                  ),
+
+                // Duration chip (if > 0)
+                if (challenge.durationMinutes > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: dark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(
+                        color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                        width: 0.8,
                       ),
-                    ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Iconsax.timer_1_copy,
+                          size: 12.5,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${challenge.durationMinutes} mins',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: dark ? Colors.white70 : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 14),
 
-            // Actions (Leaderboard + Review / Practice / Download / Unlock)
+            // ── Action Buttons Row ────────────────────────────────────
             Row(
               children: [
+                // Standings Button
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
-                      minimumSize: const Size(0, 31),
+                      padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                      minimumSize: const Size(0, 36),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       backgroundColor: dark
-                          ? Colors.white.withValues(alpha: 0.04)
-                          : const Color(0xFFF8FAFC),
-                      foregroundColor:
-                          dark ? Colors.white : const Color(0xFF0F172A),
+                          ? Colors.amber.withValues(alpha: 0.08)
+                          : const Color(0xFFFFFBEB),
+                      foregroundColor: dark
+                          ? const Color(0xFFFDE68A)
+                          : const Color(0xFFB45309),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       side: BorderSide(
-                        color: dark
-                            ? AppColors.darkBorder
-                            : AppColors.borderPrimary,
+                        color: Colors.amber.withValues(alpha: dark ? 0.3 : 0.35),
+                        width: 0.9,
                       ),
                     ),
                     onPressed: () => Get.to(
@@ -342,69 +439,81 @@ class ArchiveChallengeCard extends StatelessWidget {
                     ),
                     icon: const Icon(
                       Icons.leaderboard_rounded,
-                      size: 14,
+                      size: 14.5,
                       color: Color(0xFFF59E0B),
                     ),
                     label: const Text(
                       'Standings',
                       style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: Obx(() {
-                    final isPremium = ctrl.isPremium;
-                    final isDown = ctrl.isDownloaded(challenge.id);
-                    final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-                    final isDownloading = ctrl.isDownloading[challenge.id] == true;
 
-                    if (!isPremium) {
-                      return FilledButton.icon(
+                // Primary Action Button
+                Obx(() {
+                  final isPremium = ctrl.isPremium;
+                  final isDown = ctrl.isDownloaded(challenge.id);
+                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                  final isBusy = ctrl.isDownloading[challenge.id] == true;
+
+                  // 1. Pro Locked state
+                  if (!isPremium) {
+                    final isPending = UserController.instance.user.value.isPending;
+                    return Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.amber.shade700,
+                          backgroundColor: isPending
+                              ? const Color(0xFFD97706)
+                              : Colors.amber.shade700,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 4.5,
-                            horizontal: 8,
-                          ),
-                          minimumSize: const Size(0, 31),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                          minimumSize: const Size(0, 36),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        onPressed: () => ctrl.downloadChallenge(challenge),
-                        icon: const Icon(Icons.lock_rounded, size: 13),
-                        label: const Text(
-                          'Unlock (Pro)',
-                          style: TextStyle(
-                            fontSize: 11.5,
+                        onPressed: () {
+                          if (isPending) {
+                            Get.toNamed(Routes.paymentVerification);
+                          } else {
+                            ctrl.downloadChallenge(challenge);
+                          }
+                        },
+                        icon: Icon(
+                          isPending ? Icons.hourglass_top_rounded : Icons.lock_rounded,
+                          size: 13.5,
+                        ),
+                        label: Text(
+                          isPending ? 'Verifying (Pro)' : 'Unlock (Pro)',
+                          style: const TextStyle(
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      );
-                    }
+                      ),
+                    );
+                  }
 
-                    // 1. If already attempted/completed -> Always show Review!
-                    if (isDone) {
-                      final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
-                      return isReviewing
+                  // 2. Completed / Attempted -> Review
+                  if (isDone) {
+                    final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
+                    return Expanded(
+                      flex: 2,
+                      child: isReviewing
                           ? FilledButton(
                               style: FilledButton.styleFrom(
                                 backgroundColor: ChallengeColors.completed,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4.5,
-                                  horizontal: 8,
-                                ),
-                                minimumSize: const Size(0, 31),
+                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                                minimumSize: const Size(0, 36),
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               onPressed: null,
@@ -413,45 +522,42 @@ class ArchiveChallengeCard extends StatelessWidget {
                           : FilledButton.icon(
                               style: FilledButton.styleFrom(
                                 backgroundColor: ChallengeColors.completed,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4.5,
-                                  horizontal: 8,
-                                ),
-                                minimumSize: const Size(0, 31),
+                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                                minimumSize: const Size(0, 36),
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               onPressed: () => ctrl.openCompletedChallenge(challenge),
                               icon: const Icon(
                                 Iconsax.document_text_1_copy,
-                                size: 14,
+                                size: 14.5,
                               ),
                               label: const Text(
                                 'Review',
                                 style: TextStyle(
-                                  fontSize: 11.5,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            );
-                    }
+                            ),
+                    );
+                  }
 
-                    // 2. Live challenge: show Start button (if not attempted)
-                    if (isLive) {
-                      if (ctrl.isOffline.value) {
-                        return FilledButton.icon(
+                  // 3. Live challenge: show Start / Continue button
+                  if (isLive) {
+                    if (ctrl.isOffline.value) {
+                      return Expanded(
+                        flex: 2,
+                        child: FilledButton.icon(
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.grey.shade600,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 4.5,
-                              horizontal: 8,
-                            ),
-                            minimumSize: const Size(0, 31),
+                            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                            minimumSize: const Size(0, 36),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           onPressed: () => ToastHelper.warning(
@@ -461,24 +567,24 @@ class ArchiveChallengeCard extends StatelessWidget {
                           label: const Text(
                             'Needs Internet',
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        );
-                      }
-                      final inProgress = ctrl.isInProgress(challenge.id);
-                      return FilledButton.icon(
+                        ),
+                      );
+                    }
+                    final inProgress = ctrl.isInProgress(challenge.id);
+                    return Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 4.5,
-                            horizontal: 8,
-                          ),
-                          minimumSize: const Size(0, 31),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                          minimumSize: const Size(0, 36),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         onPressed: () => Get.to(
@@ -490,57 +596,57 @@ class ArchiveChallengeCard extends StatelessWidget {
                             durationMinutes: challenge.durationMinutes,
                           ),
                         ),
-                        icon: Icon(inProgress ? Iconsax.play_copy : Iconsax.play_circle_copy, size: 14),
+                        icon: Icon(inProgress ? Iconsax.play_copy : Iconsax.play_circle_copy, size: 14.5),
                         label: Text(
                           inProgress ? 'Continue' : 'Start Challenge',
                           style: const TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      );
-                    }
+                      ),
+                    );
+                  }
 
-                    // 3. Scheduled challenge: show countdown info
-                    if (isScheduled) {
-                      return FilledButton.icon(
+                  // 4. Scheduled challenge: Upcoming
+                  if (isScheduled) {
+                    return Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
                         style: FilledButton.styleFrom(
                           backgroundColor: ChallengeColors.scheduled,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 4.5,
-                            horizontal: 8,
-                          ),
-                          minimumSize: const Size(0, 31),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                          minimumSize: const Size(0, 36),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         onPressed: null,
-                        icon: const Icon(Iconsax.clock_copy, size: 14),
+                        icon: const Icon(Iconsax.clock_copy, size: 14.5),
                         label: const Text(
                           'Upcoming',
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      );
-                    }
+                      ),
+                    );
+                  }
 
-                    // 4. Closed challenge: Practice or Download
-                    if (isDown) {
-                      return FilledButton.icon(
+                  // 5. Downloaded -> Practice
+                  if (isDown) {
+                    return Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: ChallengeColors.completed,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 4.5,
-                            horizontal: 8,
-                          ),
-                          minimumSize: const Size(0, 31),
+                          backgroundColor: const Color(0xFF0284C7),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                          minimumSize: const Size(0, 36),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         onPressed: () => Get.to(
@@ -549,32 +655,30 @@ class ArchiveChallengeCard extends StatelessWidget {
                             title: challenge.title,
                           ),
                         ),
-                        icon: const Icon(
-                          Iconsax.book_1_copy,
-                          size: 14,
-                        ),
+                        icon: const Icon(Iconsax.book_1_copy, size: 14.5),
                         label: const Text(
                           'Practice',
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      );
-                    }
+                      ),
+                    );
+                  }
 
-                    return isDownloading
+                  // 6. Not downloaded -> Download
+                  return Expanded(
+                    flex: 2,
+                    child: isBusy
                         ? FilledButton(
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 4.5,
-                                horizontal: 8,
-                              ),
-                              minimumSize: const Size(0, 31),
+                              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                              minimumSize: const Size(0, 36),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                             onPressed: null,
@@ -583,31 +687,28 @@ class ArchiveChallengeCard extends StatelessWidget {
                         : FilledButton.icon(
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 4.5,
-                                horizontal: 8,
-                              ),
-                              minimumSize: const Size(0, 31),
+                              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                              minimumSize: const Size(0, 36),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                             onPressed: () => ctrl.downloadChallenge(challenge),
                             icon: const Icon(
                               Iconsax.document_download_copy,
-                              size: 14,
+                              size: 14.5,
                             ),
                             label: const Text(
                               'Download',
                               style: TextStyle(
-                                fontSize: 11.5,
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                          );
-                  }),
-                ),
+                          ),
+                  );
+                }),
               ],
             ),
           ],

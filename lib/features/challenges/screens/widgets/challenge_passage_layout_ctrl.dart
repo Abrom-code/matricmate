@@ -20,9 +20,6 @@ class ChallengePassageLayoutCtrl extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final hidden = isHidden.value;
-      final title = (passage?.title?.trim().isNotEmpty == true)
-          ? passage!.title!
-          : 'Reading Passage';
 
       return Material(
         color: Colors.transparent,
@@ -48,17 +45,12 @@ class ChallengePassageLayoutCtrl extends StatelessWidget {
                   color: AppColors.primary,
                 ),
                 const SizedBox(width: 5),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 100),
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
+                const Text(
+                  'Passage',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(width: 5),

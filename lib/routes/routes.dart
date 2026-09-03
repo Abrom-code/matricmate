@@ -3,7 +3,6 @@ import 'package:matricmate/features/authentication/screens/loading/loading.dart'
 import 'package:matricmate/bindings/auth/change_password_binding.dart';
 import 'package:matricmate/bindings/exam/bookmark_binding.dart';
 import 'package:matricmate/bindings/exam/chapter_binding.dart';
-import 'package:matricmate/bindings/auth/email_verify_binding.dart';
 import 'package:matricmate/bindings/auth/forgot_password_binding.dart';
 import 'package:matricmate/bindings/auth/login_binding.dart';
 import 'package:matricmate/bindings/exam/entrance_binding.dart';
@@ -19,7 +18,6 @@ import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/authentication/screens/password_configuration/forget_password.dart';
 import 'package:matricmate/features/authentication/screens/password_configuration/reset_password.dart';
 import 'package:matricmate/features/authentication/screens/signup/signup.dart';
-import 'package:matricmate/features/authentication/screens/signup/verify_email.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/chapter/chapter.dart';
 import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
@@ -123,11 +121,6 @@ class AppRoutes {
       name: Routes.signup,
       page: () => const SignupScreen(),
       binding: SignupBinding(),
-    ),
-    GetPage(
-      name: Routes.verifyEmail,
-      page: () => const VerifyEmailScreen(),
-      binding: EmailVerifyBinding(),
     ),
     GetPage(
       name: Routes.signIn,

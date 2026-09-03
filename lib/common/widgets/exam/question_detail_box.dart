@@ -174,9 +174,7 @@ class _PassageSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayTitle = (title != null && title!.isNotEmpty)
-        ? title!
-        : 'Reading Passage';
+    const displayTitle = 'Reading Passage';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,14 +243,48 @@ class _PassageSection extends StatelessWidget {
                     padding: EdgeInsets.all(AppSizes.md),
                     child: Center(child: AppPulsingDots()),
                   )
-                : _RichContent(
-                    text: content!,
-                    style: GoogleFonts.lora(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      height: 1.75,
-                      color: dark ? AppColors.grey : AppColors.darkerGrey,
-                    ),
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (title != null && title!.trim().isNotEmpty) ...[
+                        Center(
+                          child: RichTextParser.widget(
+                            title!.trim(),
+                            textAlign: TextAlign.center,
+                            baseStyle: TextStyle(
+                              fontSize: 16.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              height: 1.35,
+                              color: dark
+                                  ? AppColors.white
+                                  : const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Center(
+                          child: Container(
+                            width: 36,
+                            height: 2.5,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+                      _RichContent(
+                        text: content!,
+                        style: GoogleFonts.lora(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          height: 1.75,
+                          color: dark ? AppColors.grey : AppColors.darkerGrey,
+                        ),
+                      ),
+                    ],
                   ),
           ),
         ],

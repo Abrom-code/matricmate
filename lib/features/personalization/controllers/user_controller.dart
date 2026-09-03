@@ -15,6 +15,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class UserController extends GetxController {
   static UserController get instance => Get.find();
@@ -36,17 +37,87 @@ class UserController extends GetxController {
   final isPasswordHidden = true.obs;
   final RxBool isCheckingPayment = false.obs;
 
+  /// Firebase email-verification state. Lives on the Firebase User object
+  /// rather than UserModel, so it is mirrored here to make it reactive.
+  final RxBool isEmailVerified = false.obs;
+  final RxBool isSendingVerification = false.obs;
+
+  /// True once a verification link has been sent this session, so the settings
+  /// row can switch from "send" to "re-check".
+  final RxBool verificationLinkSent = false.obs;
+
   @override
   void onInit() {
     super.onInit();
 
     _authSub = _authRepo.userChanges.listen((firebaseUser) async {
       if (firebaseUser != null) {
+        syncEmailVerified();
         await loadLocalUser();
       } else {
         user.value = UserModel.empty();
+        isEmailVerified.value = false;
+        verificationLinkSent.value = false;
       }
     });
+  }
+
+  /// Mirrors the Firebase user's emailVerified flag into [isEmailVerified].
+  void syncEmailVerified() {
+    isEmailVerified.value = _authRepo.currentUser?.emailVerified ?? false;
+  }
+
+  /// Sends a verification link to the signed-in user's email address.
+  Future<void> sendVerificationEmail() async {
+    if (isSendingVerification.value) return;
+    try {
+      isSendingVerification.value = true;
+
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) {
+        ToastHelper.warning('No Internet!');
+        return;
+      }
+
+      await _authRepo.sendEmailVerification();
+      verificationLinkSent.value = true;
+      ToastHelper.success('Verification link sent. Check your inbox.');
+    } catch (e) {
+      // Firebase rate-limits this (too-many-requests) — surface it properly.
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isSendingVerification.value = false;
+    }
+  }
+
+  /// Re-reads the Firebase user to pick up a verification completed in the
+  /// browser, then reports the result.
+  Future<void> refreshEmailVerified() async {
+    if (isSendingVerification.value) return;
+    try {
+      isSendingVerification.value = true;
+
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) {
+        ToastHelper.warning('No Internet!');
+        return;
+      }
+
+      await _authRepo.reloadUser();
+      syncEmailVerified();
+
+      if (isEmailVerified.value) {
+        ToastHelper.success('Email verified');
+      } else {
+        ToastHelper.warning(
+          'Still not verified. Open the link in your email first.',
+        );
+      }
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isSendingVerification.value = false;
+    }
   }
 
   Future<void> loadLocalUser() async {

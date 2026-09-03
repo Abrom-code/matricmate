@@ -22,6 +22,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     Get.put(ProfileController());
+    // Reflect the current Firebase verification state on the settings row.
+    UserController.instance.syncEmailVerified();
   }
 
   @override

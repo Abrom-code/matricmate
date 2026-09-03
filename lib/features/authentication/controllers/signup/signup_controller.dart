@@ -5,8 +5,8 @@ import 'package:matricmate/data/repositories/authentication/authentication_repos
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
+import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
-import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -96,10 +96,10 @@ class SignupController extends GetxController {
         ToastHelper.error('Failed to register device. Please try again.');
         return;
       }
-      Get.offAllNamed(
-        Routes.verifyEmail,
-        arguments: {'email': email.text.trim()},
-      );
+
+      // Straight into the app — email verification is optional and lives in
+      // Profile → Account Settings.
+      AuthenticationController.instance.screenRedirect();
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

@@ -63,7 +63,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
 
     return Scaffold(
       appBar: ModernAppbarWithBuilder(
-        title: '🏆 Challenges',
+        title: 'Challenges',
         subtitleBuilder: (_) => Obx(() {
           final stream = UserController.instance.user.value.stream;
           if (stream.isEmpty) return const SizedBox.shrink();
@@ -77,12 +77,69 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
           );
         }),
         actions: [
-          IconButton(
-            tooltip: 'Period Standings',
-            icon: const Icon(Icons.leaderboard_rounded, color: Colors.white),
-            onPressed: () => Get.to(() => const LeaderboardScreen()),
+          Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: Center(
+              child: Tooltip(
+                message: 'Period Standings',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Get.to(() => const LeaderboardScreen()),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF0F766E).withValues(alpha: 0.45),
+                            const Color(0xFF14B8A6).withValues(alpha: 0.25),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF2DD4BF).withValues(alpha: 0.45),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0D9488).withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.leaderboard_rounded,
+                            size: 15,
+                            color: Color(0xFF2DD4BF),
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'Standings',
+                            style: TextStyle(
+                              color: Color(0xFFF0FDFA),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: 4),
         ],
       ),
       body: Column(

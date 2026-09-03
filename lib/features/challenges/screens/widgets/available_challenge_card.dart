@@ -7,6 +7,8 @@ import 'package:matricmate/features/challenges/controllers/challenge_home_contro
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_status_pill.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/ethiopian_time_helper.dart';
@@ -31,33 +33,29 @@ class AvailableChallengeCard extends StatelessWidget {
       final isLive = challenge.isLive;
       final isScheduled = challenge.isScheduled;
 
-      Color borderColor;
-      if (!isPremium) {
-        borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
-      } else if (isLive) {
-        borderColor = AppColors.primary;
-      } else if (isScheduled) {
-        borderColor = ChallengeColors.scheduled;
-      } else {
-        borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
-      }
-
-      return Card(
-        elevation: 0,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
-          side: BorderSide(
-            color: borderColor,
-            width: isLive && isPremium ? 1.5 : 1.0,
-          ),
+      return Container(
+        decoration: BoxDecoration(
+          color: dark ? AppColors.darkCard : AppColors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: dark
+                  ? Colors.black.withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
-          onTap: () => ctrl.onChallengeTapped(challenge),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSizes.md),
-            child: Column(
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => ctrl.onChallengeTapped(challenge),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.md),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Header Row (Subject, Audience, Lock Badge, Status Badge)
@@ -100,41 +98,7 @@ class AvailableChallengeCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (!isPremium) ...[
-                      const SizedBox(width: AppSizes.xs),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: Colors.amber.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.lock_rounded,
-                              size: 10.5,
-                              color: Colors.amber,
-                            ),
-                            SizedBox(width: 3),
-                            Text(
-                              'PRO',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.amber,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+
                     Obx(() {
                       final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                       if (!isDone) return const SizedBox.shrink();
@@ -177,7 +141,7 @@ class AvailableChallengeCard extends StatelessWidget {
                         return Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: IconButton(
-                            tooltip: isDone ? 'Delete challenge practice data' : 'Remove offline download',
+                            tooltip: 'Manage challenge data',
                             icon: const Icon(
                               Iconsax.trash_copy,
                               size: 15,
@@ -187,7 +151,7 @@ class AvailableChallengeCard extends StatelessWidget {
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             onPressed: () =>
-                                ctrl.confirmDeleteDownload(context, challenge),
+                                ctrl.showChallengeManageSheet(context, challenge),
                           ),
                         );
                       }
@@ -349,31 +313,45 @@ class AvailableChallengeCard extends StatelessWidget {
                       ],
                       Expanded(
                         flex: isLive ? 2 : 1,
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: isLive
-                                ? AppColors.primary
-                                : ChallengeColors.scheduled,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
-                            minimumSize: const Size(0, 31),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        child: Builder(builder: (context) {
+                          final isPending = UserController.instance.user.value.isPending;
+                          return FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: isPending
+                                  ? const Color(0xFFD97706)
+                                  : (isLive
+                                      ? AppColors.primary
+                                      : ChallengeColors.scheduled),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                              minimumSize: const Size(0, 31),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
-                          ),
-                          onPressed: () => ctrl.onChallengeTapped(challenge),
-                          icon: const Icon(Icons.lock_rounded, size: 13),
-                          label: Text(
-                            isLive
-                                ? 'Unlock (Pro)'
-                                : 'Unlock to Join (Pro)',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11.5,
+                            onPressed: () {
+                              if (isPending) {
+                                Get.toNamed(Routes.paymentVerification);
+                              } else {
+                                ctrl.onChallengeTapped(challenge);
+                              }
+                            },
+                            icon: Icon(
+                              isPending ? Icons.hourglass_top_rounded : Icons.lock_rounded,
+                              size: 13,
                             ),
-                          ),
-                        ),
+                            label: Text(
+                              isPending
+                                  ? 'Verifying (Pro)'
+                                  : (isLive ? 'Unlock (Pro)' : 'Unlock to Join (Pro)'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          );
+                        }),
                       ),
                     ],
                   )
@@ -535,6 +513,7 @@ class AvailableChallengeCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
         ),
       );
     });

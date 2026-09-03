@@ -69,7 +69,7 @@ class AuthenticationController extends GetxController
   Future<void> _init() async {
     try {
       final user = authRepo.currentUser;
-      if (user != null && user.emailVerified) {
+      if (user != null) {
         // Load user record before screenRedirect decides navigation
         await UserController.instance.loadLocalUser();
       }
@@ -85,10 +85,8 @@ class AuthenticationController extends GetxController
       return;
     }
 
-    if (!user.emailVerified) {
-      Get.offAllNamed(Routes.verifyEmail, arguments: {'email': user.email});
-      return;
-    }
+    // Email verification is optional and handled from Profile → Account
+    // Settings. It deliberately does not gate access to the app.
 
     // Reset so _runInitThenNavigate always runs fresh on each login.
     _initStarted = false;
@@ -110,8 +108,6 @@ class AuthenticationController extends GetxController
     if (_initStarted) return;
     _initStarted = true;
 
-    bool networkFetchSucceeded = false;
-
     try {
       isInitializing.value = true;
 
@@ -121,37 +117,31 @@ class AuthenticationController extends GetxController
       if (isConnected) {
         try {
           initStatus.value = 'Verifying account…';
-          final fetched = await UserController.instance
+          await UserController.instance
               .fetchUserRecord()
               .timeout(AppTimeouts.verify);
-          if (fetched) {
-            await UserController.instance.loadLocalUser();
-            networkFetchSucceeded = true;
-          } else {
-            // fetchUserRecord returned false — fall back to local cache
-            await UserController.instance.loadLocalUser();
-          }
         } catch (_) {
-          // Connection dropped mid-verify — fall back to local
-          await UserController.instance.loadLocalUser();
+          // Connection dropped mid-verify — fall through to the local cache.
         }
+        // Whether the fetch succeeded, returned false, or threw, the local
+        // record is the source of truth for the UI.
+        await UserController.instance.loadLocalUser();
       }
 
-      // Step 2 — load subjects from local DB (always runs regardless of network)
+      // Step 2 — load subjects: local cache first, then remote when online.
+      // Deliberately NOT gated on the user-record fetch — subjects are public
+      // content and must load even if account verification was slow or failed.
       initStatus.value = 'Loading subjects…';
-      await SubjectsController.instance.loadLocalSubjects();
+      try {
+        await SubjectsController.instance.ensureSubjectsLoaded().timeout(
+          AppTimeouts.initFromRemote,
+        );
+      } catch (_) {
+        // Timed out or failed — navigate with whatever is cached. The
+        // connectivity listener in SubjectsController retries when online.
+      }
 
-      if (isConnected && networkFetchSucceeded) {
-        // Step 3 — first login with no local subjects: fetch from remote
-        if (SubjectsController.instance.subjects.isEmpty) {
-          try {
-            await SubjectsController.instance.initFromRemote().timeout(
-              AppTimeouts.initFromRemote,
-            );
-          } catch (_) {
-            // Timed out or failed — subjects remain empty; user can retry later.
-          }
-        }
+      if (isConnected) {
         // Refresh entrance counts from remote
         try {
           initStatus.value = 'Loading exam info…';
@@ -160,19 +150,6 @@ class AuthenticationController extends GetxController
               .timeout(AppTimeouts.entranceCounts);
         } catch (_) {
           // Timed out or failed — cached counts still shown.
-        }
-      } else if (isConnected && !networkFetchSucceeded) {
-        // Partial connectivity: attempt best-effort remote fetch
-        if (SubjectsController.instance.subjects.isEmpty) {
-          try {
-            await SubjectsController.instance.initFromRemote().timeout(
-              AppTimeouts.initFromRemote,
-            );
-            // Reload after remote fetch so subjects list is populated.
-            await SubjectsController.instance.loadLocalSubjects();
-          } catch (_) {
-            // Timed out or failed — navigate with whatever we have.
-          }
         }
       }
 

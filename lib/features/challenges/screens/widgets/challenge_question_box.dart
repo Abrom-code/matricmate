@@ -236,68 +236,87 @@ class _InlinePassageSection extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.md,
-              vertical: AppSizes.sm,
+              vertical: 10,
             ),
             decoration: BoxDecoration(
               color: dark
                   ? AppColors.primary.withValues(alpha: 0.15)
-                  : AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppSizes.sm),
+                  : AppColors.primary.withValues(alpha: 0.07),
+              borderRadius: expanded
+                  ? const BorderRadius.vertical(
+                      top: Radius.circular(AppSizes.borderRadiusLg),
+                    )
+                  : BorderRadius.circular(AppSizes.borderRadiusLg),
               border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
+                color: AppColors.primary.withValues(alpha: 0.25),
               ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.menu_book_rounded,
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: AppSizes.sm),
-                    Text(
-                      displayTitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
                 Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                  color: AppColors.primary,
+                  Icons.menu_book_rounded,
+                  size: 16,
+                  color: AppColors.primary.withValues(alpha: 0.85),
+                ),
+                const SizedBox(width: AppSizes.sm),
+                Expanded(
+                  child: Text(
+                    displayTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.sm),
+                AnimatedRotation(
+                  turns: expanded ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 20,
+                    color: AppColors.primary.withValues(alpha: 0.7),
+                  ),
                 ),
               ],
             ),
           ),
         ),
         if (expanded) ...[
-          const SizedBox(height: AppSizes.sm),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(AppSizes.md),
+            constraints: const BoxConstraints(maxHeight: 280),
             decoration: BoxDecoration(
               color: dark ? AppColors.darkContainer : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(AppSizes.sm),
-              border: Border.all(
-                color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(AppSizes.borderRadiusLg),
+              ),
+              border: Border(
+                left: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                ),
+                right: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                ),
+                bottom: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                ),
               ),
             ),
-            child: RichTextParser.widget(
-              content?.isNotEmpty == true ? content! : 'No passage content.',
-              baseStyle: TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w400,
-                height: 1.65,
-                color: dark ? AppColors.grey : AppColors.darkerGrey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSizes.md),
+              physics: const ClampingScrollPhysics(),
+              child: RichTextParser.widget(
+                content?.isNotEmpty == true ? content! : 'No passage content.',
+                baseStyle: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w400,
+                  height: 1.7,
+                  color: dark ? AppColors.grey : AppColors.darkerGrey,
+                ),
               ),
             ),
           ),

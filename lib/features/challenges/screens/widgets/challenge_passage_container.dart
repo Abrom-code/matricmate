@@ -48,18 +48,23 @@ class ChallengePassageContainer extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: AppSizes.sm),
         decoration: BoxDecoration(
           color: dark ? AppColors.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: dark
+                ? AppColors.primary.withValues(alpha: 0.2)
+                : AppColors.primary.withValues(alpha: 0.18),
+          ),
           boxShadow: [
             BoxShadow(
               color: dark
-                  ? Colors.black.withValues(alpha: 0.25)
-                  : Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : AppColors.primary.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -158,21 +163,44 @@ class _PassageHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        vertical: 10,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: dark ? 0.18 : 0.08),
-        borderRadius: hidden
-            ? BorderRadius.circular(AppSizes.borderRadiusLg)
-            : const BorderRadius.vertical(
-                top: Radius.circular(AppSizes.borderRadiusLg),
+        gradient: LinearGradient(
+          colors: dark
+              ? [
+                  AppColors.primary.withValues(alpha: 0.22),
+                  AppColors.primary.withValues(alpha: 0.12),
+                ]
+              : [
+                  AppColors.primary.withValues(alpha: 0.1),
+                  AppColors.primary.withValues(alpha: 0.04),
+                ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        border: hidden
+            ? null
+            : Border(
+                bottom: BorderSide(
+                  color: AppColors.primary.withValues(alpha: dark ? 0.15 : 0.1),
+                ),
               ),
       ),
       child: Row(
         children: [
-          const Icon(
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.7),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(
             Icons.article_outlined,
-            color: AppColors.primary,
+            color: AppColors.primary.withValues(alpha: 0.8),
             size: 16,
           ),
           const SizedBox(width: AppSizes.sm),
@@ -183,7 +211,9 @@ class _PassageHeader extends StatelessWidget {
               title != null && title!.isNotEmpty ? title! : 'Reading Passage',
               style: Theme.of(context).textTheme.labelLarge!.copyWith(
                 color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                letterSpacing: -0.1,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -206,27 +236,45 @@ class _PassageHeader extends StatelessWidget {
           // expand / collapse
           GestureDetector(
             onTap: hidden ? onToggleHidden : onToggleSize,
-            child: Icon(
-              hidden
-                  ? Icons.keyboard_arrow_down_rounded
-                  : expanded
-                  ? Icons.keyboard_arrow_up_rounded
-                  : Icons.keyboard_arrow_down_rounded,
-              color: AppColors.primary,
-              size: 22,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: AnimatedRotation(
+                turns: expanded ? 0.5 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  hidden
+                      ? Icons.keyboard_arrow_down_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.primary.withValues(alpha: 0.7),
+                  size: 20,
+                ),
+              ),
             ),
           ),
 
           // hide / show toggle
-          const SizedBox(width: AppSizes.xs),
+          const SizedBox(width: 6),
           GestureDetector(
             onTap: onToggleHidden,
-            child: Icon(
-              hidden
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-              color: AppColors.primary.withValues(alpha: 0.7),
-              size: 18,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: hidden
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                hidden
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: AppColors.primary.withValues(alpha: 0.6),
+                size: 17,
+              ),
             ),
           ),
         ],
@@ -244,9 +292,14 @@ class _ScaleBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Icon(icon, color: AppColors.primary, size: 18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Icon(icon, color: AppColors.primary, size: 16),
       ),
     );
   }

@@ -139,7 +139,7 @@ class AvailableChallengeCard extends StatelessWidget {
                         return Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: IconButton(
-                            tooltip: isDone ? 'Delete challenge practice data' : 'Remove offline download',
+                            tooltip: 'Manage challenge data',
                             icon: const Icon(
                               Iconsax.trash_copy,
                               size: 15,
@@ -149,7 +149,7 @@ class AvailableChallengeCard extends StatelessWidget {
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             onPressed: () =>
-                                ctrl.confirmDeleteDownload(context, challenge),
+                                ctrl.showChallengeManageSheet(context, challenge),
                           ),
                         );
                       }

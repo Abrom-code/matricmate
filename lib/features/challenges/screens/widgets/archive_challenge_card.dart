@@ -191,7 +191,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   if (isDown || isDone) {
                     return IconButton(
-                      tooltip: isDone ? 'Delete challenge practice data' : 'Remove offline download',
+                      tooltip: 'Manage challenge data',
                       icon: const Icon(
                         Iconsax.trash_copy,
                         size: 15,
@@ -200,7 +200,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      onPressed: () => ctrl.confirmDeleteDownload(
+                      onPressed: () => ctrl.showChallengeManageSheet(
                         context,
                         challenge,
                       ),

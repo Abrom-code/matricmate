@@ -63,7 +63,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
 
     return Scaffold(
       appBar: ModernAppbarWithBuilder(
-        title: '🏆 Challenges',
+        title: 'Challenges',
         subtitleBuilder: (_) => Obx(() {
           final stream = UserController.instance.user.value.stream;
           if (stream.isEmpty) return const SizedBox.shrink();
@@ -79,7 +79,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
         actions: [
           IconButton(
             tooltip: 'Period Standings',
-            icon: const Icon(Icons.leaderboard_rounded, color: Colors.white),
+            icon: const Icon(Icons.leaderboard_rounded, color: Colors.teal),
             onPressed: () => Get.to(() => const LeaderboardScreen()),
           ),
           const SizedBox(width: 4),

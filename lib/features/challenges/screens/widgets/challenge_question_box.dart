@@ -309,14 +309,50 @@ class _InlinePassageSection extends StatelessWidget {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSizes.md),
               physics: const ClampingScrollPhysics(),
-              child: RichTextParser.widget(
-                content?.isNotEmpty == true ? content! : 'No passage content.',
-                baseStyle: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w400,
-                  height: 1.7,
-                  color: dark ? AppColors.grey : AppColors.darkerGrey,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (title != null && title!.trim().isNotEmpty) ...[
+                    Center(
+                      child: Text(
+                        title!.trim(),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                          height: 1.35,
+                          color: dark
+                              ? AppColors.white
+                              : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 2.5,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  RichTextParser.widget(
+                    content?.isNotEmpty == true
+                        ? content!
+                        : 'No passage content.',
+                    baseStyle: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w400,
+                      height: 1.7,
+                      color: dark ? AppColors.grey : AppColors.darkerGrey,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

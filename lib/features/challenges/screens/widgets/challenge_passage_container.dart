@@ -110,23 +110,61 @@ class ChallengePassageContainer extends StatelessWidget {
                     physics: const ClampingScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(
                       AppSizes.md,
-                      0,
+                      AppSizes.md,
                       AppSizes.md,
                       AppSizes.md,
                     ),
-                    child: Obx(
-                      () => RichTextParser.widget(
-                        passage.content.isNotEmpty
-                            ? passage.content
-                            : 'Reading passage content loading...',
-                        baseStyle: TextStyle(
-                          fontSize: 15 * textScale.value,
-                          fontWeight: FontWeight.w400,
-                          height: 1.75,
-                          color: dark ? AppColors.grey : AppColors.darkerGrey,
-                        ),
-                      ),
-                    ),
+                    child: Obx(() {
+                      final passageTitle = passage.title?.trim();
+                      final hasTitle =
+                          passageTitle != null && passageTitle.isNotEmpty;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (hasTitle) ...[
+                            Center(
+                              child: Text(
+                                passageTitle,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 17 * textScale.value,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                  height: 1.35,
+                                  color: dark
+                                      ? AppColors.white
+                                      : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Center(
+                              child: Container(
+                                width: 36,
+                                height: 2.5,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                          ],
+                          RichTextParser.widget(
+                            passage.content.isNotEmpty
+                                ? passage.content
+                                : 'Reading passage content loading...',
+                            baseStyle: TextStyle(
+                              fontSize: 15 * textScale.value,
+                              fontWeight: FontWeight.w400,
+                              height: 1.75,
+                              color: dark ? AppColors.grey : AppColors.darkerGrey,
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                   ),
                 ),
               ),
@@ -205,10 +243,10 @@ class _PassageHeader extends StatelessWidget {
           ),
           const SizedBox(width: AppSizes.sm),
 
-          // title
+          // Header title
           Expanded(
             child: Text(
-              title != null && title!.isNotEmpty ? title! : 'Reading Passage',
+              'Reading Passage',
               style: Theme.of(context).textTheme.labelLarge!.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w700,

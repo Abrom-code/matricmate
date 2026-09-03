@@ -13,64 +13,52 @@ class PassageLayoutCtrl extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final hidden = controller.isPassageHidden.value;
-      final block = controller.blocks.isNotEmpty
-          ? controller.blocks[controller.currentBlockIndex.value]
-          : null;
-      final title = (block?.passage?.title?.trim().isNotEmpty == true)
-          ? block!.passage!.title!
-          : 'Reading Passage';
 
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Passage title pill ─────────────────────────────────────
-          Flexible(
-            child: GestureDetector(
-              onTap: controller.togglePassage,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
+          // ── Passage toggle pill ─────────────────────────────────────
+          GestureDetector(
+            onTap: controller.togglePassage,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 5,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: 0.15),
                 ),
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.white.withValues(alpha: 0.15),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.article_outlined,
+                    size: 14,
+                    color: AppColors.white.withValues(alpha: 0.8),
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.article_outlined,
-                      size: 14,
-                      color: AppColors.white.withValues(alpha: 0.8),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Passage',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.1,
                     ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      hidden
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: AppColors.white.withValues(alpha: 0.7),
-                      size: 15,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    hidden
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: AppColors.white.withValues(alpha: 0.7),
+                    size: 15,
+                  ),
+                ],
               ),
             ),
           ),

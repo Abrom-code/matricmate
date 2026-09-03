@@ -40,9 +40,7 @@ class _AppPassageBoxState extends State<AppPassageBox> {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
-    final displayTitle = (widget.title != null && widget.title!.isNotEmpty)
-        ? widget.title!
-        : 'Reading Passage';
+    const displayTitle = 'Reading Passage';
 
     final bgColor = dark
         ? AppColors.primary.withValues(alpha: 0.10)
@@ -116,19 +114,55 @@ class _AppPassageBoxState extends State<AppPassageBox> {
                           padding: EdgeInsets.all(AppSizes.md),
                           child: Center(child: AppPulsingDots()),
                         )
-                      : Text.rich(
-                          RichTextParser.parse(
-                            widget.content!,
-                            GoogleFonts.lora(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              height: 1.75,
-                              letterSpacing: 0.1,
-                              color: dark
-                                  ? AppColors.white.withValues(alpha: 0.85)
-                                  : AppColors.darkerGrey,
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (widget.title != null &&
+                                widget.title!.trim().isNotEmpty) ...[
+                              Center(
+                                child: Text(
+                                  widget.title!.trim(),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16.5,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.2,
+                                    height: 1.35,
+                                    color: dark
+                                        ? AppColors.white
+                                        : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Center(
+                                child: Container(
+                                  width: 36,
+                                  height: 2.5,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+                            Text.rich(
+                              RichTextParser.parse(
+                                widget.content!,
+                                GoogleFonts.lora(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.75,
+                                  letterSpacing: 0.1,
+                                  color: dark
+                                      ? AppColors.white.withValues(alpha: 0.85)
+                                      : AppColors.darkerGrey,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                 ),
               ),

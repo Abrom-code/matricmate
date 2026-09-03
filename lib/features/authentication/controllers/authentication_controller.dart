@@ -69,7 +69,7 @@ class AuthenticationController extends GetxController
   Future<void> _init() async {
     try {
       final user = authRepo.currentUser;
-      if (user != null && user.emailVerified) {
+      if (user != null) {
         // Load user record before screenRedirect decides navigation
         await UserController.instance.loadLocalUser();
       }
@@ -85,10 +85,8 @@ class AuthenticationController extends GetxController
       return;
     }
 
-    if (!user.emailVerified) {
-      Get.offAllNamed(Routes.verifyEmail, arguments: {'email': user.email});
-      return;
-    }
+    // Email verification is optional and handled from Profile → Account
+    // Settings. It deliberately does not gate access to the app.
 
     // Reset so _runInitThenNavigate always runs fresh on each login.
     _initStarted = false;

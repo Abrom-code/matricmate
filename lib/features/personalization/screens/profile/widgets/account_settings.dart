@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
@@ -70,6 +71,68 @@ class AccountSettings extends StatelessWidget {
               ),
               onTap: () => Get.toNamed(Routes.changePassword),
             ),
+            divider,
+            // Email verification — read inside this Obx so it rebuilds after
+            // the user verifies.
+            if (userCtrl.isEmailVerified.value)
+              AppListTile(
+                icon: const Icon(
+                  Icons.mark_email_read_rounded,
+                  color: Color(0xFF10B981),
+                  size: 20,
+                ),
+                title: 'Email Verified',
+                subtitle: userCtrl.user.value.email,
+                trailing: const Icon(
+                  Icons.verified_rounded,
+                  color: Color(0xFF10B981),
+                  size: 20,
+                ),
+                onTap: null,
+              )
+            else
+              AppListTile(
+                icon: const Icon(
+                  Icons.mark_email_unread_rounded,
+                  color: Color(0xFFF59E0B),
+                  size: 20,
+                ),
+                title: 'Verify Email',
+                subtitle: userCtrl.isSendingVerification.value
+                    ? 'Working…'
+                    : (userCtrl.verificationLinkSent.value
+                          ? 'Link sent — tap to re-check'
+                          : 'Not verified'),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
+                onTap: userCtrl.isSendingVerification.value
+                    ? null
+                    : () {
+                        // Once a link has been sent, tapping re-checks instead
+                        // of sending another email.
+                        if (userCtrl.verificationLinkSent.value) {
+                          userCtrl.refreshEmailVerified();
+                          return;
+                        }
+                        AppDialogBoxes.showOkCancelDialog(
+                          context: context,
+                          title: 'Verify your email',
+                          subtitle:
+                              "We'll send a verification link to "
+                              '${userCtrl.user.value.email}',
+                          confirmText: 'Send Link',
+                          icon: Icons.mark_email_unread_rounded,
+                          onPressed: () {
+                            // showOkCancelDialog does not dismiss itself.
+                            Get.back();
+                            userCtrl.sendVerificationEmail();
+                          },
+                        );
+                      },
+              ),
             divider,
             if (userCtrl.user.value.isActive) ...[
               AppListTile(

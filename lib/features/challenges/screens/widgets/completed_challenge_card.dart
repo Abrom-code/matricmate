@@ -25,18 +25,22 @@ class CompletedChallengeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.borderRadiusMd),
-        side: BorderSide(
-          color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
-        ),
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.md),
+      decoration: BoxDecoration(
+        color: dark ? AppColors.darkCard : AppColors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: dark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.md),
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header Row: Subject, Audience, Completed Badge, Delete Button in top right
@@ -79,48 +83,7 @@ class CompletedChallengeCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Obx(() {
-                  final isPremium = ctrl.isPremium;
-                  if (!isPremium) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: AppSizes.xs),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: Colors.amber.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.lock_rounded,
-                              size: 10.5,
-                              color: Colors.amber,
-                            ),
-                            SizedBox(width: 3),
-                            Text(
-                              'PRO',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.amber,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }),
-                const SizedBox(width: AppSizes.xs),
+
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
@@ -503,7 +466,6 @@ class CompletedChallengeCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

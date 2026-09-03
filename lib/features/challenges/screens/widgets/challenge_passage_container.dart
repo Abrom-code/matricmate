@@ -124,13 +124,13 @@ class ChallengePassageContainer extends StatelessWidget {
                         children: [
                           if (hasTitle) ...[
                             Center(
-                              child: Text(
+                              child: RichTextParser.widget(
                                 passageTitle,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                baseStyle: TextStyle(
                                   fontSize: 17 * textScale.value,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.3,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.2,
                                   height: 1.35,
                                   color: dark
                                       ? AppColors.white

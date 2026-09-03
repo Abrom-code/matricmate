@@ -314,12 +314,12 @@ class _InlinePassageSection extends StatelessWidget {
                 children: [
                   if (title != null && title!.trim().isNotEmpty) ...[
                     Center(
-                      child: Text(
+                      child: RichTextParser.widget(
                         title!.trim(),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        baseStyle: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: -0.2,
                           height: 1.35,
                           color: dark

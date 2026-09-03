@@ -5,14 +5,25 @@ import 'package:matricmate/utils/constants/colors.dart';
 class RichTextParser {
   RichTextParser._();
 
-  // Single regex that captures either a tag or plain text
+  // Single regex that captures either a tag or plain text (case-insensitive)
   static final _tagRe = RegExp(
-    r'\[([a-z]+(?:=#[0-9a-fA-F]{3,8})?)\]|\[/([a-z]+)\]',
+    r'\[([a-zA-Z]+(?:=#[0-9a-fA-F]{3,8})?)\]|\[/([a-zA-Z]+)\]',
+    caseSensitive: false,
   );
 
   /// Preprocesses HTML tags, entities, and Markdown syntax into normalized BBCode.
   static String _preprocessText(String raw) {
     var text = raw;
+
+    // 0. Normalize BBCode tags to lowercase & trim spaces inside tags (e.g. [B], [/B], [ b ], [ /b ])
+    text = text.replaceAllMapped(
+      RegExp(r'\[\s*([a-zA-Z]+(?:=#[0-9a-fA-F]{3,8})?)\s*\]'),
+      (m) => '[${m.group(1)!.toLowerCase()}]',
+    );
+    text = text.replaceAllMapped(
+      RegExp(r'\[\s*/\s*([a-zA-Z]+)\s*\]'),
+      (m) => '[/${m.group(1)!.toLowerCase()}]',
+    );
 
     // 1. Literal escape characters from JSON / DB
     text = text.replaceAll(r'\r\n', '\n').replaceAll(r'\n', '\n').replaceAll('\r', '');
@@ -208,9 +219,11 @@ class RichTextParser {
 
       if (openTag != null) {
         // Find matching close tag
-        final tagName = openTag.contains('=') ? openTag.split('=')[0] : openTag;
+        final tagName =
+            (openTag.contains('=') ? openTag.split('=')[0] : openTag)
+                .toLowerCase();
         final closePattern = '[/$tagName]';
-        final closeIdx = text.indexOf(closePattern, match.end);
+        final closeIdx = text.toLowerCase().indexOf(closePattern, match.end);
 
         if (closeIdx == -1) {
           // No close tag — treat as plain text
@@ -261,7 +274,8 @@ class RichTextParser {
 
   // ── Tag → TextStyle mapping ───────────────────────────────────────────────
 
-  static TextStyle _applyTag(String tag, TextStyle base) {
+  static TextStyle _applyTag(String rawTag, TextStyle base) {
+    final tag = rawTag.toLowerCase();
     if (tag == 'b') {
       return base.copyWith(
         fontWeight: FontWeight.w900,

@@ -120,12 +120,12 @@ class _AppPassageBoxState extends State<AppPassageBox> {
                             if (widget.title != null &&
                                 widget.title!.trim().isNotEmpty) ...[
                               Center(
-                                child: Text(
+                                child: RichTextParser.widget(
                                   widget.title!.trim(),
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
+                                  baseStyle: TextStyle(
                                     fontSize: 16.5,
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w700,
                                     letterSpacing: -0.2,
                                     height: 1.35,
                                     color: dark

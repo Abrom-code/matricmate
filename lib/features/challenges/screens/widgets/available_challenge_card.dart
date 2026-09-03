@@ -7,6 +7,8 @@ import 'package:matricmate/features/challenges/controllers/challenge_home_contro
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_status_pill.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/ethiopian_time_helper.dart';
@@ -311,31 +313,45 @@ class AvailableChallengeCard extends StatelessWidget {
                       ],
                       Expanded(
                         flex: isLive ? 2 : 1,
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: isLive
-                                ? AppColors.primary
-                                : ChallengeColors.scheduled,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
-                            minimumSize: const Size(0, 31),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        child: Builder(builder: (context) {
+                          final isPending = UserController.instance.user.value.isPending;
+                          return FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: isPending
+                                  ? const Color(0xFFD97706)
+                                  : (isLive
+                                      ? AppColors.primary
+                                      : ChallengeColors.scheduled),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 4.5, horizontal: 8),
+                              minimumSize: const Size(0, 31),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
-                          ),
-                          onPressed: () => ctrl.onChallengeTapped(challenge),
-                          icon: const Icon(Icons.lock_rounded, size: 13),
-                          label: Text(
-                            isLive
-                                ? 'Unlock (Pro)'
-                                : 'Unlock to Join (Pro)',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11.5,
+                            onPressed: () {
+                              if (isPending) {
+                                Get.toNamed(Routes.paymentVerification);
+                              } else {
+                                ctrl.onChallengeTapped(challenge);
+                              }
+                            },
+                            icon: Icon(
+                              isPending ? Icons.hourglass_top_rounded : Icons.lock_rounded,
+                              size: 13,
                             ),
-                          ),
-                        ),
+                            label: Text(
+                              isPending
+                                  ? 'Verifying (Pro)'
+                                  : (isLive ? 'Unlock (Pro)' : 'Unlock to Join (Pro)'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          );
+                        }),
                       ),
                     ],
                   )

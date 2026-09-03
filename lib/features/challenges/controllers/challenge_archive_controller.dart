@@ -15,6 +15,7 @@ import 'package:matricmate/features/challenges/screens/widgets/challenge_manage_
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -376,6 +377,10 @@ class ChallengeArchiveController extends GetxController {
 
   Future<void> downloadChallenge(LeaderboardChallengeModel challenge) async {
     if (!isPremium) {
+      if (UserController.instance.user.value.isPending) {
+        Get.toNamed(Routes.paymentVerification);
+        return;
+      }
       Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
       return;
     }

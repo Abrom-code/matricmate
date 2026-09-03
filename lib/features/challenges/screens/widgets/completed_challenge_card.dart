@@ -7,6 +7,8 @@ import 'package:matricmate/features/challenges/controllers/challenge_home_contro
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/ethiopian_time_helper.dart';
@@ -389,11 +391,14 @@ class CompletedChallengeCard extends StatelessWidget {
 
                   // 1. Pro Locked state
                   if (!isPremium) {
+                    final isPending = UserController.instance.user.value.isPending;
                     return Expanded(
                       flex: 2,
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.amber.shade700,
+                          backgroundColor: isPending
+                              ? const Color(0xFFD97706)
+                              : Colors.amber.shade700,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
                           minimumSize: const Size(0, 36),
@@ -402,11 +407,20 @@ class CompletedChallengeCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        onPressed: () => ctrl.downloadChallenge(challenge),
-                        icon: const Icon(Icons.lock_rounded, size: 13.5),
-                        label: const Text(
-                          'Unlock (Pro)',
-                          style: TextStyle(
+                        onPressed: () {
+                          if (isPending) {
+                            Get.toNamed(Routes.paymentVerification);
+                          } else {
+                            ctrl.downloadChallenge(challenge);
+                          }
+                        },
+                        icon: Icon(
+                          isPending ? Icons.hourglass_top_rounded : Icons.lock_rounded,
+                          size: 13.5,
+                        ),
+                        label: Text(
+                          isPending ? 'Verifying (Pro)' : 'Unlock (Pro)',
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),

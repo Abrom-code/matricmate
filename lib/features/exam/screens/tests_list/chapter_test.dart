@@ -227,6 +227,7 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
 
                 return TestTile(
                   testName: test.title,
+                  description: test.description,
                   icon: canAccess
                       ? Iconsax.message_question_copy
                       : Icons.lock,
@@ -260,6 +261,7 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                         testId: test.id,
                         id: 1,
                         examTitle: test.title,
+                        description: test.description,
                         draft: ctrl.isInProgress(test.id)
                             ? ctrl.testResults[test.id]
                             : null,

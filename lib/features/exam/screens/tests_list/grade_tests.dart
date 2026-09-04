@@ -219,6 +219,7 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
 
                 return TestTile(
                   testName: test.title,
+                  description: test.description,
                   icon: canAccess
                       ? Iconsax.message_question_copy
                       : Icons.lock,
@@ -252,6 +253,7 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
                         testId: test.id,
                         id: 0,
                         examTitle: test.title,
+                        description: test.description,
                         draft: ctrl.isInProgress(test.id)
                             ? ctrl.testResults[test.id]
                             : null,

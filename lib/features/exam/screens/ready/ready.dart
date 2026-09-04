@@ -8,19 +8,6 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-/// Parses year and code from entrance exam title (e.g. "2023 Physics 4").
-({int? year, int? code}) _parseEntranceTitle(String title) {
-  final numbers = RegExp(
-    r'\d+',
-  ).allMatches(title).map((m) => int.parse(m.group(0)!)).toList();
-  if (numbers.isEmpty) return (year: null, code: null);
-  final year = numbers.first >= 1900 && numbers.first <= 2100
-      ? numbers.first
-      : null;
-  final code = numbers.length >= 2 ? numbers.last : null;
-  return (year: year, code: code);
-}
-
 class ReadyDialog extends StatelessWidget {
   const ReadyDialog({
     super.key,
@@ -30,6 +17,7 @@ class ReadyDialog extends StatelessWidget {
     required this.id,
     this.draft,
     this.examTitle,
+    this.description,
   });
 
   final int qnCount, time, testId, id;
@@ -39,6 +27,9 @@ class ReadyDialog extends StatelessWidget {
 
   /// When provided (entrance exams), year and code are parsed and displayed.
   final String? examTitle;
+
+  /// Optional description or source info for the test.
+  final String? description;
 
   void _launch({
     required bool examMode,
@@ -65,12 +56,6 @@ class ReadyDialog extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
     final hasDraft = draft != null;
     final answered = draft?.selectedAnswers.length ?? 0;
-
-    // Parse year/code from entrance exam title if provided
-    final parsed = examTitle != null ? _parseEntranceTitle(examTitle!) : null;
-    final examYear = parsed?.year;
-    final examCode = parsed?.code;
-    final hasExamMeta = examYear != null || examCode != null;
 
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
@@ -104,28 +89,11 @@ class ReadyDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
-                  // ── Entrance exam year & code chips ───────────────────
-                  if (hasExamMeta) ...[
-                    Row(
-                      children: [
-                        if (examYear != null)
-                          _MetaChip(
-                            icon: Icons.calendar_today_rounded,
-                            label: '$examYear',
-                            color: AppColors.secondary,
-                            dark: dark,
-                          ),
-                        if (examYear != null && examCode != null)
-                          const SizedBox(width: 8),
-                        if (examCode != null)
-                          _MetaChip(
-                            icon: Icons.tag_rounded,
-                            label: 'B Code: $examCode',
-                            color: Colors.teal,
-                            dark: dark,
-                          ),
-                      ],
-                    ),
+                  // ── Description / source info quote card (only when not paused) ──
+                  if (!hasDraft &&
+                      description != null &&
+                      description!.trim().isNotEmpty) ...[
+                    _ExpandableQuoteCard(text: description!),
                     const SizedBox(height: AppSizes.spaceBtwItems),
                   ],
 
@@ -295,44 +263,130 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-// ── Meta chip (year / code) ───────────────────────────────────────────────────
+// ── Expandable quote card for test description ────────────────────────────────
 
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.dark,
-  });
+class _ExpandableQuoteCard extends StatefulWidget {
+  const _ExpandableQuoteCard({required this.text});
+  final String text;
 
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool dark;
+  @override
+  State<_ExpandableQuoteCard> createState() => _ExpandableQuoteCardState();
+}
+
+class _ExpandableQuoteCardState extends State<_ExpandableQuoteCard> {
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: dark ? 0.18 : 0.10),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: color,
+    final dark = AppHelperFunctions.isDark(context);
+    final text = widget.text.trim();
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _isExpanded = !_isExpanded),
+        borderRadius: BorderRadius.circular(10),
+        child: Stack(
+          children: [
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: dark ? 0.09 : 0.05),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: dark ? 0.3 : 0.18),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header row: Quote icon + Title + Animated chevron
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.format_quote_rounded,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'About this test',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const Spacer(),
+                      AnimatedRotation(
+                        turns: _isExpanded ? 0.5 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 18,
+                          color: AppColors.primary.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+
+                  // Quote body: 1-line ellipsis when collapsed, full text when expanded
+                  AnimatedCrossFade(
+                    firstChild: Text(
+                      '“$text”',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontStyle: FontStyle.italic,
+                        height: 1.35,
+                        color: dark
+                            ? AppColors.white.withValues(alpha: 0.88)
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    secondChild: Text(
+                      '“$text”',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontStyle: FontStyle.italic,
+                        height: 1.45,
+                        color: dark
+                            ? AppColors.white.withValues(alpha: 0.95)
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    crossFadeState: _isExpanded
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    duration: const Duration(milliseconds: 200),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            // Left accent bar (blockquote style)
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              child: Container(
+                width: 4,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

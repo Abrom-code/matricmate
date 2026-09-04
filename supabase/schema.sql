@@ -90,6 +90,7 @@ CREATE TABLE public.tests (
     type           text    NOT NULL DEFAULT 'chapter',
     question_count integer NOT NULL,
     time           integer NOT NULL DEFAULT -1,   -- -1 = untimed
+    description    text,
     created_at     timestamptz NOT NULL DEFAULT now(),
     updated_at     timestamptz NOT NULL DEFAULT now()
 );

@@ -454,6 +454,7 @@ class SyncRepository {
       'type',
       'question_count',
       'time',
+      'description',
       'created_at',
     },
     'passages': {'id', 'content', 'title', 'image_url'},

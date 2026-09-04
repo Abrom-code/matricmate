@@ -24,7 +24,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 14,
+      version: 15,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -213,6 +213,11 @@ class DatabaseService extends GetxController {
               'CREATE INDEX IF NOT EXISTS idx_local_challenge_questions_set '
               'ON local_challenge_questions(set_id, order_index)',
             );
+          } catch (_) {}
+        }
+        if (oldVersion < 15) {
+          try {
+            await db.execute('ALTER TABLE tests ADD COLUMN description TEXT');
           } catch (_) {}
         }
       },

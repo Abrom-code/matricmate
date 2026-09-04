@@ -56,230 +56,174 @@ class SubjectModeModal extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                    // ── Subject Header ────────────────────────────────────────
-                    Row(
+              // ── Subject Header ────────────────────────────────────────
+              Row(
+                children: [
+                  // Artwork Thumbnail
+                  Container(
+                    width: 50,
+                    height: 50,
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: dark
+                          ? AppColors.darkSurface
+                          : AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Image.asset(
+                      AppHelperFunctions.getSubjectImage(subject.name),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+
+                  const SizedBox(width: 14),
+
+                  // Title + Stream
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Artwork Thumbnail
-                        Container(
-                          width: 50,
-                          height: 50,
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
+                        Text(
+                          subject.name,
+                          style: TextStyle(
+                            fontSize: 18.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.3,
                             color: dark
-                                ? AppColors.darkSurface
-                                : AppColors.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Image.asset(
-                            AppHelperFunctions.getSubjectImage(subject.name),
-                            fit: BoxFit.contain,
+                                ? AppColors.textWhite
+                                : AppColors.textPrimary,
                           ),
                         ),
-
-                        const SizedBox(width: 14),
-
-                        // Title + Stream
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                subject.name,
-                                style: TextStyle(
-                                  fontSize: 18.5,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.3,
-                                  color: dark
-                                      ? AppColors.textWhite
-                                      : AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2.5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(
-                                    alpha: dark ? 0.2 : 0.1,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  streamLabel,
-                                  style: const TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
+                        const SizedBox(height: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2.5,
                           ),
-                        ),
-
-                        // Close Button
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          icon: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: dark
-                                  ? AppColors.darkSurface
-                                  : AppColors.lightGrey,
-                              shape: BoxShape.circle,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(
+                              alpha: dark ? 0.2 : 0.1,
                             ),
-                            child: Icon(
-                              Icons.close_rounded,
-                              size: 18,
-                              color: dark
-                                  ? AppColors.darkGrey
-                                  : AppColors.textSecondary,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            streamLabel,
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
                       ],
                     ),
+                  ),
 
-                    const SizedBox(height: 18),
-
-                    // ── Subtitle ──────────────────────────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.only(left: 2, bottom: 12),
-                      child: Text(
-                        'Choose Practice Mode',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: dark
-                              ? AppColors.darkGrey
-                              : AppColors.textSecondary,
-                          letterSpacing: 0.1,
-                        ),
-                      ),
-                    ),
-
-                    // ── Option 1: Tests ──────────────────────────────────────
-                    _ModeOptionTile(
-                      dark: dark,
-                      icon: Iconsax.book_1_copy,
-                      iconGradient: const [
-                        AppColors.primary,
-                        Color(0xFF00796B),
-                      ],
-                      title: 'Tests',
-                      subtitle: subject.isCommon
-                          ? 'Section and practice tests'
-                          : 'Chapter and grade based tests',
-                      chips: subject.isCommon
-                          ? const ['All Sections', 'Section Tests']
-                          : const ['Grades 9 – 12', 'Chapter Tests'],
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        Get.toNamed(
-                          Routes.chapter,
-                          arguments: {
-                            'title': subject.name,
-                            'id': subject.id,
-                            'is_common': subject.isCommon,
-                          },
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // ── Option 2: Exams ──────────────────────────────────────
-                    _ModeOptionTile(
-                      dark: dark,
-                      icon: Icons.military_tech_rounded,
-                      iconGradient: const [
-                        Color(0xFF3B82F6),
-                        Color(0xFF1D4ED8),
-                      ],
-                      title: 'Exams',
-                      subtitle: 'Entrance and model exams from multiple years',
-                      chips: totalMockExams > 0
-                          ? [
-                              '$entranceCount Entrance Papers',
-                              if (modelCount > 0) '$modelCount Model Tests',
-                            ]
-                          : ['Coming soon'],
-                      isDisabled: totalMockExams == 0,
-                      onTap: () {
-                        if (totalMockExams == 0) {
-                          ToastHelper.info(
-                            'Exams for ${subject.name} are coming soon!',
-                          );
-                          return;
-                        }
-                        Navigator.of(context).pop();
-                        Get.toNamed(
-                          Routes.entranceExams,
-                          arguments: {
-                            'subject_id': subject.id,
-                            'subject': subject.name,
-                          },
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // ── Remove from Device Button ──────────────────────────────
-                    Container(
+                  // Close Button
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Container(
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEF4444).withValues(
-                          alpha: dark ? 0.12 : 0.05,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFEF4444).withValues(
-                            alpha: dark ? 0.25 : 0.15,
-                          ),
-                          width: 1.0,
-                        ),
+                        color: dark
+                            ? AppColors.darkSurface
+                            : AppColors.lightGrey,
+                        shape: BoxShape.circle,
                       ),
-                      child: InkWell(
-                        onTap: () =>
-                            confirmDelete(context, subject, closeModal: true),
-                        borderRadius: BorderRadius.circular(12),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.delete_outline_rounded,
-                                size: 16,
-                                color: Color(0xFFEF4444),
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Remove from device',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFEF4444),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: dark
+                            ? AppColors.darkGrey
+                            : AppColors.textSecondary,
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              // ── Subtitle ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.only(left: 2, bottom: 12),
+                child: Text(
+                  'Choose Practice Mode',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    letterSpacing: 0.1,
+                  ),
                 ),
               ),
-            ),
-          );
+
+              // ── Option 1: Tests ──────────────────────────────────────
+              _ModeOptionTile(
+                dark: dark,
+                icon: Iconsax.book_1_copy,
+                iconGradient: const [AppColors.primary, Color(0xFF00796B)],
+                title: 'Tests',
+                subtitle: subject.isCommon
+                    ? 'Section and practice tests'
+                    : 'Chapter and grade based tests',
+                chips: subject.isCommon
+                    ? const ['All Sections', 'Section Tests']
+                    : const ['Grades 9 – 12', 'Chapter Tests'],
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Get.toNamed(
+                    Routes.chapter,
+                    arguments: {
+                      'title': subject.name,
+                      'id': subject.id,
+                      'is_common': subject.isCommon,
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              // ── Option 2: Exams ──────────────────────────────────────
+              _ModeOptionTile(
+                dark: dark,
+                icon: Icons.military_tech_rounded,
+                iconGradient: const [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                title: 'Exams',
+                subtitle: 'Entrance and model exams from multiple years',
+                chips: totalMockExams > 0
+                    ? [
+                        '$entranceCount Entrance Papers',
+                        if (modelCount > 0) '$modelCount Model Tests',
+                      ]
+                    : ['Coming soon'],
+                isDisabled: totalMockExams == 0,
+                onTap: () {
+                  if (totalMockExams == 0) {
+                    ToastHelper.info(
+                      'Exams for ${subject.name} are coming soon!',
+                    );
+                    return;
+                  }
+                  Navigator.of(context).pop();
+                  Get.toNamed(
+                    Routes.entranceExams,
+                    arguments: {
+                      'subject_id': subject.id,
+                      'subject': subject.name,
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   static void confirmDelete(
@@ -302,7 +246,10 @@ class SubjectModeModal extends StatelessWidget {
               width: 1.2,
             ),
           ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 380),
             child: Padding(
@@ -315,9 +262,9 @@ class SubjectModeModal extends StatelessWidget {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withValues(
-                        alpha: dark ? 0.14 : 0.08,
-                      ),
+                      color: const Color(
+                        0xFFEF4444,
+                      ).withValues(alpha: dark ? 0.14 : 0.08),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -325,9 +272,9 @@ class SubjectModeModal extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444).withValues(
-                            alpha: dark ? 0.22 : 0.14,
-                          ),
+                          color: const Color(
+                            0xFFEF4444,
+                          ).withValues(alpha: dark ? 0.22 : 0.14),
                           shape: BoxShape.circle,
                         ),
                         child: const Center(
@@ -362,7 +309,9 @@ class SubjectModeModal extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13.5,
                       height: 1.45,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      color: dark
+                          ? AppColors.darkGrey
+                          : AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -416,7 +365,9 @@ class SubjectModeModal extends StatelessWidget {
                               if (closeModal) {
                                 Navigator.of(context).pop();
                               }
-                              SubjectsController.instance.deleteSubject(subject);
+                              SubjectsController.instance.deleteSubject(
+                                subject,
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.zero,
@@ -504,7 +455,12 @@ class _ModeOptionTile extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: const Color.fromARGB(
+          255,
+          23,
+          23,
+          23,
+        ).withValues(alpha: dark ? 0.0 : 0.0),
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
           onTap: onTap,

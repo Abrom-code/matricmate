@@ -308,6 +308,7 @@ class _ExamList extends StatelessWidget {
               correctAnswers: controller.getCorrectAnswers(test.id),
               isInProgress: controller.isInProgress(test.id),
               testName: test.title,
+              description: test.description,
               questionCount:
                   controller.testQuestionCounts[test.id] ?? test.questionCount,
               timeMinutes: test.time,
@@ -337,6 +338,7 @@ class _ExamList extends StatelessWidget {
                     testId: test.id,
                     id: 2,
                     examTitle: test.title,
+                    description: test.description,
                     draft: controller.isInProgress(test.id)
                         ? controller.testResults[test.id]
                         : null,

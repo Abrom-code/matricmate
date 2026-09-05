@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
@@ -464,15 +465,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                       ),
                       onPressed: _deleting ? null : _submit,
                       child: _deleting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
+                          ? const AppCircularButtonLoading(color: Colors.white)
                           : const Text(
                               'Delete',
                               style: TextStyle(

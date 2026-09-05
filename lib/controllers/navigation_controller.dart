@@ -10,7 +10,7 @@ import 'package:matricmate/features/personalization/screens/analytics/analytics_
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/routes/app_routes.dart';
 
-class NavigationController extends GetxController with WidgetsBindingObserver {
+class NavigationController extends GetxController {
   static NavigationController get instance => Get.find();
 
   final Rx<int> selectedIdx = 0.obs;
@@ -23,10 +23,9 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
   @override
   void onInit() {
     super.onInit();
-    WidgetsBinding.instance.addObserver(this);
     pageController = PageController(initialPage: selectedIdx.value);
 
-    // Ensure notification permissions are requested on startup / main screen visit
+    // Request notification permission once on app startup if not yet allowed
     unawaited(FcmService.instance.requestPermissionIfNeeded());
 
     // Ensure BookmarkController is registered before BookmarkScreen builds.
@@ -45,16 +44,8 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
 
   @override
   void onClose() {
-    WidgetsBinding.instance.removeObserver(this);
     pageController.dispose();
     super.onClose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      unawaited(FcmService.instance.requestPermissionIfNeeded());
-    }
   }
 
   /// Called by the nav bar tap — animates the PageView.
@@ -67,17 +58,11 @@ class NavigationController extends GetxController with WidgetsBindingObserver {
         curve: Curves.easeInOut,
       );
     }
-    if (index == 0) {
-      unawaited(FcmService.instance.requestPermissionIfNeeded());
-    }
   }
 
   /// Called when the user swipes — syncs the nav bar indicator.
   void onPageChanged(int index) {
     selectedIdx.value = index;
-    if (index == 0) {
-      unawaited(FcmService.instance.requestPermissionIfNeeded());
-    }
   }
 
   /// Navigates to a top-level tab in NavigationMenu, popping any pushed routes

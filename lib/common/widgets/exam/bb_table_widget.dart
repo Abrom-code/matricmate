@@ -5,13 +5,21 @@ import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// Renders a parsed BBCode table as a Flutter [Table] widget.
 class BBTableWidget extends StatelessWidget {
-  const BBTableWidget({super.key, required this.rows, this.baseStyle});
+  const BBTableWidget({
+    super.key,
+    required this.rows,
+    this.baseStyle,
+    this.minWidth,
+  });
 
   /// Parsed rows — `rows[0]` is the header row.
   final List<List<String>> rows;
 
   /// Optional override for the body text style. When null the widget derives
   final TextStyle? baseStyle;
+
+  /// Optional minimum width for the table. When null, defaults to screen width minus padding.
+  final double? minWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +51,10 @@ class BBTableWidget extends StatelessWidget {
         ? AppColors.primary.withValues(alpha: 0.18)
         : Colors.teal.shade50;
 
-    final borderSide = BorderSide(color: Colors.grey.shade300, width: 0.8);
+    final borderSide = BorderSide(
+      color: dark ? AppColors.darkBorder : Colors.grey.shade300,
+      width: 0.8,
+    );
     final tableBorder = TableBorder(
       top: borderSide,
       bottom: borderSide,
@@ -86,11 +97,12 @@ class BBTableWidget extends StatelessWidget {
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveMinWidth = minWidth ?? (screenWidth - 48);
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: screenWidth - 48),
+        constraints: BoxConstraints(minWidth: effectiveMinWidth),
         child: Table(
           border: tableBorder,
           // IntrinsicColumnWidth sizes each column to its content,

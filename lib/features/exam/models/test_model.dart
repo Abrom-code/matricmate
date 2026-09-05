@@ -3,6 +3,7 @@ class TestModel {
   int? grade, chapterId;
   int time;
   String title, type;
+  String? description;
   DateTime createdAt;
 
   TestModel({
@@ -15,6 +16,7 @@ class TestModel {
     required this.type,
     required this.title,
     required this.time,
+    this.description,
   });
 
   factory TestModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class TestModel {
       type: json['type'],
       title: json['title'],
       time: json['time'] ?? -1,
+      description: json['description']?.toString(),
     );
   }
 
@@ -51,6 +54,7 @@ class TestModel {
       'type': type,
       'title': title,
       'time': time,
+      'description': description,
     };
   }
 }

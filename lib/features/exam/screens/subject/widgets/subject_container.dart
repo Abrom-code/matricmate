@@ -39,9 +39,7 @@ class SubjectContainer extends StatelessWidget {
           color: cardBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDownloading
-                ? AppColors.primary
-                : borderColor,
+            color: isDownloading ? AppColors.primary : borderColor,
             width: isDownloading ? 1.5 : 1,
           ),
           boxShadow: [
@@ -56,9 +54,7 @@ class SubjectContainer extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
-            onTap: isDownloaded
-                ? onTap
-                : (isDownloading ? null : onPressed),
+            onTap: isDownloaded ? onTap : (isDownloading ? null : onPressed),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
               child: Column(
@@ -70,7 +66,7 @@ class SubjectContainer extends StatelessWidget {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: dark
-                            ? AppColors.darkSurface
+                            ? AppColors.black
                             : AppColors.primary.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -106,7 +102,9 @@ class SubjectContainer extends StatelessWidget {
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: AppColors.primary.withValues(alpha: 0.4),
+                                            color: AppColors.primary.withValues(
+                                              alpha: 0.4,
+                                            ),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
@@ -120,14 +118,17 @@ class SubjectContainer extends StatelessWidget {
                                                   value: progress,
                                                   strokeWidth: 2.5,
                                                   color: AppColors.white,
-                                                  backgroundColor: AppColors.white.withValues(alpha: 0.2),
+                                                  backgroundColor: AppColors
+                                                      .white
+                                                      .withValues(alpha: 0.2),
                                                 ),
                                                 if (progress != null)
                                                   Text(
                                                     '${(progress * 100).toInt()}%',
                                                     style: const TextStyle(
                                                       fontSize: 9,
-                                                      fontWeight: FontWeight.w800,
+                                                      fontWeight:
+                                                          FontWeight.w800,
                                                       color: AppColors.white,
                                                     ),
                                                   ),
@@ -222,14 +223,20 @@ class SubjectContainer extends StatelessWidget {
                   Text(
                     isDownloaded
                         ? 'Ready to practice'
-                        : (isDownloading ? 'Downloading...' : 'Tap to download'),
+                        : (isDownloading
+                              ? 'Downloading...'
+                              : 'Tap to download'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w500,
                       color: isDownloaded
                           ? AppColors.success
-                          : (isDownloading ? AppColors.primary : (dark ? AppColors.darkGrey : AppColors.textSecondary)),
+                          : (isDownloading
+                                ? AppColors.primary
+                                : (dark
+                                      ? AppColors.darkGrey
+                                      : AppColors.textSecondary)),
                     ),
                   ),
                 ],

@@ -20,6 +20,7 @@ class TestTile extends StatelessWidget {
     this.questionCount = 0,
     this.timeMinutes = -1,
     this.isNew = false,
+    this.description,
   });
 
   final String testName;
@@ -32,6 +33,7 @@ class TestTile extends StatelessWidget {
   final bool isInProgress;
   final int questionCount;
   final int timeMinutes;
+  final String? description;
 
   /// When true, shows a "NEW" badge next to the test title.
   final bool isNew;

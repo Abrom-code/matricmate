@@ -101,16 +101,26 @@ class FcmService {
   }
 
   bool _isRequestingPermission = false;
+  bool _hasPromptedThisSession = false;
   DateTime? _lastPermissionCheck;
 
   /// Requests notification permissions if not already granted.
-  Future<NotificationSettings?> requestPermissionIfNeeded() async {
+  ///
+  /// - If permission is already granted, returns settings without showing any prompt.
+  /// - Prompts the user once when the app starts if notifications are not yet allowed.
+  /// - Once prompted in the current session, it will NOT prompt again during this session
+  ///   if the user clicks Back or dismisses the dialog (preventing annoying loops).
+  /// - Each time the app starts afresh (cold start), it will ask the user again.
+  /// - If [force] is true, prompts even if already requested this session.
+  Future<NotificationSettings?> requestPermissionIfNeeded({
+    bool force = false,
+  }) async {
     if (_isRequestingPermission) return null;
 
-    // Cooldown guard to avoid rapid re-checks
     final now = DateTime.now();
+    // Cooldown guard to avoid rapid duplicate checks within 3 seconds
     if (_lastPermissionCheck != null &&
-        now.difference(_lastPermissionCheck!).inSeconds < 5) {
+        now.difference(_lastPermissionCheck!).inSeconds < 3) {
       return null;
     }
 
@@ -119,36 +129,53 @@ class FcmService {
 
     try {
       final settings = await _messaging.getNotificationSettings();
-      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
-          settings.authorizationStatus != AuthorizationStatus.provisional) {
-        await _localNotifications
-            .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >()
-            ?.requestNotificationsPermission();
-
-        final updated = await _messaging.requestPermission(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-
-        if (updated.authorizationStatus == AuthorizationStatus.authorized ||
-            updated.authorizationStatus == AuthorizationStatus.provisional) {
-          final token = await _messaging.getToken();
-          await _saveTokenIfLoggedIn(token);
-          await _subscribeToStreamTopics();
-        }
-
-        return updated;
+      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional) {
+        return settings;
       }
-      return settings;
+
+      // If already prompted during this app session, do not prompt again (prevents Back button loops)
+      if (!force && _hasPromptedThisSession) {
+        debugPrint(
+          '[FcmService] Notification permission already requested this session; skipping',
+        );
+        return settings;
+      }
+
+      // Mark prompted for this session BEFORE showing the dialog
+      _hasPromptedThisSession = true;
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestNotificationsPermission();
+
+      final updated = await _messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      if (updated.authorizationStatus == AuthorizationStatus.authorized ||
+          updated.authorizationStatus == AuthorizationStatus.provisional) {
+        final token = await _messaging.getToken();
+        await _saveTokenIfLoggedIn(token);
+        await _subscribeToStreamTopics();
+      }
+
+      return updated;
     } catch (e) {
       debugPrint('[FcmService] requestPermissionIfNeeded error: $e');
       return null;
     } finally {
       _isRequestingPermission = false;
     }
+  }
+
+  /// Resets the session prompt flag so permission can be requested again in this session.
+  void resetSessionPromptFlag() {
+    _hasPromptedThisSession = false;
   }
 
   Future<void> init() async {

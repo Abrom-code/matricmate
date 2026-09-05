@@ -74,10 +74,53 @@ class UserRepository {
   Future<void> deleteUserRecord(String userId) async {
     try {
       await ensureSupabaseAuth();
-      await _supabase.from('users').delete().eq('id', userId);
-      await SessionService().removeSession(userId);
 
-      // clear local user table so no stale data remains
+      // 1. Clean up payment receipts and uploaded receipt images in storage
+      try {
+        final receipts = await _supabase
+            .from('payment_receipts')
+            .select('receipt_path')
+            .eq('user_id', userId);
+
+        if (receipts.isNotEmpty) {
+          final filesToDelete = receipts
+              .map((e) => e['receipt_path']?.toString().trim() ?? '')
+              .where((p) => p.isNotEmpty)
+              .toList();
+
+          if (filesToDelete.isNotEmpty) {
+            try {
+              await _supabase.storage.from('receipts').remove(filesToDelete);
+            } catch (_) {}
+          }
+        }
+        await _supabase.from('payment_receipts').delete().eq('user_id', userId);
+      } catch (_) {}
+
+      // 2. Remove user session lock
+      try {
+        await SessionService().removeSession(userId);
+      } catch (_) {}
+
+      // 3. Remove notification reads & personal notifications
+      try {
+        await _supabase
+            .from('notification_reads')
+            .delete()
+            .eq('user_id', userId);
+      } catch (_) {}
+
+      try {
+        await _supabase
+            .from('notifications')
+            .delete()
+            .eq('user_id', userId);
+      } catch (_) {}
+
+      // 4. Delete user record in Supabase
+      await _supabase.from('users').delete().eq('id', userId);
+
+      // 5. Clear local user table so no stale data remains
       final db = await databaseService.database;
       await db.delete('user');
     } catch (e) {

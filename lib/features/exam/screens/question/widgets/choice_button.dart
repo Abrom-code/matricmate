@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:matricmate/common/widgets/exam/bb_table_widget.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/bb_table_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
@@ -71,6 +73,14 @@ class ChoiceButton extends StatelessWidget {
       }
     }
 
+    final textStyle = TextStyle(
+      fontSize: 15,
+      fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+      height: 1.45,
+      letterSpacing: 0.1,
+      color: dark ? AppColors.textWhite : AppColors.textPrimary,
+    );
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 9),
       child: Material(
@@ -137,22 +147,7 @@ class ChoiceButton extends StatelessWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 1.5),
-                    child: Text.rich(
-                      RichTextParser.parse(
-                        optionTxt,
-                        TextStyle(
-                          fontSize: 15,
-                          fontWeight: isSelected
-                              ? FontWeight.w500
-                              : FontWeight.w400,
-                          height: 1.45,
-                          letterSpacing: 0.1,
-                          color: dark
-                              ? AppColors.textWhite
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
+                    child: _buildOptionContent(textStyle),
                   ),
                 ),
 
@@ -183,6 +178,44 @@ class ChoiceButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildOptionContent(TextStyle textStyle) {
+    if (!BBTableParser.containsTable(optionTxt)) {
+      return Text.rich(
+        RichTextParser.parse(optionTxt, textStyle),
+      );
+    }
+
+    final segments = BBTableParser.splitSegments(optionTxt);
+    final widgets = <Widget>[];
+
+    for (final seg in segments) {
+      if (seg.isTable) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: BBTableWidget(
+              rows: seg.tableRows!,
+              baseStyle: textStyle.copyWith(fontSize: 13.5),
+              minWidth: 0,
+            ),
+          ),
+        );
+      } else {
+        widgets.add(
+          Text.rich(
+            RichTextParser.parse(seg.text!, textStyle),
+          ),
+        );
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: widgets,
     );
   }
 }

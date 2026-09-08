@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
-import 'package:matricmate/utils/exceptions/firebase_auth_exceptions.dart';
 import 'package:matricmate/utils/exceptions/firebase_exceptions.dart';
 import 'package:matricmate/utils/exceptions/format_exceptions.dart';
 import 'package:matricmate/utils/exceptions/platform_exceptions.dart';
 import 'package:matricmate/utils/exceptions/sqflite_exceptions.dart';
+import 'package:matricmate/utils/exceptions/supabase_auth_exceptions.dart';
 import 'package:matricmate/utils/exceptions/supabase_exception.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -23,15 +23,6 @@ class AppExceptionHandler {
 
   static AppFailure handle(Object e) {
     if (e is AppFailure) return e;
-
-    // ── Firebase Auth ────────────────────────────────────────────
-    if (e is FirebaseAuthException) {
-      return AppFailure(
-        title: 'Authentication Error',
-        message: FirebaseAuthExceptions.fromException(e).message,
-        code: e.code,
-      );
-    }
 
     // ── Firebase General ─────────────────────────────────────────
     if (e is FirebaseException) {
@@ -53,7 +44,7 @@ class AppExceptionHandler {
 
     // ── Supabase Auth ────────────────────────────────────────────
     if (e is AuthException) {
-      return _handleSupabaseAuth(e);
+      return SupabaseAuthExceptions.fromException(e).toFailure();
     }
 
     // ── Supabase Storage ─────────────────────────────────────────
@@ -119,32 +110,6 @@ class AppExceptionHandler {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────
-
-  static AppFailure _handleSupabaseAuth(AuthException e) {
-    final msg = e.message.toLowerCase();
-    if (msg.contains('invalid') || msg.contains('credentials')) {
-      return const AppFailure(
-        title: 'Authentication Error',
-        message: 'Invalid credentials. Please check and try again.',
-      );
-    }
-    if (msg.contains('expired') || msg.contains('session')) {
-      return const AppFailure(
-        title: 'Session Expired',
-        message: 'Your session has expired. Please log in again.',
-      );
-    }
-    if (msg.contains('rate') || msg.contains('limit')) {
-      return const AppFailure(
-        title: 'Too Many Attempts',
-        message: 'Please wait a moment before trying again.',
-      );
-    }
-    return const AppFailure(
-      title: 'Authentication Error',
-      message: 'An authentication error occurred. Please try again.',
-    );
-  }
 
   static String _storageMessage(String? statusCode) {
     switch (statusCode) {

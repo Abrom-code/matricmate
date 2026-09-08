@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -19,7 +19,6 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChallengeArchiveController extends GetxController {
   ChallengeArchiveController({this.subjectId, this.subjectTitle});
@@ -578,7 +577,7 @@ class ChallengeArchiveController extends GetxController {
     try {
       final userId = UserController.instance.user.value.id.isNotEmpty
           ? UserController.instance.user.value.id
-          : (FirebaseAuth.instance.currentUser?.uid ?? '');
+          : (Supabase.instance.client.auth.currentUser?.id ?? '');
 
       // 1. Check local practice results first (fastest & offline)
       final localPractice = await _db.getChallengePracticeResult(challenge.id, setId: challenge.setId);

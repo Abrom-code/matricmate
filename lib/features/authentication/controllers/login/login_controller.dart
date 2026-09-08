@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
@@ -62,13 +61,13 @@ class LoginController extends GetxController {
 
       await authRepo.loginUsingEmailAndPassword(emailText, passwordText);
 
-      final uid = authRepo.currentUser!.uid;
+      final uid = authRepo.currentUser!.id;
       final deviceId = await DeviceService.getDeviceId();
 
       final isAllowed = await SessionService().validateSession(uid, deviceId);
 
       if (!isAllowed) {
-        await FirebaseAuth.instance.signOut();
+        await authRepo.logout();
 
         trials.value = await SessionService().getTrial(uid);
         if (trials.value == -1) return;

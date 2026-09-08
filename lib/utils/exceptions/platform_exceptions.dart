@@ -17,9 +17,9 @@ class PlatformExceptions implements Exception {
       case 'invalid-phone-number':
         return 'The provided phone number is invalid.';
       case 'operation-not-allowed':
-        return 'The sign-in provider is disabled for your Firebase project.';
+        return 'The sign-in provider is currently disabled.';
       case 'session-cookie-expired':
-        return 'The Firebase session cookie has expired. Please sign in again.';
+        return 'The session has expired. Please sign in again.';
       case 'uid-already-exists':
         return 'The provided user ID is already in use by another user.';
       case 'sign_in_failed':

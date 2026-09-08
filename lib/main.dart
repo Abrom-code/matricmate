@@ -37,19 +37,22 @@ Future<void> main() async {
         ),
       );
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  ).then((FirebaseApp value) => Get.put(AuthenticationRepository()));
-
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
   // Initialize Supabase
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     publishableKey: dotenv.env['SUPABASE_API_KEY'] ?? '',
   );
 
-  // Best-effort anonymous payment config fetch; auth load picks up failures
+  Get.put(AuthenticationRepository());
+
+  // Initialize Firebase for FCM Push Notifications
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // Best-effort payment config fetch; auth load picks up failures
   unawaited(PaymentConfigService.instance.load());
 
   runApp(const App());

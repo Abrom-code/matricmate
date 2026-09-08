@@ -8,6 +8,19 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
+/// Parses year and code from entrance exam title (e.g. "2023 Physics 4").
+({int? year, int? code}) _parseEntranceTitle(String title) {
+  final numbers = RegExp(
+    r'\d+',
+  ).allMatches(title).map((m) => int.parse(m.group(0)!)).toList();
+  if (numbers.isEmpty) return (year: null, code: null);
+  final year = numbers.first >= 1900 && numbers.first <= 2100
+      ? numbers.first
+      : null;
+  final code = numbers.length >= 2 ? numbers.last : null;
+  return (year: year, code: code);
+}
+
 class ReadyDialog extends StatelessWidget {
   const ReadyDialog({
     super.key,
@@ -56,6 +69,12 @@ class ReadyDialog extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
     final hasDraft = draft != null;
     final answered = draft?.selectedAnswers.length ?? 0;
+    final meta = examTitle != null
+        ? _parseEntranceTitle(examTitle!)
+        : (year: null, code: null);
+    final examYear = meta.year;
+    final examCode = meta.code;
+    final hasExamMeta = examYear != null || examCode != null;
 
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
@@ -88,6 +107,31 @@ class ReadyDialog extends StatelessWidget {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: AppSizes.spaceBtwItems),
+
+                  // ── Entrance Exam Metadata (Year / Code chips) ───────────
+                  if (!hasDraft && hasExamMeta) ...[
+                    Row(
+                      children: [
+                        if (examYear != null)
+                          _MetaChip(
+                            icon: Icons.calendar_today_rounded,
+                            label: '$examYear',
+                            color: AppColors.secondary,
+                            dark: dark,
+                          ),
+                        if (examYear != null && examCode != null)
+                          const SizedBox(width: 8),
+                        if (examCode != null)
+                          _MetaChip(
+                            icon: Icons.tag_rounded,
+                            label: 'B Code: $examCode',
+                            color: Colors.teal,
+                            dark: dark,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSizes.spaceBtwItems),
+                  ],
 
                   // ── Description / source info quote card (only when not paused) ──
                   if (!hasDraft &&
@@ -391,3 +435,47 @@ class _ExpandableQuoteCardState extends State<_ExpandableQuoteCard> {
     );
   }
 }
+
+// ── Meta chip (year / code) ───────────────────────────────────────────────────
+
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.dark,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: dark ? 0.18 : 0.10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

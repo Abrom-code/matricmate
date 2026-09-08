@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
-import 'package:matricmate/data/services/ensure_supabase_auth.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -284,7 +283,6 @@ class NotificationsController extends GetxController {
     }
 
     try {
-      await ensureSupabaseAuth();
       final client = Supabase.instance.client;
 
       // 1. All rows in notifications table (no filter — see everything)

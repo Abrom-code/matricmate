@@ -1,7 +1,7 @@
 import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'dart:convert';
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
@@ -22,7 +22,6 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChallengeHomeController extends GetxController {
   static ChallengeHomeController get instance => Get.find();
@@ -710,7 +709,7 @@ isDownloading[challenge.id] = false;
     try {
       final userId = UserController.instance.user.value.id.isNotEmpty
           ? UserController.instance.user.value.id
-          : (FirebaseAuth.instance.currentUser?.uid ?? '');
+          : (Supabase.instance.client.auth.currentUser?.id ?? '');
 
       // 1. Check local practice results first (fastest & offline)
       final localPractice = await _db.getChallengePracticeResult(challenge.id, setId: challenge.setId);

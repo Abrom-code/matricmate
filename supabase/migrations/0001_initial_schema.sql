@@ -1,5 +1,6 @@
 -- =====================================================================
--- MatricMate Complete Database Schema (Master Fresh Install)
+-- Migration: 0001_initial_schema.sql
+-- MatricMate Complete Database Foundation
 -- Native Supabase Auth with Strict Row-Level Security (RLS)
 -- =====================================================================
 

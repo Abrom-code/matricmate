@@ -44,7 +44,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   await plugin.initialize(
     settings: const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings('@drawable/ic_notification'),
       iOS: DarwinInitializationSettings(),
     ),
   );
@@ -64,6 +64,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           channelDescription: channel.description,
           importance: Importance.high,
           priority: Priority.high,
+          icon: '@drawable/ic_notification',
         ),
         iOS: const DarwinNotificationDetails(),
       ),
@@ -201,7 +202,7 @@ class FcmService {
 
     await _localNotifications.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('@drawable/ic_notification'),
         iOS: DarwinInitializationSettings(),
       ),
       onDidReceiveNotificationResponse: (response) {
@@ -266,7 +267,9 @@ class FcmService {
     if (token == null) return;
     final userId = UserController.instance.user.value.id;
     if (userId.isEmpty) return;
-    debugPrint('[FcmService] saving FCM token for userId=$userId');
+    if (kDebugMode) {
+      debugPrint('[FcmService] saving FCM token for user');
+    }
     await _repo.saveFcmToken(userId, token);
   }
 
@@ -319,6 +322,7 @@ class FcmService {
             channelDescription: _channel.description,
             importance: Importance.high,
             priority: Priority.high,
+            icon: '@drawable/ic_notification',
           ),
           iOS: const DarwinNotificationDetails(),
         ),

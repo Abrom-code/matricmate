@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MatricET — Privacy Policy</title>
+  <style>
+    :root {
+      --primary: #0D7377;
+      --text: #2D3748;
+      --bg: #F7FAFC;
+      --card: #FFFFFF;
+      --border: #E2E8F0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 36px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    h1 {
+      color: var(--primary);
+      margin-top: 0;
+      font-size: 28px;
+    }
+    h2 {
+      font-size: 20px;
+      margin-top: 28px;
+      color: var(--primary);
+      border-bottom: 2px solid #E6FFFA;
+      padding-bottom: 6px;
+    }
+    .badge {
+      display: inline-block;
+      background: #E6FFFA;
+      color: #234E52;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #EDF2F7;
+      color: #1A202C;
+    }
+    .disclaimer-box {
+      background: #FFF5F5;
+      border-left: 4px solid #E53E3E;
+      padding: 16px;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    .footer {
+      margin-top: 40px;
+      font-size: 13px;
+      color: #718096;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">Privacy Policy</div>
+    <h1>MatricET Privacy Policy</h1>
+    <p><em>Effective Date: September 2026</em></p>
+
+    <div class="disclaimer-box">
+      <strong>Government Affiliation Disclaimer:</strong><br>
+      MatricET is an independent educational examination preparation platform developed by Abopia. It is <strong>not</strong> an official government application and is <strong>not</strong> affiliated with, endorsed by, or operated by the Ministry of Education of Ethiopia, the Educational Assessment and Examinations Service (EAES), or any governmental authority. All educational references and examination curricula are based on publicly available educational curricula.
+    </div>
+
+    <h2>1. Introduction</h2>
+    <p>
+      This Privacy Policy describes how <strong>Abopia</strong> ("we", "us", or "our") collects, uses, and safeguards information when you use the <strong>MatricET</strong> mobile application (Package ID: <code>com.abopia.matricet</code>).
+    </p>
+
+    <h2>2. Information We Collect</h2>
+    <p>We collect only the information strictly necessary to provide educational functionality, user authentication, exam scoring, and subscription access:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Specific Data</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Account Information</strong></td>
+          <td>Name (First & Last), Email Address, Password (hashed securely)</td>
+          <td>User authentication, account recovery, profile display.</td>
+        </tr>
+        <tr>
+          <td><strong>Educational Stream</strong></td>
+          <td>Stream preference (Natural Science / Social Science)</td>
+          <td>Filtering relevant subjects, tests, and entrance exams.</td>
+        </tr>
+        <tr>
+          <td><strong>Device & Session Identifier</strong></td>
+          <td>App-generated UUID (randomly generated, not a hardware IMEI)</td>
+          <td>Single-device session security and preventing unauthorized account takeover.</td>
+        </tr>
+        <tr>
+          <td><strong>Push Notifications</strong></td>
+          <td>Firebase Cloud Messaging (FCM) registration token</td>
+          <td>Delivering study announcements, challenge updates, and payment status alerts.</td>
+        </tr>
+        <tr>
+          <td><strong>Academic Progress</strong></td>
+          <td>Test answers, scores, bookmarks, timer remaining, completion status</td>
+          <td>Local and remote test result reviews, analytics, and resume-in-progress features.</td>
+        </tr>
+        <tr>
+          <td><strong>Payment Verification Proof</strong></td>
+          <td>User-uploaded transaction receipt screenshots, payment method name</td>
+          <td>Manual verification of bank/mobile money subscriptions by administrators.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Information We Do NOT Collect</h2>
+    <p>MatricET does <strong>not</strong> collect:</p>
+    <ul>
+      <li>Precise or approximate GPS location.</li>
+      <li>Device hardware serial numbers, IMEI, or MAC address.</li>
+      <li>Contact lists, phone logs, or SMS content.</li>
+      <li>Microphone or camera recordings.</li>
+      <li>Advertising identifiers (no advertising SDKs or third-party ad networks are used).</li>
+    </ul>
+
+    <h2>4. How Information is Processed & Third-Party Services</h2>
+    <p>We do not sell, rent, or trade your personal data. Data is processed securely through trusted infrastructure providers:</p>
+    <ul>
+      <li><strong>Supabase Inc. (Backend & Authentication):</strong> Stores user accounts, encrypted passwords, relational test data, and receipt files over encrypted HTTPS/TLS connections.</li>
+      <li><strong>Google Firebase Cloud Messaging (FCM):</strong> Delivers encrypted push notifications to your device. No user profile data or test scores are shared with Firebase.</li>
+    </ul>
+
+    <h2>5. Data Retention & Deletion</h2>
+    <p>
+      We retain your personal data for as long as your account is active. You have the right to permanently delete your account and all associated data at any time:
+    </p>
+    <ul>
+      <li><strong>In-App Deletion:</strong> Open MatricET &rarr; Profile &rarr; Settings &rarr; Delete Account. Deletion is instantaneous and cascades through all servers.</li>
+      <li><strong>Web Deletion:</strong> You can submit a deletion request via our Account Deletion page or by contacting <strong>[INSERT_YOUR_SUPPORT_EMAIL_HERE]</strong>.</li>
+    </ul>
+
+    <h2>6. Children & Student Privacy</h2>
+    <p>
+      MatricET is designed for Ethiopian secondary school students (typically Grade 9 through 12, ages 14 to 18) preparing for university entrance examinations. We do not knowingly collect personal data from children under the age of 13.
+    </p>
+
+    <h2>7. Security of Your Information</h2>
+    <p>
+      All communication between the MatricET app and backend servers is encrypted in transit using Transport Layer Security (TLS 1.3/HTTPS). Row-Level Security (RLS) policies restrict database queries so users can only access their own educational data.
+    </p>
+
+    <h2>8. Contact Us</h2>
+    <p>
+      If you have questions about this Privacy Policy or your data, please contact:
+    </p>
+    <p>
+      <strong>Abopia Software</strong><br>
+      Email: <strong>[INSERT_YOUR_SUPPORT_EMAIL_HERE]</strong><br>
+      Website: <strong>[INSERT_YOUR_WEBSITE_URL_HERE]</strong>
+    </p>
+
+    <div class="footer">
+      <p>MatricET &bull; Package ID: <code>com.abopia.matricet</code> &bull; Version 1.0.0</p>
+    </div>
+  </div>
+</body>
+</html>

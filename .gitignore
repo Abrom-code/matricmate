@@ -8,6 +8,7 @@
 .pub-cache/
 .pub/
 .env*
+!.env.example
 build/
 **/doc/api/
 
@@ -73,6 +74,7 @@ xcuserdata/
 lib/utils/constants/api_constants.dart
 .env
 .env.*
+!.env.example
 lib/motivations/
 todo.txt
 

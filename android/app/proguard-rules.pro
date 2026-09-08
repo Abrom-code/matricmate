@@ -17,3 +17,7 @@
 
 # Keep Desugaring classes
 -dontwarn java.time.**
+
+# Google Play Core SplitCompat safe suppression
+# The app extends standard android.app.Application and does not use Play Feature Delivery / deferred components.
+-dontwarn com.google.android.play.core.**

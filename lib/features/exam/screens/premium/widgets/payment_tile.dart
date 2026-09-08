@@ -182,8 +182,6 @@ Color _getBrandColor(String title) {
     return AppColors.secondary;
   } else if (lower.contains('abyssinia') || lower.contains('boa')) {
     return AppColors.amberAccent;
-  } else if (lower.contains('mpesa') || lower.contains('m-pesa')) {
-    return AppColors.success;
   }
   return AppColors.primary;
 }

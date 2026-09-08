@@ -18,7 +18,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await GetStorage.init();
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {}
 
   // ThemeController must exist before any widget builds
   Get.put(ThemeController(), permanent: true);
@@ -37,10 +39,22 @@ Future<void> main() async {
         ),
       );
 
+  const defineUrl = String.fromEnvironment('SUPABASE_URL');
+  const defineKey = String.fromEnvironment('SUPABASE_API_KEY');
+  final envUrl = dotenv.isInitialized ? dotenv.env['SUPABASE_URL'] : null;
+  final envKey = dotenv.isInitialized ? dotenv.env['SUPABASE_API_KEY'] : null;
+
+  final supabaseUrl = defineUrl.isNotEmpty
+      ? defineUrl
+      : (envUrl ?? 'https://gcscoitnhdrqsibkxrit.supabase.co');
+  final supabaseKey = defineKey.isNotEmpty
+      ? defineKey
+      : (envKey ?? 'sb_publishable_OhdIkL0Tlwn4I9cbf-EDdA_Vp9uKhda');
+
   // Initialize Supabase
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    publishableKey: dotenv.env['SUPABASE_API_KEY'] ?? '',
+    url: supabaseUrl,
+    publishableKey: supabaseKey,
   );
 
   Get.put(AuthenticationRepository());

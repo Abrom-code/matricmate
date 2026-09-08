@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "com.abopia.matricmate"
+    namespace = "com.abopia.matricet"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -25,7 +25,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.abopia.matricmate"
+        applicationId = "com.abopia.matricet"
 
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion

@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyC_MNqrCLJcvbyT28mXTWoeB7MNfFXEKvM',
-    appId: '1:768230513418:android:c86fc2d489f25b878178f3',
+    appId: '1:768230513418:android:e135397021cdb0a38178f3',
     messagingSenderId: '768230513418',
     projectId: 'matricmate-a1bf6',
     storageBucket: 'matricmate-a1bf6.firebasestorage.app',

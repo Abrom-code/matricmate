@@ -63,6 +63,11 @@ class AuthenticationController extends GetxController
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_periodicSessionCheck());
+      if (Get.isRegistered<NotificationsController>()) {
+        unawaited(
+          NotificationsController.instance.loadNotifications(syncRemote: true),
+        );
+      }
     }
   }
 

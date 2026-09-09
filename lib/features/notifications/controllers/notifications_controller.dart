@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
@@ -6,7 +6,8 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class NotificationsController extends GetxController {
+class NotificationsController extends GetxController
+    with WidgetsBindingObserver {
   static NotificationsController get instance => Get.find();
 
   final NotificationRepository _repo = NotificationRepository();
@@ -32,10 +33,30 @@ class NotificationsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Load local notifications immediately for responsive bell badge
+    WidgetsBinding.instance.addObserver(this);
+
+    // Initial load: sync remote right away if user is already populated
+    if (_userId.isNotEmpty) {
+      loadNotifications(syncRemote: true);
+    }
+
+    // Load local notifications and sync remote whenever user profile updates
     ever(UserController.instance.user, (_) {
-      if (_userId.isNotEmpty) loadNotifications();
+      if (_userId.isNotEmpty) loadNotifications(syncRemote: true);
     });
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _userId.isNotEmpty) {
+      loadNotifications(syncRemote: true);
+    }
   }
 
   /// Loads notifications from local SQLite and optionally syncs from remote.

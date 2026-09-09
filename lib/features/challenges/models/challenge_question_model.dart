@@ -77,7 +77,9 @@ class ChallengeQuestionModel {
       explanationEn: expEn.isNotEmpty ? expEn : rawExp,
       explanationAm: expAm,
       imageUrl: json['image_url']?.toString(),
-      passageId: (json['passage_id'] as num?)?.toInt(),
+      passageId: json['passage_id'] is num
+          ? (json['passage_id'] as num).toInt()
+          : int.tryParse(json['passage_id']?.toString() ?? ''),
       passage: parsedPassage,
     );
   }

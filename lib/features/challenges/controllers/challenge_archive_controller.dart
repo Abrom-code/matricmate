@@ -395,20 +395,18 @@ class ChallengeArchiveController extends GetxController {
 
       await _db.insertDownloadedChallengeBundle(bundle);
       downloadedIds.add(challenge.id);
+      if (challenge.setId.isNotEmpty) downloadedIds.add(challenge.setId);
+      downloadedIds.refresh();
+
       if (Get.isRegistered<ChallengeHomeController>()) {
-        Get.find<ChallengeHomeController>().downloadedIds.add(challenge.id);
+        final hCtrl = Get.find<ChallengeHomeController>();
+        hCtrl.downloadedIds.add(challenge.id);
+        if (challenge.setId.isNotEmpty) hCtrl.downloadedIds.add(challenge.setId);
+        hCtrl.downloadedIds.refresh();
       }
       ToastHelper.success('Downloaded for offline practice!');
     } catch (e) {
-      // Fallback to local DB when offline or network fails
-      final localChallenges = await _loadLocalArchivedChallenges();
-      if (localChallenges.isNotEmpty) {
-        challenges.value = localChallenges;
-        await refreshDownloadStates();
-        await refreshAttemptStates();
-      } else {
-        AppExceptionHandler.handleResponse(e);
-      }
+      AppExceptionHandler.handleResponse(e);
     } finally {
       isDownloading[challenge.id] = false;
     }
@@ -420,15 +418,13 @@ class ChallengeArchiveController extends GetxController {
 
   Future<void> showChallengeManageSheet(BuildContext context, LeaderboardChallengeModel challenge) async {
     final isDown = isDownloaded(challenge.id);
-    final isDone = isAttemptedOrPracticed(challenge.id);
 
     await ChallengeManageSheet.show(
       context: context,
       challenge: challenge,
       isDownloaded: isDown,
-      isAttemptedOrPracticed: isDone,
+      onDownload: () => downloadChallenge(challenge),
       onRemoveDownload: () => removeChallengeDownload(challenge),
-      onClearPractice: () => clearPracticeProgress(challenge),
       onHideChallenge: () => hideChallenge(context, challenge),
     );
   }
@@ -442,30 +438,17 @@ class ChallengeArchiveController extends GetxController {
       );
       downloadedIds.remove(challenge.id);
       if (challenge.setId.isNotEmpty) downloadedIds.remove(challenge.setId);
+      downloadedIds.refresh();
 
       if (Get.isRegistered<ChallengeHomeController>()) {
         final hCtrl = Get.find<ChallengeHomeController>();
         hCtrl.downloadedIds.remove(challenge.id);
         if (challenge.setId.isNotEmpty) hCtrl.downloadedIds.remove(challenge.setId);
+        hCtrl.downloadedIds.refresh();
       }
+
+      await refreshDownloadStates();
       ToastHelper.success('Downloaded questions removed.');
-    } catch (e) {
-      AppExceptionHandler.handleResponse(e);
-    }
-  }
-
-  Future<void> clearPracticeProgress(LeaderboardChallengeModel challenge) async {
-    try {
-      await _db.deleteChallengePracticeResult(challenge.id, setId: challenge.setId);
-      attemptedIds.remove(challenge.id);
-      if (challenge.setId.isNotEmpty) attemptedIds.remove(challenge.setId);
-
-      if (Get.isRegistered<ChallengeHomeController>()) {
-        final hCtrl = Get.find<ChallengeHomeController>();
-        hCtrl.attemptedIds.remove(challenge.id);
-        if (challenge.setId.isNotEmpty) hCtrl.attemptedIds.remove(challenge.setId);
-      }
-      ToastHelper.success('Practice progress cleared.');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
@@ -475,9 +458,9 @@ class ChallengeArchiveController extends GetxController {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hide Challenge'),
+        title: const Text('Remove from History'),
         content: Text(
-          'Are you sure you want to hide "${challenge.title}"? It will be removed from your challenges list.',
+          'Are you sure you want to remove "${challenge.title}" from your archive list? Your official national leaderboard ranking will remain preserved.',
         ),
         actions: [
           TextButton(
@@ -487,7 +470,7 @@ class ChallengeArchiveController extends GetxController {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hide'),
+            child: const Text('Remove'),
           ),
         ],
       ),
@@ -496,20 +479,13 @@ class ChallengeArchiveController extends GetxController {
     if (confirmed != true) return;
 
     try {
-      final userId = UserController.instance.user.value.id;
-
-      // 1. Permanently record deletion in local DB
+      // 1. Permanently record deletion in local DB (purges local offline bundle & practice results)
       await _db.markChallengeAsDeleted(challenge.id, setId: challenge.setId);
 
-      // 2. Best-effort delete attempt from Supabase
-      if (userId.isNotEmpty) {
-        await _repo.deleteChallengeAttempt(
-          challengeId: challenge.id,
-          userId: userId,
-        );
-      }
+      // Note: We deliberately do NOT delete the attempt from Supabase server so the student's
+      // official national ranking and scores remain safely preserved!
 
-      // 3. Update reactive state sets
+      // 2. Update reactive state sets
       deletedChallengeIds.add(challenge.id);
       if (challenge.setId.isNotEmpty) deletedChallengeIds.add(challenge.setId);
 
@@ -520,7 +496,7 @@ class ChallengeArchiveController extends GetxController {
       inProgressIds.remove(challenge.id);
       inProgressIds.remove(challenge.setId);
 
-      // 4. Immediately remove from UI list so it disappears!
+      // 3. Immediately remove from UI list so it disappears!
       challenges.removeWhere(
         (c) =>
             c.id == challenge.id ||
@@ -528,7 +504,7 @@ class ChallengeArchiveController extends GetxController {
             (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
       );
 
-      // 5. Update cached SharedPreferences
+      // 4. Update cached SharedPreferences
       final cached = await _getCachedArchiveChallenges();
       final updatedCache = cached
           .where(
@@ -540,7 +516,7 @@ class ChallengeArchiveController extends GetxController {
           .toList();
       await _saveCachedArchiveChallenges(updatedCache);
 
-      // 6. Update home controller if registered
+      // 5. Update home controller if registered
       if (Get.isRegistered<ChallengeHomeController>()) {
         final hCtrl = Get.find<ChallengeHomeController>();
         hCtrl.deletedChallengeIds.add(challenge.id);
@@ -565,7 +541,7 @@ class ChallengeArchiveController extends GetxController {
         );
       }
 
-      ToastHelper.success('Challenge hidden from list.');
+      ToastHelper.success('Challenge removed from archive.');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }

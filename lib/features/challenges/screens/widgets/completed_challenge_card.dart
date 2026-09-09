@@ -107,76 +107,82 @@ class CompletedChallengeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
 
-                // Dynamic Status Pill (Completed / Downloaded)
-                Obx(() {
-                  final isDown = ctrl.isDownloaded(challenge.id);
-                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                // Dynamic Status Pills (Completed & Offline Ready)
+                Flexible(
+                  child: Obx(() {
+                    final isDown = ctrl.isDownloaded(challenge.id);
+                    final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
 
-                  if (isDone) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                      decoration: BoxDecoration(
-                        color: ChallengeColors.completed.withValues(alpha: dark ? 0.2 : 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: ChallengeColors.completed.withValues(alpha: 0.25),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_circle_rounded,
-                            size: 11.5,
-                            color: ChallengeColors.completed,
-                          ),
-                          SizedBox(width: 3.5),
-                          Text(
-                            'Completed',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: ChallengeColors.completed,
+                    return Wrap(
+                      spacing: 5,
+                      runSpacing: 4,
+                      children: [
+                        if (isDone)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                            decoration: BoxDecoration(
+                              color: ChallengeColors.completed.withValues(alpha: dark ? 0.2 : 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: ChallengeColors.completed.withValues(alpha: 0.25),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 11.5,
+                                  color: ChallengeColors.completed,
+                                ),
+                                SizedBox(width: 3.5),
+                                Text(
+                                  'Completed',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: ChallengeColors.completed,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    );
-                  } else if (isDown) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: const Color(0xFF0284C7).withValues(alpha: 0.25),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.download_done_rounded,
-                            size: 11.5,
-                            color: Color(0xFF0284C7),
-                          ),
-                          SizedBox(width: 3.5),
-                          Text(
-                            'Downloaded',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7),
+                        if (isDown)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.download_done_rounded,
+                                  size: 11.5,
+                                  color: Color(0xFF0284C7),
+                                ),
+                                SizedBox(width: 3.5),
+                                Text(
+                                  'Offline Ready',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0284C7),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     );
-                  }
-                  return const SizedBox.shrink();
-                }),
+                  }),
+                ),
 
                 const Spacer(),
 
@@ -186,7 +192,7 @@ class CompletedChallengeCard extends StatelessWidget {
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   if (isDown || isDone) {
                     return Tooltip(
-                      message: 'Manage challenge data',
+                      message: 'Manage challenge options',
                       child: InkWell(
                         borderRadius: BorderRadius.circular(8),
                         onTap: () =>
@@ -194,13 +200,23 @@ class CompletedChallengeCard extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(5.5),
                           decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: dark ? 0.16 : 0.08),
+                            color: dark
+                                ? Colors.white.withValues(alpha: 0.06)
+                                : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: dark
+                                  ? AppColors.darkBorder
+                                  : const Color(0xFFE2E8F0),
+                              width: 0.8,
+                            ),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Iconsax.trash_copy,
                             size: 13.5,
-                            color: AppColors.error,
+                            color: dark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
                         ),
                       ),

@@ -11,26 +11,23 @@ class ChallengeManageSheet extends StatelessWidget {
     super.key,
     required this.challenge,
     required this.isDownloaded,
-    required this.isAttemptedOrPracticed,
+    this.onDownload,
     required this.onRemoveDownload,
-    required this.onClearPractice,
     required this.onHideChallenge,
   });
 
   final LeaderboardChallengeModel challenge;
   final bool isDownloaded;
-  final bool isAttemptedOrPracticed;
+  final VoidCallback? onDownload;
   final VoidCallback onRemoveDownload;
-  final VoidCallback onClearPractice;
   final VoidCallback onHideChallenge;
 
   static Future<void> show({
     required BuildContext context,
     required LeaderboardChallengeModel challenge,
     required bool isDownloaded,
-    required bool isAttemptedOrPracticed,
+    VoidCallback? onDownload,
     required VoidCallback onRemoveDownload,
-    required VoidCallback onClearPractice,
     required VoidCallback onHideChallenge,
   }) {
     return showModalBottomSheet(
@@ -40,9 +37,8 @@ class ChallengeManageSheet extends StatelessWidget {
       builder: (_) => ChallengeManageSheet(
         challenge: challenge,
         isDownloaded: isDownloaded,
-        isAttemptedOrPracticed: isAttemptedOrPracticed,
+        onDownload: onDownload,
         onRemoveDownload: onRemoveDownload,
-        onClearPractice: onClearPractice,
         onHideChallenge: onHideChallenge,
       ),
     );
@@ -178,7 +174,26 @@ class ChallengeManageSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
               child: Column(
                 children: [
-                  // Option 1: Remove Offline Download (only if downloaded)
+                  // Option 1A: Download for Offline Practice (if not yet downloaded)
+                  if (!isDownloaded && onDownload != null) ...[
+                    _buildOptionTile(
+                      context: context,
+                      dark: dark,
+                      icon: Icons.cloud_download_rounded,
+                      iconColor: const Color(0xFF0284C7),
+                      iconBg: const Color(0xFF0284C7).withValues(alpha: 0.12),
+                      title: 'Download for Offline Practice',
+                      subtitle:
+                          'Save questions to your device so you can practice anytime without internet.',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDownload!();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+
+                  // Option 1B: Remove Offline Download (only if downloaded)
                   if (isDownloaded) ...[
                     _buildOptionTile(
                       context: context,
@@ -188,7 +203,7 @@ class ChallengeManageSheet extends StatelessWidget {
                       iconBg: const Color(0xFFF59E0B).withValues(alpha: 0.12),
                       title: 'Remove Offline Download',
                       subtitle:
-                          'Free up phone storage by deleting saved questions. You can download again anytime.',
+                          'Free up phone storage by deleting saved offline questions. Your review history and score are preserved.',
                       onTap: () {
                         Navigator.pop(context);
                         onRemoveDownload();
@@ -197,35 +212,16 @@ class ChallengeManageSheet extends StatelessWidget {
                     const SizedBox(height: 10),
                   ],
 
-                  // Option 2: Clear Practice Progress (only if practiced/completed)
-                  if (isAttemptedOrPracticed) ...[
-                    _buildOptionTile(
-                      context: context,
-                      dark: dark,
-                      icon: Icons.restart_alt_rounded,
-                      iconColor: AppColors.primary,
-                      iconBg: AppColors.primary.withValues(alpha: 0.12),
-                      title: 'Clear Practice Progress',
-                      subtitle:
-                          'Reset your practice answers and score to practice this challenge fresh.',
-                      onTap: () {
-                        Navigator.pop(context);
-                        onClearPractice();
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-
-                  // Option 3: Hide Challenge from List
+                  // Option 2: Remove from History
                   _buildOptionTile(
                     context: context,
                     dark: dark,
                     icon: Iconsax.trash_copy,
                     iconColor: AppColors.error,
                     iconBg: AppColors.error.withValues(alpha: 0.12),
-                    title: 'Hide Challenge',
+                    title: 'Remove from History',
                     subtitle:
-                        'Remove this challenge from your challenges list.',
+                        'Remove this completed challenge from your list and delete local offline files.',
                     isDestructive: true,
                     onTap: () {
                       Navigator.pop(context);

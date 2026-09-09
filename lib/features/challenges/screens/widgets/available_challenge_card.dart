@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
@@ -32,7 +31,6 @@ class AvailableChallengeCard extends StatelessWidget {
       final isPremium = ctrl.isPremium;
       final isLive = challenge.isLive;
       final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-      final isDown = ctrl.isDownloaded(challenge.id);
       final inProgress = ctrl.isInProgress(challenge.id);
       final isPending = UserController.instance.user.value.isPending;
 
@@ -176,27 +174,6 @@ class AvailableChallengeCard extends StatelessWidget {
                       ),
 
                       const Spacer(),
-
-                      // Trash Manage button (if downloaded / attempted)
-                      if (isDown || isDone)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: IconButton(
-                            tooltip: 'Manage challenge data',
-                            icon: const Icon(
-                              Iconsax.trash_copy,
-                              size: 15,
-                              color: AppColors.error,
-                            ),
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () => ctrl.showChallengeManageSheet(
-                              context,
-                              challenge,
-                            ),
-                          ),
-                        ),
 
                       // Status Badge (UPCOMING or LIVE)
                       Container(

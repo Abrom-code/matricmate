@@ -1,33 +1,36 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthenticationRepository {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _supabase.auth.currentUser;
 
-  Stream<User?> get userChanges => _auth.userChanges();
+  Stream<User?> get userChanges =>
+      _supabase.auth.onAuthStateChange.map((state) => state.session?.user);
 
-  Future<UserCredential> registerWithEmailAndPassword(
+  Future<AuthResponse> registerWithEmailAndPassword(
     String email,
-    String password,
-  ) async {
+    String password, {
+    Map<String, dynamic>? data,
+  }) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(
+      return await _supabase.auth.signUp(
         email: email,
         password: password,
+        data: data,
       );
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
   }
 
-  Future<UserCredential> loginUsingEmailAndPassword(
+  Future<AuthResponse> loginUsingEmailAndPassword(
     String email,
     String password,
   ) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
+      return await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
@@ -38,7 +41,12 @@ class AuthenticationRepository {
 
   Future<void> sendEmailVerification() async {
     try {
-      await _auth.currentUser?.sendEmailVerification();
+      final email = _supabase.auth.currentUser?.email;
+      if (email == null) return;
+      await _supabase.auth.resend(
+        type: OtpType.signup,
+        email: email,
+      );
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -46,7 +54,7 @@ class AuthenticationRepository {
 
   Future<void> sendResetPasswordEmail(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
+      await _supabase.auth.resetPasswordForEmail(email);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -54,10 +62,12 @@ class AuthenticationRepository {
 
   Future<void> updateUserPassword(String newPassword) async {
     try {
-      final user = _auth.currentUser;
+      final user = _supabase.auth.currentUser;
       if (user == null) throw 'No authenticated user found';
 
-      await user.updatePassword(newPassword);
+      await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -65,41 +75,42 @@ class AuthenticationRepository {
 
   Future<void> reAuthenticate(String email, String password) async {
     try {
-      final credential = EmailAuthProvider.credential(
+      await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
-
-      await _auth.currentUser!.reauthenticateWithCredential(credential);
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Future<void> logout() async {
-    try {
-      await _auth.signOut();
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
   }
 
-  Future<void> deleteFirebaseAccount() async {
+  Future<void> logout() async {
     try {
-      final user = _auth.currentUser;
+      await _supabase.auth.signOut();
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    try {
+      final user = _supabase.auth.currentUser;
       if (user == null) throw 'No authenticated user';
 
-      await user.delete();
+      await _supabase.rpc('delete_own_account');
+      try {
+        await _supabase.auth.signOut();
+      } catch (_) {}
     } catch (e) {
-      rethrow;
+      throw AppExceptionHandler.handle(e);
     }
   }
 
   Future<void> reloadUser() async {
     try {
-      await _auth.currentUser?.reload();
+      await _supabase.auth.getUser();
     } catch (e) {
-      rethrow;
+      throw AppExceptionHandler.handle(e);
     }
   }
 }

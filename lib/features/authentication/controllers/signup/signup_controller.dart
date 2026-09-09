@@ -1,6 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
@@ -14,7 +15,9 @@ import 'package:matricmate/utils/network_manager/network_manager.dart';
 class SignupController extends GetxController {
   static SignupController get instance => Get.find();
   final AuthenticationRepository _authenticationRepository =
-      AuthenticationRepository();
+      Get.isRegistered<AuthenticationRepository>()
+          ? Get.find<AuthenticationRepository>()
+          : AuthenticationRepository();
 
   final hidePassword = true.obs;
   final hideConfirmPassword = true.obs;
@@ -66,22 +69,47 @@ class SignupController extends GetxController {
       }
       isSigning.value = true;
 
-      // REGISTER USER (Firebase)
-      final userCredential = await _authenticationRepository
+      final fName = firstName.text.trim();
+      final lName = lastName.text.trim();
+      final emailStr = email.text.trim();
+      final streamStr = selectedStream.value.trim();
+
+      // REGISTER USER (Supabase Auth with metadata for trigger)
+      final authResponse = await _authenticationRepository
           .registerWithEmailAndPassword(
-            email.text.trim(),
+            emailStr,
             password.text.trim(),
+            data: {
+              'first_name': fName,
+              'last_name': lName,
+              'stream': streamStr,
+            },
           );
 
-      final uid = userCredential.user!.uid;
+      final user = authResponse.user;
+      if (user == null) {
+        throw 'Registration failed. Please try again.';
+      }
 
-      //  SAVE USER DATA
+      // When Supabase email confirmation is enabled and auto-confirm is off,
+      // session is null until user verifies their email.
+      if (authResponse.session == null) {
+        ToastHelper.info(
+          'Account created! Please check your email to confirm your account before logging in.',
+        );
+        Get.offNamed(Routes.signIn);
+        return;
+      }
+
+      final uid = user.id;
+
+      // SAVE USER DATA (trigger creates row, upsert ensures local + remote match)
       final newUser = UserModel(
-        id: userCredential.user!.uid,
-        firstName: firstName.text.trim(),
-        lastName: lastName.text.trim(),
-        email: email.text.trim(),
-        stream: selectedStream.value.trim(),
+        id: uid,
+        firstName: fName,
+        lastName: lName,
+        email: emailStr,
+        stream: streamStr,
       );
 
       final userRepository = Get.find<UserRepository>();
@@ -92,7 +120,7 @@ class SignupController extends GetxController {
       final isAllowed = await SessionService().validateSession(uid, deviceId);
 
       if (!isAllowed) {
-        await FirebaseAuth.instance.signOut();
+        await _authenticationRepository.logout();
         ToastHelper.error('Failed to register device. Please try again.');
         return;
       }
@@ -100,7 +128,10 @@ class SignupController extends GetxController {
       // Straight into the app — email verification is optional and lives in
       // Profile → Account Settings.
       AuthenticationController.instance.screenRedirect();
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[SignupController] Registration error: $e\n$st');
+      }
       AppExceptionHandler.handleResponse(e);
     } finally {
       isSigning.value = false;

@@ -67,13 +67,6 @@ class PaymentConfigService {
       subtitle: 'Direct from Abyssinia Bank',
       icon: Icons.account_balance,
     ),
-    _BuiltIn(
-      key: 'payment_mpesa',
-      holderKey: 'payment_mpesa_holder',
-      label: 'M-PESA',
-      subtitle: 'M-Pesa Safaricom wallet',
-      icon: Icons.account_balance_wallet_outlined,
-    ),
   ];
 
   /// All currently active payment methods.
@@ -147,13 +140,11 @@ class PaymentConfigService {
       case 'payment_telebirr':
       case 'payment_cbe_birr':
       case 'payment_abyssinia':
-      case 'payment_mpesa':
         _accounts.remove(key);
 
       case 'payment_telebirr_holder':
       case 'payment_cbe_birr_holder':
       case 'payment_abyssinia_holder':
-      case 'payment_mpesa_holder':
         _holders.remove(key);
 
       case 'payment_extra_accounts':
@@ -202,14 +193,12 @@ class PaymentConfigService {
       case 'payment_telebirr':
       case 'payment_cbe_birr':
       case 'payment_abyssinia':
-      case 'payment_mpesa':
         _accounts[key] = value;
 
       // Holder names
       case 'payment_telebirr_holder':
       case 'payment_cbe_birr_holder':
       case 'payment_abyssinia_holder':
-      case 'payment_mpesa_holder':
         _holders[key] = value;
 
       // Extra / custom accounts (JSON array)

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
@@ -38,7 +38,7 @@ class UserController extends GetxController {
   final isPasswordHidden = true.obs;
   final RxBool isCheckingPayment = false.obs;
 
-  /// Firebase email-verification state. Lives on the Firebase User object
+  /// Supabase email-verification state. Lives on the Supabase User object
   /// rather than UserModel, so it is mirrored here to make it reactive.
   final RxBool isEmailVerified = false.obs;
   final RxBool isSendingVerification = false.obs;
@@ -51,8 +51,8 @@ class UserController extends GetxController {
   void onInit() {
     super.onInit();
 
-    _authSub = _authRepo.userChanges.listen((firebaseUser) async {
-      if (firebaseUser != null) {
+    _authSub = _authRepo.userChanges.listen((authUser) async {
+      if (authUser != null) {
         syncEmailVerified();
         await loadLocalUser();
       } else {
@@ -63,9 +63,9 @@ class UserController extends GetxController {
     });
   }
 
-  /// Mirrors the Firebase user's emailVerified flag into [isEmailVerified].
+  /// Mirrors the Supabase user's emailConfirmedAt flag into [isEmailVerified].
   void syncEmailVerified() {
-    isEmailVerified.value = _authRepo.currentUser?.emailVerified ?? false;
+    isEmailVerified.value = _authRepo.currentUser?.emailConfirmedAt != null;
   }
 
   /// Sends a verification link to the signed-in user's email address.
@@ -84,14 +84,14 @@ class UserController extends GetxController {
       verificationLinkSent.value = true;
       ToastHelper.success('Verification link sent. Check your inbox.');
     } catch (e) {
-      // Firebase rate-limits this (too-many-requests) — surface it properly.
+      // Supabase rate-limits this (over_email_send_rate_limit) — surface it properly.
       AppExceptionHandler.handleResponse(e);
     } finally {
       isSendingVerification.value = false;
     }
   }
 
-  /// Re-reads the Firebase user to pick up a verification completed in the
+  /// Re-reads the Supabase user to pick up a verification completed in the
   /// browser, then reports the result.
   Future<void> refreshEmailVerified() async {
     if (isSendingVerification.value) return;
@@ -147,7 +147,7 @@ class UserController extends GetxController {
 
       if (freshUser == null) return false;
 
-      final uid = _authRepo.currentUser!.uid;
+      final uid = _authRepo.currentUser!.id;
 
       final deviceId = await DeviceService.getDeviceId();
 
@@ -215,20 +215,21 @@ class UserController extends GetxController {
     }
   }
 
-  Future<void> saveUserRecord(UserCredential? userCredentials) async {
+  Future<void> saveUserRecord(User? authUser) async {
     try {
-      if (userCredentials == null) return;
+      if (authUser == null) return;
 
-      final nameParts = UserModel.nameParts(
-        userCredentials.user?.displayName ?? '',
-      );
+      final metadata = authUser.userMetadata ?? {};
+      final fName = metadata['first_name']?.toString() ?? '';
+      final lName = metadata['last_name']?.toString() ?? '';
+      final streamStr = metadata['stream']?.toString() ?? 'natural';
 
       final newUser = UserModel(
-        id: userCredentials.user!.uid,
-        firstName: nameParts.first,
-        lastName: nameParts.last,
-        email: userCredentials.user?.email ?? '',
-        stream: 'natural',
+        id: authUser.id,
+        firstName: fName,
+        lastName: lName,
+        email: authUser.email ?? '',
+        stream: streamStr,
       );
 
       await _userRepository.saveUserRecord(newUser);
@@ -271,15 +272,19 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
 
   Future<void> _submit() async {
     if (_deleting) return;
+    final password = _passwordController.text.trim();
+    if (password.isEmpty) {
+      ToastHelper.warning('Please enter your password');
+      return;
+    }
+
     setState(() => _deleting = true);
     try {
-      await Get.find<AuthenticationController>().deleteAccount(
-        _passwordController.text.trim(),
-      );
-      if (mounted) Get.back();
+      if (mounted) Navigator.of(context).pop();
+      await Get.find<AuthenticationController>().deleteAccount(password);
       SnackbarHelper.success(
         'Account Deleted',
-        'Your data has been permanently removed.',
+        'Your account and all associated data have been permanently removed.',
       );
     } catch (e) {
       AppExceptionHandler.handleResponse(e);

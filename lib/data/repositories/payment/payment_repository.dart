@@ -1,8 +1,7 @@
-import 'package:matricmate/data/services/ensure_supabase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 
 class PaymentRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -10,7 +9,6 @@ class PaymentRepository {
   /// Returns the number of receipt upload attempts from the users table.
   Future<int> getReceiptCount(String userId) async {
     try {
-      await ensureSupabaseAuth();
       final data = await _supabase
           .from('users')
           .select('receipt_upload_count')
@@ -25,7 +23,6 @@ class PaymentRepository {
   /// Increments receipt_upload_count for the given user in Supabase.
   Future<void> incrementReceiptUploadCount(String userId) async {
     try {
-      await ensureSupabaseAuth();
       try {
         await _supabase.rpc(
           'increment_receipt_upload_count',
@@ -48,21 +45,23 @@ class PaymentRepository {
     } catch (_) {}
   }
 
-  /// Upload receipt
+  /// Upload receipt into folder scoped by userId for RLS compliance
   Future<Map<String, String>> uploadReceipt(XFile file, String userId) async {
     try {
-      await ensureSupabaseAuth();
-      final bytes = await File(file.path).readAsBytes();
+      final bytes = await file.readAsBytes();
 
       final fileName =
-          'receipt_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          '$userId/receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
       await _supabase.storage.from('receipts').uploadBinary(fileName, bytes);
 
       final url = _supabase.storage.from('receipts').getPublicUrl(fileName);
 
       return {'filePath': fileName, 'url': url};
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[PaymentRepository] uploadReceipt error: $e\n$st');
+      }
       throw AppExceptionHandler.handle(e);
     }
   }
@@ -79,7 +78,6 @@ class PaymentRepository {
     num? amount,
   }) async {
     try {
-      await ensureSupabaseAuth();
       await _supabase.from('payment_receipts').insert({
         'user_id': userId,
         'receipt_path': receiptPath,
@@ -101,7 +99,6 @@ class PaymentRepository {
   /// Set pending
   Future<void> setUserPending(String userId) async {
     try {
-      await ensureSupabaseAuth();
       await _supabase
           .from('users')
           .update({'subscription_status': 'pending'})
@@ -114,8 +111,6 @@ class PaymentRepository {
   /// Cancels payment receipt and resets status to inactive if still pending.
   Future<void> cancelPayment(String userId) async {
     try {
-      await ensureSupabaseAuth();
-
       // 1. Collect all file paths so storage stays clean.
       final data = await _supabase
           .from('payment_receipts')

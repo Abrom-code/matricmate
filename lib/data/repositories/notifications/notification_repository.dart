@@ -1,7 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:matricmate/data/database/database_service.dart';
-import 'package:matricmate/data/services/ensure_supabase_auth.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:sqflite/sqflite.dart';
@@ -15,7 +13,7 @@ class NotificationRepository {
   final DatabaseService _db;
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  String? get _currentUid => FirebaseAuth.instance.currentUser?.uid;
+  String? get _currentUid => _supabase.auth.currentUser?.id;
 
   /// Syncs notifications from Supabase to local SQLite, filtering by stream and signup date.
   Future<void> syncFromRemote(
@@ -217,7 +215,6 @@ class NotificationRepository {
     final uid = _currentUid;
     if (uid == null) return;
     try {
-      await ensureSupabaseAuth();
       await _supabase.from('notification_reads').upsert({
         'notification_id': notificationId,
         'user_id': uid,
@@ -291,7 +288,6 @@ class NotificationRepository {
 
     // 2. Sync to Supabase.
     try {
-      await ensureSupabaseAuth();
       if (n.userId == uid) {
         // Personal notification: delete permanently from server.
         await _supabase.from('notifications').delete().eq('id', n.id);
@@ -334,7 +330,6 @@ class NotificationRepository {
 
     // 2. Server update
     try {
-      await ensureSupabaseAuth();
       final personalIds = notifications
           .where((n) => n.userId == userId)
           .map((n) => n.id)

@@ -18,7 +18,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await GetStorage.init();
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {}
 
   // ThemeController must exist before any widget builds
   Get.put(ThemeController(), permanent: true);
@@ -37,19 +39,34 @@ Future<void> main() async {
         ),
       );
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  ).then((FirebaseApp value) => Get.put(AuthenticationRepository()));
+  const defineUrl = String.fromEnvironment('SUPABASE_URL');
+  const defineKey = String.fromEnvironment('SUPABASE_API_KEY');
+  final envUrl = dotenv.isInitialized ? dotenv.env['SUPABASE_URL'] : null;
+  final envKey = dotenv.isInitialized ? dotenv.env['SUPABASE_API_KEY'] : null;
 
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  final supabaseUrl = defineUrl.isNotEmpty
+      ? defineUrl
+      : (envUrl ?? 'https://gcscoitnhdrqsibkxrit.supabase.co');
+  final supabaseKey = defineKey.isNotEmpty
+      ? defineKey
+      : (envKey ?? 'sb_publishable_OhdIkL0Tlwn4I9cbf-EDdA_Vp9uKhda');
 
   // Initialize Supabase
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    publishableKey: dotenv.env['SUPABASE_API_KEY'] ?? '',
+    url: supabaseUrl,
+    publishableKey: supabaseKey,
   );
 
-  // Best-effort anonymous payment config fetch; auth load picks up failures
+  Get.put(AuthenticationRepository());
+
+  // Initialize Firebase for FCM Push Notifications
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // Best-effort payment config fetch; auth load picks up failures
   unawaited(PaymentConfigService.instance.load());
 
   runApp(const App());

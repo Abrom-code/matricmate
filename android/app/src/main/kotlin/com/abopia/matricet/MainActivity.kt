@@ -1,4 +1,4 @@
-package com.abopia.matricmate
+package com.abopia.matricet
 
 import io.flutter.embedding.android.FlutterActivity
 

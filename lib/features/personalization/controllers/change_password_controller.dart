@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
@@ -60,7 +61,10 @@ class ChangePasswordController extends GetxController {
       Get.back();
 
       ToastHelper.success('Your password has been updated.');
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[ChangePasswordController] Error: $e\n$st');
+      }
       AppExceptionHandler.handleResponse(e);
     } finally {
       isUpdating.value = false;

@@ -1,4 +1,4 @@
-package com.abopia.matricmate
+package com.abopia.matricet
 
 import android.app.Application
 import android.app.NotificationChannel

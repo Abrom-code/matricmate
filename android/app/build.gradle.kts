@@ -11,8 +11,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
 android {
-    namespace = "com.abopia.matricmate"
+    namespace = "com.abopia.matricet"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -25,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.abopia.matricmate"
+        applicationId = "com.abopia.matricet"
 
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
@@ -33,35 +40,35 @@ android {
         versionName = flutter.versionName
     }
 
-    val keystorePropertiesFile = rootProject.file("key.properties")
-    val keystoreProperties = Properties()
-
-    if (keystorePropertiesFile.exists()) {
-        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-    }
-
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-
+                val alias = keystoreProperties.getProperty("keyAlias")
+                val keyPass = keystoreProperties.getProperty("keyPassword")
+                val storePass = keystoreProperties.getProperty("storePassword")
                 val storeFilePath = keystoreProperties.getProperty("storeFile")
-                if (!storeFilePath.isNullOrEmpty()) {
-                    storeFile = file(storeFilePath)
-                }
 
-                storePassword = keystoreProperties.getProperty("storePassword")
+                if (!alias.isNullOrEmpty() && !keyPass.isNullOrEmpty() && !storePass.isNullOrEmpty() && !storeFilePath.isNullOrEmpty()) {
+                    val keystoreFile = rootProject.file(storeFilePath).takeIf { it.exists() }
+                        ?: file(storeFilePath).takeIf { it.exists() }
+                        ?: file(storeFilePath)
+
+                    keyAlias = alias
+                    keyPassword = keyPass
+                    storePassword = storePass
+                    storeFile = keystoreFile
+                }
             }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
             } else {
-                signingConfigs.getByName("debug")
+                // Production releases must strictly use release signing. Never fall back to debug.
+                signingConfig = null
             }
 
             isMinifyEnabled = true
@@ -70,6 +77,61 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
+            )
+        }
+    }
+}
+
+// Ensure release builds fail immediately and explicitly if signing configuration is missing
+tasks.matching {
+    (it.name.contains("Release", ignoreCase = true) || it.name.contains("bundle", ignoreCase = true)) &&
+    !it.name.contains("lint", ignoreCase = true) &&
+    !it.name.contains("test", ignoreCase = true)
+}.configureEach {
+    doFirst {
+        if (!keystorePropertiesFile.exists()) {
+            throw GradleException(
+                """
+                |
+                |========================================================================================
+                |RELEASE BUILD FAILED: Missing 'android/key.properties'.
+                |Production release builds must be signed with your release/upload keystore.
+                |Debug signing fallback is strictly disabled for release builds.
+                |
+                |Please create 'android/key.properties' with the following entries:
+                |  storePassword=<your-store-password>
+                |  keyPassword=<your-key-password>
+                |  keyAlias=<your-key-alias>
+                |  storeFile=app/upload-keystore.jks
+                |========================================================================================
+                """.trimMargin()
+            )
+        }
+        val alias = keystoreProperties.getProperty("keyAlias")
+        val keyPass = keystoreProperties.getProperty("keyPassword")
+        val storePass = keystoreProperties.getProperty("storePassword")
+        val storeFilePath = keystoreProperties.getProperty("storeFile")
+        if (alias.isNullOrEmpty() || keyPass.isNullOrEmpty() || storePass.isNullOrEmpty() || storeFilePath.isNullOrEmpty()) {
+            throw GradleException(
+                """
+                |
+                |========================================================================================
+                |RELEASE BUILD FAILED: 'android/key.properties' is incomplete.
+                |It must specify: keyAlias, keyPassword, storePassword, and storeFile.
+                |========================================================================================
+                """.trimMargin()
+            )
+        }
+        val keystoreFile = rootProject.file(storeFilePath).takeIf { it.exists() }
+            ?: file(storeFilePath).takeIf { it.exists() }
+        if (keystoreFile == null || !keystoreFile.exists()) {
+            throw GradleException(
+                """
+                |
+                |========================================================================================
+                |RELEASE BUILD FAILED: Keystore file '$storeFilePath' defined in 'key.properties' does not exist.
+                |========================================================================================
+                """.trimMargin()
             )
         }
     }

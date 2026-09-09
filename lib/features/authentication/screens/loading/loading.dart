@@ -57,8 +57,8 @@ class _LoadingScreenState extends State<LoadingScreen>
               children: [
                 // ── Logo with Circular Outline Background ──────────
                 Container(
-                  width: 112,
-                  height: 112,
+                  width: 96,
+                  height: 96,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.primary.withValues(
@@ -83,8 +83,8 @@ class _LoadingScreenState extends State<LoadingScreen>
                   child: Center(
                     child: Image.asset(
                       AppImages.transparentIcon,
-                      width: 76,
-                      height: 76,
+                      width: 62,
+                      height: 62,
                       fit: BoxFit.contain,
                     ),
                   ),

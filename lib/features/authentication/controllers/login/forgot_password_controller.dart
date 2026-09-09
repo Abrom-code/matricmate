@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
@@ -36,7 +37,7 @@ class ForgotPasswordController extends GetxController {
       }
 
       await _authenticationRepository.sendResetPasswordEmail(
-        email.value.text.trim(),
+        email.text.trim(),
       );
       SnackbarHelper.success(
         'Email sent',
@@ -47,7 +48,10 @@ class ForgotPasswordController extends GetxController {
         Routes.resetPassword,
         arguments: {'email': email.text.trim()},
       );
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[ForgotPasswordController] Reset error: $e\n$st');
+      }
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoading.value = false;

@@ -1,12 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
+import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/features/authentication/controllers/authentication_controller.dart';
+import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -62,16 +64,55 @@ class LoginController extends GetxController {
 
       await authRepo.loginUsingEmailAndPassword(emailText, passwordText);
 
-      final uid = authRepo.currentUser!.uid;
+      final user = authRepo.currentUser;
+      if (user == null) {
+        throw 'Authentication failed. Please try again.';
+      }
+      final uid = user.id;
+
+      // Ensure user profile exists in public.users to satisfy foreign key constraints
+      try {
+        final userRepo = Get.isRegistered<UserRepository>()
+            ? Get.find<UserRepository>()
+            : UserRepository();
+        final existingProfile = await userRepo.fetchCurrentUserDetails();
+        if (existingProfile == null) {
+          final metadata = user.userMetadata ?? {};
+          final fName = (metadata['first_name'] as String?) ?? '';
+          final lName = (metadata['last_name'] as String?) ?? '';
+          final streamStr = (metadata['stream'] as String?) ?? 'Natural';
+          final fallbackUser = UserModel(
+            id: uid,
+            firstName: fName,
+            lastName: lName,
+            email: user.email ?? emailText,
+            stream: streamStr,
+          );
+          await userRepo.saveUserRecord(fallbackUser);
+        }
+      } catch (profileErr) {
+        if (kDebugMode) {
+          debugPrint('[LoginController] Profile sync notice: $profileErr');
+        }
+      }
+
       final deviceId = await DeviceService.getDeviceId();
+      final sessionResult =
+          await SessionService().validateSessionDetailed(uid, deviceId);
 
-      final isAllowed = await SessionService().validateSession(uid, deviceId);
+      if (sessionResult == SessionValidationResult.error) {
+        await authRepo.logout();
+        SnackbarHelper.error(
+          'Session Error',
+          'Could not verify your device session. Please check your internet connection and try again.',
+        );
+        return;
+      }
 
-      if (!isAllowed) {
-        await FirebaseAuth.instance.signOut();
-
-        trials.value = await SessionService().getTrial(uid);
-        if (trials.value == -1) return;
+      if (sessionResult == SessionValidationResult.blocked) {
+        // Query remaining trials WHILE STILL AUTHENTICATED
+        final remainingTrials = await SessionService().getTrial(uid);
+        trials.value = remainingTrials >= 0 ? remainingTrials : 0;
 
         AppDialogBoxes.changeDevice(emailText, this, () async {
           isUpdating.value = true;
@@ -81,6 +122,7 @@ class LoginController extends GetxController {
               'Limit reached',
               'You cannot change device anymore.',
             );
+            await authRepo.logout();
             isUpdating.value = false;
             return;
           }
@@ -91,15 +133,13 @@ class LoginController extends GetxController {
             trials.value - 1,
           );
           if (!updated) {
+            await authRepo.logout();
             isUpdating.value = false;
             return;
           }
 
-          await authRepo.loginUsingEmailAndPassword(emailText, passwordText);
-
           Get.back();
           authController.screenRedirect();
-
           isUpdating.value = false;
         });
 
@@ -107,7 +147,10 @@ class LoginController extends GetxController {
       }
 
       authController.screenRedirect();
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[LoginController] Login error: $e\n$st');
+      }
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLogging.value = false;

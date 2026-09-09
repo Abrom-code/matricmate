@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:768230513418:android:5abff2955457e2a78178f3",
+        "mobilesdk_app_id": "1:768230513418:android:e135397021cdb0a38178f3",
         "android_client_info": {
-          "package_name": "com.abopia.matricmate"
+          "package_name": "com.abopia.matricet"
         }
       },
       "oauth_client": [],

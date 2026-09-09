@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,16 +18,16 @@ class SessionService {
       final existing = await _supabase
           .from('user_sessions')
           .select()
-          .eq('firebase_uid', uid)
+          .eq('user_id', uid)
           .maybeSingle();
 
       // First login → create session
       if (existing == null) {
-        await _supabase.from('user_sessions').insert({
-          'firebase_uid': uid,
+        await _supabase.from('user_sessions').upsert({
+          'user_id': uid,
           'device_id': deviceId,
           'trial': 5,
-        });
+        }, onConflict: 'user_id');
         return SessionValidationResult.allowed;
       }
 
@@ -37,7 +38,10 @@ class SessionService {
 
       // Different device → block
       return SessionValidationResult.blocked;
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[SessionService] validateSessionDetailed error: $e\n$st');
+      }
       return SessionValidationResult.error;
     }
   }
@@ -53,7 +57,7 @@ class SessionService {
       final response = await _supabase
           .from('user_sessions')
           .select('trial')
-          .eq('firebase_uid', uid)
+          .eq('user_id', uid)
           .maybeSingle();
 
       if (response == null) return -1;
@@ -73,7 +77,7 @@ class SessionService {
       await _supabase
           .from('user_sessions')
           .update({'device_id': deviceId, 'trial': trial})
-          .eq('firebase_uid', uid);
+          .eq('user_id', uid);
       return true;
     } catch (e) {
       SnackbarHelper.error(
@@ -86,7 +90,7 @@ class SessionService {
 
   Future<void> removeSession(String uid) async {
     try {
-      await _supabase.from('user_sessions').delete().eq('firebase_uid', uid);
+      await _supabase.from('user_sessions').delete().eq('user_id', uid);
     } catch (e) {
       // Non-critical — session cleanup failure should not block logout
     }
@@ -110,7 +114,7 @@ class SessionService {
           table: 'user_sessions',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'firebase_uid',
+            column: 'user_id',
             value: uid,
           ),
           callback: (payload) {

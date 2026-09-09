@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -21,7 +20,9 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:matricmate/data/services/session_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// GetStorage key that records the last time session validation ran.
 const _kLastSessionCheckKey = 'last_session_check_ms';
@@ -37,7 +38,7 @@ class AuthenticationController extends GetxController
   final userRepo = Get.find<UserRepository>();
   final deviceStorage = GetStorage();
 
-  late Rx<User?> firebaseUser;
+  late Rx<User?> authUser;
 
   /// True while the loading screen is doing initial data fetch.
   final RxBool isInitializing = false.obs;
@@ -46,8 +47,8 @@ class AuthenticationController extends GetxController
   @override
   void onReady() {
     WidgetsBinding.instance.addObserver(this);
-    firebaseUser = Rx<User?>(authRepo.currentUser);
-    firebaseUser.bindStream(authRepo.userChanges);
+    authUser = Rx<User?>(authRepo.currentUser);
+    authUser.bindStream(authRepo.userChanges);
     _init();
   }
 
@@ -180,7 +181,7 @@ class AuthenticationController extends GetxController
       unawaited(SyncingController.instance.syncAll(showUiLoading: false));
 
       // Start Realtime
-      final uid = authRepo.currentUser?.uid ?? '';
+      final uid = authRepo.currentUser?.id ?? '';
       final downloadedIds = SubjectsController.instance.subjects
           .where((s) => s.isDownloaded || s.isEntranceDownloaded)
           .map((s) => s.id)
@@ -246,6 +247,14 @@ class AuthenticationController extends GetxController
         UserController.instance.user.value = UserModel.empty();
       }
 
+      // Remove session from remote database while still authenticated
+      final uid = authRepo.currentUser?.id;
+      if (uid != null && uid.isNotEmpty) {
+        try {
+          await SessionService().removeSession(uid);
+        } catch (_) {}
+      }
+
       await userRepo.clearLocalUser();
 
       await Future.wait([
@@ -273,28 +282,65 @@ class AuthenticationController extends GetxController
 
   Future<void> deleteAccount(String password) async {
     try {
+      if (Get.isRegistered<UserController>()) {
+        UserController.instance.isDeleting.value = true;
+      }
+      AppFullScreenLoader.openLoadingDialog('Deleting account...');
       final user = authRepo.currentUser;
-      if (user == null) throw 'No user';
+      if (user == null || user.email == null) {
+        throw 'No authenticated user found';
+      }
+      final uid = user.id;
 
-      // re-auth
+      // 1. Re-authenticate to verify user credentials before destructive action
       await authRepo.reAuthenticate(user.email!, password);
 
-      // delete backend data
-      await userRepo.deleteUserRecord(user.uid);
+      // 2. Stop listeners & clear user state
+      _initStarted = false;
+      deviceStorage.remove(_kLastSessionCheckKey);
 
-      // clear local
+      if (Get.isRegistered<UserController>()) {
+        UserController.instance.cancelSessionWatch();
+        UserController.instance.user.value = UserModel.empty();
+      }
+
+      await Future.wait([
+        RealtimeService.instance.stop(),
+        FcmService.instance.unsubscribeAll(),
+      ]);
+
+      // 3. Delete backend data (storage receipts, sessions, local user table)
+      await userRepo.deleteUserRecord(uid);
+
+      // 4. Clear all SQLite databases and sync timestamps
       await Future.wait([
         DatabaseService.instance.clearAllData(),
         SyncingController.instance.clearSyncTimestamps(),
       ]);
+
+      // 5. Erase device storage & secure storage credentials
       await deviceStorage.erase();
+      try {
+        const secureStorage = FlutterSecureStorage();
+        await secureStorage.deleteAll();
+      } catch (_) {}
 
-      // delete firebase
-      await authRepo.deleteFirebaseAccount();
+      // 6. Delete account from Supabase Auth via delete_own_account() RPC
+      await authRepo.deleteAccount();
 
+      if (Get.isRegistered<NavigationController>()) {
+        Get.find<NavigationController>().selectedIdx.value = 0;
+      }
+
+      AppFullScreenLoader.stopLoading();
       Get.offAllNamed(Routes.signIn);
     } catch (e) {
+      AppFullScreenLoader.stopLoading();
       throw AppExceptionHandler.handle(e);
+    } finally {
+      if (Get.isRegistered<UserController>()) {
+        UserController.instance.isDeleting.value = false;
+      }
     }
   }
 }

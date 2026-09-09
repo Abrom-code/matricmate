@@ -43,5 +43,69 @@ void main() {
       expect(pending.isPending, isTrue);
       expect(pending.isActive, isFalse);
     });
+
+    test('correctly evaluates exceededUploadLimit threshold', () {
+      final userZero = UserModel(
+        id: 'u1',
+        firstName: 'A',
+        lastName: 'B',
+        email: 'a@b.com',
+        stream: 'natural',
+        receiptUploadCount: 0,
+      );
+      expect(userZero.exceededUploadLimit, isFalse);
+
+      final userOne = userZero.copyWith(receiptUploadCount: 1);
+      expect(userOne.exceededUploadLimit, isFalse);
+
+      final userTwo = userZero.copyWith(receiptUploadCount: 2);
+      expect(userTwo.exceededUploadLimit, isTrue);
+
+      final userThree = userZero.copyWith(receiptUploadCount: 3);
+      expect(userThree.exceededUploadLimit, isTrue);
+    });
+
+    test('toJson excludes server-managed fields to prevent client overrides', () {
+      final premiumUser = UserModel(
+        id: 'u-prem',
+        firstName: 'First',
+        lastName: 'Last',
+        email: 'prem@example.com',
+        stream: 'social',
+        status: 'active',
+        receiptUploadCount: 2,
+        subscriptionPlan: '1_year',
+        subscriptionExpiresAt: DateTime.utc(2026, 12, 31),
+      );
+
+      final json = premiumUser.toJson();
+      expect(json.containsKey('receipt_upload_count'), isFalse);
+      expect(json.containsKey('subscription_plan'), isFalse);
+      expect(json.containsKey('subscription_expires_at'), isFalse);
+      expect(json['first_name'], 'First');
+      expect(json['stream'], 'social');
+    });
+
+    test('parses subscription dates and plan from Supabase payload', () {
+      final raw = {
+        'id': 'u-sub',
+        'first_name': 'Hana',
+        'last_name': 'Bekele',
+        'email': 'hana@example.com',
+        'stream': 'natural',
+        'subscription_status': 'active',
+        'receipt_upload_count': 1,
+        'subscription_plan': '1_month',
+        'subscription_expires_at': '2026-10-15T12:00:00.000Z',
+      };
+
+      final parsed = UserModel.fromJson(raw);
+      expect(parsed.subscriptionPlan, '1_month');
+      expect(parsed.receiptUploadCount, 1);
+      expect(parsed.subscriptionExpiresAt, isNotNull);
+      expect(parsed.subscriptionExpiresAt!.year, 2026);
+      expect(parsed.subscriptionExpiresAt!.month, 10);
+      expect(parsed.isActive, isTrue);
+    });
   });
 }

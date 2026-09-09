@@ -5,6 +5,7 @@ import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
+import 'package:matricmate/features/notifications/screens/widgets/notification_filter_sheet.dart';
 import 'package:matricmate/features/notifications/screens/widgets/notification_section_header.dart';
 import 'package:matricmate/features/notifications/screens/widgets/notification_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -23,7 +24,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
+    ctrl.setFilter(NotificationFilter.all);
     ctrl.loadNotifications(syncRemote: true);
+  }
+
+  @override
+  void dispose() {
+    ctrl.setFilter(NotificationFilter.all);
+    super.dispose();
   }
 
   // ── Delete helpers with undo SnackBars ──────────────────────────────
@@ -141,6 +149,127 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       );
   }
 
+  Widget _buildFilteredEmptyState(bool dark, NotificationFilter filter) {
+    final IconData icon;
+    final String title;
+    final String subtitle;
+    final Color color = filter.color;
+
+    switch (filter) {
+      case NotificationFilter.unread:
+        icon = Icons.done_all_rounded;
+        title = 'No Unread Notifications';
+        subtitle =
+            'You\'re completely caught up! All your notifications have been marked as read.';
+        break;
+      case NotificationFilter.newContent:
+        icon = Icons.menu_book_rounded;
+        title = 'No New Content Alerts';
+        subtitle =
+            'New tests, study materials, and subject resources will appear here when posted.';
+        break;
+      case NotificationFilter.announcements:
+        icon = Icons.campaign_rounded;
+        title = 'No Announcements';
+        subtitle =
+            'Important academic announcements, guidelines, and school news will appear here.';
+        break;
+      case NotificationFilter.challenges:
+        icon = Icons.emoji_events_rounded;
+        title = 'No Challenge Notifications';
+        subtitle =
+            'Challenge tournament invites, round updates, and leaderboard rankings will appear here.';
+        break;
+      case NotificationFilter.payments:
+        icon = Icons.account_balance_wallet_rounded;
+        title = 'No Payment Notifications';
+        subtitle =
+            'Payment approvals, verification updates, and subscription receipts will appear here.';
+        break;
+      case NotificationFilter.all:
+        icon = Icons.notifications_none_rounded;
+        title = 'No Notifications';
+        subtitle = 'You have no notifications right now.';
+        break;
+    }
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        const SizedBox(height: 60),
+        Center(
+          child: Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: dark ? 0.20 : 0.10),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: color.withValues(alpha: dark ? 0.35 : 0.22),
+                width: 1.5,
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                icon,
+                size: 38,
+                color: color,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Center(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Center(
+          child: TextButton.icon(
+            onPressed: () => ctrl.setFilter(NotificationFilter.all),
+            icon: const Icon(Icons.grid_view_rounded, size: 16),
+            label: const Text(
+              'View All Notifications',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 10,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
@@ -148,14 +277,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Obx(() {
       final isSelectionMode = ctrl.isSelectionMode;
       final selectedCount = ctrl.selectedIds.length;
-      final totalCount = ctrl.notifications.length;
-      final allSelected = selectedCount > 0 && selectedCount == totalCount;
+      final filteredTotal = ctrl.filteredNotifications.length;
+      final allSelected = selectedCount > 0 && selectedCount == filteredTotal;
 
       return PopScope(
         canPop: !isSelectionMode,
         onPopInvokedWithResult: (didPop, _) {
           if (!didPop && isSelectionMode) {
             ctrl.clearSelection();
+          }
+          if (didPop) {
+            ctrl.setFilter(NotificationFilter.all);
           }
         },
         child: Scaffold(
@@ -167,7 +299,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   leadingIcon: Icons.close_rounded,
                   leadingOnPressed: ctrl.clearSelection,
                   subtitleBuilder: (_) => Text(
-                    allSelected ? 'All notifications selected' : '$totalCount total',
+                    allSelected
+                        ? 'All in this view selected'
+                        : '$filteredTotal in this view',
                     style: const TextStyle(
                       color: Color(0xFFD1FAE5),
                       fontSize: 11.5,
@@ -214,12 +348,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   title: 'Notifications',
                   showBackArrow: true,
                   subtitleBuilder: (_) => Obx(() {
+                    final filter = ctrl.selectedFilter.value;
                     final unread = ctrl.unreadCount.value;
                     final total = ctrl.notifications.length;
                     if (total == 0) {
                       return const Text(
                         'All caught up',
                         style: TextStyle(
+                          color: Color(0xFFD1FAE5),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }
+                    if (filter != NotificationFilter.all) {
+                      final filteredCount = ctrl.filteredNotifications.length;
+                      return Text(
+                        '${filter.label} · $filteredCount notification${filteredCount == 1 ? '' : 's'}',
+                        style: const TextStyle(
                           color: Color(0xFFD1FAE5),
                           fontSize: 11.5,
                           fontWeight: FontWeight.w500,
@@ -238,9 +384,61 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   actions: [
                     Obx(() {
                       if (ctrl.notifications.isEmpty) return const SizedBox.shrink();
+                      final isFiltered = ctrl.selectedFilter.value != NotificationFilter.all;
+
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // ── Filter Button (right side of AppBar) ─────────
+                          Stack(
+                            clipBehavior: Clip.none,
+                            alignment: Alignment.topRight,
+                            children: [
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => NotificationFilterSheet.show(context),
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      color: isFiltered
+                                          ? Colors.white.withValues(alpha: 0.28)
+                                          : Colors.white.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.tune_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (isFiltered)
+                                Positioned(
+                                  top: -1,
+                                  right: -1,
+                                  child: Container(
+                                    width: 9,
+                                    height: 9,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF5EEAD4),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppColors.primary,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 8),
+
                           if (ctrl.unreadCount.value > 0) ...[
                             Material(
                               color: Colors.transparent,
@@ -294,16 +492,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     }),
                   ],
                 ),
-          body: RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: ctrl.refreshAndMarkAllRead,
-            child: Obx(() {
-              if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
-                return const AppCircularLoading(title: 'Loading notifications...');
-              }
+          body: Obx(() {
+            if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
+              return const AppCircularLoading(title: 'Loading notifications...');
+            }
 
-              if (ctrl.notifications.isEmpty) {
-                return ListView(
+            if (ctrl.notifications.isEmpty) {
+              return RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: ctrl.refreshAndMarkAllRead,
+                child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
                     const SizedBox(height: 80),
@@ -400,15 +598,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       }),
                     ),
                   ],
-                );
-              }
-
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                children: _buildGroupedList(ctrl.notifications),
+                ),
               );
-            }),
-          ),
+            }
+
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: ctrl.refreshAndMarkAllRead,
+              child: ctrl.filteredNotifications.isEmpty
+                  ? _buildFilteredEmptyState(dark, ctrl.selectedFilter.value)
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                      children: _buildGroupedList(ctrl.filteredNotifications),
+                    ),
+            );
+          }),
         ),
       );
     });

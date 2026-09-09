@@ -16,6 +16,71 @@ class NotificationsController extends GetxController
   final RxInt unreadCount = 0.obs;
   final RxBool isLoading = false.obs;
 
+  // ── Filter state ────────────────────────────────────────────────────
+  final Rx<NotificationFilter> selectedFilter = NotificationFilter.all.obs;
+
+  void setFilter(NotificationFilter filter) {
+    if (selectedFilter.value != filter) {
+      clearSelection();
+      selectedFilter.value = filter;
+    }
+  }
+
+  /// Notifications filtered by the currently active filter.
+  List<AppNotification> get filteredNotifications {
+    switch (selectedFilter.value) {
+      case NotificationFilter.all:
+        return notifications.toList();
+      case NotificationFilter.unread:
+        return notifications.where((n) => !n.isRead).toList();
+      case NotificationFilter.newContent:
+        return notifications.where((n) => n.isNewContent).toList();
+      case NotificationFilter.announcements:
+        return notifications.where((n) => n.isAnnouncement).toList();
+      case NotificationFilter.challenges:
+        return notifications.where((n) => n.isChallenge).toList();
+      case NotificationFilter.payments:
+        return notifications.where((n) => n.isPayment).toList();
+    }
+  }
+
+  /// Returns count of notifications matching a specific filter.
+  int countForFilter(NotificationFilter filter) {
+    switch (filter) {
+      case NotificationFilter.all:
+        return notifications.length;
+      case NotificationFilter.unread:
+        return unreadCount.value;
+      case NotificationFilter.newContent:
+        return notifications.where((n) => n.isNewContent).length;
+      case NotificationFilter.announcements:
+        return notifications.where((n) => n.isAnnouncement).length;
+      case NotificationFilter.challenges:
+        return notifications.where((n) => n.isChallenge).length;
+      case NotificationFilter.payments:
+        return notifications.where((n) => n.isPayment).length;
+    }
+  }
+
+  /// Available filter categories for the filter bar.
+  List<NotificationFilter> get availableFilters {
+    final list = <NotificationFilter>[
+      NotificationFilter.all,
+      NotificationFilter.unread,
+      NotificationFilter.newContent,
+      NotificationFilter.announcements,
+      NotificationFilter.challenges,
+    ];
+
+    // Show payments only if user has payments or if payments is currently selected
+    if (countForFilter(NotificationFilter.payments) > 0 ||
+        selectedFilter.value == NotificationFilter.payments) {
+      list.add(NotificationFilter.payments);
+    }
+
+    return list;
+  }
+
   // ── Multi-selection state ───────────────────────────────────────────
   final RxSet<int> selectedIds = <int>{}.obs;
   bool get isSelectionMode => selectedIds.isNotEmpty;
@@ -220,7 +285,7 @@ class NotificationsController extends GetxController
   }
 
   void selectAll() {
-    selectedIds.assignAll(notifications.map((n) => n.id));
+    selectedIds.assignAll(filteredNotifications.map((n) => n.id));
   }
 
   void clearSelection() {

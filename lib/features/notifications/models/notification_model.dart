@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 
 /// Local and remote model for the notifications table.
 class AppNotification {
@@ -26,6 +28,18 @@ class AppNotification {
     this.isArchived = false,
     required this.createdAt,
   });
+
+  bool get isPayment => type == 'payment';
+
+  bool get isNewContent => type == 'new_content';
+
+  bool get isChallenge =>
+      type == 'challenge' ||
+      type == 'challenge_round' ||
+      type == 'challenge_reward' ||
+      payload.containsKey('challenge_id');
+
+  bool get isAnnouncement => !isPayment && !isNewContent && !isChallenge;
 
   factory AppNotification.fromMap(Map<String, dynamic> map) {
     Map<String, dynamic> parsedPayload = {};
@@ -111,4 +125,67 @@ int _parseInt(dynamic value) {
   if (value is num) return value.toInt();
   if (value is String) return int.parse(value);
   return 0;
+}
+
+/// Filter categories for the student notification center.
+enum NotificationFilter {
+  all,
+  unread,
+  newContent,
+  announcements,
+  challenges,
+  payments,
+}
+
+extension NotificationFilterX on NotificationFilter {
+  String get label {
+    switch (this) {
+      case NotificationFilter.all:
+        return 'All';
+      case NotificationFilter.unread:
+        return 'Unread';
+      case NotificationFilter.newContent:
+        return 'New Content';
+      case NotificationFilter.announcements:
+        return 'Announcements';
+      case NotificationFilter.challenges:
+        return 'Challenges';
+      case NotificationFilter.payments:
+        return 'Payments';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case NotificationFilter.all:
+        return Icons.grid_view_rounded;
+      case NotificationFilter.unread:
+        return Icons.mark_email_unread_rounded;
+      case NotificationFilter.newContent:
+        return Icons.menu_book_rounded;
+      case NotificationFilter.announcements:
+        return Icons.campaign_rounded;
+      case NotificationFilter.challenges:
+        return Icons.emoji_events_rounded;
+      case NotificationFilter.payments:
+        return Icons.account_balance_wallet_rounded;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case NotificationFilter.all:
+        return AppColors.primary;
+      case NotificationFilter.unread:
+        return const Color(0xFFF59E0B);
+      case NotificationFilter.newContent:
+        return const Color(0xFF0284C7);
+      case NotificationFilter.announcements:
+        return AppColors.primary;
+      case NotificationFilter.challenges:
+        return const Color(0xFF2563EB);
+      case NotificationFilter.payments:
+        return const Color(0xFFF59E0B);
+    }
+  }
 }

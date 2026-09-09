@@ -2,7 +2,7 @@ import 'package:matricmate/features/challenges/controllers/challenge_home_contro
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'dart:async';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
@@ -86,7 +86,10 @@ class UpdateProfileController extends GetxController {
       Get.back();
 
       ToastHelper.success('Profile updated successfully');
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[UpdateProfileController] Error: $e\n$st');
+      }
       await _userController.loadLocalUser();
       AppExceptionHandler.handleResponse(e);
     } finally {

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -48,7 +48,7 @@ class PaymentRepository {
   /// Upload receipt into folder scoped by userId for RLS compliance
   Future<Map<String, String>> uploadReceipt(XFile file, String userId) async {
     try {
-      final bytes = await File(file.path).readAsBytes();
+      final bytes = await file.readAsBytes();
 
       final fileName =
           '$userId/receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -58,7 +58,10 @@ class PaymentRepository {
       final url = _supabase.storage.from('receipts').getPublicUrl(fileName);
 
       return {'filePath': fileName, 'url': url};
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[PaymentRepository] uploadReceipt error: $e\n$st');
+      }
       throw AppExceptionHandler.handle(e);
     }
   }

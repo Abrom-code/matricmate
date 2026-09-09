@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,11 +23,11 @@ class SessionService {
 
       // First login → create session
       if (existing == null) {
-        await _supabase.from('user_sessions').insert({
+        await _supabase.from('user_sessions').upsert({
           'user_id': uid,
           'device_id': deviceId,
           'trial': 5,
-        });
+        }, onConflict: 'user_id');
         return SessionValidationResult.allowed;
       }
 
@@ -37,7 +38,10 @@ class SessionService {
 
       // Different device → block
       return SessionValidationResult.blocked;
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[SessionService] validateSessionDetailed error: $e\n$st');
+      }
       return SessionValidationResult.error;
     }
   }

@@ -122,10 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: OutlinedButton(
                     onPressed: () => AppDialogBoxes.showLogoutDialog(
                       context: context,
-                      onLogout: () {
-                        Get.back();
-                        userController.logOut();
-                      },
+                      onLogout: () => userController.logOut(),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.zero,

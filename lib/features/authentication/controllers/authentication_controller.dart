@@ -256,32 +256,47 @@ class AuthenticationController extends GetxController
       final uid = authRepo.currentUser?.id;
       if (uid != null && uid.isNotEmpty) {
         try {
-          await SessionService().removeSession(uid);
+          await SessionService()
+              .removeSession(uid)
+              .timeout(const Duration(seconds: 2));
         } catch (_) {}
       }
 
-      await userRepo.clearLocalUser();
+      try {
+        await userRepo.clearLocalUser();
+      } catch (_) {}
 
+      // Clean up remote subscriptions and session with strict timeouts
       await Future.wait([
-        authRepo.logout(),
-        SyncingController.instance.clearSyncTimestamps(),
-        RealtimeService.instance.stop(),
-        FcmService.instance.unsubscribeAll(),
-      ]);
+        authRepo
+            .logout()
+            .timeout(const Duration(seconds: 3))
+            .catchError((_) {}),
+        SyncingController.instance.clearSyncTimestamps().catchError((_) {}),
+        RealtimeService.instance
+            .stop()
+            .timeout(const Duration(seconds: 2))
+            .catchError((_) {}),
+        FcmService.instance
+            .unsubscribeAll()
+            .timeout(const Duration(seconds: 2))
+            .catchError((_) {}),
+      ]).timeout(const Duration(seconds: 4)).catchError((_) => <dynamic>[]);
 
       try {
-        await Supabase.instance.client.auth.signOut();
+        await Supabase.instance.client.auth
+            .signOut()
+            .timeout(const Duration(seconds: 2));
       } catch (_) {}
 
       if (Get.isRegistered<NavigationController>()) {
         Get.find<NavigationController>().selectedIdx.value = 0;
       }
-
+    } catch (e) {
+      debugPrint('[AuthenticationController] Logout cleanup notice: $e');
+    } finally {
       AppFullScreenLoader.stopLoading();
       Get.offAllNamed(Routes.signIn);
-    } catch (e) {
-      AppFullScreenLoader.stopLoading();
-      throw AppExceptionHandler.handle(e);
     }
   }
 

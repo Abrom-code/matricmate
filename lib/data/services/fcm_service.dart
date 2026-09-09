@@ -485,10 +485,17 @@ class FcmService {
 
   /// Unsubscribes from all topics on logout.
   Future<void> unsubscribeAll() async {
-    await _messaging.unsubscribeFromTopic('all_users');
-    await _messaging.unsubscribeFromTopic('natural');
-    await _messaging.unsubscribeFromTopic('social');
-    _initialized = false;
+    try {
+      await Future.wait([
+        _messaging.unsubscribeFromTopic('all_users').catchError((_) {}),
+        _messaging.unsubscribeFromTopic('natural').catchError((_) {}),
+        _messaging.unsubscribeFromTopic('social').catchError((_) {}),
+      ]).timeout(const Duration(seconds: 2));
+    } catch (e) {
+      debugPrint('[FcmService] unsubscribeAll notice: $e');
+    } finally {
+      _initialized = false;
+    }
   }
 
   /// Subscribes to 'all_users' and the user's stream topic.

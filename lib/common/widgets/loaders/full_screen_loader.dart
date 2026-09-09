@@ -5,15 +5,23 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 /// A utility class for managing a full-screen loading overlay.
 class AppFullScreenLoader {
+  static bool _isLoading = false;
+
+  static bool get isLoading => _isLoading;
+
   /// Opens a clean full-screen loading dialog with 3 pulsing dots and subtitle text (no box/card).
   static void openLoadingDialog(String text, [String? _]) {
+    if (_isLoading) return;
+
     final context = Get.overlayContext ?? Get.context;
     if (context == null) return;
 
+    _isLoading = true;
     final dark = AppHelperFunctions.isDark(context);
 
     showDialog(
       context: context,
+      useRootNavigator: true,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: dark ? 0.75 : 0.55),
       builder: (_) => PopScope(
@@ -53,13 +61,38 @@ class AppFullScreenLoader {
           ),
         ),
       ),
-    );
+    ).then((_) {
+      _isLoading = false;
+    });
   }
 
   static void stopLoading() {
-    final context = Get.overlayContext ?? Get.context;
-    if (context != null && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+    if (!_isLoading) {
+      try {
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+      } catch (_) {}
+      return;
     }
+
+    _isLoading = false;
+
+    try {
+      final context = Get.overlayContext ?? Get.context;
+      if (context != null) {
+        final nav = Navigator.of(context, rootNavigator: true);
+        if (nav.canPop()) {
+          nav.pop();
+          return;
+        }
+      }
+    } catch (_) {}
+
+    try {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+    } catch (_) {}
   }
 }

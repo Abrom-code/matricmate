@@ -38,30 +38,31 @@ class RealtimeService {
 
   /// Stop and clean up all Realtime channels.
   Future<void> stop() async {
-    if (_questionsChannel != null) {
-      await _supabase.removeChannel(_questionsChannel!);
+    try {
+      final channels = [
+        _questionsChannel,
+        _userChannel,
+        _appConfigChannel,
+        _notificationsChannel,
+        _notificationReadsChannel,
+      ].whereType<RealtimeChannel>().toList();
+
       _questionsChannel = null;
-      debugPrint('[Realtime] unsubscribed from questions');
-    }
-    if (_userChannel != null) {
-      await _supabase.removeChannel(_userChannel!);
       _userChannel = null;
-      debugPrint('[Realtime] unsubscribed from user');
-    }
-    if (_appConfigChannel != null) {
-      await _supabase.removeChannel(_appConfigChannel!);
       _appConfigChannel = null;
-      debugPrint('[Realtime] unsubscribed from app_config');
-    }
-    if (_notificationsChannel != null) {
-      await _supabase.removeChannel(_notificationsChannel!);
       _notificationsChannel = null;
-      debugPrint('[Realtime] unsubscribed from notifications');
-    }
-    if (_notificationReadsChannel != null) {
-      await _supabase.removeChannel(_notificationReadsChannel!);
       _notificationReadsChannel = null;
-      debugPrint('[Realtime] unsubscribed from notification_reads');
+
+      if (channels.isNotEmpty) {
+        await Future.wait(
+          channels.map(
+            (ch) => _supabase.removeChannel(ch).catchError((_) => 'error'),
+          ),
+        ).timeout(const Duration(seconds: 2));
+      }
+      debugPrint('[Realtime] all channels stopped');
+    } catch (e) {
+      debugPrint('[Realtime] stop notice: $e');
     }
   }
 

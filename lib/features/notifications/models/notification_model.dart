@@ -40,12 +40,33 @@ class AppNotification {
       }
     }
 
+    final rawType = map['type']?.toString().toLowerCase().trim() ?? '';
+    final payloadType = parsedPayload['type']?.toString().toLowerCase().trim();
+    final title = map['title']?.toString() ?? '';
+
+    String resolvedType;
+    if (rawType.isNotEmpty && rawType != 'announcement') {
+      resolvedType = rawType;
+    } else if (payloadType != null &&
+        payloadType.isNotEmpty &&
+        payloadType != 'announcement') {
+      resolvedType = payloadType;
+    } else if (parsedPayload.containsKey('test_id') ||
+        parsedPayload.containsKey('test_type')) {
+      resolvedType = 'new_content';
+    } else if (title.toLowerCase().startsWith('new content') ||
+        title.toLowerCase().startsWith('[new content]')) {
+      resolvedType = 'new_content';
+    } else {
+      resolvedType = 'announcement';
+    }
+
     return AppNotification(
       id: _parseInt(map['id']),
       userId: map['user_id']?.toString() ?? '',
-      title: map['title']?.toString() ?? '',
+      title: title,
       body: map['body']?.toString() ?? '',
-      type: map['type']?.toString() ?? 'announcement',
+      type: resolvedType,
       payload: parsedPayload,
       targetStream: map['target_stream']?.toString(),
       isRead: map['is_read'] == true || map['is_read'] == 1,

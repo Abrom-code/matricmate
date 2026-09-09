@@ -105,7 +105,11 @@ class NotificationTile extends StatelessWidget {
 
   String get _categoryLabel {
     if (notification.type == 'payment') return 'PAYMENT';
-    if (notification.type == 'new_content') return 'NEW TEST';
+    if (notification.type == 'new_content') {
+      return notification.payload.containsKey('test_id')
+          ? 'NEW TEST'
+          : 'NEW CONTENT';
+    }
     if (_isChallenge) {
       return _isChallengeClosed ? 'STANDINGS' : 'CHALLENGE';
     }

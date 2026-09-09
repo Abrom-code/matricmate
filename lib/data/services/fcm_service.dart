@@ -416,17 +416,17 @@ class FcmService {
           : (message.hashCode & 0x7FFFFFFF);
       final currentUserId = UserController.instance.user.value.id;
       if (currentUserId.isNotEmpty) {
-        final newNotif = AppNotification(
-          id: notifId,
-          userId: currentUserId,
-          title: title,
-          body: body,
-          type: type.isNotEmpty ? type : 'announcement',
-          payload: message.data,
-          targetStream: message.data['target_stream']?.toString(),
-          isRead: false,
-          createdAt: DateTime.now(),
-        );
+        final newNotif = AppNotification.fromMap({
+          'id': notifId,
+          'user_id': currentUserId,
+          'title': title,
+          'body': body,
+          'type': type.isNotEmpty ? type : 'announcement',
+          'payload': message.data,
+          'target_stream': message.data['target_stream']?.toString(),
+          'is_read': false,
+          'created_at': DateTime.now().toIso8601String(),
+        });
         try {
           await _repo.insertLocal(newNotif);
         } catch (e) {

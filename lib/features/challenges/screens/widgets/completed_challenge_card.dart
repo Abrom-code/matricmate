@@ -73,150 +73,135 @@ class CompletedChallengeCard extends StatelessWidget {
                         color: AppColors.primary,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        challenge.subjectName ?? 'Subject',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 150),
+                        child: Text(
+                          challenge.subjectName ?? 'Subject',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
-
-                // Audience Tag
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                  decoration: BoxDecoration(
-                    color: dark
-                        ? Colors.white.withValues(alpha: 0.07)
-                        : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    challenge.audience.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                      color: dark ? Colors.white70 : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-
-                // Dynamic Status Pills (Completed & Offline Ready)
-                Flexible(
-                  child: Obx(() {
-                    final isDown = ctrl.isDownloaded(challenge.id);
-                    final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-
-                    return Wrap(
-                      spacing: 5,
-                      runSpacing: 4,
-                      children: [
-                        if (isDone)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                            decoration: BoxDecoration(
-                              color: ChallengeColors.completed.withValues(alpha: dark ? 0.2 : 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: ChallengeColors.completed.withValues(alpha: 0.25),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.check_circle_rounded,
-                                  size: 11.5,
-                                  color: ChallengeColors.completed,
-                                ),
-                                SizedBox(width: 3.5),
-                                Text(
-                                  'Completed',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: ChallengeColors.completed,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (isDown)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFF0284C7).withValues(alpha: 0.25),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.download_done_rounded,
-                                  size: 11.5,
-                                  color: Color(0xFF0284C7),
-                                ),
-                                SizedBox(width: 3.5),
-                                Text(
-                                  'Offline Ready',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0284C7),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    );
-                  }),
-                ),
 
                 const Spacer(),
+
+                // Dynamic Status Pill (Completed & Offline Ready)
+                Obx(() {
+                  final isDown = ctrl.isDownloaded(challenge.id);
+                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+
+                  if (isDone) {
+                    return Tooltip(
+                      message: isDown ? 'Completed • Offline Ready' : 'Completed',
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: ChallengeColors.completed.withValues(alpha: dark ? 0.2 : 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: ChallengeColors.completed.withValues(alpha: 0.25),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              size: 13.5,
+                              color: ChallengeColors.completed,
+                            ),
+                            if (isDown) ...[
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.download_done_rounded,
+                                size: 12,
+                                color: Color(0xFF0284C7),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (isDown) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.download_done_rounded,
+                            size: 11.5,
+                            color: Color(0xFF0284C7),
+                          ),
+                          SizedBox(width: 3.5),
+                          Text(
+                            'Offline Ready',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                }),
 
                 // Manage / Delete Button
                 Obx(() {
                   final isDown = ctrl.isDownloaded(challenge.id);
                   final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
                   if (isDown || isDone) {
-                    return Tooltip(
-                      message: 'Manage challenge options',
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () =>
-                            ctrl.showChallengeManageSheet(context, challenge),
-                        child: Container(
-                          padding: const EdgeInsets.all(5.5),
-                          decoration: BoxDecoration(
-                            color: dark
-                                ? Colors.white.withValues(alpha: 0.06)
-                                : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Tooltip(
+                        message: 'Manage challenge options',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () =>
+                              ctrl.showChallengeManageSheet(context, challenge),
+                          child: Container(
+                            padding: const EdgeInsets.all(5.5),
+                            decoration: BoxDecoration(
                               color: dark
-                                  ? AppColors.darkBorder
-                                  : const Color(0xFFE2E8F0),
-                              width: 0.8,
+                                  ? Colors.white.withValues(alpha: 0.06)
+                                  : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: dark
+                                    ? AppColors.darkBorder
+                                    : const Color(0xFFE2E8F0),
+                                width: 0.8,
+                              ),
                             ),
-                          ),
-                          child: Icon(
-                            Iconsax.trash_copy,
-                            size: 13.5,
-                            color: dark
-                                ? const Color(0xFF94A3B8)
-                                : const Color(0xFF64748B),
+                            child: Icon(
+                              Iconsax.trash_copy,
+                              size: 13.5,
+                              color: dark
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF64748B),
+                            ),
                           ),
                         ),
                       ),

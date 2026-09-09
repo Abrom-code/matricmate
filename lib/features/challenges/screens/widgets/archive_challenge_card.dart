@@ -78,12 +78,17 @@ class ArchiveChallengeCard extends StatelessWidget {
                         color: AppColors.primary,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        challenge.subjectName ?? 'Subject',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 100),
+                        child: Text(
+                          challenge.subjectName ?? 'Subject',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ],
@@ -123,34 +128,23 @@ class ArchiveChallengeCard extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         if (isDone)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                            decoration: BoxDecoration(
-                              color: ChallengeColors.completed.withValues(alpha: dark ? 0.2 : 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: ChallengeColors.completed.withValues(alpha: 0.25),
-                                width: 0.8,
+                          Tooltip(
+                            message: 'Completed',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
+                              decoration: BoxDecoration(
+                                color: ChallengeColors.completed.withValues(alpha: dark ? 0.2 : 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: ChallengeColors.completed.withValues(alpha: 0.25),
+                                  width: 0.8,
+                                ),
                               ),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.check_circle_rounded,
-                                  size: 11.5,
-                                  color: ChallengeColors.completed,
-                                ),
-                                SizedBox(width: 3.5),
-                                Text(
-                                  'Completed',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: ChallengeColors.completed,
-                                  ),
-                                ),
-                              ],
+                              child: const Icon(
+                                Icons.check_circle_rounded,
+                                size: 13,
+                                color: ChallengeColors.completed,
+                              ),
                             ),
                           )
                         else if (isLive)

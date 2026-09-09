@@ -44,7 +44,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   await plugin.initialize(
     settings: const InitializationSettings(
-      android: AndroidInitializationSettings('@drawable/ic_notification'),
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
     ),
   );
@@ -64,7 +64,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           channelDescription: channel.description,
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@drawable/ic_notification',
+          icon: '@mipmap/ic_launcher',
+          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
         ),
         iOS: const DarwinNotificationDetails(),
       ),
@@ -202,7 +203,7 @@ class FcmService {
 
     await _localNotifications.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@drawable/ic_notification'),
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(),
       ),
       onDidReceiveNotificationResponse: (response) {
@@ -322,7 +323,8 @@ class FcmService {
             channelDescription: _channel.description,
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@drawable/ic_notification',
+            icon: '@mipmap/ic_launcher',
+            largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
           ),
           iOS: const DarwinNotificationDetails(),
         ),
@@ -396,6 +398,8 @@ class FcmService {
             channelDescription: _channel.description,
             importance: Importance.high,
             priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+            largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
           ),
           iOS: const DarwinNotificationDetails(),
         ),

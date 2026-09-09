@@ -41,9 +41,19 @@ class ChallengeHomeController extends GetxController {
   final attemptedIds = <String>{}.obs;
   final inProgressIds = <String>{}.obs;
   final deletedChallengeIds = <String>{}.obs;
+  final participantCounts = <String, int>{}.obs;
   final selectedCompletedSubjectId = RxnInt(); // null = Recent 3 (default)
   final selectedTabIndex = 0.obs;
   final isOffline = false.obs;
+
+  int getParticipantCount(String challengeId) {
+    if (participantCounts.containsKey(challengeId)) {
+      return participantCounts[challengeId]!;
+    }
+    final ch = availableChallenges.firstWhereOrNull((c) => c.id == challengeId) ??
+        completedChallenges.firstWhereOrNull((c) => c.id == challengeId);
+    return ch?.attemptCount ?? 0;
+  }
 
   bool get hasLiveChallenges => availableChallenges.any((c) => c.isLive);
 
@@ -90,6 +100,7 @@ class ChallengeHomeController extends GetxController {
 
   Timer? _countdownTimer;
   RealtimeChannel? _realtimeChannel;
+  RealtimeChannel? _attemptsRealtimeChannel;
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream;
@@ -110,6 +121,9 @@ class ChallengeHomeController extends GetxController {
     _countdownTimer?.cancel();
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
+    }
+    if (_attemptsRealtimeChannel != null) {
+      _sb.removeChannel(_attemptsRealtimeChannel!);
     }
     super.onClose();
   }
@@ -168,6 +182,9 @@ class ChallengeHomeController extends GetxController {
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
     }
+    if (_attemptsRealtimeChannel != null) {
+      _sb.removeChannel(_attemptsRealtimeChannel!);
+    }
     _realtimeChannel = _sb
         .channel('public:leaderboard_challenges')
         .onPostgresChanges(
@@ -182,6 +199,33 @@ class ChallengeHomeController extends GetxController {
         .subscribe((status, [error]) {
           debugPrint('[Realtime] Challenges status: $status ${error ?? ''}');
         });
+
+    _attemptsRealtimeChannel = _sb
+        .channel('public:challenge_attempts')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'challenge_attempts',
+          callback: (payload) {
+            debugPrint('[Realtime] Attempt changed: ${payload.eventType}');
+            _refreshParticipantCounts();
+          },
+        )
+        .subscribe((status, [error]) {
+          debugPrint('[Realtime] Attempts status: $status ${error ?? ''}');
+        });
+  }
+
+  Future<void> _refreshParticipantCounts() async {
+    try {
+      final challengeIds = [
+        ...availableChallenges.map((c) => c.id),
+        ...completedChallenges.map((c) => c.id),
+      ];
+      if (challengeIds.isEmpty) return;
+      final counts = await _repo.fetchParticipantCounts(challengeIds: challengeIds);
+      participantCounts.addAll(counts);
+    } catch (_) {}
   }
 
   Future<void> _preloadLocalChallenges() async {
@@ -382,6 +426,13 @@ class ChallengeHomeController extends GetxController {
         ...validFiltered.map((c) => c.setId),
       };
       await _db.pruneDeletedChallengeSets(validServerIds);
+
+      // Fetch real participant counts for all visible challenges
+      try {
+        final challengeIds = validFiltered.map((c) => c.id).toList();
+        final counts = await _repo.fetchParticipantCounts(challengeIds: challengeIds);
+        participantCounts.assignAll(counts);
+      } catch (_) {}
 
       // Refresh offline download states & attempt states
       await refreshDownloadStates();

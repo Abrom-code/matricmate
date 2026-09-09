@@ -147,6 +147,20 @@ class LeaderboardChallengeModel {
         ? json['challenge_question_sets']['title']?.toString()
         : json['set_title']?.toString();
 
+    int attempts = (json['attempt_count'] as num?)?.toInt() ?? 0;
+    if (attempts == 0 && json['challenge_attempts'] != null) {
+      if (json['challenge_attempts'] is List) {
+        final list = json['challenge_attempts'] as List;
+        if (list.isNotEmpty && list.first is Map && list.first.containsKey('count')) {
+          attempts = (list.first['count'] as num?)?.toInt() ?? 0;
+        } else {
+          attempts = list.length;
+        }
+      } else if (json['challenge_attempts'] is Map && json['challenge_attempts'].containsKey('count')) {
+        attempts = (json['challenge_attempts']['count'] as num?)?.toInt() ?? 0;
+      }
+    }
+
     return LeaderboardChallengeModel(
       id: finalId,
       setId: rawSetId,
@@ -168,7 +182,43 @@ class LeaderboardChallengeModel {
           ? (DateTime.tryParse(json['created_at'].toString())?.toLocal() ?? DateTime.now())
           : DateTime.now(),
       questionCount: (json['question_count'] as num?)?.toInt() ?? 0,
-      attemptCount: (json['attempt_count'] as num?)?.toInt() ?? 0,
+      attemptCount: attempts,
+    );
+  }
+
+  LeaderboardChallengeModel copyWith({
+    String? id,
+    String? setId,
+    int? subjectId,
+    String? subjectName,
+    String? setTitle,
+    String? audience,
+    String? title,
+    DateTime? startsAt,
+    DateTime? endsAt,
+    int? durationSeconds,
+    String? status,
+    String? createdBy,
+    DateTime? createdAt,
+    int? questionCount,
+    int? attemptCount,
+  }) {
+    return LeaderboardChallengeModel(
+      id: id ?? this.id,
+      setId: setId ?? this.setId,
+      subjectId: subjectId ?? this.subjectId,
+      subjectName: subjectName ?? this.subjectName,
+      setTitle: setTitle ?? this.setTitle,
+      audience: audience ?? this.audience,
+      title: title ?? this.title,
+      startsAt: startsAt ?? this.startsAt,
+      endsAt: endsAt ?? this.endsAt,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      status: status ?? this.status,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      questionCount: questionCount ?? this.questionCount,
+      attemptCount: attemptCount ?? this.attemptCount,
     );
   }
 

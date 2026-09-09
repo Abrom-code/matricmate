@@ -29,11 +29,20 @@ class ChallengeRepository {
   }) async {
     await _checkConnectivity();
 
-    final rows = await _sb
-        .from('leaderboard_challenges')
-        .select('*, subjects(name), challenge_questions(id)')
-        .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
-        .order('created_at', ascending: false);
+    dynamic rows;
+    try {
+      rows = await _sb
+          .from('leaderboard_challenges')
+          .select('*, subjects(name), challenge_questions(id), challenge_attempts(count)')
+          .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+          .order('created_at', ascending: false);
+    } catch (_) {
+      rows = await _sb
+          .from('leaderboard_challenges')
+          .select('*, subjects(name), challenge_questions(id)')
+          .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+          .order('created_at', ascending: false);
+    }
 
     final list = (rows as List)
         .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
@@ -47,6 +56,28 @@ class ChallengeRepository {
       }).toList();
     }
     return list;
+  }
+
+  /// Fetches real participant counts from challenge_attempts (live standings & attempts).
+  Future<Map<String, int>> fetchParticipantCounts({List<String>? challengeIds}) async {
+    try {
+      await _checkConnectivity();
+      var query = _sb.from('challenge_attempts').select('challenge_id');
+      if (challengeIds != null && challengeIds.isNotEmpty) {
+        query = query.inFilter('challenge_id', challengeIds);
+      }
+      final rows = await query;
+      final Map<String, int> counts = {};
+      for (final r in (rows as List)) {
+        final id = r['challenge_id']?.toString() ?? '';
+        if (id.isNotEmpty) {
+          counts[id] = (counts[id] ?? 0) + 1;
+        }
+      }
+      return counts;
+    } catch (_) {
+      return {};
+    }
   }
 
   /// Fetches challenges that are live or scheduled.

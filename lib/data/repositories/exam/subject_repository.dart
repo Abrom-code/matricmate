@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:sqflite/sqflite.dart';
@@ -46,7 +47,7 @@ class SubjectRepository {
         Future.wait([
           supabase.from('chapters').select().eq('subject_id', subjectId),
           supabase.from('tests').select().eq('subject_id', subjectId),
-        ]),
+        ]).timeout(AppTimeouts.download),
         0.05,
         0.20,
         (p) => onStep('Fetching subject data…', p),
@@ -78,7 +79,7 @@ class SubjectRepository {
                   .select('*, question_sections(title)')
                   .inFilter('test_id', chunk),
             ),
-          ),
+          ).timeout(AppTimeouts.download),
           0.20,
           0.65,
           (p) => onStep('Fetching questions…', p),
@@ -116,7 +117,8 @@ class SubjectRepository {
           supabase
               .from('passages')
               .select()
-              .inFilter('id', passageIds.toList()),
+              .inFilter('id', passageIds.toList())
+              .timeout(AppTimeouts.download),
           0.60,
           0.72,
           (p) => onStep('Fetching passages…', p),
@@ -242,7 +244,7 @@ class SubjectRepository {
     DateTime? since,
   }) async {
     try {
-      return await supabase.from('subjects').select();
+      return await supabase.from('subjects').select().timeout(AppTimeouts.query);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -265,7 +267,8 @@ class SubjectRepository {
           .from('tests')
           .select('subject_id, type')
           .inFilter('subject_id', subjectIds)
-          .inFilter('type', ['entrance', 'model']);
+          .inFilter('type', ['entrance', 'model'])
+          .timeout(AppTimeouts.query);
 
       final Map<int, Map<String, int>> result = {};
       for (final row in rows) {

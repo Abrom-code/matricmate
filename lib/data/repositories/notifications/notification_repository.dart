@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -53,7 +54,7 @@ class NotificationRepository {
               .order('created_at', ascending: false)
               .limit(100),
           readsQuery,
-        ]);
+        ]).timeout(AppTimeouts.sync);
       } else {
         notifFutures = await Future.wait([
           _supabase
@@ -69,7 +70,7 @@ class NotificationRepository {
               .order('created_at', ascending: false)
               .limit(100),
           readsQuery,
-        ]);
+        ]).timeout(AppTimeouts.sync);
       }
 
       // Remote dismissals fetch (may fail if table doesn't exist yet)
@@ -78,7 +79,8 @@ class NotificationRepository {
         final raw = await _supabase
             .from('notification_dismissals')
             .select('notification_id')
-            .eq('user_id', userId);
+            .eq('user_id', userId)
+            .timeout(AppTimeouts.bestEffort);
         remoteDismissals = List<Map<String, dynamic>>.from(raw as List);
       } catch (_) {
         // Table doesn't exist on Supabase yet — local SQLite handles dismissals.
@@ -218,7 +220,7 @@ class NotificationRepository {
       await _supabase.from('notification_reads').upsert({
         'notification_id': notificationId,
         'user_id': uid,
-      }, onConflict: 'notification_id,user_id');
+      }, onConflict: 'notification_id,user_id').timeout(AppTimeouts.bestEffort);
     } catch (_) {
       // Best-effort — local state is already updated.
     }
@@ -252,7 +254,8 @@ class NotificationRepository {
             .toList();
         await _supabase
             .from('notification_reads')
-            .upsert(rows, onConflict: 'notification_id,user_id');
+            .upsert(rows, onConflict: 'notification_id,user_id')
+            .timeout(AppTimeouts.bestEffort);
       } catch (_) {}
     }
   }
@@ -290,13 +293,13 @@ class NotificationRepository {
     try {
       if (n.userId == uid) {
         // Personal notification: delete permanently from server.
-        await _supabase.from('notifications').delete().eq('id', n.id);
+        await _supabase.from('notifications').delete().eq('id', n.id).timeout(AppTimeouts.bestEffort);
       } else {
         // Broadcast notification: track dismissal on server.
         await _supabase.from('notification_dismissals').upsert({
           'notification_id': n.id,
           'user_id': uid,
-        }, onConflict: 'notification_id,user_id');
+        }, onConflict: 'notification_id,user_id').timeout(AppTimeouts.bestEffort);
       }
     } catch (_) {
       // Best-effort. Local DB is updated so UI is correct.
@@ -343,7 +346,8 @@ class NotificationRepository {
         await _supabase
             .from('notifications')
             .delete()
-            .inFilter('id', personalIds);
+            .inFilter('id', personalIds)
+            .timeout(AppTimeouts.bestEffort);
       }
       if (broadcastIds.isNotEmpty) {
         final rows = broadcastIds
@@ -351,7 +355,8 @@ class NotificationRepository {
             .toList();
         await _supabase
             .from('notification_dismissals')
-            .upsert(rows, onConflict: 'notification_id,user_id');
+            .upsert(rows, onConflict: 'notification_id,user_id')
+            .timeout(AppTimeouts.bestEffort);
       }
     } catch (_) {}
   }
@@ -361,7 +366,8 @@ class NotificationRepository {
       await _supabase
           .from('users')
           .update({'fcm_token': token})
-          .eq('id', userId);
+          .eq('id', userId)
+          .timeout(AppTimeouts.bestEffort);
     } catch (_) {
       // Non-fatal — token refresh will retry on next app open.
     }

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:sqflite/sqflite.dart';
@@ -103,7 +104,7 @@ class SyncRepository {
         supabase.from('tests').select().eq('subject_id', subjectId).inFilter(
           'type',
           ['entrance', 'model'],
-        ),
+        ).timeout(AppTimeouts.download),
         0.0,
         0.15,
         (p) => onStep('Fetching tests…', p),
@@ -121,7 +122,8 @@ class SyncRepository {
         supabase
             .from('questions')
             .select('*, question_sections(title)')
-            .inFilter('test_id', testIds),
+            .inFilter('test_id', testIds)
+            .timeout(AppTimeouts.download),
         0.15,
         0.50,
         (p) => onStep('Fetching questions…', p),
@@ -150,7 +152,8 @@ class SyncRepository {
           supabase
               .from('passages')
               .select()
-              .inFilter('id', passageIds.toList()),
+              .inFilter('id', passageIds.toList())
+              .timeout(AppTimeouts.download),
           0.50,
           0.65,
           (p) => onStep('Fetching passages…', p),
@@ -224,7 +227,7 @@ class SyncRepository {
         testsQuery = testsQuery.gt('updated_at', sinceIso);
       }
 
-      final tests = await testsQuery;
+      final tests = await testsQuery.timeout(AppTimeouts.download);
 
       // Fetch changed/new questions by delta or full scope
       List<dynamic> questionsData;
@@ -236,7 +239,8 @@ class SyncRepository {
         questionsData = await supabase
             .from('questions')
             .select('*, question_sections(title)')
-            .inFilter('test_id', testIds);
+            .inFilter('test_id', testIds)
+            .timeout(AppTimeouts.download);
       } else {
         // Delta: fetch questions updated since last sync
         if (tests.isEmpty) {
@@ -245,7 +249,8 @@ class SyncRepository {
               .from('questions')
               .select('*, question_sections(title)')
               .inFilter('subject_id', subjectIds)
-              .gt('updated_at', sinceIso);
+              .gt('updated_at', sinceIso)
+              .timeout(AppTimeouts.download);
         } else {
           // New tests + edited questions across entrance subjects
           final newTestIds = tests.map<int>((t) => t['id'] as int).toList();
@@ -259,7 +264,7 @@ class SyncRepository {
                 .select('*, question_sections(title)')
                 .inFilter('subject_id', subjectIds)
                 .gt('updated_at', sinceIso),
-          ]);
+          ]).timeout(AppTimeouts.download);
           // Merge and deduplicate by question id
           final Map<int, dynamic> merged = {};
           for (final q in [...results[0], ...results[1]]) {
@@ -344,7 +349,7 @@ class SyncRepository {
         q = q.inFilter('type', typeFilter);
       }
       if (sinceIso != null) q = q.gt('updated_at', sinceIso);
-      return await q;
+      return await q.timeout(AppTimeouts.query);
     }
 
     if (table == 'questions') {
@@ -364,15 +369,15 @@ class SyncRepository {
           .select('*, question_sections(title)')
           .inFilter('test_id', testIds);
       if (sinceIso != null) q = q.gt('updated_at', sinceIso);
-      return await q;
+      return await q.timeout(AppTimeouts.query);
     }
 
     // chapters — no updated_at, always full sync (rarely changes)
-    return await supabase.from(table).select().inFilter('subject_id', ids);
+    return await supabase.from(table).select().inFilter('subject_id', ids).timeout(AppTimeouts.query);
   }
 
   Future<List<Map<String, dynamic>>> getPassages(List<int> passageIds) async {
-    return await supabase.from('passages').select().inFilter('id', passageIds);
+    return await supabase.from('passages').select().inFilter('id', passageIds).timeout(AppTimeouts.query);
   }
 
   Future<List<dynamic>> _fetchChangedPassages(
@@ -384,7 +389,8 @@ class SyncRepository {
       return await supabase
           .from('passages')
           .select()
-          .inFilter('id', passageIds);
+          .inFilter('id', passageIds)
+          .timeout(AppTimeouts.query);
     }
 
     // Delta sync: fetch missing + edited passages
@@ -409,7 +415,8 @@ class SyncRepository {
           .from('passages')
           .select()
           .inFilter('id', passageIds)
-          .gt('updated_at', sinceIso);
+          .gt('updated_at', sinceIso)
+          .timeout(AppTimeouts.query);
     }
 
     if (missingIds.length == passageIds.length) {
@@ -417,7 +424,8 @@ class SyncRepository {
       return await supabase
           .from('passages')
           .select()
-          .inFilter('id', passageIds);
+          .inFilter('id', passageIds)
+          .timeout(AppTimeouts.query);
     }
 
     // Mixed: fetch missing unconditionally + existing if updated
@@ -431,7 +439,7 @@ class SyncRepository {
           .select()
           .inFilter('id', existingIds)
           .gt('updated_at', sinceIso),
-    ]);
+    ]).timeout(AppTimeouts.query);
 
     final Map<int, dynamic> merged = {};
     for (final p in [...results[0], ...results[1]]) {

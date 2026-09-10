@@ -1,3 +1,4 @@
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
@@ -35,13 +36,15 @@ class ChallengeRepository {
           .from('leaderboard_challenges')
           .select('*, subjects(name), challenge_questions(id), challenge_attempts(count)')
           .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .timeout(AppTimeouts.sync);
     } catch (_) {
       rows = await _sb
           .from('leaderboard_challenges')
           .select('*, subjects(name), challenge_questions(id)')
           .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .timeout(AppTimeouts.sync);
     }
 
     final list = (rows as List)
@@ -66,7 +69,7 @@ class ChallengeRepository {
       if (challengeIds != null && challengeIds.isNotEmpty) {
         query = query.inFilter('challenge_id', challengeIds);
       }
-      final rows = await query;
+      final rows = await query.timeout(AppTimeouts.query);
       final Map<String, int> counts = {};
       for (final r in (rows as List)) {
         final id = r['challenge_id']?.toString() ?? '';
@@ -93,7 +96,7 @@ class ChallengeRepository {
         .inFilter('status', ['live', 'scheduled'])
         .order('starts_at', ascending: true);
 
-    final rows = await query;
+    final rows = await query.timeout(AppTimeouts.sync);
     final list = (rows as List)
         .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
         .toList();
@@ -119,7 +122,7 @@ class ChallengeRepository {
       res = await _sb.rpc('rpc_start_challenge_attempt', params: {
         'p_challenge_id': challengeId,
         'p_user_id': userId,
-      });
+      }).timeout(AppTimeouts.rpc);
     } catch (e) {
       final msg = e.toString().toLowerCase();
       if (e is PostgrestException &&
@@ -131,7 +134,7 @@ class ChallengeRepository {
         res = await _sb.rpc('rpc_start_attempt', params: {
           'p_challenge_id': challengeId,
           'p_user_id': userId,
-        });
+        }).timeout(AppTimeouts.rpc);
       } else {
         rethrow;
       }
@@ -186,7 +189,7 @@ class ChallengeRepository {
       'p_attempt_id': attemptId,
       'p_question_id': questionId,
       'p_selected_choice': selectedChoice,
-    });
+    }).timeout(AppTimeouts.rpc);
   }
 
   /// Batch syncs all local user answers to ensure nothing is missed before final submission.
@@ -204,7 +207,7 @@ class ChallengeRepository {
           'p_selected_choice': entry.value,
         }).catchError((_) {});
       });
-      await Future.wait(futures);
+      await Future.wait(futures).timeout(AppTimeouts.sync);
     } catch (_) {}
   }
 
@@ -217,7 +220,7 @@ class ChallengeRepository {
     final res = await _sb.rpc('rpc_submit_attempt', params: {
       'p_attempt_id': attemptId,
       if (totalTimeSeconds != null) 'p_total_time_seconds': totalTimeSeconds,
-    });
+    }).timeout(AppTimeouts.rpc);
 
     if (res is Map<String, dynamic>) {
       return res;
@@ -237,7 +240,7 @@ class ChallengeRepository {
     } else {
       query = query.eq('challenge_id', challengeId);
     }
-    final rows = await query.order('order_index', ascending: true);
+    final rows = await query.order('order_index', ascending: true).timeout(AppTimeouts.sync);
 
     final list = <ChallengeQuestionModel>[];
     for (final r in rows) {
@@ -264,7 +267,8 @@ class ChallengeRepository {
           .select('*')
           .eq('challenge_id', challengeId)
           .eq('user_id', userId)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(AppTimeouts.query);
 
       if (attemptRow == null) return null;
 
@@ -272,7 +276,8 @@ class ChallengeRepository {
       final answersRows = await _sb
           .from('challenge_answers')
           .select('question_id, selected_choice, is_correct')
-          .eq('attempt_id', attemptId);
+          .eq('attempt_id', attemptId)
+          .timeout(AppTimeouts.query);
 
       final Map<String, String> userAnswers = {};
       for (final a in answersRows) {
@@ -307,7 +312,7 @@ class ChallengeRepository {
         if (stream != null && stream.isNotEmpty && stream != 'all')
           'p_stream': stream,
         'p_limit': limit,
-      });
+      }).timeout(AppTimeouts.sync);
 
       if (res is List) {
         return res
@@ -333,7 +338,8 @@ class ChallengeRepository {
           .order('score', ascending: false)
           .order('total_time_seconds', ascending: true)
           .order('submitted_at', ascending: true)
-          .limit(limit);
+          .limit(limit)
+          .timeout(AppTimeouts.sync);
 
       final list = <ChallengeLeaderboardEntry>[];
       for (int i = 0; i < rows.length; i++) {
@@ -376,7 +382,7 @@ class ChallengeRepository {
         if (periodStart != null)
           'p_period_start': periodStart.toIso8601String().split('T').first,
         'p_limit': limit,
-      });
+      }).timeout(AppTimeouts.sync);
 
       if (res is List && res.isNotEmpty) {
         return res
@@ -407,7 +413,7 @@ class ChallengeRepository {
         query = query.eq('stream', stream);
       }
 
-      final rows = await query.order('submitted_at', ascending: false);
+      final rows = await query.order('submitted_at', ascending: false).timeout(AppTimeouts.sync);
 
       final userMap = <String, Map<String, dynamic>>{};
       for (final r in rows) {
@@ -522,7 +528,7 @@ class ChallengeRepository {
       query = query.eq('subject_id', subjectId);
     }
 
-    final rows = await query.order('ends_at', ascending: false);
+    final rows = await query.order('ends_at', ascending: false).timeout(AppTimeouts.sync);
     final list = (rows as List)
         .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
         .toList();
@@ -550,7 +556,7 @@ class ChallengeRepository {
       query = query.eq('subject_id', subjectId);
     }
 
-    final rows = await query.order('created_at', ascending: false);
+    final rows = await query.order('created_at', ascending: false).timeout(AppTimeouts.sync);
     final list = (rows as List)
         .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
         .toList();
@@ -585,7 +591,7 @@ class ChallengeRepository {
 
     // 2. Try Supabase
     try {
-      final row = await _sb.from('passages').select().eq('id', passageId).maybeSingle();
+      final row = await _sb.from('passages').select().eq('id', passageId).maybeSingle().timeout(AppTimeouts.query);
       if (row != null) {
         final p = PassageModel.fromJson(row);
         _passageCache[passageId] = p;
@@ -609,7 +615,8 @@ class ChallengeRepository {
         .from('leaderboard_challenges')
         .select('*, subjects(name)')
         .eq('id', challengeId)
-        .single();
+        .single()
+        .timeout(AppTimeouts.sync);
 
     final setId = chRow['set_id']?.toString();
     final questions = await fetchQuestionsForReview(challengeId, setId: setId);
@@ -653,7 +660,8 @@ class ChallengeRepository {
           .from('challenge_attempts')
           .select('challenge_id')
           .eq('user_id', userId)
-          .eq('status', 'submitted');
+          .eq('status', 'submitted')
+          .timeout(AppTimeouts.query);
       return rows
           .map((r) => r['challenge_id']?.toString() ?? '')
           .where((id) => id.isNotEmpty)
@@ -669,7 +677,8 @@ class ChallengeRepository {
           .from('challenge_attempts')
           .select('challenge_id')
           .eq('user_id', userId)
-          .eq('status', 'in_progress');
+          .eq('status', 'in_progress')
+          .timeout(AppTimeouts.query);
       return rows
           .map((r) => r['challenge_id']?.toString() ?? '')
           .where((id) => id.isNotEmpty)
@@ -688,7 +697,8 @@ class ChallengeRepository {
           .from('challenge_attempts')
           .delete()
           .eq('challenge_id', challengeId)
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .timeout(AppTimeouts.bestEffort);
     } catch (_) {
       // Best-effort if offline or RLS restrictions
     }

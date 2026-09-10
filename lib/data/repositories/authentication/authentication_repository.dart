@@ -1,3 +1,4 @@
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,7 +20,7 @@ class AuthenticationRepository {
         email: email,
         password: password,
         data: data,
-      );
+      ).timeout(AppTimeouts.auth);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -33,7 +34,7 @@ class AuthenticationRepository {
       return await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
-      );
+      ).timeout(AppTimeouts.auth);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -46,7 +47,7 @@ class AuthenticationRepository {
       await _supabase.auth.resend(
         type: OtpType.signup,
         email: email,
-      );
+      ).timeout(AppTimeouts.auth);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -55,7 +56,7 @@ class AuthenticationRepository {
   /// Requests a 6-digit recovery OTP for the given email via Supabase Auth.
   Future<void> sendPasswordResetOtp(String email) async {
     try {
-      await _supabase.auth.resetPasswordForEmail(email);
+      await _supabase.auth.resetPasswordForEmail(email).timeout(AppTimeouts.auth);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -75,7 +76,7 @@ class AuthenticationRepository {
         email: email,
         token: token,
         type: OtpType.recovery,
-      );
+      ).timeout(AppTimeouts.auth);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -89,7 +90,7 @@ class AuthenticationRepository {
 
       return await _supabase.auth.updateUser(
         UserAttributes(password: password),
-      );
+      ).timeout(AppTimeouts.auth);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -104,7 +105,7 @@ class AuthenticationRepository {
       await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
-      );
+      ).timeout(AppTimeouts.auth);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
@@ -123,9 +124,9 @@ class AuthenticationRepository {
       final user = _supabase.auth.currentUser;
       if (user == null) throw 'No authenticated user';
 
-      await _supabase.rpc('delete_own_account');
+      await _supabase.rpc('delete_own_account').timeout(AppTimeouts.delete);
       try {
-        await _supabase.auth.signOut();
+        await _supabase.auth.signOut().timeout(AppTimeouts.bestEffort);
       } catch (_) {}
     } catch (e) {
       throw AppExceptionHandler.handle(e);
@@ -134,7 +135,7 @@ class AuthenticationRepository {
 
   Future<void> reloadUser() async {
     try {
-      await _supabase.auth.getUser();
+      await _supabase.auth.getUser().timeout(AppTimeouts.auth);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

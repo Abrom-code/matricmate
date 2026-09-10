@@ -464,6 +464,7 @@ class SyncRepository {
       'time',
       'description',
       'created_at',
+      'is_premium',
     },
     'passages': {'id', 'content', 'title', 'image_url'},
     'questions': {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
@@ -11,6 +10,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class GradeTestsScreen extends StatefulWidget {
@@ -104,7 +104,8 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
           return const AppCircularLoading(title: 'Loading tests...');
         }
 
-        final tests = ctrl.chapterTests;
+        final user = UserController.instance.user.value;
+        final tests = TestAccessHelper.sortForUser(ctrl.chapterTests, user);
 
         if (tests.isEmpty) {
           return Center(
@@ -201,21 +202,17 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
             final qnCount =
                 ctrl.testQuestionCounts[test.id] ?? test.questionCount;
             final time = test.time;
-            final testIndex = index - 1;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Obx(() {
-                final isInactive =
-                    UserController.instance.user.value.isInactive;
-                final isPending =
-                    UserController.instance.user.value.isPending;
-                final isActive = UserController.instance.user.value.isActive;
+                final user = UserController.instance.user.value;
+                final canAccess = TestAccessHelper.canAccess(
+                  test: test,
+                  user: user,
+                );
 
                 final _ = ctrl.testResults[test.id];
-
-                final canAccess =
-                    isActive || ((isInactive || isPending) && testIndex < 1);
 
                 return TestTile(
                   testName: test.title,
@@ -231,33 +228,28 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
                   questionCount: qnCount,
                   timeMinutes: time,
                   onTap: () {
-                    if (isInactive && testIndex > 0) {
-                      Get.bottomSheet(
-                        const PremiumBottomSheet(),
-                        isScrollControlled: true,
-                      );
-                      return;
-                    }
-                    if (isPending && testIndex > 0) {
-                      Get.toNamed(Routes.paymentVerification);
-                      return;
-                    }
-                    if (!hasQn) {
-                      ToastHelper.info('No questions added yet!');
-                      return;
-                    }
-                    Get.dialog(
-                      ReadyDialog(
-                        qnCount: qnCount,
-                        time: time,
-                        testId: test.id,
-                        id: 0,
-                        examTitle: test.title,
-                        description: test.description,
-                        draft: ctrl.isInProgress(test.id)
-                            ? ctrl.testResults[test.id]
-                            : null,
-                      ),
+                    TestAccessHelper.handleTestTap(
+                      test: test,
+                      user: user,
+                      onStart: () {
+                        if (!hasQn) {
+                          ToastHelper.info('No questions added yet!');
+                          return;
+                        }
+                        Get.dialog(
+                          ReadyDialog(
+                            qnCount: qnCount,
+                            time: time,
+                            testId: test.id,
+                            id: 0,
+                            examTitle: test.title,
+                            description: test.description,
+                            draft: ctrl.isInProgress(test.id)
+                                ? ctrl.testResults[test.id]
+                                : null,
+                          ),
+                        );
+                      },
                     );
                   },
                 );

@@ -157,10 +157,7 @@ class ResetPasswordController extends GetxController {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () {
-                      Get.back(); // close dialog
-                      Get.offAllNamed(Routes.signIn);
-                    },
+                    onPressed: () => Get.offAllNamed(Routes.signIn),
                     child: const Text(
                       'Back to Login',
                       style: TextStyle(

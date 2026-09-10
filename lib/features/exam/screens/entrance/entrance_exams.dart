@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
@@ -13,6 +12,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class EntranceExamsScreen extends StatefulWidget {
@@ -235,12 +235,15 @@ class _ExamList extends StatelessWidget {
       );
     }
 
+    final user = UserController.instance.user.value;
+    final displayTests = TestAccessHelper.sortForUser(tests, user);
+
     final isLandscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
 
     final list = ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
-      itemCount: tests.length + 1,
+      itemCount: displayTests.length + 1,
       itemBuilder: (context, index) {
         // Top count header
         if (index == 0) {
@@ -270,7 +273,7 @@ class _ExamList extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${tests.length} tests available',
+                    '${displayTests.length} tests available',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -283,22 +286,20 @@ class _ExamList extends StatelessWidget {
           );
         }
 
-        final test = tests[index - 1];
+        final test = displayTests[index - 1];
         final hasQn = controller.testHasQuestions[test.id] ?? false;
-        final testIndex = index - 1;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Obx(() {
-            final isInactive = UserController.instance.user.value.isInactive;
-            final isPending = UserController.instance.user.value.isPending;
-            final isActive = UserController.instance.user.value.isActive;
+            final user = UserController.instance.user.value;
+            final canAccess = TestAccessHelper.canAccess(
+              test: test,
+              user: user,
+            );
 
             // Subscribe to testResults so tile rebuilds reactively.
             final _ = controller.testResults[test.id];
-
-            final canAccess =
-                isActive || ((isInactive || isPending) && testIndex < 2);
 
             return TestTile(
               icon: canAccess ? Iconsax.message_question_copy : Icons.lock,
@@ -314,35 +315,30 @@ class _ExamList extends StatelessWidget {
               timeMinutes: test.time,
               isNew: test.isNew,
               onTap: () {
-                if (isInactive && testIndex >= 2) {
-                  Get.bottomSheet(
-                    const PremiumBottomSheet(),
-                    isScrollControlled: true,
-                  );
-                  return;
-                }
-                if (isPending && testIndex >= 2) {
-                  Get.toNamed(Routes.paymentVerification);
-                  return;
-                }
-                if (!hasQn) {
-                  ToastHelper.info('No questions added yet!');
-                  return;
-                }
-                Get.dialog(
-                  ReadyDialog(
-                    qnCount:
-                        controller.testQuestionCounts[test.id] ??
-                        test.questionCount,
-                    time: test.time,
-                    testId: test.id,
-                    id: 2,
-                    examTitle: test.title,
-                    description: test.description,
-                    draft: controller.isInProgress(test.id)
-                        ? controller.testResults[test.id]
-                        : null,
-                  ),
+                TestAccessHelper.handleTestTap(
+                  test: test,
+                  user: user,
+                  onStart: () {
+                    if (!hasQn) {
+                      ToastHelper.info('No questions added yet!');
+                      return;
+                    }
+                    Get.dialog(
+                      ReadyDialog(
+                        qnCount:
+                            controller.testQuestionCounts[test.id] ??
+                            test.questionCount,
+                        time: test.time,
+                        testId: test.id,
+                        id: 2,
+                        examTitle: test.title,
+                        description: test.description,
+                        draft: controller.isInProgress(test.id)
+                            ? controller.testResults[test.id]
+                            : null,
+                      ),
+                    );
+                  },
                 );
               },
             );

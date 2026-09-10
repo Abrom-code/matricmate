@@ -4,6 +4,9 @@ import 'package:matricmate/features/personalization/controllers/change_password_
 class ChangePasswordBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ChangePasswordController>(() => ChangePasswordController());
+    Get.lazyPut<ChangePasswordController>(
+      () => ChangePasswordController(),
+      fenix: true,
+    );
   }
 }

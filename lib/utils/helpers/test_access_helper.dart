@@ -46,4 +46,25 @@ class TestAccessHelper {
       isScrollControlled: true,
     );
   }
+
+  /// Sorts a list of tests based on user subscription status:
+  /// - For inactive or pending users, free tests (`isPremium == false`) appear first on top.
+  /// - For active subscribers (all tests unlocked), original order is preserved.
+  /// - Within the same tier, original relative order is preserved.
+  static List<TestModel> sortForUser(List<TestModel> tests, UserModel user) {
+    if (user.isActive || tests.isEmpty) return tests;
+
+    final free = <TestModel>[];
+    final premium = <TestModel>[];
+
+    for (final test in tests) {
+      if (test.isPremium) {
+        premium.add(test);
+      } else {
+        free.add(test);
+      }
+    }
+
+    return [...free, ...premium];
+  }
 }

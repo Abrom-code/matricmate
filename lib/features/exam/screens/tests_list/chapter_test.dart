@@ -109,7 +109,8 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
           return const AppCircularLoading(title: 'Loading tests...');
         }
 
-        final tests = ctrl.chapterTest;
+        final user = UserController.instance.user.value;
+        final tests = TestAccessHelper.sortForUser(ctrl.chapterTest, user);
 
         if (tests.isEmpty) {
           return Center(

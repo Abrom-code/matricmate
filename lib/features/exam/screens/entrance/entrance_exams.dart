@@ -235,12 +235,15 @@ class _ExamList extends StatelessWidget {
       );
     }
 
+    final user = UserController.instance.user.value;
+    final displayTests = TestAccessHelper.sortForUser(tests, user);
+
     final isLandscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
 
     final list = ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
-      itemCount: tests.length + 1,
+      itemCount: displayTests.length + 1,
       itemBuilder: (context, index) {
         // Top count header
         if (index == 0) {
@@ -270,7 +273,7 @@ class _ExamList extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${tests.length} tests available',
+                    '${displayTests.length} tests available',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -283,7 +286,7 @@ class _ExamList extends StatelessWidget {
           );
         }
 
-        final test = tests[index - 1];
+        final test = displayTests[index - 1];
         final hasQn = controller.testHasQuestions[test.id] ?? false;
 
         return Padding(

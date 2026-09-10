@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,7 +20,8 @@ class SessionService {
           .from('user_sessions')
           .select()
           .eq('user_id', uid)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(AppTimeouts.query);
 
       // First login → create session
       if (existing == null) {
@@ -27,7 +29,7 @@ class SessionService {
           'user_id': uid,
           'device_id': deviceId,
           'trial': 5,
-        }, onConflict: 'user_id');
+        }, onConflict: 'user_id').timeout(AppTimeouts.query);
         return SessionValidationResult.allowed;
       }
 
@@ -58,7 +60,8 @@ class SessionService {
           .from('user_sessions')
           .select('trial')
           .eq('user_id', uid)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(AppTimeouts.query);
 
       if (response == null) return -1;
 
@@ -77,7 +80,8 @@ class SessionService {
       await _supabase
           .from('user_sessions')
           .update({'device_id': deviceId, 'trial': trial})
-          .eq('user_id', uid);
+          .eq('user_id', uid)
+          .timeout(AppTimeouts.query);
       return true;
     } catch (e) {
       SnackbarHelper.error(
@@ -90,7 +94,7 @@ class SessionService {
 
   Future<void> removeSession(String uid) async {
     try {
-      await _supabase.from('user_sessions').delete().eq('user_id', uid);
+      await _supabase.from('user_sessions').delete().eq('user_id', uid).timeout(AppTimeouts.bestEffort);
     } catch (e) {
       // Non-critical — session cleanup failure should not block logout
     }

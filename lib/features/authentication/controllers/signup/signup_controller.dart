@@ -62,12 +62,14 @@ class SignupController extends GetxController {
         return;
       }
 
+      // Show loading immediately so the button responds on the exact frame of the tap
+      isSigning.value = true;
+
       final isConnectd = await NetworkManager.instance.isConnected();
       if (!isConnectd) {
         ToastHelper.warning('No Internet!');
         return;
       }
-      isSigning.value = true;
 
       final fName = firstName.text.trim();
       final lName = lastName.text.trim();
@@ -113,9 +115,14 @@ class SignupController extends GetxController {
       );
 
       final userRepository = Get.find<UserRepository>();
-      await userRepository.saveUserRecord(newUser);
 
-      final deviceId = await DeviceService.getDeviceId();
+      // Parallelize local user record save and device ID retrieval
+      final results = await Future.wait([
+        userRepository.saveUserRecord(newUser),
+        DeviceService.getDeviceId(),
+      ]);
+
+      final deviceId = results[1] as String;
 
       final isAllowed = await SessionService().validateSession(uid, deviceId);
 

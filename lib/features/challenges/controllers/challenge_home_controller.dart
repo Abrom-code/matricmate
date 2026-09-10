@@ -41,9 +41,19 @@ class ChallengeHomeController extends GetxController {
   final attemptedIds = <String>{}.obs;
   final inProgressIds = <String>{}.obs;
   final deletedChallengeIds = <String>{}.obs;
+  final participantCounts = <String, int>{}.obs;
   final selectedCompletedSubjectId = RxnInt(); // null = Recent 3 (default)
   final selectedTabIndex = 0.obs;
   final isOffline = false.obs;
+
+  int getParticipantCount(String challengeId) {
+    if (participantCounts.containsKey(challengeId)) {
+      return participantCounts[challengeId]!;
+    }
+    final ch = availableChallenges.firstWhereOrNull((c) => c.id == challengeId) ??
+        completedChallenges.firstWhereOrNull((c) => c.id == challengeId);
+    return ch?.attemptCount ?? 0;
+  }
 
   bool get hasLiveChallenges => availableChallenges.any((c) => c.isLive);
 
@@ -90,6 +100,7 @@ class ChallengeHomeController extends GetxController {
 
   Timer? _countdownTimer;
   RealtimeChannel? _realtimeChannel;
+  RealtimeChannel? _attemptsRealtimeChannel;
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream;
@@ -110,6 +121,9 @@ class ChallengeHomeController extends GetxController {
     _countdownTimer?.cancel();
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
+    }
+    if (_attemptsRealtimeChannel != null) {
+      _sb.removeChannel(_attemptsRealtimeChannel!);
     }
     super.onClose();
   }
@@ -168,6 +182,9 @@ class ChallengeHomeController extends GetxController {
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
     }
+    if (_attemptsRealtimeChannel != null) {
+      _sb.removeChannel(_attemptsRealtimeChannel!);
+    }
     _realtimeChannel = _sb
         .channel('public:leaderboard_challenges')
         .onPostgresChanges(
@@ -182,6 +199,33 @@ class ChallengeHomeController extends GetxController {
         .subscribe((status, [error]) {
           debugPrint('[Realtime] Challenges status: $status ${error ?? ''}');
         });
+
+    _attemptsRealtimeChannel = _sb
+        .channel('public:challenge_attempts')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'challenge_attempts',
+          callback: (payload) {
+            debugPrint('[Realtime] Attempt changed: ${payload.eventType}');
+            _refreshParticipantCounts();
+          },
+        )
+        .subscribe((status, [error]) {
+          debugPrint('[Realtime] Attempts status: $status ${error ?? ''}');
+        });
+  }
+
+  Future<void> _refreshParticipantCounts() async {
+    try {
+      final challengeIds = [
+        ...availableChallenges.map((c) => c.id),
+        ...completedChallenges.map((c) => c.id),
+      ];
+      if (challengeIds.isEmpty) return;
+      final counts = await _repo.fetchParticipantCounts(challengeIds: challengeIds);
+      participantCounts.addAll(counts);
+    } catch (_) {}
   }
 
   Future<void> _preloadLocalChallenges() async {
@@ -383,6 +427,13 @@ class ChallengeHomeController extends GetxController {
       };
       await _db.pruneDeletedChallengeSets(validServerIds);
 
+      // Fetch real participant counts for all visible challenges
+      try {
+        final challengeIds = validFiltered.map((c) => c.id).toList();
+        final counts = await _repo.fetchParticipantCounts(challengeIds: challengeIds);
+        participantCounts.assignAll(counts);
+      } catch (_) {}
+
       // Refresh offline download states & attempt states
       await refreshDownloadStates();
       await refreshAttemptStates();
@@ -439,14 +490,20 @@ class ChallengeHomeController extends GetxController {
 
       await _db.insertDownloadedChallengeBundle(bundle);
       downloadedIds.add(challenge.id);
+      if (challenge.setId.isNotEmpty) downloadedIds.add(challenge.setId);
+      downloadedIds.refresh();
+
       if (Get.isRegistered<ChallengeArchiveController>()) {
-        Get.find<ChallengeArchiveController>().downloadedIds.add(challenge.id);
+        final aCtrl = Get.find<ChallengeArchiveController>();
+        aCtrl.downloadedIds.add(challenge.id);
+        if (challenge.setId.isNotEmpty) aCtrl.downloadedIds.add(challenge.setId);
+        aCtrl.downloadedIds.refresh();
       }
       ToastHelper.success('Downloaded for offline practice!');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
-isDownloading[challenge.id] = false;
+      isDownloading[challenge.id] = false;
     }
   }
 
@@ -456,15 +513,13 @@ isDownloading[challenge.id] = false;
 
   Future<void> showChallengeManageSheet(BuildContext context, LeaderboardChallengeModel challenge) async {
     final isDown = isDownloaded(challenge.id);
-    final isDone = isAttemptedOrPracticed(challenge.id);
 
     await ChallengeManageSheet.show(
       context: context,
       challenge: challenge,
       isDownloaded: isDown,
-      isAttemptedOrPracticed: isDone,
+      onDownload: () => downloadChallenge(challenge),
       onRemoveDownload: () => removeChallengeDownload(challenge),
-      onClearPractice: () => clearPracticeProgress(challenge),
       onHideChallenge: () => hideChallenge(context, challenge),
     );
   }
@@ -478,30 +533,17 @@ isDownloading[challenge.id] = false;
       );
       downloadedIds.remove(challenge.id);
       if (challenge.setId.isNotEmpty) downloadedIds.remove(challenge.setId);
+      downloadedIds.refresh();
 
       if (Get.isRegistered<ChallengeArchiveController>()) {
         final aCtrl = Get.find<ChallengeArchiveController>();
         aCtrl.downloadedIds.remove(challenge.id);
         if (challenge.setId.isNotEmpty) aCtrl.downloadedIds.remove(challenge.setId);
+        aCtrl.downloadedIds.refresh();
       }
+
+      await refreshDownloadStates();
       ToastHelper.success('Downloaded questions removed.');
-    } catch (e) {
-      AppExceptionHandler.handleResponse(e);
-    }
-  }
-
-  Future<void> clearPracticeProgress(LeaderboardChallengeModel challenge) async {
-    try {
-      await _db.deleteChallengePracticeResult(challenge.id, setId: challenge.setId);
-      attemptedIds.remove(challenge.id);
-      if (challenge.setId.isNotEmpty) attemptedIds.remove(challenge.setId);
-
-      if (Get.isRegistered<ChallengeArchiveController>()) {
-        final aCtrl = Get.find<ChallengeArchiveController>();
-        aCtrl.attemptedIds.remove(challenge.id);
-        if (challenge.setId.isNotEmpty) aCtrl.attemptedIds.remove(challenge.setId);
-      }
-      ToastHelper.success('Practice progress cleared.');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }
@@ -511,9 +553,9 @@ isDownloading[challenge.id] = false;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hide Challenge'),
+        title: const Text('Remove from History'),
         content: Text(
-          'Are you sure you want to hide "${challenge.title}"? It will be removed from your challenges list.',
+          'Are you sure you want to remove "${challenge.title}" from your completed challenges list? Your official national leaderboard ranking will remain preserved.',
         ),
         actions: [
           TextButton(
@@ -523,7 +565,7 @@ isDownloading[challenge.id] = false;
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hide'),
+            child: const Text('Remove'),
           ),
         ],
       ),
@@ -532,20 +574,13 @@ isDownloading[challenge.id] = false;
     if (confirmed != true) return;
 
     try {
-      final userId = UserController.instance.user.value.id;
-
-      // 1. Permanently record deletion in local DB
+      // 1. Permanently record deletion in local DB (purges local offline bundle & practice results)
       await _db.markChallengeAsDeleted(challenge.id, setId: challenge.setId);
 
-      // 2. Best-effort delete attempt from Supabase
-      if (userId.isNotEmpty) {
-        await _repo.deleteChallengeAttempt(
-          challengeId: challenge.id,
-          userId: userId,
-        );
-      }
+      // Note: We deliberately do NOT delete the attempt from Supabase server so the student's
+      // official national ranking and scores remain safely preserved!
 
-      // 3. Update reactive state sets
+      // 2. Update reactive state sets
       deletedChallengeIds.add(challenge.id);
       if (challenge.setId.isNotEmpty) deletedChallengeIds.add(challenge.setId);
 
@@ -556,7 +591,7 @@ isDownloading[challenge.id] = false;
       inProgressIds.remove(challenge.id);
       inProgressIds.remove(challenge.setId);
 
-      // 4. Immediately remove from UI lists so it disappears!
+      // 3. Immediately remove from UI lists
       availableChallenges.removeWhere(
         (c) =>
             c.id == challenge.id ||
@@ -570,7 +605,7 @@ isDownloading[challenge.id] = false;
             (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
       );
 
-      // 5. Update cached SharedPreferences
+      // 4. Update cached SharedPreferences
       final cached = await _getCachedChallenges();
       final updatedCache = cached
           .where(
@@ -582,7 +617,7 @@ isDownloading[challenge.id] = false;
           .toList();
       await _saveCachedChallenges(updatedCache);
 
-      // 6. Update archive controller if registered
+      // 5. Update archive controller if registered
       if (Get.isRegistered<ChallengeArchiveController>()) {
         final aCtrl = Get.find<ChallengeArchiveController>();
         aCtrl.deletedChallengeIds.add(challenge.id);
@@ -601,7 +636,7 @@ isDownloading[challenge.id] = false;
         );
       }
 
-      ToastHelper.success('Challenge hidden from list.');
+      ToastHelper.success('Challenge removed from completed list.');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     }

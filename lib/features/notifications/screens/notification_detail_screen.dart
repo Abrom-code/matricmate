@@ -158,10 +158,11 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
           typeName: 'Payment Update',
         );
       case 'new_content':
-        return const _TypeVisuals(
+        final isTest = notification.payload.containsKey('test_id');
+        return _TypeVisuals(
           icon: Icons.menu_book_rounded,
-          color: Color(0xFF0284C7),
-          typeName: 'New Test Available',
+          color: const Color(0xFF0284C7),
+          typeName: isTest ? 'New Test Available' : 'New Content',
         );
       default:
         return const _TypeVisuals(
@@ -509,7 +510,9 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
             const SizedBox(height: 24),
 
             // ── Action Button ─────────────────────────────────────────
-            if (notification.type == 'new_content')
+            if (notification.type == 'new_content' &&
+                (notification.payload.containsKey('test_id') ||
+                    notification.payload.containsKey('test_type')))
               SizedBox(
                 width: double.infinity,
                 height: 50,

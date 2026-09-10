@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/common/widgets/tiles/list_tile.dart';
 import 'package:matricmate/features/personalization/controllers/update_profile_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/validators/validators.dart';
@@ -23,6 +25,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     controller = Get.put(UpdateProfileController());
+    UserController.instance.syncEmailVerified();
   }
 
   @override
@@ -229,7 +232,247 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+
+                    // ── Email & Verification Status ──────────────────
+                    Obx(() {
+                      final isVerified = userController.isEmailVerified.value;
+                      final isSending =
+                          userController.isSendingVerification.value;
+                      final linkSent =
+                          userController.verificationLinkSent.value;
+                      final email = userController.user.value.email;
+
+                      return Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: isVerified
+                              ? (dark
+                                  ? const Color(0xFF10B981).withValues(alpha: 0.08)
+                                  : const Color(0xFFECFDF5))
+                              : (dark
+                                  ? const Color(0xFFF59E0B).withValues(alpha: 0.08)
+                                  : const Color(0xFFFFFBEB)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isVerified
+                                ? const Color(0xFF10B981)
+                                    .withValues(alpha: dark ? 0.3 : 0.25)
+                                : const Color(0xFFF59E0B)
+                                    .withValues(alpha: dark ? 0.35 : 0.3),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  isVerified
+                                      ? Icons.mark_email_read_rounded
+                                      : Icons.mark_email_unread_rounded,
+                                  color: isVerified
+                                      ? const Color(0xFF10B981)
+                                      : const Color(0xFFF59E0B),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Email Address',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: dark
+                                              ? AppColors.darkGrey
+                                              : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        email.isNotEmpty
+                                            ? email
+                                            : 'No email found',
+                                        style: TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: dark
+                                              ? AppColors.white
+                                              : const Color(0xFF0F172A),
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isVerified
+                                        ? const Color(0xFF10B981)
+                                            .withValues(alpha: 0.15)
+                                        : const Color(0xFFF59E0B)
+                                            .withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        isVerified
+                                            ? Icons.check_circle_rounded
+                                            : Icons.warning_amber_rounded,
+                                        size: 13,
+                                        color: isVerified
+                                            ? const Color(0xFF10B981)
+                                            : const Color(0xFFD97706),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        isVerified
+                                            ? 'Verified'
+                                            : 'Unverified',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: isVerified
+                                              ? const Color(0xFF10B981)
+                                              : const Color(0xFFD97706),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (!isVerified) ...[
+                              const SizedBox(height: 10),
+                              Text(
+                                linkSent
+                                    ? 'Verification link sent to your inbox. Open it to verify, then tap below.'
+                                    : 'Verify your email address to ensure seamless account recovery and security.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  color: dark
+                                      ? AppColors.darkGrey
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 36,
+                                child: OutlinedButton(
+                                  onPressed: isSending
+                                      ? null
+                                      : () {
+                                          if (linkSent) {
+                                            userController
+                                                .refreshEmailVerified();
+                                          } else {
+                                            userController
+                                                .sendVerificationEmail();
+                                          }
+                                        },
+                                  style: OutlinedButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    side: BorderSide(
+                                      color: const Color(0xFFF59E0B)
+                                          .withValues(alpha: 0.5),
+                                      width: 1.2,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    backgroundColor: const Color(0xFFF59E0B)
+                                        .withValues(alpha: 0.08),
+                                  ),
+                                  child: isSending
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Color(0xFFF59E0B),
+                                            ),
+                                          ),
+                                        )
+                                      : Text(
+                                          linkSent
+                                              ? 'Re-check Verification'
+                                              : 'Send Verification Link',
+                                          style: const TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFFD97706),
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }),
                   ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Section Title: Security ─────────────────────
+              Text(
+                'SECURITY',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.1,
+                  color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: dark ? AppColors.darkCard : AppColors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: AppListTile(
+                  icon: const Icon(
+                    Iconsax.lock_circle_copy,
+                    color: Color(0xFF6366F1),
+                    size: 18,
+                  ),
+                  title: 'Change Password',
+                  subtitle: 'Update your account login password',
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                  onTap: () => Get.toNamed(Routes.changePassword),
                 ),
               ),
 

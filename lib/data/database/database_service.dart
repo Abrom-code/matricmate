@@ -247,6 +247,16 @@ class DatabaseService extends GetxController {
               image_url TEXT
             )
           ''');
+          try {
+            await db.execute(
+              'ALTER TABLE local_challenge_questions ADD COLUMN explanation_en TEXT',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE local_challenge_questions ADD COLUMN explanation_am TEXT',
+            );
+          } catch (_) {}
           await db.execute('''
             CREATE TABLE IF NOT EXISTS user_deleted_challenges (
               challenge_id TEXT PRIMARY KEY,
@@ -677,6 +687,13 @@ class DatabaseService extends GetxController {
 
   Future<void> insertDownloadedChallengeBundle(Map<String, dynamic> bundle) async {
     final db = await database;
+    try {
+      await db.execute('ALTER TABLE local_challenge_questions ADD COLUMN explanation_en TEXT');
+    } catch (_) {}
+    try {
+      await db.execute('ALTER TABLE local_challenge_questions ADD COLUMN explanation_am TEXT');
+    } catch (_) {}
+
     await db.transaction((txn) async {
       final challengeId = bundle['challenge_id']?.toString() ?? bundle['id']?.toString() ?? '';
       final subjectId = (bundle['subject_id'] as num?)?.toInt() ?? 0;

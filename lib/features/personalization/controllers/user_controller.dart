@@ -135,8 +135,16 @@ class UserController extends GetxController {
 
   void cancelSessionWatch() => _sessionService.cancelWatch();
 
+  final RxBool isLoggingOut = false.obs;
+
   Future<void> logOut() async {
-    await AuthenticationController.instance.logout();
+    if (isLoggingOut.value) return;
+    try {
+      isLoggingOut.value = true;
+      await AuthenticationController.instance.logout();
+    } finally {
+      isLoggingOut.value = false;
+    }
   }
 
   Future<bool> fetchUserRecord() async {

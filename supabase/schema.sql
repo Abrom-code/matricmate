@@ -775,7 +775,17 @@ BEGIN
     RAISE EXCEPTION 'challenge_not_active';
   END IF;
 
-  IF v_challenge.starts_at IS NOT NULL AND now() < v_challenge.starts_at THEN
+  -- If challenge is live but starts_at is in the future (e.g. forced live from scheduled),
+  -- heal starts_at so that students can attempt immediately.
+  IF v_challenge.status = 'live' AND v_challenge.starts_at IS NOT NULL AND now() < v_challenge.starts_at THEN
+    UPDATE public.leaderboard_challenges
+    SET starts_at = now() - interval '10 seconds'
+    WHERE id = v_challenge.id;
+    v_challenge.starts_at := now() - interval '10 seconds';
+  END IF;
+
+  -- Only scheduled challenges block attempts with 'challenge_not_started'
+  IF v_challenge.status = 'scheduled' AND v_challenge.starts_at IS NOT NULL AND now() < v_challenge.starts_at THEN
     RAISE EXCEPTION 'challenge_not_started';
   END IF;
 

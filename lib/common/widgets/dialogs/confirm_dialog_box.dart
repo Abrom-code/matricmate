@@ -202,6 +202,7 @@ class AppDialogBoxes {
                           height: 46,
                           child: ElevatedButton(
                             onPressed: () {
+                              Navigator.pop(dialogContext, true);
                               onLogout();
                             },
                             style: ElevatedButton.styleFrom(

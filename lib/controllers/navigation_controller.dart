@@ -6,6 +6,7 @@ import 'package:matricmate/features/challenges/screens/challenge_home_screen.dar
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
+import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -58,11 +59,21 @@ class NavigationController extends GetxController {
         curve: Curves.easeInOut,
       );
     }
+    if (index == 0 && Get.isRegistered<NotificationsController>()) {
+      unawaited(
+        NotificationsController.instance.loadNotifications(syncRemote: true),
+      );
+    }
   }
 
   /// Called when the user swipes — syncs the nav bar indicator.
   void onPageChanged(int index) {
     selectedIdx.value = index;
+    if (index == 0 && Get.isRegistered<NotificationsController>()) {
+      unawaited(
+        NotificationsController.instance.loadNotifications(syncRemote: true),
+      );
+    }
   }
 
   /// Navigates to a top-level tab in NavigationMenu, popping any pushed routes

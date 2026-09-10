@@ -6,6 +6,7 @@ import 'package:matricmate/features/personalization/controllers/profile_controll
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/features/personalization/screens/profile/widgets/account_settings.dart';
 import 'package:matricmate/features/personalization/screens/profile/widgets/connect_support_section.dart';
+import 'package:matricmate/features/personalization/screens/profile/widgets/legal_about_section.dart';
 import 'package:matricmate/features/personalization/screens/profile/widgets/profile_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -98,6 +99,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 10),
                 const ConnectSupportSection(),
+                const SizedBox(height: 20),
+
+                // Legal & about
+                Text(
+                  'LEGAL & ABOUT',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const LegalAboutSection(),
                 const SizedBox(height: 24),
 
                 // Log out
@@ -107,10 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: OutlinedButton(
                     onPressed: () => AppDialogBoxes.showLogoutDialog(
                       context: context,
-                      onLogout: () {
-                        Get.back();
-                        userController.logOut();
-                      },
+                      onLogout: () => userController.logOut(),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.zero,

@@ -86,9 +86,9 @@ class AuthenticationRepository {
 
   Future<void> logout() async {
     try {
-      await _supabase.auth.signOut();
+      await _supabase.auth.signOut().timeout(const Duration(seconds: 3));
     } catch (e) {
-      throw AppExceptionHandler.handle(e);
+      // Best-effort remote sign out; local clearing should proceed even if offline
     }
   }
 

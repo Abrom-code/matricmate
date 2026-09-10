@@ -29,11 +29,20 @@ class ChallengeRepository {
   }) async {
     await _checkConnectivity();
 
-    final rows = await _sb
-        .from('leaderboard_challenges')
-        .select('*, subjects(name), challenge_questions(id)')
-        .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
-        .order('created_at', ascending: false);
+    dynamic rows;
+    try {
+      rows = await _sb
+          .from('leaderboard_challenges')
+          .select('*, subjects(name), challenge_questions(id), challenge_attempts(count)')
+          .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+          .order('created_at', ascending: false);
+    } catch (_) {
+      rows = await _sb
+          .from('leaderboard_challenges')
+          .select('*, subjects(name), challenge_questions(id)')
+          .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+          .order('created_at', ascending: false);
+    }
 
     final list = (rows as List)
         .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
@@ -47,6 +56,28 @@ class ChallengeRepository {
       }).toList();
     }
     return list;
+  }
+
+  /// Fetches real participant counts from challenge_attempts (live standings & attempts).
+  Future<Map<String, int>> fetchParticipantCounts({List<String>? challengeIds}) async {
+    try {
+      await _checkConnectivity();
+      var query = _sb.from('challenge_attempts').select('challenge_id');
+      if (challengeIds != null && challengeIds.isNotEmpty) {
+        query = query.inFilter('challenge_id', challengeIds);
+      }
+      final rows = await query;
+      final Map<String, int> counts = {};
+      for (final r in (rows as List)) {
+        final id = r['challenge_id']?.toString() ?? '';
+        if (id.isNotEmpty) {
+          counts[id] = (counts[id] ?? 0) + 1;
+        }
+      }
+      return counts;
+    } catch (_) {
+      return {};
+    }
   }
 
   /// Fetches challenges that are live or scheduled.
@@ -85,17 +116,19 @@ class ChallengeRepository {
 
     dynamic res;
     try {
-      res = await _sb.rpc('rpc_start_attempt', params: {
+      res = await _sb.rpc('rpc_start_challenge_attempt', params: {
         'p_challenge_id': challengeId,
         'p_user_id': userId,
       });
     } catch (e) {
+      final msg = e.toString().toLowerCase();
       if (e is PostgrestException &&
-          (e.code == '42883' ||
-              e.code == 'PGRST202' ||
-              e.message.contains('does not exist') ||
-              e.message.contains('not found'))) {
-        res = await _sb.rpc('rpc_start_challenge_attempt', params: {
+              (e.code == '42883' ||
+                  e.code == 'PGRST202' ||
+                  e.message.contains('does not exist') ||
+                  e.message.contains('not found')) ||
+          msg.contains('not_found')) {
+        res = await _sb.rpc('rpc_start_attempt', params: {
           'p_challenge_id': challengeId,
           'p_user_id': userId,
         });
@@ -578,29 +611,35 @@ class ChallengeRepository {
         .eq('id', challengeId)
         .single();
 
-    final qRows = await _sb
-        .from('challenge_questions')
-        .select('*')
-        .eq('challenge_id', challengeId)
-        .order('order_index', ascending: true);
+    final setId = chRow['set_id']?.toString();
+    final questions = await fetchQuestionsForReview(challengeId, setId: setId);
 
-    final questionsList = <Map<String, dynamic>>[];
-    for (final rawQ in qRows) {
-      final qMap = Map<String, dynamic>.from(rawQ);
-      final pId = (qMap['passage_id'] as num?)?.toInt();
-      if (pId != null) {
-        final p = await getPassage(pId);
-        if (p != null) {
-          qMap['passage'] = p.toMap();
-        }
-      }
-      questionsList.add(qMap);
+    if (questions.isEmpty) {
+      throw const AppFailure(
+        title: 'Download Unavailable',
+        message: 'Questions for this challenge are not available for offline download.',
+      );
     }
+
+    final questionsList = questions.map((q) => {
+      'id': q.id,
+      'set_id': q.setId.isNotEmpty ? q.setId : challengeId,
+      'order_index': q.orderIndex,
+      'question_text': q.questionText,
+      'choices': q.choices,
+      'correct_choice': q.correctChoice,
+      'explanation': q.explanation,
+      'explanation_en': q.explanationEn,
+      'explanation_am': q.explanationAm,
+      'image_url': q.imageUrl,
+      'passage_id': q.passageId,
+      if (q.passage != null) 'passage': q.passage!.toMap(),
+    }).toList();
 
     return {
       'id': chRow['id']?.toString() ?? '',
       'challenge_id': chRow['id']?.toString() ?? '',
-      'set_id': chRow['set_id']?.toString() ?? challengeId,
+      'set_id': setId ?? challengeId,
       'subject_id': (chRow['subject_id'] as num?)?.toInt() ?? 0,
       'title': chRow['title']?.toString() ?? 'Challenge',
       'audience': chRow['audience']?.toString() ?? 'both',

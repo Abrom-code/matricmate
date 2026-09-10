@@ -35,11 +35,7 @@ class NotificationTile extends StatelessWidget {
   bool get _isRejected =>
       notification.type == 'payment' && _paymentStatus == 'rejected';
 
-  bool get _isChallenge =>
-      notification.type == 'challenge' ||
-      notification.type == 'challenge_round' ||
-      notification.type == 'challenge_reward' ||
-      notification.payload.containsKey('challenge_id');
+  bool get _isChallenge => notification.isChallenge;
 
   bool get _isChallengeClosed {
     if (notification.type == 'challenge_reward') return true;
@@ -105,7 +101,11 @@ class NotificationTile extends StatelessWidget {
 
   String get _categoryLabel {
     if (notification.type == 'payment') return 'PAYMENT';
-    if (notification.type == 'new_content') return 'NEW TEST';
+    if (notification.type == 'new_content') {
+      return notification.payload.containsKey('test_id')
+          ? 'NEW TEST'
+          : 'NEW CONTENT';
+    }
     if (_isChallenge) {
       return _isChallengeClosed ? 'STANDINGS' : 'CHALLENGE';
     }

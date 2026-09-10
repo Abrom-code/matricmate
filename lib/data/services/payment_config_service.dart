@@ -90,6 +90,41 @@ class PaymentConfigService {
   /// Share / invite link (loaded from app_config, falls back to empty).
   final shareLink = ''.obs;
 
+  /// Support email (loaded from app_config, falls back to abopiatech@gmail.com).
+  final supportEmail = 'abopiatech@gmail.com'.obs;
+
+  /// Privacy policy URL (loaded from app_config).
+  final privacyPolicyUrl =
+      'https://abopia.github.io/matricmate/privacy_policy.html'.obs;
+
+  /// Effective support email (guaranteed non-empty).
+  String get supportEmailValue {
+    final v = supportEmail.value.trim();
+    return v.isNotEmpty ? v : 'abopiatech@gmail.com';
+  }
+
+  /// Effective privacy policy URL (guaranteed non-empty).
+  String get privacyPolicyUrlValue {
+    final v = privacyPolicyUrl.value.trim();
+    return v.isNotEmpty
+        ? v
+        : 'https://abopia.github.io/matricmate/privacy_policy.html';
+  }
+
+  /// Effective Telegram link (guaranteed non-empty).
+  String get telegramLinkValue {
+    final v = telegramLink.value.trim();
+    return v.isNotEmpty ? v : 'https://t.me/matric_mate';
+  }
+
+  /// Effective share invite link.
+  String get shareLinkValue {
+    final v = shareLink.value.trim();
+    return v.isNotEmpty
+        ? v
+        : 'https://play.google.com/store/apps/details?id=com.abopia.matricet';
+  }
+
   /// Reactive loading and error state
   final isLoading = false.obs;
   final hasError = false.obs;
@@ -155,6 +190,13 @@ class PaymentConfigService {
 
       case 'share_link':
         shareLink.value = '';
+
+      case 'support_email':
+        supportEmail.value = 'abopiatech@gmail.com';
+
+      case 'privacy_policy_url':
+        privacyPolicyUrl.value =
+            'https://abopia.github.io/matricmate/privacy_policy.html';
 
       case 'plan_price_6_months':
         planPrices.remove('6_months');
@@ -240,6 +282,14 @@ class PaymentConfigService {
       // Share / invite link
       case 'share_link':
         shareLink.value = value;
+
+      // Support email
+      case 'support_email':
+        supportEmail.value = value.isNotEmpty ? value : 'abopiatech@gmail.com';
+
+      // Privacy policy URL
+      case 'privacy_policy_url':
+        if (value.isNotEmpty) privacyPolicyUrl.value = value;
     }
   }
 
@@ -320,3 +370,7 @@ class _BuiltIn {
   final IconData icon;
   final bool isFeatured;
 }
+
+/// Alias for [PaymentConfigService] providing dynamic app configuration.
+typedef AppConfigService = PaymentConfigService;
+

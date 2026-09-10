@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' show Color;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,6 +11,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
+import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -65,6 +68,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           importance: Importance.high,
           priority: Priority.high,
           icon: '@drawable/ic_notification',
+          color: const Color(0xFF009688),
+          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
         ),
         iOS: const DarwinNotificationDetails(),
       ),
@@ -323,6 +328,8 @@ class FcmService {
             importance: Importance.high,
             priority: Priority.high,
             icon: '@drawable/ic_notification',
+            color: const Color(0xFF009688),
+            largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
           ),
           iOS: const DarwinNotificationDetails(),
         ),
@@ -396,15 +403,58 @@ class FcmService {
             channelDescription: _channel.description,
             importance: Importance.high,
             priority: Priority.high,
+            icon: '@drawable/ic_notification',
+            color: const Color(0xFF009688),
+            largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
           ),
           iOS: const DarwinNotificationDetails(),
         ),
         payload: jsonEncode(message.data),
       );
     }
+
+    // Insert into local SQLite immediately so it appears offline & instantaneously
+    if (title != null && body != null) {
+      final notifId = notifIdStr != null && int.tryParse(notifIdStr) != null
+          ? int.parse(notifIdStr)
+          : (message.hashCode & 0x7FFFFFFF);
+      final currentUserId = UserController.instance.user.value.id;
+      if (currentUserId.isNotEmpty) {
+        final newNotif = AppNotification.fromMap({
+          'id': notifId,
+          'user_id': currentUserId,
+          'title': title,
+          'body': body,
+          'type': type.isNotEmpty ? type : 'announcement',
+          'payload': message.data,
+          'target_stream': message.data['target_stream']?.toString(),
+          'is_read': false,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+        try {
+          await _repo.insertLocal(newNotif);
+        } catch (e) {
+          debugPrint('[FcmService] insertLocal failed: $e');
+        }
+      }
+    }
+
+    // Refresh NotificationsController so red dot badge and list update live
+    if (Get.isRegistered<NotificationsController>()) {
+      unawaited(
+        NotificationsController.instance.loadNotifications(syncRemote: true),
+      );
+    }
   }
 
   void _handleTap(Map<String, dynamic> data) {
+    // Ensure notifications list and unread badge are synced on tap
+    if (Get.isRegistered<NotificationsController>()) {
+      unawaited(
+        NotificationsController.instance.loadNotifications(syncRemote: true),
+      );
+    }
+
     // Route tap to appropriate screen based on notification type
     final type = data['type']?.toString();
     if (data.containsKey('challenge_id') ||
@@ -435,10 +485,17 @@ class FcmService {
 
   /// Unsubscribes from all topics on logout.
   Future<void> unsubscribeAll() async {
-    await _messaging.unsubscribeFromTopic('all_users');
-    await _messaging.unsubscribeFromTopic('natural');
-    await _messaging.unsubscribeFromTopic('social');
-    _initialized = false;
+    try {
+      await Future.wait([
+        _messaging.unsubscribeFromTopic('all_users').catchError((_) {}),
+        _messaging.unsubscribeFromTopic('natural').catchError((_) {}),
+        _messaging.unsubscribeFromTopic('social').catchError((_) {}),
+      ]).timeout(const Duration(seconds: 2));
+    } catch (e) {
+      debugPrint('[FcmService] unsubscribeAll notice: $e');
+    } finally {
+      _initialized = false;
+    }
   }
 
   /// Subscribes to 'all_users' and the user's stream topic.

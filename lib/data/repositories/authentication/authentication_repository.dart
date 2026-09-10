@@ -52,7 +52,8 @@ class AuthenticationRepository {
     }
   }
 
-  Future<void> sendResetPasswordEmail(String email) async {
+  /// Requests a 6-digit recovery OTP for the given email via Supabase Auth.
+  Future<void> sendPasswordResetOtp(String email) async {
     try {
       await _supabase.auth.resetPasswordForEmail(email);
     } catch (e) {
@@ -60,18 +61,43 @@ class AuthenticationRepository {
     }
   }
 
-  Future<void> updateUserPassword(String newPassword) async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw 'No authenticated user found';
+  /// Alias for backward compatibility.
+  Future<void> sendResetPasswordEmail(String email) =>
+      sendPasswordResetOtp(email);
 
-      await _supabase.auth.updateUser(
-        UserAttributes(password: newPassword),
+  /// Verifies a 6-digit recovery OTP and establishes an authenticated recovery session.
+  Future<AuthResponse> verifyPasswordResetOtp({
+    required String email,
+    required String token,
+  }) async {
+    try {
+      return await _supabase.auth.verifyOTP(
+        email: email,
+        token: token,
+        type: OtpType.recovery,
       );
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
   }
+
+  /// Updates the user's password using the established recovery session.
+  Future<UserResponse> updatePassword(String password) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw 'No authenticated user found';
+
+      return await _supabase.auth.updateUser(
+        UserAttributes(password: password),
+      );
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  /// Alias for backward compatibility.
+  Future<void> updateUserPassword(String newPassword) =>
+      updatePassword(newPassword);
 
   Future<void> reAuthenticate(String email, String password) async {
     try {

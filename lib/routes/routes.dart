@@ -10,12 +10,14 @@ import 'package:matricmate/bindings/exam/entrance_exams_binding.dart';
 import 'package:matricmate/bindings/exam/grade_test_binding.dart';
 import 'package:matricmate/bindings/exam/question_binding.dart';
 import 'package:matricmate/bindings/auth/reset_password_binding.dart';
+import 'package:matricmate/bindings/auth/verify_reset_otp_binding.dart';
 import 'package:matricmate/bindings/exam/result_binding.dart';
 import 'package:matricmate/bindings/exam/review_binding.dart';
 import 'package:matricmate/bindings/auth/signup_binding.dart';
 import 'package:matricmate/bindings/exam/test_binding.dart';
 import 'package:matricmate/features/authentication/screens/login/login.dart';
 import 'package:matricmate/features/authentication/screens/password_configuration/forget_password.dart';
+import 'package:matricmate/features/authentication/screens/password_configuration/verify_reset_otp.dart';
 import 'package:matricmate/features/authentication/screens/password_configuration/reset_password.dart';
 import 'package:matricmate/features/authentication/screens/signup/signup.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
@@ -131,6 +133,11 @@ class AppRoutes {
       name: Routes.forgotPassword,
       page: () => const ForgetPasswordScreen(),
       binding: ForgotPasswordBinding(),
+    ),
+    GetPage(
+      name: Routes.verifyResetOtp,
+      page: () => const VerifyResetOtpScreen(),
+      binding: VerifyResetOtpBinding(),
     ),
     GetPage(
       name: Routes.resetPassword,

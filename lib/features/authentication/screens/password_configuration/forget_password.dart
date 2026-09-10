@@ -50,7 +50,7 @@ class ForgetPasswordScreen extends GetView<ForgotPasswordController> {
 
               // Subtitle
               Text(
-                AppTextStrings.forgetPasswordSubTitle,
+                "Don't worry, enter your registered email and we will send you a 6-digit verification code to reset your password.",
                 style: TextStyle(
                   fontSize: 13.5,
                   height: 1.45,
@@ -175,7 +175,7 @@ class ForgetPasswordScreen extends GetView<ForgotPasswordController> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Send Reset Link',
+                                'Send Verification Code',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,

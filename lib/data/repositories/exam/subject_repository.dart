@@ -190,7 +190,9 @@ class SubjectRepository {
       'type',
       'question_count',
       'time',
+      'description',
       'created_at',
+      'is_premium',
     },
     'passages': {'id', 'content', 'title', 'image_url'},
     'questions': {

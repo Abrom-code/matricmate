@@ -64,6 +64,7 @@ class DBschema {
         question_count INTEGER NOT NULL,
         description TEXT,
         created_at TEXT NOT NULL,
+        is_premium INTEGER DEFAULT 1,
         FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
         FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
       );

@@ -63,7 +63,47 @@ void main() {
       expect(exam.time, -1);
       expect(exam.grade, isNull);
       expect(exam.chapterId, isNull);
+      expect(exam.isPremium, isTrue);
       expect(exam.toMap()['created_at'], '2026-07-01T09:00:00.000Z');
+      expect(exam.toMap()['is_premium'], 1);
+    });
+
+    test('correctly parses is_premium from various representations', () {
+      final freeExamBool = TestModel.fromMap({
+        'id': 1,
+        'subject_id': 1,
+        'question_count': 10,
+        'created_at': '2026-07-01T09:00:00.000Z',
+        'type': 'chapter',
+        'title': 'Test 1',
+        'is_premium': false,
+      });
+      expect(freeExamBool.isPremium, isFalse);
+      expect(freeExamBool.toMap()['is_premium'], 0);
+
+      final freeExamInt = TestModel.fromMap({
+        'id': 2,
+        'subject_id': 1,
+        'question_count': 10,
+        'created_at': '2026-07-01T09:00:00.000Z',
+        'type': 'grade',
+        'title': 'Test 2',
+        'is_premium': 0,
+      });
+      expect(freeExamInt.isPremium, isFalse);
+      expect(freeExamInt.toMap()['is_premium'], 0);
+
+      final premiumExamInt = TestModel.fromMap({
+        'id': 3,
+        'subject_id': 1,
+        'question_count': 10,
+        'created_at': '2026-07-01T09:00:00.000Z',
+        'type': 'model',
+        'title': 'Test 3',
+        'is_premium': 1,
+      });
+      expect(premiumExamInt.isPremium, isTrue);
+      expect(premiumExamInt.toMap()['is_premium'], 1);
     });
 
     test('labels recently published entrance exams as new', () {

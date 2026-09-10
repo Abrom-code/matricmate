@@ -36,16 +36,16 @@ class ForgotPasswordController extends GetxController {
         return;
       }
 
-      await _authenticationRepository.sendResetPasswordEmail(
+      await _authenticationRepository.sendPasswordResetOtp(
         email.text.trim(),
       );
       SnackbarHelper.success(
-        'Email sent',
-        'If you are already registered, please check your inbox!',
+        'Verification Code Sent',
+        'Please enter the 6-digit code sent to your email.',
       );
 
       Get.toNamed(
-        Routes.resetPassword,
+        Routes.verifyResetOtp,
         arguments: {'email': email.text.trim()},
       );
     } catch (e, st) {

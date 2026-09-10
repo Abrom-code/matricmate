@@ -42,6 +42,7 @@ class Routes {
   static const signIn = '/sign-in';
   static const changePassword = '/change-password';
   static const forgotPassword = '/forgot-password';
+  static const verifyResetOtp = '/verify-reset-otp';
   static const resetPassword = '/reset-password';
 
   // notifications

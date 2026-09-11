@@ -13,6 +13,10 @@ class NavigationMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<NavigationController>();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.requestNotificationPermissionIfNeeded();
+    });
+
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: Obx(

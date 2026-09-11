@@ -291,6 +291,7 @@ class AuthenticationController extends GetxController
 
       if (Get.isRegistered<NavigationController>()) {
         Get.find<NavigationController>().selectedIdx.value = 0;
+        Get.find<NavigationController>().resetNotificationPermissionFlag();
       }
     } catch (e) {
       debugPrint('[AuthenticationController] Logout cleanup notice: $e');
@@ -350,6 +351,7 @@ class AuthenticationController extends GetxController
 
       if (Get.isRegistered<NavigationController>()) {
         Get.find<NavigationController>().selectedIdx.value = 0;
+        Get.find<NavigationController>().resetNotificationPermissionFlag();
       }
 
       AppFullScreenLoader.stopLoading();

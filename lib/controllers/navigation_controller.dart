@@ -26,9 +26,6 @@ class NavigationController extends GetxController {
     super.onInit();
     pageController = PageController(initialPage: selectedIdx.value);
 
-    // Request notification permission once on app startup if not yet allowed
-    unawaited(FcmService.instance.requestPermissionIfNeeded());
-
     // Ensure BookmarkController is registered before BookmarkScreen builds.
     if (!Get.isRegistered<BookmarkController>()) {
       Get.lazyPut<BookmarkController>(() => BookmarkController(), fenix: true);
@@ -47,6 +44,20 @@ class NavigationController extends GetxController {
   void onClose() {
     pageController.dispose();
     super.onClose();
+  }
+
+  bool _notificationPermissionRequested = false;
+
+  /// Prompts for notification permission once when the main navigation screen is opened.
+  void requestNotificationPermissionIfNeeded() {
+    if (_notificationPermissionRequested) return;
+    _notificationPermissionRequested = true;
+    unawaited(FcmService.instance.requestPermissionIfNeeded());
+  }
+
+  /// Resets the flag on logout so subsequent logins can prompt if still needed.
+  void resetNotificationPermissionFlag() {
+    _notificationPermissionRequested = false;
   }
 
   /// Called by the nav bar tap — animates the PageView.

@@ -59,9 +59,14 @@ class LeaderboardController extends GetxController {
 
     try {
       if (activeTab.value == 'challenge' && challengeId != null) {
+        final aud = audience?.toLowerCase().trim();
+        final filterStream = (aud == null || aud.isEmpty || aud == 'both')
+            ? null
+            : aud;
+
         entries.value = await _repo.fetchLeaderboard(
           challengeId: challengeId!,
-          stream: activeStream.value,
+          stream: filterStream,
           limit: 100,
         );
       } else if (activeTab.value == 'weekly') {

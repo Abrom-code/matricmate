@@ -384,7 +384,7 @@ class ChallengeRepository {
     try {
       final res = await _sb.rpc('rpc_get_leaderboard', params: {
         'p_challenge_id': challengeId,
-        if (stream != null && stream.isNotEmpty && stream != 'all')
+        if (stream != null && stream.isNotEmpty && stream != 'all' && stream != 'both')
           'p_stream': stream,
         'p_limit': limit,
       }).timeout(AppTimeouts.sync);
@@ -394,7 +394,8 @@ class ChallengeRepository {
             .map((r) => ChallengeLeaderboardEntry.fromJson(r as Map<String, dynamic>))
             .toList();
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[ChallengeRepo] rpc_get_leaderboard failed: $e');
       // Fallback: direct query on challenge_attempts
     }
 
@@ -405,8 +406,8 @@ class ChallengeRepository {
           .eq('challenge_id', challengeId)
           .eq('status', 'submitted');
 
-      if (stream != null && stream.isNotEmpty && stream != 'all') {
-        query = query.eq('stream', stream);
+      if (stream != null && stream.isNotEmpty && stream != 'all' && stream != 'both') {
+        query = query.ilike('stream', stream);
       }
 
       final rows = await query
@@ -436,7 +437,9 @@ class ChallengeRepository {
         ));
       }
       return list;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[ChallengeRepo] fetchLeaderboard fallback failed: $e');
+    }
 
     return [];
   }
@@ -452,7 +455,7 @@ class ChallengeRepository {
     // 1. Try RPC first
     try {
       final res = await _sb.rpc('rpc_get_period_leaderboard', params: {
-        'p_stream': (stream.isEmpty || stream == 'all') ? 'all' : stream,
+        'p_stream': (stream.isEmpty || stream == 'all' || stream == 'both') ? 'all' : stream,
         'p_period': period,
         if (periodStart != null)
           'p_period_start': periodStart.toIso8601String().split('T').first,
@@ -464,7 +467,9 @@ class ChallengeRepository {
             .map((r) => ChallengeLeaderboardEntry.fromJson(r as Map<String, dynamic>))
             .toList();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[ChallengeRepo] rpc_get_period_leaderboard failed: $e');
+    }
 
     // 2. Direct aggregation from challenge_attempts (100% resilient fallback)
     try {
@@ -484,8 +489,8 @@ class ChallengeRepository {
           .select('*, users(first_name, last_name)')
           .eq('status', 'submitted');
 
-      if (stream.isNotEmpty && stream != 'all') {
-        query = query.eq('stream', stream);
+      if (stream.isNotEmpty && stream != 'all' && stream != 'both') {
+        query = query.ilike('stream', stream);
       }
 
       final rows = await query.order('submitted_at', ascending: false).timeout(AppTimeouts.sync);

@@ -1,6 +1,5 @@
 -- =====================================================================
--- Migration: 0001_initial_schema.sql
--- MatricMate Complete Database Foundation
+-- MatricMate Complete Database Schema (Master Fresh Install)
 -- Native Supabase Auth with Strict Row-Level Security (RLS)
 -- =====================================================================
 
@@ -388,53 +387,56 @@ CREATE OR REPLACE VIEW public.v_challenge_leaderboard AS
 SELECT
     ca.challenge_id,
     ca.user_id,
-    u.first_name,
-    u.last_name,
-    ca.score,
-    ca.total_points,
-    coalesce(ca.total_time_seconds, ca.time_spent_seconds, 0) AS total_time_seconds,
+    coalesce(u.first_name, 'Student') AS first_name,
+    coalesce(u.last_name, '') AS last_name,
+    coalesce(ca.stream, u.stream, 'natural') AS stream,
+    coalesce(ca.score, 0) AS score,
+    coalesce(ca.score, 0) AS total_points,
+    coalesce(ca.total_time_seconds, 0) AS total_time_seconds,
     ca.submitted_at,
     DENSE_RANK() OVER (
         PARTITION BY ca.challenge_id
-        ORDER BY ca.score DESC, coalesce(ca.total_time_seconds, ca.time_spent_seconds, 0) ASC
+        ORDER BY coalesce(ca.score, 0) DESC, coalesce(ca.total_time_seconds, 0) ASC, ca.submitted_at ASC
     ) AS rank
 FROM public.challenge_attempts ca
-JOIN public.users u ON u.id = ca.user_id
+LEFT JOIN public.users u ON u.id = ca.user_id
 WHERE ca.status = 'submitted';
 
 CREATE OR REPLACE VIEW public.v_challenge_leaderboard_weekly AS
 SELECT
     ca.user_id,
-    u.first_name,
-    u.last_name,
-    sum(ca.score)::int AS total_score,
+    coalesce(u.first_name, 'Student') AS first_name,
+    coalesce(u.last_name, '') AS last_name,
+    coalesce(ca.stream, u.stream, 'natural') AS stream,
+    sum(coalesce(ca.score, 0))::int AS total_score,
     count(ca.id)::int AS challenges_completed,
     DENSE_RANK() OVER (
-        ORDER BY sum(ca.score) DESC, sum(coalesce(ca.total_time_seconds, ca.time_spent_seconds, 0)) ASC
+        ORDER BY sum(coalesce(ca.score, 0)) DESC, sum(coalesce(ca.total_time_seconds, 0)) ASC
     ) AS rank
 FROM public.challenge_attempts ca
-JOIN public.users u ON u.id = ca.user_id
+LEFT JOIN public.users u ON u.id = ca.user_id
 JOIN public.leaderboard_challenges lc ON lc.id = ca.challenge_id
 WHERE ca.status = 'submitted'
   AND ca.submitted_at >= date_trunc('week', now())
-GROUP BY ca.user_id, u.first_name, u.last_name;
+GROUP BY ca.user_id, u.first_name, u.last_name, coalesce(ca.stream, u.stream, 'natural');
 
 CREATE OR REPLACE VIEW public.v_challenge_leaderboard_monthly AS
 SELECT
     ca.user_id,
-    u.first_name,
-    u.last_name,
-    sum(ca.score)::int AS total_score,
+    coalesce(u.first_name, 'Student') AS first_name,
+    coalesce(u.last_name, '') AS last_name,
+    coalesce(ca.stream, u.stream, 'natural') AS stream,
+    sum(coalesce(ca.score, 0))::int AS total_score,
     count(ca.id)::int AS challenges_completed,
     DENSE_RANK() OVER (
-        ORDER BY sum(ca.score) DESC, sum(coalesce(ca.total_time_seconds, ca.time_spent_seconds, 0)) ASC
+        ORDER BY sum(coalesce(ca.score, 0)) DESC, sum(coalesce(ca.total_time_seconds, 0)) ASC
     ) AS rank
 FROM public.challenge_attempts ca
-JOIN public.users u ON u.id = ca.user_id
+LEFT JOIN public.users u ON u.id = ca.user_id
 JOIN public.leaderboard_challenges lc ON lc.id = ca.challenge_id
 WHERE ca.status = 'submitted'
   AND ca.submitted_at >= date_trunc('month', now())
-GROUP BY ca.user_id, u.first_name, u.last_name;
+GROUP BY ca.user_id, u.first_name, u.last_name, coalesce(ca.stream, u.stream, 'natural');
 
 -- ─────────────────────────────────────────────────────────────────────
 -- 10. FUNCTIONS, RPCS & TRIGGERS
@@ -776,7 +778,17 @@ BEGIN
     RAISE EXCEPTION 'challenge_not_active';
   END IF;
 
-  IF v_challenge.starts_at IS NOT NULL AND now() < v_challenge.starts_at THEN
+  -- If challenge is live but starts_at is in the future (e.g. forced live from scheduled),
+  -- heal starts_at so that students can attempt immediately.
+  IF v_challenge.status = 'live' AND v_challenge.starts_at IS NOT NULL AND now() < v_challenge.starts_at THEN
+    UPDATE public.leaderboard_challenges
+    SET starts_at = now() - interval '10 seconds'
+    WHERE id = v_challenge.id;
+    v_challenge.starts_at := now() - interval '10 seconds';
+  END IF;
+
+  -- Only scheduled challenges block attempts with 'challenge_not_started'
+  IF v_challenge.status = 'scheduled' AND v_challenge.starts_at IS NOT NULL AND now() < v_challenge.starts_at THEN
     RAISE EXCEPTION 'challenge_not_started';
   END IF;
 
@@ -829,6 +841,21 @@ BEGIN
     'ends_at', v_challenge.ends_at,
     'questions', coalesce(v_questions, '[]'::jsonb)
   );
+END;
+$$;
+
+-- Challenge RPC: Start Challenge Attempt (Alias wrapper)
+CREATE OR REPLACE FUNCTION public.rpc_start_challenge_attempt(
+  p_challenge_id uuid,
+  p_user_id text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  RETURN public.rpc_start_attempt(p_challenge_id, p_user_id);
 END;
 $$;
 
@@ -1032,6 +1059,171 @@ BEGIN
 END;
 $$;
 
+-- Challenge Leaderboard RPC (Cross-user standing with dense rank)
+CREATE OR REPLACE FUNCTION public.rpc_get_leaderboard(
+  p_challenge_id uuid,
+  p_stream text DEFAULT NULL,
+  p_limit int DEFAULT 100
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_rows jsonb;
+  v_total_questions int := 0;
+BEGIN
+  -- Count total questions in this challenge
+  SELECT count(*)::int INTO v_total_questions
+  FROM public.challenge_questions
+  WHERE challenge_id = p_challenge_id;
+
+  IF v_total_questions = 0 THEN
+    SELECT count(*)::int INTO v_total_questions
+    FROM public.challenge_questions q
+    JOIN public.leaderboard_challenges c ON c.set_id = q.set_id
+    WHERE c.id = p_challenge_id;
+  END IF;
+
+  WITH ranked_attempts AS (
+    SELECT
+      ca.id AS attempt_id,
+      ca.challenge_id,
+      ca.user_id,
+      coalesce(u.first_name, 'Student') AS first_name,
+      coalesce(u.last_name, '') AS last_name,
+      coalesce(ca.stream, u.stream, 'natural') AS stream,
+      coalesce(ca.score, 0) AS score,
+      coalesce(ca.total_time_seconds, ca.time_spent_seconds, 0) AS total_time_seconds,
+      ca.submitted_at,
+      DENSE_RANK() OVER (
+        ORDER BY coalesce(ca.score, 0) DESC,
+                 coalesce(ca.total_time_seconds, ca.time_spent_seconds, 0) ASC,
+                 ca.submitted_at ASC
+      ) AS rank
+    FROM public.challenge_attempts ca
+    LEFT JOIN public.users u ON u.id = ca.user_id
+    WHERE ca.challenge_id = p_challenge_id
+      AND ca.status = 'submitted'
+      AND (
+        p_stream IS NULL
+        OR p_stream = ''
+        OR lower(p_stream) = 'all'
+        OR lower(p_stream) = 'both'
+        OR lower(coalesce(ca.stream, u.stream, '')) = lower(p_stream)
+      )
+  )
+  SELECT jsonb_agg(
+    jsonb_build_object(
+      'rank', r.rank,
+      'user_id', r.user_id,
+      'first_name', r.first_name,
+      'last_name', r.last_name,
+      'stream', r.stream,
+      'score', r.score,
+      'total_time_seconds', r.total_time_seconds,
+      'correct_count', r.score,
+      'incorrect_count', (
+        SELECT count(*)::int FROM public.challenge_answers ans
+        WHERE ans.attempt_id = r.attempt_id AND ans.is_correct = false
+      ),
+      'not_done_count', greatest(0, v_total_questions - (
+        SELECT count(*)::int FROM public.challenge_answers ans
+        WHERE ans.attempt_id = r.attempt_id
+      )),
+      'challenges_taken', 1
+    ) ORDER BY r.rank ASC
+  ) INTO v_rows
+  FROM (
+    SELECT * FROM ranked_attempts
+    ORDER BY rank ASC
+    LIMIT coalesce(p_limit, 100)
+  ) r;
+
+  RETURN coalesce(v_rows, '[]'::jsonb);
+END;
+$$;
+
+-- Period Leaderboard RPC (Weekly / Monthly)
+CREATE OR REPLACE FUNCTION public.rpc_get_period_leaderboard(
+  p_stream text,
+  p_period text, -- 'week' or 'month'
+  p_period_start date DEFAULT NULL,
+  p_limit int DEFAULT 100
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_rows jsonb;
+  v_start date := p_period_start;
+BEGIN
+  IF v_start IS NULL THEN
+    IF p_period = 'week' THEN
+      v_start := date_trunc('week', now())::date;
+    ELSE
+      v_start := date_trunc('month', now())::date;
+    END IF;
+  END IF;
+
+  WITH period_aggregated AS (
+    SELECT
+      ca.user_id,
+      coalesce(u.first_name, 'Student') AS first_name,
+      coalesce(u.last_name, '') AS last_name,
+      coalesce(ca.stream, u.stream, 'natural') AS stream,
+      sum(coalesce(ca.score, 0))::int AS total_score,
+      sum(coalesce(ca.total_time_seconds, ca.time_spent_seconds, 0))::int AS total_time_seconds,
+      count(ca.id)::int AS challenges_taken
+    FROM public.challenge_attempts ca
+    LEFT JOIN public.users u ON u.id = ca.user_id
+    WHERE ca.status = 'submitted'
+      AND ca.submitted_at >= v_start
+      AND (
+        p_stream IS NULL
+        OR p_stream = ''
+        OR lower(p_stream) = 'all'
+        OR lower(p_stream) = 'both'
+        OR lower(coalesce(ca.stream, u.stream, '')) = lower(p_stream)
+      )
+    GROUP BY ca.user_id, u.first_name, u.last_name, coalesce(ca.stream, u.stream, 'natural')
+  ),
+  ranked AS (
+    SELECT
+      pa.*,
+      DENSE_RANK() OVER (
+        ORDER BY pa.total_score DESC, pa.total_time_seconds ASC
+      ) AS rank
+    FROM period_aggregated pa
+  )
+  SELECT jsonb_agg(
+    jsonb_build_object(
+      'rank', r.rank,
+      'user_id', r.user_id,
+      'first_name', r.first_name,
+      'last_name', r.last_name,
+      'stream', r.stream,
+      'score', r.total_score,
+      'total_score', r.total_score,
+      'total_time_seconds', r.total_time_seconds,
+      'correct_count', r.total_score,
+      'challenges_taken', r.challenges_taken,
+      'period_start', v_start::text
+    ) ORDER BY r.rank ASC
+  ) INTO v_rows
+  FROM (
+    SELECT * FROM ranked
+    ORDER BY rank ASC
+    LIMIT coalesce(p_limit, 100)
+  ) r;
+
+  RETURN coalesce(v_rows, '[]'::jsonb);
+END;
+$$;
+
 -- ─────────────────────────────────────────────────────────────────────
 -- 11. ROW LEVEL SECURITY (RLS) POLICIES
 -- ─────────────────────────────────────────────────────────────────────
@@ -1066,6 +1258,11 @@ ALTER TABLE public.challenge_rewards ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own profile or admin" ON public.users;
 CREATE POLICY "Users can view own profile or admin" ON public.users
     FOR SELECT USING (auth.uid() = id OR public.is_admin());
+
+DROP POLICY IF EXISTS "Authenticated users view public profiles" ON public.users;
+CREATE POLICY "Authenticated users view public profiles" ON public.users
+    FOR SELECT TO authenticated
+    USING (true);
 
 DROP POLICY IF EXISTS "Users can update own profile or admin" ON public.users;
 CREATE POLICY "Users can update own profile or admin" ON public.users

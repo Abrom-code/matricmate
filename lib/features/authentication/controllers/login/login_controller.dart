@@ -80,7 +80,9 @@ class LoginController extends GetxController {
           final metadata = user.userMetadata ?? {};
           final fName = (metadata['first_name'] as String?) ?? '';
           final lName = (metadata['last_name'] as String?) ?? '';
-          final streamStr = (metadata['stream'] as String?) ?? 'Natural';
+          final streamStr =
+              (metadata['stream'] as String?)?.toLowerCase().trim() ??
+                  'natural';
           final fallbackUser = UserModel(
             id: uid,
             firstName: fName,

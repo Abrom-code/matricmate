@@ -270,6 +270,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildNotificationPermissionBanner(BuildContext context, bool dark) {
+    const accentColor = Color(0xFFD97706);
+    const borderColor = Color(0xFFF59E0B);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -279,12 +282,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             : const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.45 : 0.35),
+          color: borderColor.withValues(alpha: dark ? 0.45 : 0.35),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.08 : 0.06),
+            color: borderColor.withValues(alpha: dark ? 0.08 : 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -297,13 +300,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.22 : 0.15),
+              color: borderColor.withValues(alpha: dark ? 0.22 : 0.15),
               shape: BoxShape.circle,
             ),
             child: const Center(
               child: Icon(
                 Icons.notifications_off_rounded,
-                color: Color(0xFFD97706),
+                color: accentColor,
                 size: 20,
               ),
             ),
@@ -324,7 +327,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Activate to get challenge alerts, exam results, and study reminders.',
+                  'Activate to get challenge alerts and new contents notification.',
                   style: TextStyle(
                     fontSize: 11.5,
                     height: 1.35,
@@ -342,8 +345,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: ElevatedButton(
               onPressed: () => ctrl.promptEnableNotifications(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD97706),
+                backgroundColor: accentColor,
                 foregroundColor: Colors.white,
+                side: const BorderSide(color: accentColor, width: 1),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 shape: RoundedRectangleBorder(
@@ -481,9 +485,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         return const SizedBox.shrink();
                       }
                       return Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.only(right: 8),
                         child: Tooltip(
-                          message: 'Notifications disabled — tap to activate',
+                          message: 'Notifications turned off — tap to activate',
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -491,38 +495,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   ctrl.promptEnableNotifications(context),
                               borderRadius: BorderRadius.circular(10),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 6,
-                                ),
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFEF3C7)
-                                      .withValues(alpha: 0.22),
+                                  color: Colors.white.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: const Color(0xFFFDE68A)
-                                        .withValues(alpha: 0.65),
-                                    width: 1,
-                                  ),
                                 ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.notifications_off_rounded,
-                                      color: Color(0xFFFDE68A),
-                                      size: 16,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Activate',
-                                      style: TextStyle(
-                                        color: Color(0xFFFDE68A),
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.notifications_off_rounded,
+                                    color: Color(0xFFFDE68A),
+                                    size: 18,
+                                  ),
                                 ),
                               ),
                             ),
@@ -768,28 +752,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   );
                                 }),
                               ),
-                              if (isPermissionDisabled) ...[
-                                const SizedBox(height: 14),
-                                Center(
-                                  child: TextButton.icon(
-                                    onPressed: () =>
-                                        ctrl.promptEnableNotifications(context),
-                                    icon: const Icon(
-                                      Icons.notifications_active_rounded,
-                                      size: 16,
-                                      color: Color(0xFFD97706),
-                                    ),
-                                    label: const Text(
-                                      'Turn on Notifications',
-                                      style: TextStyle(
-                                        color: Color(0xFFD97706),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
                         )

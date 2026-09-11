@@ -1,14 +1,15 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
-import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NotificationsController extends GetxController
     with WidgetsBindingObserver {
@@ -139,28 +140,33 @@ class NotificationsController extends GetxController
     isNotificationPermissionGranted.value = granted;
   }
 
-  /// Prompts user to activate notifications, or shows a guidance dialog if blocked in OS settings.
+  static const MethodChannel _settingsChannel =
+      MethodChannel('com.abopia.matricmate/settings');
+
+  /// Directly opens the device notification settings page for MatricMate.
+  Future<void> openNotificationSettings() async {
+    try {
+      if (Platform.isAndroid) {
+        await _settingsChannel.invokeMethod('openNotificationSettings');
+        return;
+      }
+      if (Platform.isIOS) {
+        await launchUrl(Uri.parse('app-settings:'));
+        return;
+      }
+    } catch (_) {}
+  }
+
+  /// Prompts user to activate notifications, redirecting directly to device settings if blocked.
   Future<void> promptEnableNotifications(BuildContext context) async {
     await FcmService.instance.requestPermissionIfNeeded(force: true);
     await checkNotificationPermission();
     if (isNotificationPermissionGranted.value) {
       ToastHelper.success('Notifications enabled successfully');
-    } else {
-      if (context.mounted) {
-        AppDialogBoxes.showOkCancelDialog(
-          context: context,
-          title: 'Enable Notifications',
-          subtitle:
-              'Notifications are blocked in your device settings.\n\nTo receive challenge alerts, test reminders, and announcements, open your device Settings > Apps > MatricMate > Notifications and toggle "Allow notifications" on.',
-          confirmText: 'Got It',
-          cancelText: 'Close',
-          icon: Icons.notifications_off_rounded,
-          iconColor: const Color(0xFFF59E0B),
-          confirmButtonColor: AppColors.primary,
-          onPressed: () => Navigator.pop(context),
-        );
-      }
+      return;
     }
+    // Redirect directly to the device notification settings screen instead of showing a dialog box
+    await openNotificationSettings();
   }
 
   /// Loads notifications from local SQLite and optionally syncs from remote.

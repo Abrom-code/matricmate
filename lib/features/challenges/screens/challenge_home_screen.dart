@@ -432,8 +432,8 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                     const SizedBox(width: 6),
                                     Text(
                                       _ctrl.isOffline.value
-                                          ? 'Downloaded Challenges'
-                                          : 'Recent Challenges',
+                                          ? 'Downloaded Challenge'
+                                          : 'Recent Challenge',
                                       style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w800,
@@ -451,9 +451,9 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                         ),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
-                                      child: Text(
-                                        'Latest ${_ctrl.recentCompletedChallenges.length}',
-                                        style: const TextStyle(
+                                      child: const Text(
+                                        'Latest',
+                                        style: TextStyle(
                                           fontSize: 10.5,
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.primary,
@@ -464,7 +464,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                 ),
                                 const SizedBox(height: 10),
 
-                                // Recent 3 Cards
+                                // Recent Card
                                 ..._ctrl.recentCompletedChallenges.map((
                                   challenge,
                                 ) {

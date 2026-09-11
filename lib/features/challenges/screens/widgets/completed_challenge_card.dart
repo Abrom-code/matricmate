@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
-import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
@@ -10,8 +9,6 @@ import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/ethiopian_time_helper.dart';
 
 class CompletedChallengeCard extends StatelessWidget {
   const CompletedChallengeCard({
@@ -27,6 +24,14 @@ class CompletedChallengeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final closeDateStr = challenge.endsAt != null
+        ? 'Closes ${DateFormat('MMM dd').format(challenge.endsAt!)}'
+        : 'Closed';
+
+    final durationMins = challenge.durationMinutes > 0
+        ? challenge.durationMinutes
+        : (challenge.durationSeconds / 60).round();
+
     return Container(
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
@@ -45,514 +50,403 @@ class CompletedChallengeCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Top Header Row: Subject, Audience, Status Badge, Manage Button ──
-            Row(
-              children: [
-                // Subject Tag
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: dark ? 0.3 : 0.15),
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Iconsax.book_1_copy,
-                        size: 11,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 150),
-                        child: Text(
-                          challenge.subjectName ?? 'Subject',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── 1. Header Row ──────────────────────────────────────────
+          Row(
+            children: [
+              // Left: Subject Chip
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.teal.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-
-                const Spacer(),
-
-                // Dynamic Status Pill (Completed & Offline Ready)
-                Obx(() {
-                  final isDown = ctrl.isDownloaded(challenge.id);
-                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-
-                  if (isDone) {
-                    return Tooltip(
-                      message: isDown ? 'Completed • Offline Ready' : 'Completed',
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: ChallengeColors.completed.withValues(alpha: dark ? 0.2 : 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: ChallengeColors.completed.withValues(alpha: 0.25),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.check_circle_rounded,
-                              size: 13.5,
-                              color: ChallengeColors.completed,
-                            ),
-                            if (isDown) ...[
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.download_done_rounded,
-                                size: 12,
-                                color: Color(0xFF0284C7),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (isDown) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: const Color(0xFF0284C7).withValues(alpha: 0.25),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.download_done_rounded,
-                            size: 11.5,
-                            color: Color(0xFF0284C7),
-                          ),
-                          SizedBox(width: 3.5),
-                          Text(
-                            'Offline Ready',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                }),
-
-                // Manage / Delete Button
-                Obx(() {
-                  final isDown = ctrl.isDownloaded(challenge.id);
-                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-                  if (isDown || isDone) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Tooltip(
-                        message: 'Manage challenge options',
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () =>
-                              ctrl.showChallengeManageSheet(context, challenge),
-                          child: Container(
-                            padding: const EdgeInsets.all(5.5),
-                            decoration: BoxDecoration(
-                              color: dark
-                                  ? Colors.white.withValues(alpha: 0.06)
-                                  : const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: dark
-                                    ? AppColors.darkBorder
-                                    : const Color(0xFFE2E8F0),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: Icon(
-                              Iconsax.trash_copy,
-                              size: 13.5,
-                              color: dark
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF64748B),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // ── Challenge Title ───────────────────────────────────────
-            Text(
-              challenge.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                height: 1.3,
-                letterSpacing: -0.2,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // ── Metadata Chips Row ────────────────────────────────────
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                // Closed Date chip
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: dark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(7),
-                    border: Border.all(
-                      color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-                      width: 0.8,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.menu_book_rounded,
+                      size: 13,
+                      color: AppColors.teal,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Iconsax.calendar_tick_copy,
-                        size: 12.5,
+                    const SizedBox(width: 5),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 160),
+                      child: Text(
+                        challenge.subjectName ?? 'Subject',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.teal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // Right: Status Icons (Completed, Offline Ready, Overflow Menu)
+              Obx(() {
+                final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                final isDown = ctrl.isDownloaded(challenge.id);
+
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Completed check
+                    if (isDone) ...[
+                      const Tooltip(
+                        message: 'Completed',
+                        child: Icon(
+                          Icons.check_circle_rounded,
+                          size: 19,
+                          color: AppColors.teal,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+
+                    // Offline indicator (icon only)
+                    if (isDown) ...[
+                      const Tooltip(
+                        message: 'Offline ready',
+                        child: Icon(
+                          Icons.cloud_off_rounded,
+                          size: 18,
+                          color: AppColors.teal,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+
+                    // Overflow Menu
+                    Tooltip(
+                      message: 'More options',
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () =>
+                            ctrl.showChallengeManageSheet(context, challenge),
+                        child: const Padding(
+                          padding: EdgeInsets.all(2),
+                          child: Icon(
+                            Icons.more_vert_rounded,
+                            size: 18,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ],
+          ),
+
+          const SizedBox(height: 18),
+
+          // ── 2. Challenge Title ──────────────────────────────────────
+          Text(
+            challenge.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: dark ? Colors.white : AppColors.textPrimary,
+              height: 1.25,
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // ── 3. Meta Chips Row ───────────────────────────────────────
+          Row(
+            children: [
+              // Closes Date Chip
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: dark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.event_busy_rounded,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      closeDateStr,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
                         color: AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 5),
-                      Text(
-                        challenge.endsAt != null
-                            ? 'Closed ${EthiopianTimeHelper.formatDate(challenge.endsAt!)}'
-                            : 'Closed Round',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: dark ? Colors.white70 : AppColors.textSecondary,
-                        ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              // Duration Chip
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: dark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.timer_outlined,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$durationMins mins',
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // ── 4. Action Buttons Row ───────────────────────────────────
+          Row(
+            children: [
+              // Standings Button (Low emphasis)
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: AppColors.amber,
+                  visualDensity: VisualDensity.compact,
+                ),
+                onPressed: () => Get.to(
+                  () => LeaderboardScreen(
+                    challengeId: challenge.id,
+                    challengeTitle: challenge.title,
+                    audience: challenge.audience,
                   ),
                 ),
-
-                // Question Count chip
-                if (challenge.questionCount > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: dark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(
-                        color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Iconsax.document_copy,
-                          size: 12.5,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${challenge.questionCount} Questions',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: dark ? Colors.white70 : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Duration chip (if > 0)
-                if (challenge.durationMinutes > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: dark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(
-                        color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Iconsax.timer_1_copy,
-                          size: 12.5,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${challenge.durationMinutes} mins',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: dark ? Colors.white70 : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            // ── Action Buttons Row ────────────────────────────────────
-            Row(
-              children: [
-                // Standings Button
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                      minimumSize: const Size(0, 36),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      backgroundColor: dark
-                          ? Colors.amber.withValues(alpha: 0.08)
-                          : const Color(0xFFFFFBEB),
-                      foregroundColor: dark
-                          ? const Color(0xFFFDE68A)
-                          : const Color(0xFFB45309),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      side: BorderSide(
-                        color: Colors.amber.withValues(alpha: dark ? 0.3 : 0.35),
-                        width: 0.9,
-                      ),
-                    ),
-                    onPressed: () => Get.to(
-                      () => LeaderboardScreen(
-                        challengeId: challenge.id,
-                        challengeTitle: challenge.title,
-                        audience: challenge.audience,
-                      ),
-                    ),
-                    icon: const Icon(
-                      Icons.leaderboard_rounded,
-                      size: 14.5,
-                      color: Color(0xFFF59E0B),
-                    ),
-                    label: const Text(
-                      'Standings',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                icon: const Icon(
+                  Icons.leaderboard_rounded,
+                  size: 15,
+                  color: AppColors.amber,
+                ),
+                label: const Text(
+                  'Standings',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.amber,
                   ),
                 ),
-                const SizedBox(width: 8),
+              ),
 
-                // Primary Action Button
-                Obx(() {
-                  final isPremium = ctrl.isPremium;
-                  final isDown = ctrl.isDownloaded(challenge.id);
-                  final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-                  final isBusy = ctrl.isDownloading[challenge.id] == true;
+              const Spacer(),
 
-                  // 1. Pro Locked state
-                  if (!isPremium) {
-                    final isPending = UserController.instance.user.value.isPending;
-                    return Expanded(
-                      flex: 2,
-                      child: FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: isPending
-                              ? const Color(0xFFD97706)
-                              : Colors.amber.shade700,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                          minimumSize: const Size(0, 36),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
-                          if (isPending) {
-                            Get.toNamed(Routes.paymentVerification);
-                          } else {
-                            ctrl.downloadChallenge(challenge);
-                          }
-                        },
-                        icon: Icon(
-                          isPending ? Icons.hourglass_top_rounded : Icons.lock_rounded,
-                          size: 13.5,
-                        ),
-                        label: Text(
-                          isPending ? 'Verifying (Pro)' : 'Unlock (Pro)',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+              // Primary Action Button (Review)
+              Obx(() {
+                final isPremium = ctrl.isPremium;
+                final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+                final isDown = ctrl.isDownloaded(challenge.id);
+                final isBusy = ctrl.isDownloading[challenge.id] == true;
+                final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
+
+                // 1. Pro Locked
+                if (!isPremium) {
+                  final isPending = UserController.instance.user.value.isPending;
+                  return SizedBox(
+                    width: 150,
+                    height: 42,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isPending
+                            ? const Color(0xFFD97706)
+                            : Colors.amber.shade700,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                    );
-                  }
-
-                  // 2. Completed / Attempted -> Review
-                  if (isDone) {
-                    final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
-                    return Expanded(
-                      flex: 2,
-                      child: isReviewing
-                          ? FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: ChallengeColors.completed,
-                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                                minimumSize: const Size(0, 36),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              onPressed: null,
-                              child: const AppCircularButtonLoading(color: Colors.white),
-                            )
-                          : FilledButton.icon(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: ChallengeColors.completed,
-                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                                minimumSize: const Size(0, 36),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              onPressed: () => ctrl.openCompletedChallenge(challenge),
-                              icon: const Icon(
-                                Iconsax.document_text_1_copy,
-                                size: 14.5,
-                              ),
-                              label: const Text(
-                                'Review',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                    );
-                  }
-
-                  // 3. Downloaded -> Practice
-                  if (isDown) {
-                    return Expanded(
-                      flex: 2,
-                      child: FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF0284C7),
-                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                          minimumSize: const Size(0, 36),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () => Get.to(
-                          () => ChallengePracticeScreen(
-                            challengeId: challenge.id,
-                            title: challenge.title,
-                          ),
-                        ),
-                        icon: const Icon(Iconsax.book_1_copy, size: 14.5),
-                        label: const Text(
-                          'Practice',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      onPressed: () {
+                        if (isPending) {
+                          Get.toNamed(Routes.paymentVerification);
+                        } else {
+                          ctrl.downloadChallenge(challenge);
+                        }
+                      },
+                      icon: Icon(
+                        isPending
+                            ? Icons.hourglass_top_rounded
+                            : Icons.lock_rounded,
+                        size: 15,
+                      ),
+                      label: Text(
+                        isPending ? 'Verifying' : 'Unlock (Pro)',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    );
-                  }
-
-                  // 4. Not downloaded -> Download
-                  return Expanded(
-                    flex: 2,
-                    child: isBusy
-                        ? FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                              minimumSize: const Size(0, 36),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            onPressed: null,
-                            child: const AppCircularButtonLoading(color: Colors.white),
-                          )
-                        : FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-                              minimumSize: const Size(0, 36),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            onPressed: () => ctrl.downloadChallenge(challenge),
-                            icon: const Icon(
-                              Iconsax.document_download_copy,
-                              size: 14.5,
-                            ),
-                            label: const Text(
-                              'Download',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                    ),
                   );
-                }),
-              ],
-            ),
-          ],
-        ),
+                }
+
+                // 2. Completed / Attempted -> Review
+                if (isDone) {
+                  return SizedBox(
+                    width: 150,
+                    height: 42,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.teal,
+                        foregroundColor: const Color(0xFF04342C),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: isReviewing
+                          ? null
+                          : () => ctrl.openCompletedChallenge(challenge),
+                      icon: isReviewing
+                          ? const SizedBox.shrink()
+                          : const Icon(
+                              Icons.description_outlined,
+                              size: 15,
+                              color: Color(0xFF04342C),
+                            ),
+                      label: isReviewing
+                          ? const AppCircularButtonLoading(
+                              color: Color(0xFF04342C),
+                            )
+                          : const Text(
+                              'Review',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF04342C),
+                              ),
+                            ),
+                    ),
+                  );
+                }
+
+                // 3. Downloaded -> Practice
+                if (isDown) {
+                  return SizedBox(
+                    width: 150,
+                    height: 42,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.teal,
+                        foregroundColor: const Color(0xFF04342C),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Get.to(
+                        () => ChallengePracticeScreen(
+                          challengeId: challenge.id,
+                          title: challenge.title,
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.menu_book_rounded,
+                        size: 15,
+                        color: Color(0xFF04342C),
+                      ),
+                      label: const Text(
+                        'Practice',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF04342C),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // 4. Not downloaded -> Download
+                return SizedBox(
+                  width: 150,
+                  height: 42,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.teal,
+                      foregroundColor: const Color(0xFF04342C),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: isBusy
+                        ? null
+                        : () => ctrl.downloadChallenge(challenge),
+                    icon: isBusy
+                        ? const SizedBox.shrink()
+                        : const Icon(
+                            Icons.download_rounded,
+                            size: 15,
+                            color: Color(0xFF04342C),
+                          ),
+                    label: isBusy
+                        ? const AppCircularButtonLoading(
+                            color: Color(0xFF04342C),
+                          )
+                        : const Text(
+                            'Download',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF04342C),
+                            ),
+                          ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -76,7 +76,7 @@ class ChallengeHomeController extends GetxController {
   }
 
   List<LeaderboardChallengeModel> get recentCompletedChallenges =>
-      completedChallenges.take(3).toList();
+      completedChallenges.take(1).toList();
 
   List<LeaderboardChallengeModel> get displayedCompletedChallenges {
     if (selectedCompletedSubjectId.value == null) {

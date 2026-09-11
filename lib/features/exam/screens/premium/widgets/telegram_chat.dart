@@ -25,6 +25,9 @@ class TelegramChatButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
+    const telegramBlue = Color(0xFF0284C7);
+    const telegramLightBlue = Color(0xFF38BDF8);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -33,11 +36,21 @@ class TelegramChatButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: dark ? AppColors.darkSurface : AppColors.lightCard,
+            color: dark ? const Color(0xFF131B26) : const Color(0xFFF0F9FF),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+              color: dark
+                  ? telegramBlue.withValues(alpha: 0.30)
+                  : const Color(0xFFBAE6FD),
+              width: 1.2,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: telegramBlue.withValues(alpha: dark ? 0.10 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -47,10 +60,11 @@ class TelegramChatButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Need help?',
+                      'Need help or question?',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
                         color:
                             dark ? AppColors.textWhite : AppColors.textPrimary,
                       ),
@@ -59,14 +73,28 @@ class TelegramChatButton extends StatelessWidget {
                     Obx(() {
                       final _ = PaymentConfigService
                           .instance.telegramSupportLink.value;
-                      return Text(
-                        telegramUsername,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          color: dark
-                              ? const Color(0xFF38BDF8)
-                              : const Color(0xFF0284C7),
+                      return Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Contact with ',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w500,
+                                color: dark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B),
+                              ),
+                            ),
+                            TextSpan(
+                              text: telegramUsername,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: dark ? telegramLightBlue : telegramBlue,
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }),
@@ -75,17 +103,31 @@ class TelegramChatButton extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                width: 40,
-                height: 40,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.15),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF38BDF8),
+                      Color(0xFF0284C7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: telegramBlue.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: const Center(
                   child: Icon(
                     Icons.send_rounded,
-                    size: 20,
-                    color: AppColors.info,
+                    size: 19,
+                    color: Colors.white,
                   ),
                 ),
               ),

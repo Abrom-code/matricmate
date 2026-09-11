@@ -184,6 +184,24 @@ class FcmService {
     _hasPromptedThisSession = false;
   }
 
+  /// Checks whether notifications are currently authorized on this device.
+  Future<bool> isPermissionGranted() async {
+    try {
+      final localEnabled = await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.areNotificationsEnabled();
+      if (localEnabled == false) return false;
+
+      final settings = await _messaging.getNotificationSettings();
+      return settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+    } catch (_) {
+      return true;
+    }
+  }
+
   Future<void> init() async {
     if (_initialized) return;
     _initialized = true;

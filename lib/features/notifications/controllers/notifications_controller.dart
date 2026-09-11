@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
+import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationsController extends GetxController
@@ -15,6 +19,7 @@ class NotificationsController extends GetxController
   final RxList<AppNotification> notifications = <AppNotification>[].obs;
   final RxInt unreadCount = 0.obs;
   final RxBool isLoading = false.obs;
+  final RxBool isNotificationPermissionGranted = true.obs;
 
   // ── Filter state ────────────────────────────────────────────────────
   final Rx<NotificationFilter> selectedFilter = NotificationFilter.all.obs;
@@ -99,6 +104,7 @@ class NotificationsController extends GetxController
   void onInit() {
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
+    checkNotificationPermission();
 
     // Initial load: sync remote right away if user is already populated
     if (_userId.isNotEmpty) {
@@ -119,8 +125,41 @@ class NotificationsController extends GetxController
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _userId.isNotEmpty) {
-      loadNotifications(syncRemote: true);
+    if (state == AppLifecycleState.resumed) {
+      checkNotificationPermission();
+      if (_userId.isNotEmpty) {
+        loadNotifications(syncRemote: true);
+      }
+    }
+  }
+
+  /// Checks whether notifications are allowed on this device.
+  Future<void> checkNotificationPermission() async {
+    final granted = await FcmService.instance.isPermissionGranted();
+    isNotificationPermissionGranted.value = granted;
+  }
+
+  /// Prompts user to activate notifications, or shows a guidance dialog if blocked in OS settings.
+  Future<void> promptEnableNotifications(BuildContext context) async {
+    await FcmService.instance.requestPermissionIfNeeded(force: true);
+    await checkNotificationPermission();
+    if (isNotificationPermissionGranted.value) {
+      ToastHelper.success('Notifications enabled successfully');
+    } else {
+      if (context.mounted) {
+        AppDialogBoxes.showOkCancelDialog(
+          context: context,
+          title: 'Enable Notifications',
+          subtitle:
+              'Notifications are blocked in your device settings.\n\nTo receive challenge alerts, test reminders, and announcements, open your device Settings > Apps > MatricMate > Notifications and toggle "Allow notifications" on.',
+          confirmText: 'Got It',
+          cancelText: 'Close',
+          icon: Icons.notifications_off_rounded,
+          iconColor: const Color(0xFFF59E0B),
+          confirmButtonColor: AppColors.primary,
+          onPressed: () => Navigator.pop(context),
+        );
+      }
     }
   }
 

@@ -28,6 +28,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     ctrl.setFilter(NotificationFilter.all);
+    ctrl.checkNotificationPermission();
     ctrl.loadNotifications(syncRemote: true);
   }
 
@@ -268,6 +269,101 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  Widget _buildNotificationPermissionBanner(BuildContext context, bool dark) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: dark
+            ? const Color(0xFF78350F).withValues(alpha: 0.25)
+            : const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.45 : 0.35),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.08 : 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.22 : 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.notifications_off_rounded,
+                color: Color(0xFFD97706),
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Notifications are turned off',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Activate to get challenge alerts, exam results, and study reminders.',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    height: 1.35,
+                    color: dark
+                        ? const Color(0xFFD1D5DB)
+                        : const Color(0xFF6B7280),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            height: 36,
+            child: ElevatedButton(
+              onPressed: () => ctrl.promptEnableNotifications(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD97706),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Activate',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
@@ -380,6 +476,60 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     );
                   }),
                   actions: [
+                    Obx(() {
+                      if (ctrl.isNotificationPermissionGranted.value) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Tooltip(
+                          message: 'Notifications disabled — tap to activate',
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () =>
+                                  ctrl.promptEnableNotifications(context),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF3C7)
+                                      .withValues(alpha: 0.22),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: const Color(0xFFFDE68A)
+                                        .withValues(alpha: 0.65),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.notifications_off_rounded,
+                                      color: Color(0xFFFDE68A),
+                                      size: 16,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Activate',
+                                      style: TextStyle(
+                                        color: Color(0xFFFDE68A),
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
                     Obx(() {
                       if (ctrl.notifications.isEmpty) return const SizedBox.shrink();
                       final isFiltered = ctrl.selectedFilter.value != NotificationFilter.all;
@@ -495,120 +645,176 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               return const AppCircularLoading(title: 'Loading notifications...');
             }
 
-            if (ctrl.notifications.isEmpty) {
-              return RefreshIndicator(
-                color: AppColors.primary,
-                onRefresh: ctrl.refreshAndMarkAllRead,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    const SizedBox(height: 80),
-                    Center(
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: dark ? 0.20 : 0.10),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: dark ? 0.35 : 0.20),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.notifications_none_rounded,
-                            size: 40,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Center(
-                      child: Text(
-                        'All Caught Up!',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: Text(
-                        'You have no notifications right now.\nCheck back later for test announcements, updates, and results.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          height: 1.5,
-                          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    Center(
-                      child: Obx(() {
-                        final isBusy = ctrl.isLoading.value;
-                        return SizedBox(
-                          height: 44,
-                          child: ElevatedButton.icon(
-                            onPressed: isBusy
-                                ? null
-                                : () => ctrl.loadNotifications(syncRemote: true),
-                            icon: isBusy
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.sync_rounded, size: 18),
-                            label: Text(
-                              isBusy ? 'Checking...' : 'Check for Updates',
-                              style: const TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(
-                                color: AppColors.primary,
-                                width: 1.5,
-                              ),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 22,
-                                vertical: 10,
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              );
-            }
+            final isPermissionDisabled =
+                !ctrl.isNotificationPermissionGranted.value;
 
-            return RefreshIndicator(
-              color: AppColors.primary,
-              onRefresh: ctrl.refreshAndMarkAllRead,
-              child: ctrl.filteredNotifications.isEmpty
-                  ? _buildFilteredEmptyState(dark, ctrl.selectedFilter.value)
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                      children: _buildGroupedList(ctrl.filteredNotifications),
-                    ),
+            return Column(
+              children: [
+                if (isPermissionDisabled)
+                  _buildNotificationPermissionBanner(context, dark),
+                Expanded(
+                  child: ctrl.notifications.isEmpty
+                      ? RefreshIndicator(
+                          color: AppColors.primary,
+                          onRefresh: ctrl.refreshAndMarkAllRead,
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              const SizedBox(height: 60),
+                              Center(
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(
+                                      alpha: dark ? 0.20 : 0.10,
+                                    ),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: AppColors.primary.withValues(
+                                        alpha: dark ? 0.35 : 0.20,
+                                      ),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.notifications_none_rounded,
+                                      size: 40,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              const Center(
+                                child: Text(
+                                  'All Caught Up!',
+                                  style: TextStyle(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 40),
+                                child: Text(
+                                  'You have no notifications right now.\nCheck back later for test announcements, updates, and results.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    height: 1.5,
+                                    color: dark
+                                        ? AppColors.darkGrey
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Center(
+                                child: Obx(() {
+                                  final isBusy = ctrl.isLoading.value;
+                                  return SizedBox(
+                                    height: 44,
+                                    child: ElevatedButton.icon(
+                                      onPressed: isBusy
+                                          ? null
+                                          : () => ctrl.loadNotifications(
+                                                syncRemote: true,
+                                              ),
+                                      icon: isBusy
+                                          ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.sync_rounded,
+                                              size: 18,
+                                            ),
+                                      label: Text(
+                                        isBusy
+                                            ? 'Checking...'
+                                            : 'Check for Updates',
+                                        style: const TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        foregroundColor: Colors.white,
+                                        side: const BorderSide(
+                                          color: AppColors.primary,
+                                          width: 1.5,
+                                        ),
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 22,
+                                          vertical: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                              if (isPermissionDisabled) ...[
+                                const SizedBox(height: 14),
+                                Center(
+                                  child: TextButton.icon(
+                                    onPressed: () =>
+                                        ctrl.promptEnableNotifications(context),
+                                    icon: const Icon(
+                                      Icons.notifications_active_rounded,
+                                      size: 16,
+                                      color: Color(0xFFD97706),
+                                    ),
+                                    label: const Text(
+                                      'Turn on Notifications',
+                                      style: TextStyle(
+                                        color: Color(0xFFD97706),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          color: AppColors.primary,
+                          onRefresh: ctrl.refreshAndMarkAllRead,
+                          child: ctrl.filteredNotifications.isEmpty
+                              ? _buildFilteredEmptyState(
+                                  dark,
+                                  ctrl.selectedFilter.value,
+                                )
+                              : ListView(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    12,
+                                    16,
+                                    32,
+                                  ),
+                                  children: _buildGroupedList(
+                                    ctrl.filteredNotifications,
+                                  ),
+                                ),
+                        ),
+                ),
+              ],
             );
           }),
         ),

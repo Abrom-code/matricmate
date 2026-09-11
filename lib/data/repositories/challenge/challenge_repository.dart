@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:matricmate/data/database/database_service.dart';
@@ -234,17 +235,91 @@ class ChallengeRepository {
   }) async {
     await _checkConnectivity();
 
-    var query = _sb.from('challenge_questions').select('*');
-    if (setId != null && setId.isNotEmpty) {
-      query = query.or('challenge_id.eq.$challengeId,set_id.eq.$setId');
-    } else {
-      query = query.eq('challenge_id', challengeId);
+    List<dynamic> rows = [];
+
+    Future<List<dynamic>> runQuery(PostgrestFilterBuilder builder) async {
+      try {
+        return await builder.order('order_index', ascending: true).timeout(AppTimeouts.sync);
+      } catch (_) {
+        return await builder.timeout(AppTimeouts.sync);
+      }
     }
-    final rows = await query.order('order_index', ascending: true).timeout(AppTimeouts.sync);
+
+    final validSetId = (setId != null &&
+            setId.isNotEmpty &&
+            setId.toLowerCase() != 'null' &&
+            setId != challengeId)
+        ? setId
+        : null;
+
+    // 1. If we have a distinct set_id, try OR query across challenge_id and set_id
+    if (validSetId != null) {
+      try {
+        rows = await runQuery(
+          _sb.from('challenge_questions').select('*').or('challenge_id.eq.$challengeId,set_id.eq.$validSetId'),
+        );
+      } catch (e) {
+        debugPrint('[ChallengeRepo] .or(challenge_id, set_id) failed: $e');
+      }
+    }
+
+    // 2. Try by set_id directly if available (common in set-based challenge schemas)
+    if (rows.isEmpty && validSetId != null) {
+      try {
+        rows = await runQuery(
+          _sb.from('challenge_questions').select('*').eq('set_id', validSetId),
+        );
+      } catch (e) {
+        debugPrint('[ChallengeRepo] .eq(set_id) failed: $e');
+      }
+    }
+
+    // 3. Try by challenge_id directly
+    if (rows.isEmpty && challengeId.isNotEmpty) {
+      try {
+        rows = await runQuery(
+          _sb.from('challenge_questions').select('*').eq('challenge_id', challengeId),
+        );
+      } catch (e) {
+        debugPrint('[ChallengeRepo] .eq(challenge_id) failed: $e');
+      }
+    }
+
+    // 4. If still empty, check if leaderboard_challenges has set_id
+    if (rows.isEmpty && validSetId == null && challengeId.isNotEmpty) {
+      try {
+        final ch = await _sb
+            .from('leaderboard_challenges')
+            .select('set_id')
+            .eq('id', challengeId)
+            .maybeSingle()
+            .timeout(AppTimeouts.query);
+        final resolvedSetId = ch?['set_id']?.toString();
+        if (resolvedSetId != null &&
+            resolvedSetId.isNotEmpty &&
+            resolvedSetId.toLowerCase() != 'null' &&
+            resolvedSetId != challengeId) {
+          rows = await runQuery(
+            _sb.from('challenge_questions').select('*').eq('set_id', resolvedSetId),
+          );
+        }
+      } catch (e) {
+        debugPrint('[ChallengeRepo] set_id lookup fallback failed: $e');
+      }
+    }
+
+    // 5. Final fallback: challengeId used as set_id
+    if (rows.isEmpty && challengeId.isNotEmpty) {
+      try {
+        rows = await runQuery(
+          _sb.from('challenge_questions').select('*').eq('set_id', challengeId),
+        );
+      } catch (_) {}
+    }
 
     final list = <ChallengeQuestionModel>[];
     for (final r in rows) {
-      final q = ChallengeQuestionModel.fromJson(r);
+      final q = ChallengeQuestionModel.fromJson(r as Map<String, dynamic>);
       if (q.passageId != null && q.passage == null) {
         final p = await getPassage(q.passageId);
         list.add(q.copyWith(passage: p));
@@ -611,14 +686,28 @@ class ChallengeRepository {
   }) async {
     await _checkConnectivity();
 
-    final chRow = await _sb
-        .from('leaderboard_challenges')
-        .select('*, subjects(name)')
-        .eq('id', challengeId)
-        .single()
-        .timeout(AppTimeouts.sync);
+    Map<String, dynamic>? chRow;
+    try {
+      chRow = await _sb
+          .from('leaderboard_challenges')
+          .select('*, subjects(name)')
+          .eq('id', challengeId)
+          .single()
+          .timeout(AppTimeouts.sync);
+    } catch (_) {
+      chRow = await _sb
+          .from('leaderboard_challenges')
+          .select('*')
+          .eq('id', challengeId)
+          .single()
+          .timeout(AppTimeouts.sync);
+    }
 
-    final setId = chRow['set_id']?.toString();
+    final rawSetId = chRow['set_id']?.toString();
+    final setId = (rawSetId != null && rawSetId.isNotEmpty && rawSetId.toLowerCase() != 'null')
+        ? rawSetId
+        : null;
+
     final questions = await fetchQuestionsForReview(challengeId, setId: setId);
 
     if (questions.isEmpty) {
@@ -628,9 +717,10 @@ class ChallengeRepository {
       );
     }
 
+    final effectiveSetId = setId ?? challengeId;
     final questionsList = questions.map((q) => {
       'id': q.id,
-      'set_id': q.setId.isNotEmpty ? q.setId : challengeId,
+      'set_id': q.setId.isNotEmpty ? q.setId : effectiveSetId,
       'order_index': q.orderIndex,
       'question_text': q.questionText,
       'choices': q.choices,
@@ -646,7 +736,7 @@ class ChallengeRepository {
     return {
       'id': chRow['id']?.toString() ?? '',
       'challenge_id': chRow['id']?.toString() ?? '',
-      'set_id': setId ?? challengeId,
+      'set_id': effectiveSetId,
       'subject_id': (chRow['subject_id'] as num?)?.toInt() ?? 0,
       'title': chRow['title']?.toString() ?? 'Challenge',
       'audience': chRow['audience']?.toString() ?? 'both',

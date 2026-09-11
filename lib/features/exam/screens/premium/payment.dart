@@ -88,11 +88,7 @@ class PaymentScreen extends StatelessWidget {
             // ── Payment Tile with Embedded Detail ──────────────────
             paymentTile(
               title: payment.label,
-              subtitle: payment.account.isNotEmpty
-                  ? payment.account.length < 15
-                        ? payment.account
-                        : '${payment.account.substring(0, 12)}...'
-                  : '',
+              subtitle: '',
               icon: payment.icon,
               context: context,
               showIcon: false,

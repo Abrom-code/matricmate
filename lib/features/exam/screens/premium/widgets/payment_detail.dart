@@ -54,19 +54,16 @@ class _PaymentDetailState extends State<PaymentDetail> {
     final number = widget.payment.account;
     final name = widget.payment.holder;
 
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Divider(
+            height: 1,
+            color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
+          ),
+          const SizedBox(height: 12),
           // Amount callout
           Obx(() {
             final price = controller.selectedPlanPrice;

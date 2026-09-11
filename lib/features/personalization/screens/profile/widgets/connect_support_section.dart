@@ -53,7 +53,7 @@ class ConnectSupportSection extends StatelessWidget {
               color: AppColors.textSecondary,
               size: 20,
             ),
-            onTap: ProfileActionsHelper.openTelegram,
+            onTap: ProfileActionsHelper.openTelegramChannel,
           ),
           divider,
           Obx(() {

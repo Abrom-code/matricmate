@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:matricmate/data/services/payment_config_service.dart';
+import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class TelegramChatButton extends StatelessWidget {
   const TelegramChatButton({super.key});
@@ -73,7 +72,7 @@ class TelegramChatButton extends StatelessWidget {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () {
-              openUrl(PaymentConfigService.instance.telegramLink.value);
+              ProfileActionsHelper.openTelegramSupport();
             },
             child: const Text(
               'Chat',
@@ -86,12 +85,9 @@ class TelegramChatButton extends StatelessWidget {
   }
 
   static Future<void> openUrl(String url) async {
-    final Uri uri = Uri.parse(url);
-
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint('Telegram open failed: $e');
-    }
+    await ProfileActionsHelper.launchTelegram(
+      url,
+      unavailableMessage: 'Telegram support link is not available.',
+    );
   }
 }

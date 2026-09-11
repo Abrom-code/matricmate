@@ -84,8 +84,16 @@ class PaymentConfigService {
   /// Subscription price for the featured (1 year) plan in ETB (convenience).
   int get subscriptionPrice => planPrices['1_year'] ?? 250;
 
-  /// Telegram support link (loaded from app_config, falls back to hardcoded).
-  final telegramLink = 'https://t.me/matric_mate'.obs;
+  /// Telegram support link (loaded from app_config 'telegram_support_link', falls back to hardcoded).
+  final telegramSupportLink = 'https://t.me/matericetbot'.obs;
+
+  /// Telegram community channel link (loaded from app_config 'telegram_channel_link', falls back to hardcoded).
+  final telegramChannelLink = 'https://t.me/MatricET'.obs;
+
+  /// Legacy alias for [telegramSupportLink].
+  RxString get telegramLink => telegramSupportLink;
+
+  bool _hasExplicitSupportLink = false;
 
   /// Share / invite link (loaded from app_config, falls back to empty).
   final shareLink = ''.obs;
@@ -111,11 +119,20 @@ class PaymentConfigService {
         : 'https://abopia.github.io/matricmate/privacy_policy.html';
   }
 
-  /// Effective Telegram link (guaranteed non-empty).
-  String get telegramLinkValue {
-    final v = telegramLink.value.trim();
-    return v.isNotEmpty ? v : 'https://t.me/matric_mate';
+  /// Effective Telegram support link (guaranteed non-empty).
+  String get telegramSupportLinkValue {
+    final v = telegramSupportLink.value.trim();
+    return v.isNotEmpty ? v : 'https://t.me/matericetbot';
   }
+
+  /// Effective Telegram community channel link (guaranteed non-empty).
+  String get telegramChannelLinkValue {
+    final v = telegramChannelLink.value.trim();
+    return v.isNotEmpty ? v : 'https://t.me/MatricET';
+  }
+
+  /// Legacy alias for [telegramSupportLinkValue].
+  String get telegramLinkValue => telegramSupportLinkValue;
 
   /// Effective share invite link.
   String get shareLinkValue {
@@ -185,8 +202,18 @@ class PaymentConfigService {
       case 'payment_extra_accounts':
         _accounts.remove('payment_extra_accounts');
 
+      case 'telegram_support_link':
+        _hasExplicitSupportLink = false;
+        telegramSupportLink.value = 'https://t.me/matericetbot';
+
       case 'telegram_link':
-        telegramLink.value = 'https://t.me/matric_mate';
+        if (!_hasExplicitSupportLink) {
+          telegramSupportLink.value = 'https://t.me/matericetbot';
+        }
+
+      case 'telegram_channel_link':
+      case 'telegram_community_link':
+        telegramChannelLink.value = 'https://t.me/MatricET';
 
       case 'share_link':
         shareLink.value = '';
@@ -276,8 +303,23 @@ class PaymentConfigService {
         }
 
       // Telegram support link
+      case 'telegram_support_link':
+        if (value.isNotEmpty) {
+          telegramSupportLink.value = value;
+          _hasExplicitSupportLink = true;
+        }
+
       case 'telegram_link':
-        if (value.isNotEmpty) telegramLink.value = value;
+        if (value.isNotEmpty && !_hasExplicitSupportLink) {
+          telegramSupportLink.value = value;
+        }
+
+      // Telegram community channel link
+      case 'telegram_channel_link':
+      case 'telegram_community_link':
+        if (value.isNotEmpty) {
+          telegramChannelLink.value = value;
+        }
 
       // Share / invite link
       case 'share_link':

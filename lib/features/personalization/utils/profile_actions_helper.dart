@@ -17,7 +17,9 @@ class ProfileActionsHelper {
   static const String appVersion = '1.0.0';
   static const String packageId = 'com.abopia.matricet';
   static const String fallbackSupportEmail = 'abopiatech@gmail.com';
-  static const String fallbackTelegramLink = 'https://t.me/matric_mate';
+  static const String fallbackTelegramChannelLink = 'https://t.me/MatricET';
+  static const String fallbackTelegramSupportLink = 'https://t.me/matericetbot';
+  static const String fallbackTelegramLink = fallbackTelegramChannelLink;
   static const String fallbackPlayStoreUrl =
       'https://play.google.com/store/apps/details?id=$packageId';
   static const String fallbackPrivacyPolicyUrl =
@@ -76,14 +78,16 @@ Diagnostic Info (Please do not delete):
     }
   }
 
-  /// Opens the Telegram channel. First tries native `tg://resolve?domain=...`,
-  /// falling back to the web link.
-  static Future<void> openTelegram() async {
-    final link = PaymentConfigService.instance.telegramLinkValue;
-    final cleanLink = link.trim();
+  /// Opens a Telegram link (channel, group, or user chat).
+  /// First tries native `tg://resolve?domain=...`, falling back to the web link.
+  static Future<void> launchTelegram(
+    String rawLink, {
+    String unavailableMessage = 'Telegram link is not available.',
+  }) async {
+    final cleanLink = rawLink.trim();
 
     if (cleanLink.isEmpty) {
-      ToastHelper.warning('Telegram channel link is not available.');
+      ToastHelper.warning(unavailableMessage);
       return;
     }
 
@@ -91,7 +95,10 @@ Diagnostic Info (Please do not delete):
     String handle = '';
     final parsedUri = Uri.tryParse(cleanLink);
     if (parsedUri != null && parsedUri.pathSegments.isNotEmpty) {
-      handle = parsedUri.pathSegments.first.replaceFirst('@', '').trim();
+      final first = parsedUri.pathSegments.first;
+      if (!first.startsWith('+') && first != 'joinchat') {
+        handle = first.replaceFirst('@', '').trim();
+      }
     } else if (cleanLink.startsWith('@')) {
       handle = cleanLink.substring(1).trim();
     }
@@ -134,6 +141,27 @@ Diagnostic Info (Please do not delete):
       }
     }
   }
+
+  /// Opens the community Telegram channel (used in Profile -> Join Telegram).
+  static Future<void> openTelegramChannel() async {
+    final link = PaymentConfigService.instance.telegramChannelLinkValue;
+    await launchTelegram(
+      link,
+      unavailableMessage: 'Telegram channel link is not available.',
+    );
+  }
+
+  /// Opens the support Telegram chat (used in Payment, Contact Admin, etc.).
+  static Future<void> openTelegramSupport() async {
+    final link = PaymentConfigService.instance.telegramSupportLinkValue;
+    await launchTelegram(
+      link,
+      unavailableMessage: 'Telegram support link is not available.',
+    );
+  }
+
+  /// Opens the Telegram channel (kept for backwards compatibility).
+  static Future<void> openTelegram() => openTelegramChannel();
 
   /// Invites friends using share_plus with dynamic share link.
   static Future<void> shareApp() async {

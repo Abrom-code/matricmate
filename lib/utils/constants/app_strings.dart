@@ -26,5 +26,6 @@ class AppTextStrings {
       "Your Account Security is Our Priority! We've Sent You a Secure Link to Safely Change Your Password and Keep Your Account Secure!";
 
   // urls
-  static const String telegramChannel = 'https://t.me/matric_mate';
+  static const String telegramChannel = 'https://t.me/MatricET';
+  static const String telegramSupport = 'https://t.me/matericetbot';
 }

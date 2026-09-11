@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
@@ -43,18 +42,14 @@ class AvailableChallengeCard extends StatelessWidget {
         seconds = (totalSec % 60).toString().padLeft(2, '0');
       }
 
-      // Format Date & Time
-      final dateSource = isLive
-          ? (challenge.endsAt ?? challenge.startsAt)
-          : challenge.startsAt;
-
-      final formattedDate = dateSource != null
-          ? DateFormat('MMM dd, h:mm a').format(dateSource)
-          : '';
-
       final durationMins = challenge.durationMinutes > 0
           ? challenge.durationMinutes
           : (challenge.durationSeconds / 60).round();
+
+      final isDone = ctrl.isAttemptedOrPracticed(challenge.id) ||
+          ctrl.completedChallenges.any((c) =>
+              c.id == challenge.id ||
+              (challenge.setId.isNotEmpty && c.setId == challenge.setId));
 
       return Container(
         decoration: BoxDecoration(
@@ -157,10 +152,10 @@ class AvailableChallengeCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // ── 3. Meta Row (Single Line) ───────────────────────────────
+            // ── 3. Meta Row (Time on left, Number of joins on right) ──────
             Row(
               children: [
-                // Duration
+                // Duration / Time it takes (left)
                 const Icon(
                   Icons.access_time_rounded,
                   size: 15,
@@ -176,9 +171,9 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: 16),
+                const Spacer(),
 
-                // Participants
+                // Number of joins (right)
                 const Icon(
                   Icons.people_outline_rounded,
                   size: 15,
@@ -186,23 +181,11 @@ class AvailableChallengeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  '${challenge.attemptCount} joined',
+                  '${ctrl.getParticipantCount(challenge.id)} joined',
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Date
-                Text(
-                  formattedDate,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
@@ -251,25 +234,31 @@ class AvailableChallengeCard extends StatelessWidget {
             if (isLive) ...[
               SizedBox(
                 width: double.infinity,
-                height: 44,
+                height: 46,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.teal,
                     foregroundColor: const Color(0xFF04342C),
                     elevation: 0,
+                    padding: EdgeInsets.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () => ctrl.onChallengeTapped(challenge),
-                  icon: const Icon(
-                    Icons.arrow_forward_rounded,
+                  onPressed: isDone
+                      ? () => ctrl.openCompletedChallenge(challenge)
+                      : () => ctrl.onChallengeTapped(challenge),
+                  icon: Icon(
+                    isDone
+                        ? Icons.visibility_outlined
+                        : Icons.arrow_forward_rounded,
                     size: 16,
-                    color: Color(0xFF04342C),
+                    color: const Color(0xFF04342C),
                   ),
-                  label: const Text(
-                    'Start challenge',
-                    style: TextStyle(
+                  label: Text(
+                    isDone ? 'Review' : 'Start challenge',
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF04342C),
@@ -305,7 +294,7 @@ class AvailableChallengeCard extends StatelessWidget {
             ] else ...[
               SizedBox(
                 width: double.infinity,
-                height: 44,
+                height: 46,
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     backgroundColor: const Color(0x26378ADD),
@@ -318,6 +307,8 @@ class AvailableChallengeCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 0,
+                    padding: EdgeInsets.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   onPressed: () => ctrl.onChallengeTapped(challenge),
                   icon: const Icon(

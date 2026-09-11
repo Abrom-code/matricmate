@@ -98,60 +98,23 @@ class ArchiveChallengeCard extends StatelessWidget {
 
               const Spacer(),
 
-              // Right: Status Icons (Completed, Offline Ready, Overflow Menu)
-              Obx(() {
-                final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
-                final isDown = ctrl.isDownloaded(challenge.id);
-
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Completed check
-                    if (isDone) ...[
-                      const Tooltip(
-                        message: 'Completed',
-                        child: Icon(
-                          Icons.check_circle_rounded,
-                          size: 19,
-                          color: AppColors.teal,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-
-                    // Offline indicator (icon only)
-                    if (isDown) ...[
-                      const Tooltip(
-                        message: 'Offline ready',
-                        child: Icon(
-                          Icons.cloud_off_rounded,
-                          size: 18,
-                          color: AppColors.teal,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-
-                    // Overflow Menu
-                    Tooltip(
-                      message: 'More options',
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () =>
-                            ctrl.showChallengeManageSheet(context, challenge),
-                        child: const Padding(
-                          padding: EdgeInsets.all(2),
-                          child: Icon(
-                            Icons.more_vert_rounded,
-                            size: 18,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
+              // Right: Overflow Menu
+              Tooltip(
+                message: 'More options',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () =>
+                      ctrl.showChallengeManageSheet(context, challenge),
+                  child: const Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Icon(
+                      Icons.more_vert_rounded,
+                      size: 18,
+                      color: AppColors.textSecondary,
                     ),
-                  ],
-                );
-              }),
+                  ),
+                ),
+              ),
             ],
           ),
 
@@ -332,59 +295,19 @@ class ArchiveChallengeCard extends StatelessWidget {
                   );
                 }
 
-                // 2. Completed / Attempted -> Review
-                if (isDone) {
-                  return SizedBox(
-                    width: 150,
-                    height: 42,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.teal,
-                        foregroundColor: const Color(0xFF04342C),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: isReviewing
-                          ? null
-                          : () => ctrl.openCompletedChallenge(challenge),
-                      icon: isReviewing
-                          ? const SizedBox.shrink()
-                          : const Icon(
-                              Icons.description_outlined,
-                              size: 15,
-                              color: Color(0xFF04342C),
-                            ),
-                      label: isReviewing
-                          ? const AppCircularButtonLoading(
-                              color: Color(0xFF04342C),
-                            )
-                          : const Text(
-                              'Review',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF04342C),
-                              ),
-                            ),
-                    ),
-                  );
-                }
-
-                // 3. Live challenge: show Start / Continue button
+                // 2. Live challenge: show Start / Continue button
                 if (isLive) {
                   if (ctrl.isOffline.value) {
                     return SizedBox(
                       width: 150,
-                      height: 42,
+                      height: 44,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.grey.shade600,
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -406,13 +329,14 @@ class ArchiveChallengeCard extends StatelessWidget {
                   final inProgress = ctrl.isInProgress(challenge.id);
                   return SizedBox(
                     width: 150,
-                    height: 42,
+                    height: 44,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.teal,
                         foregroundColor: const Color(0xFF04342C),
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -445,17 +369,18 @@ class ArchiveChallengeCard extends StatelessWidget {
                   );
                 }
 
-                // 4. Scheduled challenge: Upcoming
+                // 3. Scheduled challenge: Upcoming
                 if (isScheduled) {
                   return SizedBox(
                     width: 150,
-                    height: 42,
+                    height: 44,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ChallengeColors.scheduled,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -473,75 +398,91 @@ class ArchiveChallengeCard extends StatelessWidget {
                   );
                 }
 
-                // 5. Downloaded -> Practice
-                if (isDown) {
+                // 4. Closed / Completed: Needs Download -> Download
+                if (!isDown) {
                   return SizedBox(
                     width: 150,
-                    height: 42,
+                    height: 44,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.teal,
                         foregroundColor: const Color(0xFF04342C),
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () => Get.to(
-                        () => ChallengePracticeScreen(
-                          challengeId: challenge.id,
-                          title: challenge.title,
-                        ),
-                      ),
-                      icon: const Icon(
-                        Icons.menu_book_rounded,
-                        size: 15,
-                        color: Color(0xFF04342C),
-                      ),
-                      label: const Text(
-                        'Practice',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF04342C),
-                        ),
-                      ),
+                      onPressed: isBusy
+                          ? null
+                          : () => ctrl.downloadChallenge(challenge),
+                      icon: isBusy
+                          ? const SizedBox.shrink()
+                          : const Icon(
+                              Icons.download_rounded,
+                              size: 15,
+                              color: Color(0xFF04342C),
+                            ),
+                      label: isBusy
+                          ? const AppCircularButtonLoading(
+                              color: Color(0xFF04342C),
+                            )
+                          : const Text(
+                              'Download',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF04342C),
+                              ),
+                            ),
                     ),
                   );
                 }
 
-                // 6. Not downloaded -> Download
+                // 5. Downloaded -> Review (if completed) or Practice
+                final buttonLabel = isDone ? 'Review' : 'Practice';
+                final buttonIcon = isDone
+                    ? Icons.description_outlined
+                    : Icons.menu_book_rounded;
+                final buttonAction = isDone
+                    ? () => ctrl.openCompletedChallenge(challenge)
+                    : () => Get.to(
+                          () => ChallengePracticeScreen(
+                            challengeId: challenge.id,
+                            title: challenge.title,
+                          ),
+                        );
+
                 return SizedBox(
                   width: 150,
-                  height: 42,
+                  height: 44,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.teal,
                       foregroundColor: const Color(0xFF04342C),
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: isBusy
-                        ? null
-                        : () => ctrl.downloadChallenge(challenge),
-                    icon: isBusy
+                    onPressed: isReviewing ? null : buttonAction,
+                    icon: isReviewing
                         ? const SizedBox.shrink()
-                        : const Icon(
-                            Icons.download_rounded,
+                        : Icon(
+                            buttonIcon,
                             size: 15,
-                            color: Color(0xFF04342C),
+                            color: const Color(0xFF04342C),
                           ),
-                    label: isBusy
+                    label: isReviewing
                         ? const AppCircularButtonLoading(
                             color: Color(0xFF04342C),
                           )
-                        : const Text(
-                            'Download',
-                            style: TextStyle(
+                        : Text(
+                            buttonLabel,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF04342C),

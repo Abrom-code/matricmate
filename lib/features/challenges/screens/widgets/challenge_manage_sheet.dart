@@ -193,17 +193,17 @@ class ChallengeManageSheet extends StatelessWidget {
                     const SizedBox(height: 10),
                   ],
 
-                  // Option 1B: Remove Offline Download (only if downloaded)
+                  // Option 1B: Delete locally (only if downloaded)
                   if (isDownloaded) ...[
                     _buildOptionTile(
                       context: context,
                       dark: dark,
-                      icon: Icons.cloud_off_rounded,
+                      icon: Icons.delete_outline_rounded,
                       iconColor: const Color(0xFFF59E0B),
                       iconBg: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-                      title: 'Remove Offline Download',
+                      title: 'Delete locally',
                       subtitle:
-                          'Free up phone storage by deleting saved offline questions. Your review history and score are preserved.',
+                          'Delete saved offline questions from your device to free up storage. Your review history and score are preserved.',
                       onTap: () {
                         Navigator.pop(context);
                         onRemoveDownload();
@@ -212,16 +212,16 @@ class ChallengeManageSheet extends StatelessWidget {
                     const SizedBox(height: 10),
                   ],
 
-                  // Option 2: Remove from History
+                  // Option 2: Remove
                   _buildOptionTile(
                     context: context,
                     dark: dark,
                     icon: Iconsax.trash_copy,
                     iconColor: AppColors.error,
                     iconBg: AppColors.error.withValues(alpha: 0.12),
-                    title: 'Remove from History',
+                    title: 'Remove',
                     subtitle:
-                        'Remove this completed challenge from your list and delete local offline files.',
+                        'Remove this completed challenge from your history list and delete local offline files.',
                     isDestructive: true,
                     onTap: () {
                       Navigator.pop(context);

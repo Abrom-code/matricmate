@@ -51,7 +51,7 @@ class SessionService {
         await _supabase.from('user_sessions').upsert({
           'user_id': uid,
           'device_id': deviceId,
-          'trial': 5,
+          'trial': 3,
         }, onConflict: 'user_id').timeout(AppTimeouts.query);
         return SessionValidationResult.allowed;
       }

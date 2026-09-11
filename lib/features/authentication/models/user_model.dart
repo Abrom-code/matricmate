@@ -47,8 +47,7 @@ class UserModel {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
-      receiptUploadCount:
-          (json['receipt_upload_count'] as num?)?.toInt() ?? 0,
+      receiptUploadCount: (json['receipt_upload_count'] as num?)?.toInt() ?? 0,
       subscriptionPlan: json['subscription_plan']?.toString(),
       subscriptionExpiresAt: json['subscription_expires_at'] != null
           ? DateTime.tryParse(json['subscription_expires_at'].toString())
@@ -155,7 +154,7 @@ class UserModel {
       subscriptionExpiresAt != null &&
       subscriptionExpiresAt!.isBefore(DateTime.now());
 
-  bool get exceededUploadLimit => receiptUploadCount >= 2;
+  bool get exceededUploadLimit => receiptUploadCount >= 3;
 
   /// Human-readable remaining time (e.g. "184 days left").
   String get remainingDaysText {

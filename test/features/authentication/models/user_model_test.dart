@@ -59,10 +59,13 @@ void main() {
       expect(userOne.exceededUploadLimit, isFalse);
 
       final userTwo = userZero.copyWith(receiptUploadCount: 2);
-      expect(userTwo.exceededUploadLimit, isTrue);
+      expect(userTwo.exceededUploadLimit, isFalse);
 
       final userThree = userZero.copyWith(receiptUploadCount: 3);
       expect(userThree.exceededUploadLimit, isTrue);
+
+      final userFour = userZero.copyWith(receiptUploadCount: 4);
+      expect(userFour.exceededUploadLimit, isTrue);
     });
 
     test('toJson excludes server-managed fields to prevent client overrides', () {

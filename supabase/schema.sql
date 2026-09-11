@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS users_stream_idx       ON public.users (stream);
 CREATE TABLE IF NOT EXISTS public.user_sessions (
     user_id    uuid PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
     device_id  text NOT NULL,
-    trial      integer NOT NULL DEFAULT 5,
+    trial      integer NOT NULL DEFAULT 3,
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 

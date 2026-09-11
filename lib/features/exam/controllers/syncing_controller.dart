@@ -269,13 +269,13 @@ class SyncingController extends GetxController {
         .map((e) => SubjectModel.fromJson(e))
         .toList();
 
-    // Check remote deletions during full sync
-    if (since == null) {
-      final remoteIds = remote.map((e) => e.id).toSet();
-      for (final local in localSubjects) {
-        if (!remoteIds.contains(local['id'])) {
-          await _syncRepository.deleteBatch(local);
-        }
+    // Remove locally-cached subjects that no longer appear in the remote
+    // response (deleted or deactivated). getSupabaseSubjects always returns
+    // all active subjects regardless of `since`, so this is safe every time.
+    final remoteIds = remote.map((e) => e.id).toSet();
+    for (final local in localSubjects) {
+      if (!remoteIds.contains(local['id'])) {
+        await _syncRepository.deleteBatch(local);
       }
     }
 

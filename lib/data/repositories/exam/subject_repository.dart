@@ -246,7 +246,11 @@ class SubjectRepository {
     DateTime? since,
   }) async {
     try {
-      return await supabase.from('subjects').select().timeout(AppTimeouts.query);
+      return await supabase
+          .from('subjects')
+          .select()
+          .eq('is_active', true)
+          .timeout(AppTimeouts.query);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

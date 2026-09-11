@@ -20,94 +20,56 @@ class LeaderboardPodium extends StatelessWidget {
     final second = top3.length > 1 ? top3[1] : null;
     final third = top3.length > 2 ? top3[2] : null;
 
-    return Column(
-      children: [
-        // ── Top Podium Header Perk Banner ──────────────────────────────────
-        Container(
-          margin: const EdgeInsets.only(bottom: AppSizes.md),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: ChallengeColors.gold.withValues(alpha: dark ? 0.15 : 0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: ChallengeColors.gold.withValues(alpha: 0.3),
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // #2 Silver
+          Expanded(
+            child: second != null
+                ? _PodiumStep(
+                    entry: second,
+                    rank: 2,
+                    height: 115,
+                    color: ChallengeColors.silver,
+                    badgeIcon: Icons.workspace_premium_rounded,
+                    dark: dark,
+                  )
+                : const SizedBox.shrink(),
           ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.emoji_events_rounded, size: 16, color: ChallengeColors.gold),
-              SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  'Top 3 Finishers claim Gold, Silver & Bronze Standings',
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
+          const SizedBox(width: 8),
+
+          // #1 Gold
+          Expanded(
+            child: first != null
+                ? _PodiumStep(
+                    entry: first,
+                    rank: 1,
+                    height: 145,
                     color: ChallengeColors.gold,
-                  ),
-                ),
-              ),
-            ],
+                    badgeIcon: Icons.emoji_events_rounded,
+                    dark: dark,
+                  )
+                : const SizedBox.shrink(),
           ),
-        ),
+          const SizedBox(width: 8),
 
-        // ── 3-Step Podium ───────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.xs),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // #2 Silver
-              Expanded(
-                child: second != null
-                    ? _PodiumStep(
-                        entry: second,
-                        rank: 2,
-                        height: 115,
-                        color: ChallengeColors.silver,
-                        badgeIcon: Icons.workspace_premium_rounded,
-                        dark: dark,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              const SizedBox(width: 8),
-
-              // #1 Gold
-              Expanded(
-                child: first != null
-                    ? _PodiumStep(
-                        entry: first,
-                        rank: 1,
-                        height: 145,
-                        color: ChallengeColors.gold,
-                        badgeIcon: Icons.emoji_events_rounded,
-                        dark: dark,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              const SizedBox(width: 8),
-
-              // #3 Bronze
-              Expanded(
-                child: third != null
-                    ? _PodiumStep(
-                        entry: third,
-                        rank: 3,
-                        height: 95,
-                        color: ChallengeColors.bronze,
-                        badgeIcon: Icons.military_tech_rounded,
-                        dark: dark,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
+          // #3 Bronze
+          Expanded(
+            child: third != null
+                ? _PodiumStep(
+                    entry: third,
+                    rank: 3,
+                    height: 95,
+                    color: ChallengeColors.bronze,
+                    badgeIcon: Icons.military_tech_rounded,
+                    dark: dark,
+                  )
+                : const SizedBox.shrink(),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

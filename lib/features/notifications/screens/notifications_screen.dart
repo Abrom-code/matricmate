@@ -481,40 +481,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   }),
                   actions: [
                     Obx(() {
-                      if (ctrl.isNotificationPermissionGranted.value) {
-                        return const SizedBox.shrink();
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Tooltip(
-                          message: 'Notifications turned off — tap to activate',
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () =>
-                                  ctrl.promptEnableNotifications(context),
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.notifications_off_rounded,
-                                    color: Color(0xFFFDE68A),
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                    Obx(() {
                       if (ctrl.notifications.isEmpty) return const SizedBox.shrink();
                       final isFiltered = ctrl.selectedFilter.value != NotificationFilter.all;
 

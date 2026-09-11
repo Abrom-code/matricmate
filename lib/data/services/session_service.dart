@@ -11,11 +11,34 @@ class SessionService {
 
   RealtimeChannel? _sessionChannel;
 
+  /// Reviewer and test accounts that should bypass single-device restriction during app review.
+  static const Set<String> _whitelistedEmails = {
+    'yeabrom@gmail.com',
+  };
+
+  static bool isWhitelistedTester(String? email) {
+    if (email == null || email.isEmpty) return false;
+    return _whitelistedEmails.contains(email.trim().toLowerCase());
+  }
+
   Future<SessionValidationResult> validateSessionDetailed(
     String uid,
     String deviceId,
   ) async {
     try {
+      final userEmail = _supabase.auth.currentUser?.email?.toLowerCase().trim();
+      if (isWhitelistedTester(userEmail)) {
+        // Reviewer/test account: keep session record updated but never block
+        try {
+          await _supabase.from('user_sessions').upsert({
+            'user_id': uid,
+            'device_id': deviceId,
+            'trial': 9999,
+          }, onConflict: 'user_id').timeout(AppTimeouts.bestEffort);
+        } catch (_) {}
+        return SessionValidationResult.allowed;
+      }
+
       final existing = await _supabase
           .from('user_sessions')
           .select()
@@ -108,6 +131,11 @@ class SessionService {
     required String currentDeviceId,
     required void Function() onDeviceChanged,
   }) {
+    final userEmail = _supabase.auth.currentUser?.email?.toLowerCase().trim();
+    if (isWhitelistedTester(userEmail)) {
+      return; // Do not terminate sessions for whitelisted review/test accounts
+    }
+
     cancelWatch(); // always clean up before re-subscribing
 
     _sessionChannel = _supabase

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:matricmate/utils/constants/snackbar_colors.dart';
 
 // Public API for toast notifications
@@ -23,6 +24,7 @@ class AppToast {
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 4),
     ToastPosition position = ToastPosition.bottomCenter,
+    DismissDirection dismissDirection = DismissDirection.horizontal,
   }) => _show(
     title,
     message: message,
@@ -31,6 +33,7 @@ class AppToast {
     onAction: onAction,
     duration: duration,
     position: position,
+    dismissDirection: dismissDirection,
   );
 
   static void error(
@@ -41,6 +44,7 @@ class AppToast {
     // Errors linger longer and never auto-dismiss when null is passed
     Duration? duration = const Duration(seconds: 7),
     ToastPosition position = ToastPosition.bottomCenter,
+    DismissDirection dismissDirection = DismissDirection.horizontal,
   }) => _show(
     title,
     message: message,
@@ -49,6 +53,7 @@ class AppToast {
     onAction: onAction,
     duration: duration,
     position: position,
+    dismissDirection: dismissDirection,
   );
 
   static void warning(
@@ -58,6 +63,7 @@ class AppToast {
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 5),
     ToastPosition position = ToastPosition.bottomCenter,
+    DismissDirection dismissDirection = DismissDirection.horizontal,
   }) => _show(
     title,
     message: message,
@@ -66,6 +72,7 @@ class AppToast {
     onAction: onAction,
     duration: duration,
     position: position,
+    dismissDirection: dismissDirection,
   );
 
   static void info(
@@ -75,6 +82,7 @@ class AppToast {
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 4),
     ToastPosition position = ToastPosition.bottomCenter,
+    DismissDirection dismissDirection = DismissDirection.horizontal,
   }) => _show(
     title,
     message: message,
@@ -83,6 +91,7 @@ class AppToast {
     onAction: onAction,
     duration: duration,
     position: position,
+    dismissDirection: dismissDirection,
   );
 
   static void _show(
@@ -93,6 +102,7 @@ class AppToast {
     VoidCallback? onAction,
     Duration? duration,
     ToastPosition position = ToastPosition.bottomCenter,
+    DismissDirection dismissDirection = DismissDirection.horizontal,
   }) {
     ToastOverlay.instance.add(
       _ToastItem(
@@ -104,6 +114,7 @@ class AppToast {
         onAction: onAction,
         duration: duration,
         position: position,
+        dismissDirection: dismissDirection,
       ),
     );
   }
@@ -181,6 +192,15 @@ class ToastOverlay {
   }
 
   void add(_ToastItem item) {
+    if (_host == null) {
+      Fluttertoast.cancel();
+      Fluttertoast.showToast(
+        msg: item.title,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+      return;
+    }
     if (_visibleItems.length >= _maxVisible) {
       _queue.add(item);
       return;
@@ -200,6 +220,7 @@ class ToastOverlay {
   }
 
   void dismissAll() {
+    Fluttertoast.cancel();
     for (final item in _visibleItems) {
       item._cancelTimer();
     }
@@ -221,6 +242,7 @@ class _ToastItem {
     this.onAction,
     this.duration,
     required this.position,
+    this.dismissDirection = DismissDirection.horizontal,
   });
 
   final int id;
@@ -231,6 +253,7 @@ class _ToastItem {
   final VoidCallback? onAction;
   final Duration? duration; // null = persist until manually dismissed
   final ToastPosition position;
+  final DismissDirection dismissDirection;
 
   Timer? _autoDismissTimer;
 
@@ -376,12 +399,14 @@ class _ToastWidgetState extends State<_ToastWidget>
   late final AnimationController _progressCtrl;
   late final Animation<double> _fadeAnim;
   late final Animation<Offset> _slideAnim;
+  late final FocusNode _focusNode;
 
   bool _dismissed = false;
 
   @override
   void initState() {
     super.initState();
+    _focusNode = FocusNode(skipTraversal: true);
 
     // ── Enter/exit animation ──────────────────────────────────────────
     _enterCtrl = AnimationController(
@@ -440,7 +465,11 @@ class _ToastWidgetState extends State<_ToastWidget>
   }
 
   void _onHoverExit(_) {
-    if (_dismissed) return;
+    _resumeCountdown();
+  }
+
+  void _resumeCountdown() {
+    if (_dismissed || !mounted) return;
     final remaining = _progressCtrl.value;
     if (remaining <= 0) return;
     final remainingMs = (widget.item.duration!.inMilliseconds * remaining)
@@ -456,6 +485,7 @@ class _ToastWidgetState extends State<_ToastWidget>
   @override
   void dispose() {
     widget.item._cancelTimer();
+    _focusNode.dispose();
     _enterCtrl.dispose();
     _progressCtrl.dispose();
     super.dispose();
@@ -470,24 +500,35 @@ class _ToastWidgetState extends State<_ToastWidget>
         child: MouseRegion(
           onEnter: widget.item.duration != null ? _onHoverEnter : null,
           onExit: widget.item.duration != null ? _onHoverExit : null,
-          child: Dismissible(
-            key: ValueKey('d_${widget.item.id}'),
-            direction: widget.slideFromTop
-                ? DismissDirection.up
-                : DismissDirection.down,
-            onDismissed: (_) => widget.onDismiss(),
-            child: KeyboardListener(
-              focusNode: FocusNode(skipTraversal: true),
-              onKeyEvent: (event) {
-                if (event is KeyDownEvent &&
-                    event.logicalKey == LogicalKeyboardKey.escape) {
-                  _dismiss();
-                }
+          child: Listener(
+            onPointerDown: (_) {
+              widget.item.pauseTimer();
+              _progressCtrl.stop();
+            },
+            onPointerUp: (_) => _resumeCountdown(),
+            onPointerCancel: (_) => _resumeCountdown(),
+            child: Dismissible(
+              key: ValueKey('d_${widget.item.id}'),
+              direction: widget.item.dismissDirection,
+              onDismissed: (_) {
+                _dismissed = true;
+                widget.item._cancelTimer();
+                _progressCtrl.stop();
+                widget.onDismiss();
               },
-              child: _ToastCard(
-                item: widget.item,
-                progressAnim: _progressCtrl,
-                onDismiss: _dismiss,
+              child: KeyboardListener(
+                focusNode: _focusNode,
+                onKeyEvent: (event) {
+                  if (event is KeyDownEvent &&
+                      event.logicalKey == LogicalKeyboardKey.escape) {
+                    _dismiss();
+                  }
+                },
+                child: _ToastCard(
+                  item: widget.item,
+                  progressAnim: _progressCtrl,
+                  onDismiss: _dismiss,
+                ),
               ),
             ),
           ),

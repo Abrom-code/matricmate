@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
@@ -20,6 +22,7 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   NotificationsController get ctrl => NotificationsController.instance;
+  Timer? _undoSnackBarTimer;
 
   @override
   void initState() {
@@ -30,32 +33,59 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   void dispose() {
+    _undoSnackBarTimer?.cancel();
+    ScaffoldMessenger.maybeOf(context)?.removeCurrentSnackBar();
     ctrl.setFilter(NotificationFilter.all);
     super.dispose();
   }
 
   // ── Delete helpers with undo SnackBars ──────────────────────────────
 
+  void _showUndoSnackBar({
+    required String message,
+    required VoidCallback onUndo,
+  }) {
+    _undoSnackBarTimer?.cancel();
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        dismissDirection: DismissDirection.horizontal,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: const Color(0xFF5EEAD4),
+          onPressed: () {
+            _undoSnackBarTimer?.cancel();
+            messenger.hideCurrentSnackBar();
+            onUndo();
+          },
+        ),
+      ),
+    );
+
+    // Explicit auto-dismiss timer ensures SnackBar closes even when
+    // Android accessibility services force duration to Duration(days: 1)
+    _undoSnackBarTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        messenger.hideCurrentSnackBar();
+      }
+    });
+  }
+
   void _onTileDismissed(AppNotification notification) {
     ctrl.deleteOne(notification.id);
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: const Text('Notification deleted'),
-          duration: const Duration(seconds: 4),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          action: SnackBarAction(
-            label: 'Undo',
-            textColor: const Color(0xFF5EEAD4),
-            onPressed: () => ctrl.undoDeleteOne(),
-          ),
-        ),
-      );
+    _showUndoSnackBar(
+      message: 'Notification deleted',
+      onUndo: () => ctrl.undoDeleteOne(),
+    );
   }
 
   void _confirmClearAll(BuildContext context) {
@@ -71,26 +101,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         Navigator.pop(context);
         final count = ctrl.notifications.length;
         ctrl.deleteAll();
-
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                '$count notification${count == 1 ? '' : 's'} cleared',
-              ),
-              duration: const Duration(seconds: 4),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              action: SnackBarAction(
-                label: 'Undo',
-                textColor: const Color(0xFF5EEAD4),
-                onPressed: () => ctrl.undoDeleteAll(),
-              ),
-            ),
-          );
+        _showUndoSnackBar(
+          message: '$count notification${count == 1 ? '' : 's'} cleared',
+          onUndo: () => ctrl.undoDeleteAll(),
+        );
       },
     );
   }
@@ -127,26 +141,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (count == 0) return;
 
     ctrl.deleteSelected();
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            '$count notification${count == 1 ? '' : 's'} deleted',
-          ),
-          duration: const Duration(seconds: 4),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          action: SnackBarAction(
-            label: 'Undo',
-            textColor: const Color(0xFF5EEAD4),
-            onPressed: () => ctrl.undoDeleteSelected(),
-          ),
-        ),
-      );
+    _showUndoSnackBar(
+      message: '$count notification${count == 1 ? '' : 's'} deleted',
+      onUndo: () => ctrl.undoDeleteSelected(),
+    );
   }
 
   Widget _buildFilteredEmptyState(bool dark, NotificationFilter filter) {

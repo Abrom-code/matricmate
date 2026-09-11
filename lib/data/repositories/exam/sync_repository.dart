@@ -376,6 +376,89 @@ class SyncRepository {
     return await supabase.from(table).select().inFilter('subject_id', ids).timeout(AppTimeouts.query);
   }
 
+  /// Fetches questions for sync, handling both new tests and delta updates.
+  ///
+  /// For [newTestIds]: fetches ALL questions (no updated_at filter) so that
+  /// newly added tests always arrive with their questions.
+  /// For existing local tests: fetches only questions updated since [since].
+  /// Results are merged and deduplicated by question ID.
+  Future<List<Map<String, dynamic>>> getQuestionsForSync(
+    List<String> subjectIds, {
+    required List<int> newTestIds,
+    DateTime? since,
+  }) async {
+    final sinceIso = since?.toUtc().toIso8601String();
+
+    // Full sync — combine local + new test IDs and fetch everything
+    if (sinceIso == null) {
+      final db = await _dbService.database;
+      final testRows = await db.query(
+        'tests',
+        columns: ['id'],
+        where: 'subject_id IN (${subjectIds.map((_) => '?').join(',')})',
+        whereArgs: subjectIds,
+      );
+      final allTestIds = <int>{
+        ...testRows.map((r) => r['id'] as int),
+        ...newTestIds,
+      }.toList();
+      if (allTestIds.isEmpty) return [];
+
+      return await supabase
+          .from('questions')
+          .select('*, question_sections(title)')
+          .inFilter('test_id', allTestIds)
+          .timeout(AppTimeouts.query);
+    }
+
+    // Delta sync — two-pronged fetch
+    final futures = <Future<List<Map<String, dynamic>>>>[];
+
+    // Prong 1: ALL questions for brand-new tests (no updated_at filter)
+    if (newTestIds.isNotEmpty) {
+      futures.add(
+        supabase
+            .from('questions')
+            .select('*, question_sections(title)')
+            .inFilter('test_id', newTestIds)
+            .timeout(AppTimeouts.query),
+      );
+    }
+
+    // Prong 2: Updated questions for already-local tests (delta filter)
+    final db = await _dbService.database;
+    final testRows = await db.query(
+      'tests',
+      columns: ['id'],
+      where: 'subject_id IN (${subjectIds.map((_) => '?').join(',')})',
+      whereArgs: subjectIds,
+    );
+    final existingTestIds = testRows.map((r) => r['id'].toString()).toList();
+    if (existingTestIds.isNotEmpty) {
+      futures.add(
+        supabase
+            .from('questions')
+            .select('*, question_sections(title)')
+            .inFilter('test_id', existingTestIds)
+            .gt('updated_at', sinceIso)
+            .timeout(AppTimeouts.query),
+      );
+    }
+
+    if (futures.isEmpty) return [];
+
+    final results = await Future.wait(futures);
+
+    // Merge and deduplicate by question ID
+    final Map<int, Map<String, dynamic>> merged = {};
+    for (final list in results) {
+      for (final q in list) {
+        merged[q['id'] as int] = q;
+      }
+    }
+    return merged.values.toList();
+  }
+
   Future<List<Map<String, dynamic>>> getPassages(List<int> passageIds) async {
     return await supabase.from('passages').select().inFilter('id', passageIds).timeout(AppTimeouts.query);
   }

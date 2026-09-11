@@ -170,14 +170,28 @@ class SyncingController extends GetxController {
     // Sync chapters for newly added content
     final fetchChapters = since == null;
 
+    // 1. Fetch tests FIRST so we know which IDs are new.
+    //    Running questions in parallel would miss new test IDs because they
+    //    haven't been committed to SQLite yet (race condition).
+    final testsData = await _syncRepository.getBySubjectId(
+      'tests',
+      downloadedIds,
+      since: since,
+    );
+
+    final tests = (testsData as List)
+        .map((e) => TestModel.fromJson(e))
+        .toList();
+
+    final newTestIds = tests.map((t) => t.id).toList();
+
+    // 2. Fetch questions (aware of newTestIds) + chapters in parallel
     final futures = <Future>[
-      // Sync all tests (chapter, grade, entrance, model) for downloaded subjects
-      _syncRepository.getBySubjectId(
-        'tests',
+      _syncRepository.getQuestionsForSync(
         downloadedIds,
+        newTestIds: newTestIds,
         since: since,
       ),
-      _syncRepository.getBySubjectId('questions', downloadedIds, since: since),
     ];
     if (fetchChapters) {
       futures.add(_syncRepository.getBySubjectId('chapters', downloadedIds));
@@ -185,12 +199,9 @@ class SyncingController extends GetxController {
 
     final fetched = await Future.wait(futures);
 
-    final tests = (fetched[0] as List)
-        .map((e) => TestModel.fromJson(e))
-        .toList();
-    final rawQuestions = fetched[1] as List;
+    final rawQuestions = fetched[0] as List;
     final chapters = fetchChapters
-        ? (fetched[2] as List).map((e) => ChapterModel.fromJson(e)).toList()
+        ? (fetched[1] as List).map((e) => ChapterModel.fromJson(e)).toList()
         : <ChapterModel>[];
 
     // If nothing changed, bail early

@@ -66,6 +66,28 @@ class ChallengeRepository {
   Future<Map<String, int>> fetchParticipantCounts({List<String>? challengeIds}) async {
     try {
       await _checkConnectivity();
+
+      // 1. Try server-side aggregation RPC (fast and lightweight)
+      try {
+        final rpcRes = await _sb.rpc('rpc_get_challenge_participant_counts', params: {
+          if (challengeIds != null && challengeIds.isNotEmpty)
+            'p_challenge_ids': challengeIds,
+        }).timeout(AppTimeouts.query);
+
+        if (rpcRes is List) {
+          final Map<String, int> counts = {};
+          for (final r in rpcRes) {
+            final id = r['challenge_id']?.toString() ?? '';
+            final count = (r['participant_count'] as num?)?.toInt() ?? 0;
+            if (id.isNotEmpty) {
+              counts[id] = count;
+            }
+          }
+          return counts;
+        }
+      } catch (_) {}
+
+      // 2. Fallback: direct query
       var query = _sb.from('challenge_attempts').select('challenge_id');
       if (challengeIds != null && challengeIds.isNotEmpty) {
         query = query.inFilter('challenge_id', challengeIds);
@@ -654,33 +676,62 @@ class ChallengeRepository {
     String? stream,
   }) => fetchAllSubjectChallenges(subjectId: subjectId, stream: stream);
 
-  final Map<int, PassageModel> _passageCache = {};
+  final Map<String, PassageModel> _passageCache = {};
 
-  Future<PassageModel?> getPassage(int? passageId) async {
+  Future<PassageModel?> getPassage(dynamic passageId) async {
     if (passageId == null) return null;
-    if (_passageCache.containsKey(passageId)) return _passageCache[passageId];
+    final pidStr = passageId.toString().trim();
+    if (pidStr.isEmpty || pidStr == 'null') return null;
 
-    // 1. Try local SQLite
-    try {
-      final local = await DatabaseService.instance.getPassage(passageId);
-      if (local.id != -1 && local.content.isNotEmpty && local.content != 'No passage found') {
-        _passageCache[passageId] = local;
-        return local;
-      }
-    } catch (_) {}
+    if (_passageCache.containsKey(pidStr)) return _passageCache[pidStr];
 
-    // 2. Try Supabase
+    final numericId = int.tryParse(pidStr);
+
+    // 1. Try local SQLite (if numeric ID, check local passages table)
+    if (numericId != null) {
+      try {
+        final local = await DatabaseService.instance.getPassage(numericId);
+        if (local.id != -1 && local.content.isNotEmpty && local.content != 'No passage found') {
+          _passageCache[pidStr] = local;
+          return local;
+        }
+      } catch (_) {}
+    }
+
+    // 2. Try Supabase challenge_passages table (primary for challenges)
     try {
-      final row = await _sb.from('passages').select().eq('id', passageId).maybeSingle().timeout(AppTimeouts.query);
+      final row = await _sb
+          .from('challenge_passages')
+          .select()
+          .eq('id', pidStr)
+          .maybeSingle()
+          .timeout(AppTimeouts.query);
       if (row != null) {
-        final p = PassageModel.fromJson(row);
-        _passageCache[passageId] = p;
-        try {
-          await DatabaseService.instance.insetData('passages', p.toMap());
-        } catch (_) {}
+        final p = PassageModel(
+          id: numericId ?? -1,
+          title: row['title']?.toString(),
+          content: row['content']?.toString() ?? '',
+          imageUrl: row['image_url']?.toString(),
+        );
+        _passageCache[pidStr] = p;
         return p;
       }
     } catch (_) {}
+
+    // 3. Try Supabase regular passages table if numeric
+    if (numericId != null) {
+      try {
+        final row = await _sb.from('passages').select().eq('id', numericId).maybeSingle().timeout(AppTimeouts.query);
+        if (row != null) {
+          final p = PassageModel.fromJson(row);
+          _passageCache[pidStr] = p;
+          try {
+            await DatabaseService.instance.insetData('passages', p.toMap());
+          } catch (_) {}
+          return p;
+        }
+      } catch (_) {}
+    }
 
     return null;
   }

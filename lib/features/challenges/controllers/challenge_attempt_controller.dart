@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
@@ -317,6 +317,18 @@ class ChallengeAttemptController extends GetxController
     );
 
     try {
+      // 0. Pre-save answers locally to SQLite to ensure zero data loss
+      try {
+        final db = DatabaseService.instance;
+        await db.saveChallengePracticeResult(
+          challengeId: challengeId,
+          score: 0,
+          totalQuestions: totalQuestions,
+          userAnswers: Map<String, String>.from(userAnswers),
+          timeSpentSeconds: _timeSpentSeconds,
+        );
+      } catch (_) {}
+
       // 1. Batch sync all local answers to guarantee 100% data integrity even after network glitches
       await _repo.batchSubmitAnswers(
         attemptId: attemptId!,
@@ -400,7 +412,44 @@ class ChallengeAttemptController extends GetxController
       );
     } catch (e) {
       AppFullScreenLoader.stopLoading();
-      AppExceptionHandler.handleResponse(e);
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('already_submitted')) {
+        Get.off(
+          () => ChallengeReviewScreen(
+            title: title,
+            questions: questions.toList(),
+            userAnswers: Map<String, String>.from(userAnswers),
+            score: 0,
+            timeSpentSeconds: _timeSpentSeconds,
+            challengeId: challengeId,
+            audience: audience,
+          ),
+        );
+      } else if (isAutoExpire || remainingSeconds.value <= 0) {
+        // Show persistent retry modal when network drops during expiry auto-submit
+        Get.defaultDialog(
+          title: 'Submission Incomplete',
+          barrierDismissible: false,
+          content: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Your connection was interrupted while submitting your attempt. Your answers have been preserved locally.\n\nPlease check your connection and tap Retry Submission.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13),
+            ),
+          ),
+          confirm: FilledButton.icon(
+            onPressed: () {
+              if (Get.isDialogOpen ?? false) Get.back();
+              submitAttempt(isAutoExpire: isAutoExpire);
+            },
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Retry Submission'),
+          ),
+        );
+      } else {
+        AppExceptionHandler.handleResponse(e);
+      }
     } finally {
       isSubmitting.value = false;
     }

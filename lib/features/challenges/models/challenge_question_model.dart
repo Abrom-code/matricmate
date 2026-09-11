@@ -12,7 +12,7 @@ class ChallengeQuestionModel {
   final String explanationEn;
   final String explanationAm;
   final String? imageUrl;
-  final int? passageId;
+  final String? passageId;
   final PassageModel? passage;
 
   ChallengeQuestionModel({
@@ -64,7 +64,19 @@ class ChallengeQuestionModel {
       parsedPassage = PassageModel.fromJson(json['passage'] as Map<String, dynamic>);
     } else if (json['passages'] is Map<String, dynamic>) {
       parsedPassage = PassageModel.fromJson(json['passages'] as Map<String, dynamic>);
+    } else if (json['passage_content'] != null && json['passage_content'].toString().trim().isNotEmpty) {
+      parsedPassage = PassageModel(
+        id: -1,
+        title: json['passage_title']?.toString(),
+        content: json['passage_content'].toString().trim(),
+        imageUrl: null,
+      );
     }
+
+    final rawPid = json['passage_id'];
+    final pidStr = (rawPid != null && rawPid.toString().isNotEmpty && rawPid.toString() != 'null')
+        ? rawPid.toString()
+        : null;
 
     return ChallengeQuestionModel(
       id: json['id']?.toString() ?? '',
@@ -77,9 +89,7 @@ class ChallengeQuestionModel {
       explanationEn: expEn.isNotEmpty ? expEn : rawExp,
       explanationAm: expAm,
       imageUrl: json['image_url']?.toString(),
-      passageId: json['passage_id'] is num
-          ? (json['passage_id'] as num).toInt()
-          : int.tryParse(json['passage_id']?.toString() ?? ''),
+      passageId: pidStr,
       passage: parsedPassage,
     );
   }
@@ -113,7 +123,7 @@ class ChallengeQuestionModel {
     String? explanationEn,
     String? explanationAm,
     String? imageUrl,
-    int? passageId,
+    String? passageId,
     PassageModel? passage,
   }) {
     return ChallengeQuestionModel(

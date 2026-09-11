@@ -264,6 +264,21 @@ class DatabaseService extends GetxController {
               'ALTER TABLE local_challenge_questions ADD COLUMN explanation_am TEXT',
             );
           } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE local_challenge_questions ADD COLUMN passage_id TEXT',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE local_challenge_questions ADD COLUMN passage_title TEXT',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE local_challenge_questions ADD COLUMN passage_content TEXT',
+            );
+          } catch (_) {}
           await db.execute('''
             CREATE TABLE IF NOT EXISTS user_deleted_challenges (
               challenge_id TEXT PRIMARY KEY,
@@ -700,6 +715,15 @@ class DatabaseService extends GetxController {
     try {
       await db.execute('ALTER TABLE local_challenge_questions ADD COLUMN explanation_am TEXT');
     } catch (_) {}
+    try {
+      await db.execute('ALTER TABLE local_challenge_questions ADD COLUMN passage_id TEXT');
+    } catch (_) {}
+    try {
+      await db.execute('ALTER TABLE local_challenge_questions ADD COLUMN passage_title TEXT');
+    } catch (_) {}
+    try {
+      await db.execute('ALTER TABLE local_challenge_questions ADD COLUMN passage_content TEXT');
+    } catch (_) {}
 
     await db.transaction((txn) async {
       final challengeId = bundle['challenge_id']?.toString() ?? bundle['id']?.toString() ?? '';
@@ -734,6 +758,19 @@ class DatabaseService extends GetxController {
           final explEn = q['explanation_en']?.toString() ?? q['explanation']?.toString() ?? '';
           final explAm = q['explanation_am']?.toString() ?? '';
 
+          String? passageId = q['passage_id']?.toString();
+          String? passageTitle;
+          String? passageContent;
+          if (q['passage'] is Map) {
+            final pMap = q['passage'] as Map;
+            passageTitle = pMap['title']?.toString();
+            passageContent = pMap['content']?.toString();
+            passageId ??= pMap['id']?.toString();
+          } else {
+            passageTitle = q['passage_title']?.toString();
+            passageContent = q['passage_content']?.toString();
+          }
+
           await txn.insert(
             'local_challenge_questions',
             {
@@ -747,6 +784,9 @@ class DatabaseService extends GetxController {
               'explanation_en': explEn,
               'explanation_am': explAm,
               'image_url': q['image_url']?.toString(),
+              'passage_id': passageId,
+              'passage_title': passageTitle,
+              'passage_content': passageContent,
             },
             conflictAlgorithm: ConflictAlgorithm.replace,
           );

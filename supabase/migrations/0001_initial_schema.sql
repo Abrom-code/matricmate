@@ -826,11 +826,20 @@ BEGIN
       'question_text', q.question_text,
       'choices', q.choices,
       'image_url', q.image_url,
-      'passage_id', q.passage_id
+      'passage_id', q.passage_id,
+      'passage', CASE WHEN cp.id IS NOT NULL THEN jsonb_build_object(
+        'id', -1,
+        'title', cp.title,
+        'content', cp.content,
+        'image_url', cp.image_url
+      ) ELSE NULL END
     ) ORDER BY q.order_index ASC
   ) INTO v_questions
   FROM public.challenge_questions q
-  WHERE q.challenge_id = v_challenge.id;
+  LEFT JOIN public.challenge_passages cp ON cp.id = q.passage_id
+  WHERE (q.challenge_id = v_challenge.id
+     OR (v_challenge.set_id IS NOT NULL AND q.set_id = v_challenge.set_id)
+     OR q.set_id = v_challenge.id);
 
   RETURN jsonb_build_object(
     'attempt_id', v_attempt.id,
@@ -983,11 +992,20 @@ BEGIN
       'explanation_en', coalesce(q.explanation_en, q.explanation, ''),
       'explanation_am', coalesce(q.explanation_am, ''),
       'image_url', q.image_url,
-      'passage_id', q.passage_id
+      'passage_id', q.passage_id,
+      'passage', CASE WHEN cp.id IS NOT NULL THEN jsonb_build_object(
+        'id', -1,
+        'title', cp.title,
+        'content', cp.content,
+        'image_url', cp.image_url
+      ) ELSE NULL END
     ) ORDER BY q.order_index ASC
   ) INTO v_questions
   FROM public.challenge_questions q
-  WHERE q.challenge_id = v_challenge.id;
+  LEFT JOIN public.challenge_passages cp ON cp.id = q.passage_id
+  WHERE (q.challenge_id = v_challenge.id
+     OR (v_challenge.set_id IS NOT NULL AND q.set_id = v_challenge.set_id)
+     OR q.set_id = v_challenge.id);
 
   RETURN jsonb_build_object(
     'success', true,
@@ -1043,11 +1061,20 @@ BEGIN
       'explanation_en', coalesce(q.explanation_en, q.explanation, ''),
       'explanation_am', coalesce(q.explanation_am, ''),
       'image_url', q.image_url,
-      'passage_id', q.passage_id
+      'passage_id', q.passage_id,
+      'passage', CASE WHEN cp.id IS NOT NULL THEN jsonb_build_object(
+        'id', -1,
+        'title', cp.title,
+        'content', cp.content,
+        'image_url', cp.image_url
+      ) ELSE NULL END
     ) ORDER BY q.order_index ASC
   ) INTO v_questions
   FROM public.challenge_questions q
-  WHERE q.challenge_id = v_challenge.id;
+  LEFT JOIN public.challenge_passages cp ON cp.id = q.passage_id
+  WHERE (q.challenge_id = v_challenge.id
+     OR (v_challenge.set_id IS NOT NULL AND q.set_id = v_challenge.set_id)
+     OR q.set_id = v_challenge.id);
 
   RETURN jsonb_build_object(
     'challenge_id', v_challenge.id,
@@ -1058,6 +1085,37 @@ BEGIN
   );
 END;
 $$;
+
+-- Challenge RPC: Get Real Participant Counts for Challenges
+CREATE OR REPLACE FUNCTION public.rpc_get_challenge_participant_counts(
+  p_challenge_ids uuid[] DEFAULT NULL
+)
+RETURNS TABLE (
+  challenge_id uuid,
+  participant_count bigint
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  IF p_challenge_ids IS NOT NULL AND array_length(p_challenge_ids, 1) > 0 THEN
+    RETURN QUERY
+    SELECT ca.challenge_id, count(*)::bigint
+    FROM public.challenge_attempts ca
+    WHERE ca.challenge_id = ANY(p_challenge_ids)
+    GROUP BY ca.challenge_id;
+  ELSE
+    RETURN QUERY
+    SELECT ca.challenge_id, count(*)::bigint
+    FROM public.challenge_attempts ca
+    GROUP BY ca.challenge_id;
+  END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_get_challenge_participant_counts TO authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_get_challenge_participant_counts TO anon;
 
 -- Challenge Leaderboard RPC (Cross-user standing with dense rank)
 CREATE OR REPLACE FUNCTION public.rpc_get_leaderboard(

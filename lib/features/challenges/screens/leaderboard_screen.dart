@@ -273,6 +273,109 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               );
             }),
           ),
+
+          // ── Sticky "Your Standing" Bottom Dock ────────────────────────
+          Obx(() {
+            final myEntry = _ctrl.currentUserEntry;
+            if (myEntry == null && widget.userScore == null) {
+              return const SizedBox.shrink();
+            }
+
+            final rankStr = myEntry != null ? '#${myEntry.rank}' : '--';
+            final scoreVal = myEntry != null ? myEntry.score : (widget.userScore ?? 0);
+            final timeVal = myEntry != null
+                ? myEntry.formattedTime
+                : (widget.userTimeSeconds != null
+                    ? '${widget.userTimeSeconds! ~/ 60}m ${widget.userTimeSeconds! % 60}s'
+                    : '--');
+
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
+              decoration: BoxDecoration(
+                color: dark ? AppColors.darkCard : AppColors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.35),
+                    width: 1.5,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: dark ? 0.3 : 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, -3),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.star_rounded, size: 16, color: AppColors.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            rankStr,
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Your Standing',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            'Score: $scoreVal pts • Time: $timeVal',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Ranked',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );

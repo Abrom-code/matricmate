@@ -207,34 +207,42 @@ class LoginForm extends GetView<LoginController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Obx(
-                          () => SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Checkbox(
-                              value: controller.rememberMe.value,
-                              activeColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5),
+                    InkWell(
+                      onTap: () =>
+                          controller.rememberMe.value = !controller.rememberMe.value,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                        child: Row(
+                          children: [
+                            Obx(
+                              () => SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  value: controller.rememberMe.value,
+                                  activeColor: AppColors.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  onChanged: (val) =>
+                                      controller.rememberMe.value = val ?? false,
+                                ),
                               ),
-                              onChanged: (val) =>
-                                  controller.rememberMe.value = val ?? false,
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Remember me',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: dark
+                                    ? AppColors.darkGrey
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Remember me',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: dark
-                                ? AppColors.darkGrey
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     TextButton(
                       onPressed: () => Get.toNamed(Routes.forgotPassword),

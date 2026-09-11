@@ -4,6 +4,9 @@ import 'package:matricmate/features/authentication/controllers/login/login_contr
 class LoginBinding extends Bindings {
   @override
   void dependencies() {
+    if (Get.isRegistered<LoginController>()) {
+      Get.delete<LoginController>(force: true);
+    }
     Get.lazyPut<LoginController>(
       () => LoginController(),
       fenix: true,

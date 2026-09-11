@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/authentication/authentication_repository.dart';
+import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -153,11 +154,12 @@ class ResetPasswordController extends GetxController {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
+                      padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () => Get.offAllNamed(Routes.signIn),
+                    onPressed: _onBackToLoginPressed,
                     child: const Text(
                       'Back to Login',
                       style: TextStyle(
@@ -174,6 +176,32 @@ class ResetPasswordController extends GetxController {
       ),
       barrierDismissible: false,
     );
+  }
+
+  void _onBackToLoginPressed() {
+    bool foundSignIn = false;
+    Get.until((route) {
+      if (route.settings.name == Routes.signIn) {
+        foundSignIn = true;
+        return true;
+      }
+      if (route.isFirst) {
+        return true;
+      }
+      return false;
+    });
+
+    if (foundSignIn) {
+      if (Get.isRegistered<LoginController>()) {
+        final loginCtrl = Get.find<LoginController>();
+        if (email.value.isNotEmpty) {
+          loginCtrl.email.text = email.value;
+        }
+        loginCtrl.password.clear();
+      }
+    } else {
+      Get.offAllNamed(Routes.signIn);
+    }
   }
 
   @override

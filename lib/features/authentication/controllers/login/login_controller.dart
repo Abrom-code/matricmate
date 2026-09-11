@@ -160,7 +160,9 @@ class LoginController extends GetxController {
   Future<void> loadCredentials() async {
     final savedEmail = await _secureStorage.read(key: 'saved_email');
     if (savedEmail != null && savedEmail.isNotEmpty) {
-      email.text = savedEmail;
+      if (email.text.isEmpty) {
+        email.text = savedEmail;
+      }
       rememberMe.value = true;
     }
   }

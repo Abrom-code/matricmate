@@ -151,12 +151,6 @@ class FcmService {
       // Mark prompted for this session BEFORE showing the dialog
       _hasPromptedThisSession = true;
 
-      await _localNotifications
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
-
       final updated = await _messaging.requestPermission(
         alert: true,
         badge: true,
@@ -205,8 +199,6 @@ class FcmService {
   Future<void> init() async {
     if (_initialized) return;
     _initialized = true;
-
-    await requestPermissionIfNeeded();
 
     // DISABLE foreground notification presentation — we send data-only FCM
     // messages, so there's nothing for the SDK to auto-show. All display is

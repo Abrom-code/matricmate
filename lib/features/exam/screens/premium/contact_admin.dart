@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/telegram_chat.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
@@ -13,6 +15,13 @@ class ContactAdminScreen extends StatelessWidget {
     return Scaffold(
       appBar: Appbar(
         showBackArrow: true,
+        leadingOnPressed: () {
+          if (Navigator.canPop(context)) {
+            Get.back();
+          } else {
+            Get.until((route) => route.isFirst);
+          }
+        },
         title: Text(
           'Contact Admin',
           style: Theme.of(
@@ -20,9 +29,17 @@ class ContactAdminScreen extends StatelessWidget {
           ).textTheme.headlineSmall!.apply(color: AppColors.white),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.defaultSpace),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await UserController.instance.fetchUserRecord();
+          if (Get.isRegistered<PremiumController>()) {
+            await PremiumController.instance.reloadPaymentConfig();
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSizes.defaultSpace),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -71,6 +88,7 @@ class ContactAdminScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

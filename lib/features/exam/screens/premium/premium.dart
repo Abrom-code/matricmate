@@ -4,6 +4,7 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
+import 'package:matricmate/features/exam/screens/premium/contact_admin.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payment_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/plan_selector.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -20,16 +21,21 @@ class PremiumScreen extends StatelessWidget {
     final cfg = PaymentConfigService.instance;
     final isDark = AppHelperFunctions.isDark(context);
 
-    return Scaffold(
-      appBar: Appbar(
-        showBackArrow: true,
-        title: Text(
-          'Upgrade to Premium',
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall!.apply(color: AppColors.white),
+    return Obx(() {
+      if (controller.exceededUploadLimit) {
+        return const ContactAdminScreen();
+      }
+
+      return Scaffold(
+        appBar: Appbar(
+          showBackArrow: true,
+          title: Text(
+            'Upgrade to Premium',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall!.apply(color: AppColors.white),
+          ),
         ),
-      ),
       body: LayoutBuilder(
         builder: (context, _) {
           final isLandscape =
@@ -297,5 +303,6 @@ class PremiumScreen extends StatelessWidget {
         );
       }),
     );
-  }
+  });
+}
 }

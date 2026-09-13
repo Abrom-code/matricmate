@@ -46,10 +46,13 @@ class AvailableChallengeCard extends StatelessWidget {
           ? challenge.durationMinutes
           : (challenge.durationSeconds / 60).round();
 
-      final isDone = ctrl.isAttemptedOrPracticed(challenge.id) ||
-          ctrl.completedChallenges.any((c) =>
-              c.id == challenge.id ||
-              (challenge.setId.isNotEmpty && c.setId == challenge.setId));
+      final isDone =
+          ctrl.isAttemptedOrPracticed(challenge.id) ||
+          ctrl.completedChallenges.any(
+            (c) =>
+                c.id == challenge.id ||
+                (challenge.setId.isNotEmpty && c.setId == challenge.setId),
+          );
 
       return Container(
         decoration: BoxDecoration(
@@ -102,11 +105,7 @@ class AvailableChallengeCard extends StatelessWidget {
 
                 // Status Indicator (No container, icon + text)
                 if (isLive) ...[
-                  const Icon(
-                    Icons.circle,
-                    size: 8,
-                    color: Color(0xFFE24B4A),
-                  ),
+                  const Icon(Icons.circle, size: 8, color: Color(0xFFE24B4A)),
                   const SizedBox(width: 5),
                   const Text(
                     'Live',
@@ -237,7 +236,7 @@ class AvailableChallengeCard extends StatelessWidget {
                 height: 46,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.teal,
+                    backgroundColor: AppColors.secondary,
                     foregroundColor: const Color(0xFF04342C),
                     elevation: 0,
                     padding: EdgeInsets.zero,
@@ -254,14 +253,14 @@ class AvailableChallengeCard extends StatelessWidget {
                         ? Icons.visibility_outlined
                         : Icons.arrow_forward_rounded,
                     size: 16,
-                    color: const Color(0xFF04342C),
+                    color: AppColors.white,
                   ),
                   label: Text(
                     isDone ? 'Review' : 'Start challenge',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF04342C),
+                      color: AppColors.white,
                     ),
                   ),
                 ),
@@ -299,10 +298,7 @@ class AvailableChallengeCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     backgroundColor: const Color(0x26378ADD),
                     foregroundColor: const Color(0xFF85B7EB),
-                    side: const BorderSide(
-                      color: Color(0x66378ADD),
-                      width: 1,
-                    ),
+                    side: const BorderSide(color: Color(0x66378ADD), width: 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

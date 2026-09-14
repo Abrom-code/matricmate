@@ -11,19 +11,19 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (status) {
       case 'active':
-        return const _GoldPremiumBadge();
+        return const _ActiveBadge();
       case 'pending':
         return const _PendingBadge();
       default:
-        return const _FreeBadge();
+        return const _StudentBadge();
     }
   }
 }
 
-// ── Gold gradient pill — premium users ───────────────────────────────────────
+// ── Active badge — active users ───────────────────────────────────────────────
 
-class _GoldPremiumBadge extends StatelessWidget {
-  const _GoldPremiumBadge();
+class _ActiveBadge extends StatelessWidget {
+  const _ActiveBadge();
 
   @override
   Widget build(BuildContext context) {
@@ -31,14 +31,14 @@ class _GoldPremiumBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFFFD700), Color(0xFFFFA000)],
+          colors: [Color(0xFF10B981), Color(0xFF059669)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+            color: const Color(0xFF10B981).withValues(alpha: 0.35),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -47,10 +47,10 @@ class _GoldPremiumBadge extends StatelessWidget {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.star_rounded, size: 11, color: Colors.white),
+          Icon(Icons.verified_rounded, size: 11, color: Colors.white),
           SizedBox(width: 3),
           Text(
-            'PREMIUM',
+            'ACTIVE',
             style: TextStyle(
               color: Colors.white,
               fontSize: 10,
@@ -104,10 +104,10 @@ class _PendingBadge extends StatelessWidget {
   }
 }
 
-// ── Subtle outline pill — free users ─────────────────────────────────────────
+// ── Subtle outline pill — student users ──────────────────────────────────────
 
-class _FreeBadge extends StatelessWidget {
-  const _FreeBadge();
+class _StudentBadge extends StatelessWidget {
+  const _StudentBadge();
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +141,7 @@ class _FreeBadge extends StatelessWidget {
           ),
           const SizedBox(width: 3.5),
           Text(
-            'FREE',
+            'STUDENT',
             style: TextStyle(
               color: textColor,
               fontSize: 10,

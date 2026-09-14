@@ -23,6 +23,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   NotificationsController get ctrl => NotificationsController.instance;
   Timer? _undoSnackBarTimer;
+  ScaffoldMessengerState? _scaffoldMessenger;
 
   @override
   void initState() {
@@ -33,9 +34,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
+  }
+
+  @override
   void dispose() {
     _undoSnackBarTimer?.cancel();
-    ScaffoldMessenger.maybeOf(context)?.removeCurrentSnackBar();
+    _scaffoldMessenger?.removeCurrentSnackBar();
     ctrl.setFilter(NotificationFilter.all);
     super.dispose();
   }

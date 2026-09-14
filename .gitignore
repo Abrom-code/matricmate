@@ -11,6 +11,7 @@
 !.env.example
 build/
 **/doc/api/
+app sc/
 
 # ------------------------------
 # IntelliJ / Android Studio

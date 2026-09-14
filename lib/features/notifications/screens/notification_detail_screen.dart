@@ -226,37 +226,40 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
   }
 
   void _deleteAndPop(BuildContext context) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
     NotificationsController.instance.deleteOne(notification.id);
     Get.back();
 
-    if (messenger != null) {
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(
-          content: const Text('Notification deleted'),
-          duration: const Duration(seconds: 4),
-          behavior: SnackBarBehavior.floating,
-          dismissDirection: DismissDirection.horizontal,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          action: SnackBarAction(
-            label: 'Undo',
-            textColor: const Color(0xFF5EEAD4),
-            onPressed: () {
-              messenger.hideCurrentSnackBar();
-              NotificationsController.instance.undoDeleteOne();
-            },
-          ),
-        ),
-      );
-
-      // Explicit auto-dismiss timer ensures SnackBar closes even when
-      // Android accessibility services force duration to Duration(days: 1)
-      Timer(const Duration(seconds: 4), () {
+    final navContext = Get.context;
+    if (navContext != null) {
+      final messenger = ScaffoldMessenger.maybeOf(navContext);
+      if (messenger != null) {
         messenger.hideCurrentSnackBar();
-      });
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Text('Notification deleted'),
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            dismissDirection: DismissDirection.horizontal,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            action: SnackBarAction(
+              label: 'Undo',
+              textColor: const Color(0xFF5EEAD4),
+              onPressed: () {
+                messenger.hideCurrentSnackBar();
+                NotificationsController.instance.undoDeleteOne();
+              },
+            ),
+          ),
+        );
+
+        // Explicit auto-dismiss timer ensures SnackBar closes even when
+        // Android accessibility services force duration to Duration(days: 1)
+        Timer(const Duration(seconds: 4), () {
+          messenger.hideCurrentSnackBar();
+        });
+      }
     }
   }
 

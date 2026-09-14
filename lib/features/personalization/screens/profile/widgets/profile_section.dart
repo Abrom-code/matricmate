@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:matricmate/features/exam/screens/subject/widgets/status_badge.dart';
 import 'package:matricmate/features/personalization/controllers/profile_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -64,9 +63,7 @@ class ProfileSection extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 5),
-                      StatusBadge(status: user.status),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Icon(

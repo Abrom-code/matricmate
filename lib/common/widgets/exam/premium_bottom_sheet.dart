@@ -5,15 +5,8 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class PremiumBottomSheet extends StatefulWidget {
+class PremiumBottomSheet extends StatelessWidget {
   const PremiumBottomSheet({super.key});
-
-  @override
-  State<PremiumBottomSheet> createState() => _PremiumBottomSheetState();
-}
-
-class _PremiumBottomSheetState extends State<PremiumBottomSheet> {
-  bool _showAllFeatures = false;
 
   @override
   Widget build(BuildContext context) {
@@ -74,15 +67,15 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── Primary Theme Floating Icon ──────────────────
+                    // ── Premium Crown / Badge Icon ───────────────────
                     Container(
-                      width: 60,
-                      height: 60,
+                      width: 62,
+                      height: 62,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
                             AppColors.primary,
-                            AppColors.primary.withValues(alpha: 0.8),
+                            AppColors.primary.withValues(alpha: 0.85),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -91,8 +84,8 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet> {
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 14,
-                            offset: const Offset(0, 5),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
@@ -108,21 +101,48 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet> {
                     const SizedBox(height: 14),
 
                     // ── Title & Subtitle ────────────────────────────
-                    Text(
-                      'Unlock Full Access',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                        color: primaryTextColor,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Unlock Full Access',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: primaryTextColor,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2.5,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'PRO',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 6),
 
                     Text(
-                      'Everything you need to excel in your matric exams — all subjects, all grades.',
+                      'Get unlimited access to all subjects, past matric exams, and national challenges.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
@@ -131,154 +151,79 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
-                    // ── Main Core Features ──────────────────────────
+                    // ── The 5 Premium Features ───────────────────────
                     _featureCard(
                       icon: Icons.military_tech_rounded,
-                      iconColor: AppColors.amberAccent,
+                      iconColor: const Color(0xFFF59E0B),
+                      tag: '5+ YEARS',
                       title: 'National Entrance Exams',
-                      subtitle: '10+ years of past matric papers with full answer keys.',
+                      subtitle: '5+ years of past matric papers with full answer keys & step-by-step explanations.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
                       secondaryText: secondaryTextColor,
+                      isDark: dark,
                     ),
 
                     _featureCard(
                       icon: Icons.menu_book_rounded,
                       iconColor: AppColors.primary,
+                      tag: 'GRADES 9–12',
                       title: 'Chapter Tests for All Subjects',
-                      subtitle: 'Targeted chapter quizzes covering Grades 9, 10, 11 & 12.',
+                      subtitle: 'Full access to targeted quizzes covering every chapter from Grade 9 to 12.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
                       secondaryText: secondaryTextColor,
+                      isDark: dark,
                     ),
 
                     _featureCard(
-                      icon: Icons.wifi_off_rounded,
-                      iconColor: AppColors.success,
-                      title: '100% Offline Access',
-                      subtitle: 'Download and practice tests anytime, anywhere without internet.',
+                      icon: Icons.assignment_turned_in_rounded,
+                      iconColor: const Color(0xFF3B82F6),
+                      tag: 'FULL-LENGTH',
+                      title: 'Standardized Model Exams',
+                      subtitle: 'Realistic model tests designed by expert educators to simulate the real exam.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
                       secondaryText: secondaryTextColor,
+                      isDark: dark,
                     ),
 
                     _featureCard(
-                      icon: Icons.translate_rounded,
-                      iconColor: AppColors.primary,
-                      title: 'Amharic & English Explanations',
-                      subtitle: 'Clear, step-by-step reasoning in both languages.',
+                      icon: Icons.school_rounded,
+                      iconColor: const Color(0xFF8B5CF6),
+                      tag: 'YEAR-END',
+                      title: 'Grade-Level Assessments',
+                      subtitle: 'Comprehensive yearly assessments to evaluate your overall grade readiness.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
                       secondaryText: secondaryTextColor,
+                      isDark: dark,
                     ),
 
-                    // ── Expandable Features with Slide-Down Animation ────
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 320),
-                      curve: Curves.easeInOutCubic,
-                      child: _showAllFeatures
-                          ? AnimatedSlide(
-                              duration: const Duration(milliseconds: 320),
-                              curve: Curves.easeOutCubic,
-                              offset: Offset.zero,
-                              child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 300),
-                                opacity: 1.0,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _featureCard(
-                                      icon: Icons.speed_rounded,
-                                      iconColor: AppColors.secondary,
-                                      title: 'Exam Mode vs Practice Mode',
-                                      subtitle: 'Take timed real simulations or practice with instant feedback.',
-                                      cardBg: cardBg,
-                                      borderColor: borderColor,
-                                      primaryText: primaryTextColor,
-                                      secondaryText: secondaryTextColor,
-                                    ),
-                                    _featureCard(
-                                      icon: Icons.assignment_turned_in_rounded,
-                                      iconColor: AppColors.info,
-                                      title: 'Standardized Model Exams',
-                                      subtitle: 'Full-length model tests designed by expert educators.',
-                                      cardBg: cardBg,
-                                      borderColor: borderColor,
-                                      primaryText: primaryTextColor,
-                                      secondaryText: secondaryTextColor,
-                                    ),
-                                    _featureCard(
-                                      icon: Icons.school_rounded,
-                                      iconColor: AppColors.primary,
-                                      title: 'Grade-Level Assessments',
-                                      subtitle: 'Comprehensive yearly assessments for each grade.',
-                                      cardBg: cardBg,
-                                      borderColor: borderColor,
-                                      primaryText: primaryTextColor,
-                                      secondaryText: secondaryTextColor,
-                                    ),
-                                    _featureCard(
-                                      icon: Icons.insights_rounded,
-                                      iconColor: AppColors.warning,
-                                      title: 'Detailed Performance Analytics',
-                                      subtitle: 'Track your speed, strengths, and chapters to review.',
-                                      cardBg: cardBg,
-                                      borderColor: borderColor,
-                                      primaryText: primaryTextColor,
-                                      secondaryText: secondaryTextColor,
-                                    ),
-                                    _featureCard(
-                                      icon: Icons.bookmark_added_rounded,
-                                      iconColor: AppColors.amberAccent,
-                                      title: 'Smart Bookmarks & Question Bank',
-                                      subtitle: 'Save challenging questions and review them before exams.',
-                                      cardBg: cardBg,
-                                      borderColor: borderColor,
-                                      primaryText: primaryTextColor,
-                                      secondaryText: secondaryTextColor,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-
-                    // ── See More / See Less Toggle ──────────────────
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(() => _showAllFeatures = !_showAllFeatures);
-                      },
-                      icon: Icon(
-                        _showAllFeatures
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
-                        size: 20,
-                        color: AppColors.primary,
-                      ),
-                      label: Text(
-                        _showAllFeatures
-                            ? 'Show less'
-                            : 'See all features & test modes (5 more)',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
+                    _featureCard(
+                      icon: Icons.emoji_events_rounded,
+                      iconColor: const Color(0xFFD97706),
+                      tag: 'LIVE RANKS',
+                      title: 'Weekly & Monthly Challenges',
+                      subtitle: 'Compete in live national challenges, earn rankings, and climb the leaderboard.',
+                      cardBg: cardBg,
+                      borderColor: borderColor,
+                      primaryText: primaryTextColor,
+                      secondaryText: secondaryTextColor,
+                      isDark: dark,
                     ),
 
                     // ── Primary Action Button ────────────────────────
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
-                      height: 54,
+                      height: 52,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -323,12 +268,14 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet> {
   static Widget _featureCard({
     required IconData icon,
     required Color iconColor,
+    required String tag,
     required String title,
     required String subtitle,
     required Color cardBg,
     required Color borderColor,
     required Color primaryText,
     required Color secondaryText,
+    required bool isDark,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -339,38 +286,75 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet> {
         border: Border.all(color: borderColor, width: 1),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.14),
+              color: iconColor.withValues(alpha: isDark ? 0.2 : 0.12),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: iconColor.withValues(alpha: isDark ? 0.35 : 0.25),
+                width: 0.8,
+              ),
             ),
             child: Center(
-              child: Icon(icon, color: iconColor, size: 20),
+              child: Icon(icon, color: iconColor, size: 21),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: primaryText,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: primaryText,
+                          letterSpacing: -0.1,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(
+                          alpha: isDark ? 0.18 : 0.1,
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        tag,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: iconColor,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   subtitle,
                   style: TextStyle(
                     fontSize: 11.5,
                     color: secondaryText,
-                    height: 1.3,
+                    height: 1.35,
                   ),
                 ),
               ],

@@ -41,13 +41,9 @@ class ConnectSupportSection extends StatelessWidget {
       child: Column(
         children: [
           const AppListTile(
-            icon: Icon(
-              Iconsax.send_1_copy,
-              color: AppColors.primary,
-              size: 18,
-            ),
+            icon: Icon(Iconsax.send_1_copy, color: AppColors.primary, size: 18),
             title: 'Join Telegram',
-            subtitle: 'Get announcements & student discussions',
+            subtitle: 'Get updates and join community',
             trailing: Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textSecondary,
@@ -57,7 +53,8 @@ class ConnectSupportSection extends StatelessWidget {
           ),
           divider,
           Obx(() {
-            final email = PaymentConfigService.instance.supportEmailValue;
+            final telegramSupport =
+                PaymentConfigService.instance.telegramSupportLinkValue;
             return AppListTile(
               icon: const Icon(
                 Icons.support_agent_rounded,
@@ -65,22 +62,18 @@ class ConnectSupportSection extends StatelessWidget {
                 size: 20,
               ),
               title: 'Help & Support',
-              subtitle: email,
+              subtitle: telegramSupport,
               trailing: const Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.textSecondary,
                 size: 20,
               ),
-              onTap: ProfileActionsHelper.sendSupportEmail,
+              onTap: ProfileActionsHelper.openTelegramSupport,
             );
           }),
           divider,
           const AppListTile(
-            icon: Icon(
-              Iconsax.star_1_copy,
-              color: Color(0xFFF59E0B),
-              size: 18,
-            ),
+            icon: Icon(Iconsax.star_1_copy, color: Color(0xFFF59E0B), size: 18),
             title: 'Rate the App',
             subtitle: 'Support us on Google Play',
             trailing: Icon(
@@ -92,13 +85,9 @@ class ConnectSupportSection extends StatelessWidget {
           ),
           divider,
           const AppListTile(
-            icon: Icon(
-              Iconsax.share_copy,
-              color: Color(0xFF10B981),
-              size: 18,
-            ),
+            icon: Icon(Iconsax.share_copy, color: Color(0xFF10B981), size: 18),
             title: 'Share with Friends',
-            subtitle: 'Invite your classmates to practice together',
+            subtitle: 'Invite your fiends to practice',
             trailing: Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textSecondary,
@@ -111,4 +100,3 @@ class ConnectSupportSection extends StatelessWidget {
     );
   }
 }
-

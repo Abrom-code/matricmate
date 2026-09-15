@@ -145,6 +145,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       selected: _ctrl.activeTab.value == 'monthly',
                       onTap: () => _ctrl.setTab('monthly'),
                     ),
+                    const SizedBox(width: 8),
+                    LeaderboardPeriodChip(
+                      label: 'This Year',
+                      icon: Iconsax.calendar_tick_copy,
+                      selected: _ctrl.activeTab.value == 'yearly',
+                      onTap: () => _ctrl.setTab('yearly'),
+                    ),
                   ],
                 ),
               ),

@@ -1222,6 +1222,8 @@ BEGIN
   IF v_start IS NULL THEN
     IF p_period = 'week' THEN
       v_start := date_trunc('week', now())::date;
+    ELSIF p_period = 'year' THEN
+      v_start := date_trunc('year', now())::date;
     ELSE
       v_start := date_trunc('month', now())::date;
     END IF;

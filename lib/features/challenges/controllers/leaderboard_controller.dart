@@ -22,7 +22,7 @@ class LeaderboardController extends GetxController {
 
   final isLoading = false.obs;
   final isManualRefreshing = false.obs;
-  final activeTab = 'challenge'.obs; // 'challenge', 'weekly', 'monthly'
+  final activeTab = 'challenge'.obs; // 'challenge', 'weekly', 'monthly', 'yearly'
   final activeStream = 'natural'.obs; // Locked to student's stream
   final entries = <ChallengeLeaderboardEntry>[].obs;
   final displayLimit = 10.obs;
@@ -79,6 +79,12 @@ class LeaderboardController extends GetxController {
         entries.value = await _repo.fetchPeriodLeaderboard(
           stream: activeStream.value,
           period: 'month',
+          limit: 100,
+        );
+      } else if (activeTab.value == 'yearly') {
+        entries.value = await _repo.fetchPeriodLeaderboard(
+          stream: activeStream.value,
+          period: 'year',
           limit: 100,
         );
       }

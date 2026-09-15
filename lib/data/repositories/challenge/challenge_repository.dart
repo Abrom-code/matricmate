@@ -468,7 +468,7 @@ class ChallengeRepository {
 
   Future<List<ChallengeLeaderboardEntry>> fetchPeriodLeaderboard({
     required String stream,
-    required String period, // 'week' or 'month'
+    required String period, // 'week', 'month', or 'year'
     DateTime? periodStart,
     int limit = 100,
   }) async {
@@ -502,6 +502,8 @@ class ChallengeRepository {
       } else if (period == 'week') {
         final daysFromMon = (now.weekday - 1);
         startDate = DateTime(now.year, now.month, now.day - daysFromMon);
+      } else if (period == 'year') {
+        startDate = DateTime(now.year, 1, 1);
       } else {
         startDate = DateTime(now.year, now.month, 1);
       }

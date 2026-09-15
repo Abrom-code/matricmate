@@ -142,7 +142,7 @@ class PremiumBottomSheet extends StatelessWidget {
                     const SizedBox(height: 5),
 
                     Text(
-                      'All subjects • Past matric exams • Amharic explanations & offline.',
+                      'All tests with detailed Amharic (በአማርኛ) & English explanations • 100% Offline',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -153,13 +153,13 @@ class PremiumBottomSheet extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // ── Core Features (Short & Clear) ────────────────
+                    // ── The 5 Core Premium Features ──────────────────
                     _featureCard(
                       icon: Icons.military_tech_rounded,
                       iconColor: const Color(0xFFF59E0B),
                       tag: '5+ YEARS',
                       title: 'National Entrance Exams',
-                      subtitle: 'Past matric papers with full answer keys.',
+                      subtitle: '5+ years past papers with detailed Amharic & English solutions.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -172,7 +172,7 @@ class PremiumBottomSheet extends StatelessWidget {
                       iconColor: AppColors.primary,
                       tag: 'GRADES 9–12',
                       title: 'All Chapter Tests',
-                      subtitle: 'Unit quizzes covering every grade & chapter.',
+                      subtitle: 'Grades 9–12 quizzes with detailed Amharic & English explanations.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -185,7 +185,7 @@ class PremiumBottomSheet extends StatelessWidget {
                       iconColor: const Color(0xFF3B82F6),
                       tag: 'FULL-LENGTH',
                       title: 'Standardized Model Exams',
-                      subtitle: 'Realistic exams designed by expert educators.',
+                      subtitle: 'Realistic model tests with complete Amharic & English answer keys.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -198,7 +198,7 @@ class PremiumBottomSheet extends StatelessWidget {
                       iconColor: const Color(0xFF8B5CF6),
                       tag: 'YEAR-END',
                       title: 'Grade-Level Assessments',
-                      subtitle: 'Comprehensive yearly readiness assessments.',
+                      subtitle: 'Annual readiness tests with step-by-step bilingual explanations.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -211,31 +211,16 @@ class PremiumBottomSheet extends StatelessWidget {
                       iconColor: const Color(0xFFD97706),
                       tag: 'LIVE RANKS',
                       title: 'National Challenges',
-                      subtitle: 'Compete live with peers and climb the leaderboard.',
+                      subtitle: 'Compete live, climb leaderboards & review full detailed solutions.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
                       secondaryText: secondaryTextColor,
                       isDark: dark,
-                    ),
-
-                    // ── Support Feature with Emphasis on Amharic & Offline ──
-                    _featureCard(
-                      icon: Icons.translate_rounded,
-                      iconColor: AppColors.primary,
-                      tag: 'በአማርኛ • OFFLINE',
-                      title: 'Amharic Explanations (በአማርኛ)',
-                      subtitle: 'Step-by-step reasoning in Amharic with 100% offline access.',
-                      cardBg: cardBg,
-                      borderColor: borderColor,
-                      primaryText: primaryTextColor,
-                      secondaryText: secondaryTextColor,
-                      isDark: dark,
-                      isHighlighted: true,
                     ),
 
                     // ── Primary Action Button ────────────────────────
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -291,56 +276,34 @@ class PremiumBottomSheet extends StatelessWidget {
     required Color primaryText,
     required Color secondaryText,
     required bool isDark,
-    bool isHighlighted = false,
   }) {
-    final effectiveCardBg = isHighlighted
-        ? (isDark
-            ? AppColors.primary.withValues(alpha: 0.16)
-            : AppColors.primary.withValues(alpha: 0.08))
-        : cardBg;
-
-    final effectiveBorderColor = isHighlighted
-        ? AppColors.primary.withValues(alpha: isDark ? 0.5 : 0.35)
-        : borderColor;
-
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
-        color: effectiveCardBg,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: effectiveBorderColor,
-          width: isHighlighted ? 1.2 : 1,
-        ),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              color: isHighlighted
-                  ? AppColors.primary.withValues(alpha: isDark ? 0.28 : 0.16)
-                  : iconColor.withValues(alpha: isDark ? 0.2 : 0.12),
+              color: iconColor.withValues(alpha: isDark ? 0.2 : 0.12),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isHighlighted
-                    ? AppColors.primary.withValues(alpha: 0.45)
-                    : iconColor.withValues(alpha: isDark ? 0.35 : 0.25),
+                color: iconColor.withValues(alpha: isDark ? 0.35 : 0.25),
                 width: 0.8,
               ),
             ),
             child: Center(
-              child: Icon(
-                icon,
-                color: isHighlighted ? AppColors.primary : iconColor,
-                size: 20,
-              ),
+              child: Icon(icon, color: iconColor, size: 21),
             ),
           ),
-          const SizedBox(width: 11),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,11 +331,9 @@ class PremiumBottomSheet extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: isHighlighted
-                            ? AppColors.primary
-                            : iconColor.withValues(
-                                alpha: isDark ? 0.18 : 0.1,
-                              ),
+                        color: iconColor.withValues(
+                          alpha: isDark ? 0.18 : 0.1,
+                        ),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -380,20 +341,20 @@ class PremiumBottomSheet extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
-                          color: isHighlighted ? AppColors.white : iconColor,
+                          color: iconColor,
                           letterSpacing: 0.3,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2.5),
+                const SizedBox(height: 3),
                 Text(
                   subtitle,
                   style: TextStyle(
                     fontSize: 11.5,
                     color: secondaryText,
-                    height: 1.3,
+                    height: 1.35,
                   ),
                 ),
               ],

@@ -285,12 +285,6 @@ class ResetPasswordScreen extends GetView<ResetPasswordController> {
                     ),
                     const SizedBox(height: 8),
                     _buildRequirementRow(
-                      controller.hasSpecialChar,
-                      'Contains at least one special character (!@#\$%^&*)',
-                      dark,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildRequirementRow(
                       controller.passwordsMatch,
                       'Passwords match',
                       dark,

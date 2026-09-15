@@ -283,7 +283,7 @@ class ChangePasswordScreen extends GetView<ChangePasswordController> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Password should be at least 6 characters long and include numbers or symbols.',
+                        'Password must be at least 6 characters long.',
                         style: TextStyle(
                           fontSize: 12,
                           height: 1.35,

@@ -36,7 +36,6 @@ class ResetPasswordController extends GetxController {
 
   // Real-time password criteria flags
   final hasMinLength = false.obs;
-  final hasSpecialChar = false.obs;
   final passwordsMatch = false.obs;
 
   @override
@@ -60,8 +59,6 @@ class ResetPasswordController extends GetxController {
     final confirm = confirmPassword.text;
 
     hasMinLength.value = pass.length >= 6;
-    hasSpecialChar.value =
-        pass.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
     passwordsMatch.value =
         pass.isNotEmpty && confirm.isNotEmpty && pass == confirm;
   }

@@ -12,10 +12,12 @@ void main() {
       expect(AppValidator.validateEmail('student@matricet.com'), isNull);
     });
 
-    test('validatePassword enforces minimum length and special characters', () {
+    test('validatePassword enforces minimum length only (at least 6 characters)', () {
       expect(AppValidator.validatePassword(''), 'Password is required.');
       expect(AppValidator.validatePassword('12345'), 'Password must be at least 6 characters long.');
-      expect(AppValidator.validatePassword('password123'), 'Password must contain at least one special character.');
+      expect(AppValidator.validatePassword('password'), isNull);
+      expect(AppValidator.validatePassword('123456'), isNull);
+      expect(AppValidator.validatePassword('abcdef'), isNull);
       expect(AppValidator.validatePassword('Pass@123'), isNull);
     });
 

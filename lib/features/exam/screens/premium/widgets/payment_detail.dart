@@ -102,9 +102,10 @@ class _PaymentDetailState extends State<PaymentDetail> {
           const Divider(height: 1),
           const SizedBox(height: 12),
 
-          // Account Number row with one-tap animated copy button
+          // ── Account Number Row with Animated Copy Button ──
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
@@ -113,7 +114,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
                     Text(
                       'ACCOUNT NUMBER',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
                         color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
@@ -123,42 +124,16 @@ class _PaymentDetailState extends State<PaymentDetail> {
                     SelectableText(
                       number,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
                         color: isDark ? AppColors.textWhite : AppColors.textPrimary,
                       ),
                     ),
-                    if (name.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.verified_user_rounded,
-                            size: 13,
-                            color: AppColors.success,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              name,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? AppColors.darkGrey
-                                    : AppColors.textSecondary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
 
               // Animated Copy / Loading Button
               InkWell(
@@ -237,6 +212,42 @@ class _PaymentDetailState extends State<PaymentDetail> {
               ),
             ],
           ),
+
+          // ── Account Holder Name Section (Prominent & Large) ───────
+          if (name.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'ACCOUNT HOLDER',
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(
+                  Icons.verified_user_rounded,
+                  size: 17,
+                  color: AppColors.success,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: SelectableText(
+                    name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                      color: isDark ? AppColors.textWhite : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

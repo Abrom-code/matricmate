@@ -18,13 +18,11 @@ import 'package:matricmate/features/notifications/controllers/notifications_cont
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:matricmate/data/services/session_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// GetStorage key that records the last time session validation ran.
@@ -266,19 +264,9 @@ class AuthenticationController extends GetxController
         UserController.instance.user.value = UserModel.empty();
       }
 
-      // Only remove session if this is a manual logout from this device,
-      // and scope it by device_id so another device's session is never deleted.
-      if (!isDeviceMismatch) {
-        final uid = authRepo.currentUser?.id;
-        if (uid != null && uid.isNotEmpty) {
-          try {
-            final deviceId = await DeviceService.getDeviceId();
-            await SessionService()
-                .removeSession(uid, deviceId: deviceId)
-                .timeout(const Duration(seconds: 2));
-          } catch (_) {}
-        }
-      }
+      // Do not delete user_sessions on logout: deleting the row resets
+      // remaining device switch trials and destroys device binding.
+      // Sessions are permanently removed only on account deletion.
 
       try {
         await userRepo.clearLocalUser();

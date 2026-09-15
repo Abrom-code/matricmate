@@ -46,12 +46,11 @@ class SessionService {
           .maybeSingle()
           .timeout(AppTimeouts.query);
 
-      // First login → create session
+      // First login → create session (omits 'trial' so Supabase table DEFAULT governs initial count)
       if (existing == null) {
         await _supabase.from('user_sessions').upsert({
           'user_id': uid,
           'device_id': deviceId,
-          'trial': 3,
         }, onConflict: 'user_id').timeout(AppTimeouts.query);
         return SessionValidationResult.allowed;
       }
@@ -100,13 +99,36 @@ class SessionService {
 
   Future<bool> updateDevice(String uid, String deviceId, int trial) async {
     try {
-      await _supabase
+      // 1. Attempt Supabase RPC if configured on backend
+      try {
+        await _supabase.rpc(
+          'switch_device',
+          params: {'new_device_id': deviceId},
+        ).timeout(AppTimeouts.query);
+        return true;
+      } catch (_) {
+        // Fallback to direct table upsert if RPC is not deployed yet
+      }
+
+      // 2. Direct table update fallback
+      final response = await _supabase
           .from('user_sessions')
-          .update({'device_id': deviceId, 'trial': trial})
-          .eq('user_id', uid)
+          .upsert({
+            'user_id': uid,
+            'device_id': deviceId,
+            'trial': trial,
+            'updated_at': DateTime.now().toIso8601String(),
+          }, onConflict: 'user_id')
+          .select()
           .timeout(AppTimeouts.query);
-      return true;
-    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[SessionService] updateDevice response: $response');
+      }
+      return response.isNotEmpty;
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[SessionService] updateDevice error: $e\n$st');
+      }
       SnackbarHelper.error(
         'Device Update Failed',
         'Could not update your device. Please try again.',

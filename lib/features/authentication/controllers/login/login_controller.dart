@@ -28,7 +28,7 @@ class LoginController extends GetxController {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
   final RxBool isLogging = false.obs;
-  final RxInt trials = 3.obs;
+  final RxInt trials = 0.obs;
 
   GlobalKey<FormState> loginFormkey = GlobalKey<FormState>();
 
@@ -119,34 +119,50 @@ class LoginController extends GetxController {
         final remainingTrials = await SessionService().getTrial(uid);
         trials.value = remainingTrials >= 0 ? remainingTrials : 0;
 
-        AppDialogBoxes.changeDevice(emailText, this, () async {
-          isUpdating.value = true;
+        final confirmed = await AppDialogBoxes.changeDevice(
+          emailText,
+          this,
+          () async {
+            isUpdating.value = true;
 
-          if (trials.value <= 0) {
-            SnackbarHelper.error(
-              'Limit reached',
-              'You cannot change device anymore.',
+            if (trials.value <= 0) {
+              SnackbarHelper.error(
+                'Limit reached',
+                'You cannot change device anymore.',
+              );
+              await authRepo.logout();
+              isUpdating.value = false;
+              if (Get.isDialogOpen == true) {
+                Get.back(result: false);
+              }
+              return;
+            }
+
+            final updated = await SessionService().updateDevice(
+              uid,
+              deviceId,
+              trials.value - 1,
             );
-            await authRepo.logout();
-            isUpdating.value = false;
-            return;
-          }
+            if (!updated) {
+              await authRepo.logout();
+              isUpdating.value = false;
+              if (Get.isDialogOpen == true) {
+                Get.back(result: false);
+              }
+              return;
+            }
 
-          final updated = await SessionService().updateDevice(
-            uid,
-            deviceId,
-            trials.value - 1,
-          );
-          if (!updated) {
-            await authRepo.logout();
+            if (Get.isDialogOpen == true) {
+              Get.back(result: true);
+            }
+            authController.screenRedirect();
             isUpdating.value = false;
-            return;
-          }
+          },
+        );
 
-          Get.back();
-          authController.screenRedirect();
-          isUpdating.value = false;
-        });
+        if (confirmed != true) {
+          await authRepo.logout();
+        }
 
         return;
       }

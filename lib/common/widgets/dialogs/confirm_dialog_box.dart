@@ -748,7 +748,9 @@ class AppDialogBoxes {
                                         ctrl.isUpdating.value = true;
                                         try {
                                           await onConfirm();
-                                          Get.back(result: true);
+                                          if (Get.isDialogOpen == true) {
+                                            Get.back(result: true);
+                                          }
                                         } catch (e) {
                                           ctrl.isUpdating.value = false;
                                           Get.snackbar('Error', e.toString());

@@ -374,7 +374,13 @@ class ChallengeArchiveController extends GetxController {
     } catch (_) {}
   }
 
-  bool isDownloaded(String challengeId) => downloadedIds.contains(challengeId);
+  bool isDownloaded(String challengeId, {String? setId}) {
+    if (downloadedIds.contains(challengeId)) return true;
+    if (setId != null && setId.isNotEmpty && downloadedIds.contains(setId)) {
+      return true;
+    }
+    return false;
+  }
   bool isAttemptedOrPracticed(String challengeId) => attemptedIds.contains(challengeId);
   bool isInProgress(String challengeId) => inProgressIds.contains(challengeId);
 

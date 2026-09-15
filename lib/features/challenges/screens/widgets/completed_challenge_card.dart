@@ -333,10 +333,14 @@ class CompletedChallengeCard extends StatelessWidget {
                 const Spacer(),
 
                 // Primary Action Button (Review or Download)
-                Builder(builder: (context) {
-                  final isDown = ctrl.isDownloaded(challenge.id);
+                Obx(() {
+                  final isDown = ctrl.isDownloaded(
+                    challenge.id,
+                    setId: challenge.setId,
+                  );
                   final isBusy = ctrl.isDownloading[challenge.id] == true;
-                  final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
+                  final isReviewing =
+                      ctrl.isOpeningReview[challenge.id] == true;
 
                   // 1. Pro Locked
                   if (!isPremium) {
@@ -379,15 +383,71 @@ class CompletedChallengeCard extends StatelessWidget {
                     );
                   }
 
-                // 2. Needs Download -> Download
-                if (!isDown) {
+                  // 2. Needs Download -> Download
+                  if (!isDown) {
+                    return SizedBox(
+                      width: 150,
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.teal,
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: AppColors.teal),
+                          elevation: 0,
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: isBusy
+                            ? null
+                            : () => ctrl.downloadChallenge(challenge),
+                        icon: isBusy
+                            ? const SizedBox.shrink()
+                            : const Icon(
+                                Icons.download_rounded,
+                                size: 15,
+                                color: Colors.white,
+                              ),
+                        label: isBusy
+                            ? const AppCircularButtonLoading(
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                'Download',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    );
+                  }
+
+                  // 3. Downloaded -> Review (or Practice if not yet attempted)
+                  final buttonLabel = isDone ? 'Review' : 'Practice';
+                  final buttonIcon = isDone
+                      ? Icons.description_outlined
+                      : Icons.menu_book_rounded;
+                  final buttonAction = isDone
+                      ? () => ctrl.openCompletedChallenge(challenge)
+                      : () => Get.to(
+                            () => ChallengePracticeScreen(
+                              challengeId: challenge.id,
+                              title: challenge.title,
+                            ),
+                          );
+
                   return SizedBox(
                     width: 150,
                     height: 44,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.teal,
-                        foregroundColor: const Color(0xFF04342C),
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: AppColors.teal),
                         elevation: 0,
                         padding: EdgeInsets.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -395,83 +455,29 @@ class CompletedChallengeCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: isBusy
-                          ? null
-                          : () => ctrl.downloadChallenge(challenge),
-                      icon: isBusy
+                      onPressed: isReviewing ? null : buttonAction,
+                      icon: isReviewing
                           ? const SizedBox.shrink()
-                          : const Icon(
-                              Icons.download_rounded,
+                          : Icon(
+                              buttonIcon,
                               size: 15,
-                              color: Color(0xFF04342C),
+                              color: Colors.white,
                             ),
-                      label: isBusy
+                      label: isReviewing
                           ? const AppCircularButtonLoading(
-                              color: Color(0xFF04342C),
+                              color: Colors.white,
                             )
-                          : const Text(
-                              'Download',
-                              style: TextStyle(
+                          : Text(
+                              buttonLabel,
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF04342C),
+                                color: Colors.white,
                               ),
                             ),
                     ),
                   );
-                }
-
-                // 3. Downloaded -> Review (or Practice if not yet attempted)
-                final buttonLabel = isDone ? 'Review' : 'Practice';
-                final buttonIcon = isDone
-                    ? Icons.description_outlined
-                    : Icons.menu_book_rounded;
-                final buttonAction = isDone
-                    ? () => ctrl.openCompletedChallenge(challenge)
-                    : () => Get.to(
-                          () => ChallengePracticeScreen(
-                            challengeId: challenge.id,
-                            title: challenge.title,
-                          ),
-                        );
-
-                return SizedBox(
-                  width: 150,
-                  height: 44,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.teal,
-                      foregroundColor: const Color(0xFF04342C),
-                      elevation: 0,
-                      padding: EdgeInsets.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: isReviewing ? null : buttonAction,
-                    icon: isReviewing
-                        ? const SizedBox.shrink()
-                        : Icon(
-                            buttonIcon,
-                            size: 15,
-                            color: const Color(0xFF04342C),
-                          ),
-                    label: isReviewing
-                        ? const AppCircularButtonLoading(
-                            color: Color(0xFF04342C),
-                          )
-                        : Text(
-                            buttonLabel,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF04342C),
-                            ),
-                          ),
-                  ),
-                );
-              }),
+                }),
             ],
           ),
         ],

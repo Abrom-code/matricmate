@@ -462,12 +462,22 @@ class ChallengeHomeController extends GetxController {
     final downloaded = <String>{};
     for (final c in [...availableChallenges, ...completedChallenges]) {
       final isDown = await _db.isChallengeDownloaded(c.id, setId: c.setId);
-      if (isDown) downloaded.add(c.id);
+      if (isDown) {
+        downloaded.add(c.id);
+        if (c.setId.isNotEmpty) downloaded.add(c.setId);
+      }
     }
     downloadedIds.assignAll(downloaded);
+    downloadedIds.refresh();
   }
 
-  bool isDownloaded(String challengeId) => downloadedIds.contains(challengeId);
+  bool isDownloaded(String challengeId, {String? setId}) {
+    if (downloadedIds.contains(challengeId)) return true;
+    if (setId != null && setId.isNotEmpty && downloadedIds.contains(setId)) {
+      return true;
+    }
+    return false;
+  }
 
   Future<void> downloadChallenge(LeaderboardChallengeModel challenge) async {
     if (!isPremium) {
@@ -504,6 +514,7 @@ class ChallengeHomeController extends GetxController {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isDownloading[challenge.id] = false;
+      isDownloading.refresh();
     }
   }
 

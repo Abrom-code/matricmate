@@ -340,8 +340,11 @@ class ArchiveChallengeCard extends StatelessWidget {
                 const Spacer(),
 
                 // Primary Action Button (Review / Start / Practice / Download)
-                Builder(builder: (context) {
-                  final isDown = ctrl.isDownloaded(challenge.id);
+                Obx(() {
+                  final isDown = ctrl.isDownloaded(
+                    challenge.id,
+                    setId: challenge.setId,
+                  );
                   final isBusy = ctrl.isDownloading[challenge.id] == true;
                   final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
 
@@ -506,7 +509,8 @@ class ArchiveChallengeCard extends StatelessWidget {
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.teal,
-                        foregroundColor: const Color(0xFF04342C),
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: AppColors.teal),
                         elevation: 0,
                         padding: EdgeInsets.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -522,18 +526,18 @@ class ArchiveChallengeCard extends StatelessWidget {
                           : const Icon(
                               Icons.download_rounded,
                               size: 15,
-                              color: Color(0xFF04342C),
+                              color: Colors.white,
                             ),
                       label: isBusy
                           ? const AppCircularButtonLoading(
-                              color: Color(0xFF04342C),
+                              color: Colors.white,
                             )
                           : const Text(
                               'Download',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF04342C),
+                                color: Colors.white,
                               ),
                             ),
                     ),
@@ -560,7 +564,8 @@ class ArchiveChallengeCard extends StatelessWidget {
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.teal,
-                      foregroundColor: const Color(0xFF04342C),
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.teal),
                       elevation: 0,
                       padding: EdgeInsets.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -574,22 +579,22 @@ class ArchiveChallengeCard extends StatelessWidget {
                         : Icon(
                             buttonIcon,
                             size: 15,
-                            color: const Color(0xFF04342C),
+                            color: Colors.white,
                           ),
                     label: isReviewing
                         ? const AppCircularButtonLoading(
-                            color: Color(0xFF04342C),
+                            color: Colors.white,
                           )
                         : Text(
                             buttonLabel,
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF04342C),
+                              color: Colors.white,
                             ),
                           ),
                   ),
-                  );
+                );
                 }),
               ],
             ),

@@ -25,15 +25,12 @@ void main() {
       expect(AppValidator.isValidUrl('https://example.com/receipt'), isNull);
     });
 
-    test('requires a long enough password with a special character', () {
+    test('requires a password of at least 6 characters', () {
       expect(
         AppValidator.validatePassword('abc'),
         'Password must be at least 6 characters long.',
       );
-      expect(
-        AppValidator.validatePassword('abcdef'),
-        'Password must contain at least one special character.',
-      );
+      expect(AppValidator.validatePassword('abcdef'), isNull);
       expect(AppValidator.validatePassword('abcde!'), isNull);
     });
 

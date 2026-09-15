@@ -967,6 +967,29 @@ class DatabaseService extends GetxController {
     }
   }
 
+  Future<Map<String, Map<String, int>>> getChallengePracticeScores() async {
+    final db = await database;
+    try {
+      final res = await db.query(
+        'local_challenge_practice',
+        columns: ['challenge_id', 'score', 'total_questions'],
+      );
+      final map = <String, Map<String, int>>{};
+      for (final r in res) {
+        final id = r['challenge_id']?.toString() ?? '';
+        if (id.isNotEmpty) {
+          map[id] = {
+            'score': (r['score'] as num?)?.toInt() ?? 0,
+            'total_questions': (r['total_questions'] as num?)?.toInt() ?? 0,
+          };
+        }
+      }
+      return map;
+    } catch (_) {
+      return {};
+    }
+  }
+
   /// Marks a challenge and/or set ID as deleted by the user on this device.
   Future<void> markChallengeAsDeleted(String challengeId, {String? setId}) async {
     final db = await database;

@@ -719,6 +719,20 @@ class ChallengeHomeController extends GetxController {
     inProgressIds.remove(challengeId);
   }
 
+  final practiceScores = <String, Map<String, int>>{}.obs;
+
+  String getScoreText(String challengeId) {
+    final res = practiceScores[challengeId];
+    if (res != null) {
+      final score = res['score'] ?? 0;
+      final total = res['total_questions'] ?? 0;
+      if (total > 0) {
+        return '$score / $total correct';
+      }
+    }
+    return 'Completed';
+  }
+
   Future<void> refreshAttemptStates() async {
     try {
       final deleted = await _db.getDeletedChallengeIds();
@@ -726,6 +740,9 @@ class ChallengeHomeController extends GetxController {
 
       final local = await _db.getCompletedPracticeChallengeIds();
       attemptedIds.assignAll(local.difference(deleted));
+
+      final scores = await _db.getChallengePracticeScores();
+      practiceScores.assignAll(scores);
 
       final userId = UserController.instance.user.value.id;
       if (userId.isNotEmpty) {
@@ -821,6 +838,10 @@ class ChallengeHomeController extends GetxController {
               userAnswers: userAnswers,
               timeSpentSeconds: attempt.totalTimeSeconds,
             );
+            practiceScores[challenge.id] = {
+              'score': attempt.score,
+              'total_questions': questions.length,
+            };
 
             await _db.insertDownloadedChallengeBundle({
               'id': challenge.id,

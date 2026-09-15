@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
 /// Redesigned Available Challenge Card for Upcoming and Live rounds.
@@ -24,6 +25,8 @@ class AvailableChallengeCard extends StatelessWidget {
       // Subscribe to real-time timer ticker
       final _ = ctrl.now.value;
       final isLive = challenge.isLive;
+      final isPremium = ctrl.isPremium;
+      final isPending = UserController.instance.user.value.isPending;
 
       // Countdown calculations
       final targetTime = isLive
@@ -53,13 +56,18 @@ class AvailableChallengeCard extends StatelessWidget {
                 c.id == challenge.id ||
                 (challenge.setId.isNotEmpty && c.setId == challenge.setId),
           );
+      final scoreText = ctrl.getScoreText(challenge.id);
 
       return Container(
         decoration: BoxDecoration(
           color: dark ? AppColors.darkCard : AppColors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+            color: isDone
+                ? AppColors.primary.withValues(alpha: 0.35)
+                : dark
+                    ? AppColors.darkBorder
+                    : const Color(0xFFE2E8F0),
             width: 1,
           ),
           boxShadow: [
@@ -79,7 +87,7 @@ class AvailableChallengeCard extends StatelessWidget {
             // ── 1. Header Row (Subject Chip & Status Indicator) ─────────
             Row(
               children: [
-                // Subject Chip (Uniform teal style, no icon)
+                // Subject Chip
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -103,7 +111,79 @@ class AvailableChallengeCard extends StatelessWidget {
 
                 const Spacer(),
 
-                // Status Indicator (No container, icon + text)
+                // Locked badge for free users (consistent with other tests)
+                if (!isPremium) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: dark ? 0.2 : 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.amber.withValues(alpha: 0.4),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock, size: 11, color: Colors.amber),
+                        SizedBox(width: 3.5),
+                        Text(
+                          'LOCKED',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.amber,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ] else if (isDone) ...[
+                  // Completed badge (consistent with other tests)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: 11,
+                          color: AppColors.primary,
+                        ),
+                        SizedBox(width: 3.5),
+                        Text(
+                          'COMPLETED',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+
+                // Status Indicator (Live / Upcoming)
                 if (isLive) ...[
                   const Icon(Icons.circle, size: 8, color: Color(0xFFE24B4A)),
                   const SizedBox(width: 5),
@@ -151,44 +231,92 @@ class AvailableChallengeCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // ── 3. Meta Row (Time on left, Number of joins on right) ──────
-            Row(
-              children: [
-                // Duration / Time it takes (left)
-                const Icon(
-                  Icons.access_time_rounded,
-                  size: 15,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '$durationMins mins',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+            // ── 3. Meta Row ─────────────────────────────────────────────
+            if (isDone) ...[
+              // Completed UI consistent with other tests
+              Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 14,
+                    color: AppColors.primary,
                   ),
-                ),
-
-                const Spacer(),
-
-                // Number of joins (right)
-                const Icon(
-                  Icons.people_outline_rounded,
-                  size: 15,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '${ctrl.getParticipantCount(challenge.id)} joined',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(width: 5),
+                  Text(
+                    scoreText,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12.5,
+                    ),
                   ),
+                  const Spacer(),
+                  const Icon(
+                    Icons.people_outline_rounded,
+                    size: 15,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    '${ctrl.getParticipantCount(challenge.id)} joined',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: 1.0,
+                  minHeight: 4,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
-              ],
-            ),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  // Duration / Time it takes (left)
+                  const Icon(
+                    Icons.access_time_rounded,
+                    size: 15,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    '$durationMins mins',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Number of joins (right)
+                  const Icon(
+                    Icons.people_outline_rounded,
+                    size: 15,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    '${ctrl.getParticipantCount(challenge.id)} joined',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
             const SizedBox(height: 16),
 
@@ -230,7 +358,71 @@ class AvailableChallengeCard extends StatelessWidget {
             const SizedBox(height: 16),
 
             // ── 5. Action Button ────────────────────────────────────────
-            if (isLive) ...[
+            // If Free User: Show amber lock icon button (consistent with other tests)
+            if (!isPremium) ...[
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isPending
+                        ? const Color(0xFFD97706)
+                        : Colors.amber.shade700,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: EdgeInsets.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => ctrl.onChallengeTapped(challenge),
+                  icon: Icon(
+                    isPending ? Icons.hourglass_top_rounded : Icons.lock,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    isPending ? 'Verifying' : 'Unlock (Pro)',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              if (isLive) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => Get.to(
+                      () => LeaderboardScreen(
+                        challengeId: challenge.id,
+                        challengeTitle: challenge.title,
+                        audience: challenge.audience,
+                      ),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 2,
+                        horizontal: 4,
+                      ),
+                      child: Text(
+                        'View rankings →',
+                        style: TextStyle(
+                          color: AppColors.amber,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ] else if (isLive) ...[
               SizedBox(
                 width: double.infinity,
                 height: 46,

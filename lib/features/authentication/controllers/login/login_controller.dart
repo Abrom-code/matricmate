@@ -25,8 +25,8 @@ class LoginController extends GetxController {
   final hidePassword = true.obs;
   final isUpdating = false.obs;
 
-  final email = TextEditingController();
-  final password = TextEditingController();
+  TextEditingController email = TextEditingController();
+  TextEditingController password = TextEditingController();
   final RxBool isLogging = false.obs;
   final RxInt trials = 3.obs;
 
@@ -34,6 +34,9 @@ class LoginController extends GetxController {
 
   @override
   void onInit() {
+    email = TextEditingController();
+    password = TextEditingController();
+    loginFormkey = GlobalKey<FormState>();
     loadCredentials();
     super.onInit();
   }

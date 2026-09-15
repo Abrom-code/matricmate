@@ -17,6 +17,9 @@ import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:matricmate/data/services/device_service.dart';
+import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -27,8 +30,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// GetStorage key that records the last time session validation ran.
 const _kLastSessionCheckKey = 'last_session_check_ms';
 
-/// Minimum gap between periodic session checks (12 hours).
-const _kSessionCheckInterval = Duration(hours: 12);
+/// Minimum gap between periodic session checks (5 minutes).
+const _kSessionCheckInterval = Duration(minutes: 5);
 
 class AuthenticationController extends GetxController
     with WidgetsBindingObserver {
@@ -39,6 +42,7 @@ class AuthenticationController extends GetxController
   final deviceStorage = GetStorage();
 
   late Rx<User?> authUser;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
   /// True while the loading screen is doing initial data fetch.
   final RxBool isInitializing = false.obs;
@@ -49,12 +53,22 @@ class AuthenticationController extends GetxController
     WidgetsBinding.instance.addObserver(this);
     authUser = Rx<User?>(authRepo.currentUser);
     authUser.bindStream(authRepo.userChanges);
+
+    // Validate session and refresh when connectivity is restored
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
+      final isOnline = !results.contains(ConnectivityResult.none);
+      if (isOnline && authRepo.currentUser != null) {
+        unawaited(UserController.instance.fetchUserRecord());
+      }
+    });
+
     _init();
   }
 
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
+    _connectivitySub?.cancel();
     super.onClose();
   }
 
@@ -241,7 +255,7 @@ class AuthenticationController extends GetxController
     }
   }
 
-  Future<void> logout() async {
+  Future<void> logout({bool isDeviceMismatch = false}) async {
     try {
       AppFullScreenLoader.openLoadingDialog('Logging out...');
       _initStarted = false;
@@ -252,14 +266,18 @@ class AuthenticationController extends GetxController
         UserController.instance.user.value = UserModel.empty();
       }
 
-      // Remove session from remote database while still authenticated
-      final uid = authRepo.currentUser?.id;
-      if (uid != null && uid.isNotEmpty) {
-        try {
-          await SessionService()
-              .removeSession(uid)
-              .timeout(const Duration(seconds: 2));
-        } catch (_) {}
+      // Only remove session if this is a manual logout from this device,
+      // and scope it by device_id so another device's session is never deleted.
+      if (!isDeviceMismatch) {
+        final uid = authRepo.currentUser?.id;
+        if (uid != null && uid.isNotEmpty) {
+          try {
+            final deviceId = await DeviceService.getDeviceId();
+            await SessionService()
+                .removeSession(uid, deviceId: deviceId)
+                .timeout(const Duration(seconds: 2));
+          } catch (_) {}
+        }
       }
 
       try {
@@ -297,6 +315,9 @@ class AuthenticationController extends GetxController
       debugPrint('[AuthenticationController] Logout cleanup notice: $e');
     } finally {
       AppFullScreenLoader.stopLoading();
+      if (Get.isRegistered<LoginController>()) {
+        Get.delete<LoginController>(force: true);
+      }
       Get.offAllNamed(Routes.signIn);
     }
   }

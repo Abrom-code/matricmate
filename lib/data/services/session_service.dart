@@ -115,9 +115,13 @@ class SessionService {
     }
   }
 
-  Future<void> removeSession(String uid) async {
+  Future<void> removeSession(String uid, {String? deviceId}) async {
     try {
-      await _supabase.from('user_sessions').delete().eq('user_id', uid).timeout(AppTimeouts.bestEffort);
+      var query = _supabase.from('user_sessions').delete().eq('user_id', uid);
+      if (deviceId != null && deviceId.isNotEmpty) {
+        query = query.eq('device_id', deviceId);
+      }
+      await query.timeout(AppTimeouts.bestEffort);
     } catch (e) {
       // Non-critical — session cleanup failure should not block logout
     }

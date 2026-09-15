@@ -64,9 +64,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
         dismissDirection: DismissDirection.horizontal,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         action: SnackBarAction(
           label: 'Undo',
           textColor: const Color(0xFF5EEAD4),
@@ -144,7 +142,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return widgets;
   }
 
-    void _deleteSelectedWithUndo() {
+  void _deleteSelectedWithUndo() {
     final count = ctrl.selectedIds.length;
     if (count == 0) return;
 
@@ -215,13 +213,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 width: 1.5,
               ),
             ),
-            child: Center(
-              child: Icon(
-                icon,
-                size: 38,
-                color: color,
-              ),
-            ),
+            child: Center(child: Icon(icon, size: 38, color: color)),
           ),
         ),
         const SizedBox(height: 20),
@@ -259,10 +251,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
             style: TextButton.styleFrom(
               foregroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
@@ -363,10 +352,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
               child: const Text(
                 'Activate',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -424,13 +410,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         color: Colors.white,
                         size: 20,
                       ),
-                      onPressed: allSelected ? ctrl.clearSelection : ctrl.selectAll,
+                      onPressed: allSelected
+                          ? ctrl.clearSelection
+                          : ctrl.selectAll,
                     ),
                     // Mark Selected as Read
                     IconButton(
                       tooltip: 'Mark as read',
                       icon: const Icon(
-                        Icons.mark_email_read_rounded,
+                        Icons.done_all_rounded,
                         color: Colors.white,
                         size: 20,
                       ),
@@ -478,7 +466,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       );
                     }
                     return Text(
-                      unread > 0 ? '$unread unread · $total total' : '$total notifications',
+                      unread > 0
+                          ? '$unread unread · $total total'
+                          : '$total notifications',
                       style: const TextStyle(
                         color: Color(0xFFD1FAE5),
                         fontSize: 11.5,
@@ -488,8 +478,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   }),
                   actions: [
                     Obx(() {
-                      if (ctrl.notifications.isEmpty) return const SizedBox.shrink();
-                      final isFiltered = ctrl.selectedFilter.value != NotificationFilter.all;
+                      if (ctrl.notifications.isEmpty)
+                        return const SizedBox.shrink();
+                      final isFiltered =
+                          ctrl.selectedFilter.value != NotificationFilter.all;
 
                       return Row(
                         mainAxisSize: MainAxisSize.min,
@@ -502,7 +494,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               Material(
                                 color: Colors.transparent,
                                 child: InkWell(
-                                  onTap: () => NotificationFilterSheet.show(context),
+                                  onTap: () =>
+                                      NotificationFilterSheet.show(context),
                                   borderRadius: BorderRadius.circular(10),
                                   child: Container(
                                     width: 34,
@@ -510,7 +503,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     decoration: BoxDecoration(
                                       color: isFiltered
                                           ? Colors.white.withValues(alpha: 0.28)
-                                          : Colors.white.withValues(alpha: 0.15),
+                                          : Colors.white.withValues(
+                                              alpha: 0.15,
+                                            ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: const Center(
@@ -599,7 +594,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
           body: Obx(() {
             if (ctrl.isLoading.value && ctrl.notifications.isEmpty) {
-              return const AppCircularLoading(title: 'Loading notifications...');
+              return const AppCircularLoading(
+                title: 'Loading notifications...',
+              );
             }
 
             final isPermissionDisabled =
@@ -656,8 +653,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               ),
                               const SizedBox(height: 8),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 40),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                ),
                                 child: Text(
                                   'You have no notifications right now.\nCheck back later for test announcements, updates, and results.',
                                   textAlign: TextAlign.center,
@@ -680,8 +678,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       onPressed: isBusy
                                           ? null
                                           : () => ctrl.loadNotifications(
-                                                syncRemote: true,
-                                              ),
+                                              syncRemote: true,
+                                            ),
                                       icon: isBusy
                                           ? const SizedBox(
                                               width: 16,
@@ -713,8 +711,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                         ),
                                         elevation: 0,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 22,
@@ -757,4 +756,3 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     });
   }
 }
-

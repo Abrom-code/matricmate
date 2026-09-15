@@ -56,7 +56,6 @@ class AvailableChallengeCard extends StatelessWidget {
                 c.id == challenge.id ||
                 (challenge.setId.isNotEmpty && c.setId == challenge.setId),
           );
-      final scoreText = ctrl.getScoreText(challenge.id);
 
       return Container(
         decoration: BoxDecoration(
@@ -108,39 +107,13 @@ class AvailableChallengeCard extends StatelessWidget {
                 const Spacer(),
 
                 if (isDone) ...[
-                  // Completed badge (consistent with other tests)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle_outline_rounded,
-                          size: 11,
-                          color: AppColors.primary,
-                        ),
-                        SizedBox(width: 3.5),
-                        Text(
-                          'COMPLETED',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ],
+                  // Double check completed icon
+                  const Tooltip(
+                    message: 'Completed',
+                    child: Icon(
+                      Icons.done_all_rounded,
+                      size: 19,
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -195,91 +168,43 @@ class AvailableChallengeCard extends StatelessWidget {
             const SizedBox(height: 12),
 
             // ── 3. Meta Row ─────────────────────────────────────────────
-            if (isDone) ...[
-              // Completed UI consistent with other tests
-              Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle_outline_rounded,
-                    size: 14,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    scoreText,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  const Icon(
-                    Icons.people_outline_rounded,
-                    size: 15,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '${ctrl.getParticipantCount(challenge.id)} joined',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: 1.0,
-                  minHeight: 4,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            Row(
+              children: [
+                // Duration / Time it takes (left)
+                const Icon(
+                  Icons.access_time_rounded,
+                  size: 15,
+                  color: AppColors.textSecondary,
                 ),
-              ),
-            ] else ...[
-              Row(
-                children: [
-                  // Duration / Time it takes (left)
-                  const Icon(
-                    Icons.access_time_rounded,
-                    size: 15,
+                const SizedBox(width: 5),
+                Text(
+                  '$durationMins mins',
+                  style: const TextStyle(
+                    fontSize: 13,
                     color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '$durationMins mins',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                ),
 
-                  const Spacer(),
+                const Spacer(),
 
-                  // Number of joins (right)
-                  const Icon(
-                    Icons.people_outline_rounded,
-                    size: 15,
+                // Number of joins (right)
+                const Icon(
+                  Icons.people_outline_rounded,
+                  size: 15,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  '${ctrl.getParticipantCount(challenge.id)} joined',
+                  style: const TextStyle(
+                    fontSize: 13,
                     color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '${ctrl.getParticipantCount(challenge.id)} joined',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
 
             const SizedBox(height: 16),
 

@@ -63,11 +63,7 @@ class AvailableChallengeCard extends StatelessWidget {
           color: dark ? AppColors.darkCard : AppColors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDone
-                ? AppColors.primary.withValues(alpha: 0.35)
-                : dark
-                    ? AppColors.darkBorder
-                    : const Color(0xFFE2E8F0),
+            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
             width: 1,
           ),
           boxShadow: [
@@ -111,40 +107,7 @@ class AvailableChallengeCard extends StatelessWidget {
 
                 const Spacer(),
 
-                // Locked badge for free users (consistent with other tests)
-                if (!isPremium) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: dark ? 0.2 : 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.amber.withValues(alpha: 0.4),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.lock, size: 11, color: Colors.amber),
-                        SizedBox(width: 3.5),
-                        Text(
-                          'LOCKED',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.amber,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ] else if (isDone) ...[
+                if (isDone) ...[
                   // Completed badge (consistent with other tests)
                   Container(
                     padding: const EdgeInsets.symmetric(

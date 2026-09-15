@@ -222,39 +222,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                       ],
                     ),
                   ),
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Completed / Archive'),
-                        if (_ctrl.completedChallenges.isNotEmpty) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: dark
-                                  ? AppColors.darkContainer
-                                  : const Color(0xFFE2E8F0),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${_ctrl.completedChallenges.length}',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: dark
-                                    ? Colors.white70
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                  const Tab(text: 'Completed'),
                 ],
               ),
             ),

@@ -332,6 +332,11 @@ class AvailableChallengeCard extends StatelessWidget {
                         ? const Color(0xFFD97706)
                         : Colors.amber.shade700,
                     foregroundColor: Colors.white,
+                    side: BorderSide(
+                      color: isPending
+                          ? const Color(0xFFD97706)
+                          : Colors.amber.shade700,
+                    ),
                     elevation: 0,
                     padding: EdgeInsets.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,

@@ -22,7 +22,9 @@ class PremiumBottomSheet extends StatelessWidget {
     final cardBg = dark ? AppColors.darkSurface : AppColors.lightGrey;
     final borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
     final primaryTextColor = dark ? AppColors.textWhite : AppColors.textPrimary;
-    final secondaryTextColor = dark ? AppColors.darkGrey : AppColors.textSecondary;
+    final secondaryTextColor = dark
+        ? AppColors.darkGrey
+        : AppColors.textSecondary;
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: screenHeight * 0.92),
@@ -158,8 +160,9 @@ class PremiumBottomSheet extends StatelessWidget {
                       icon: Icons.military_tech_rounded,
                       iconColor: const Color(0xFFF59E0B),
                       tag: '5+ YEARS',
-                      title: 'National Entrance Exams',
-                      subtitle: '5+ years past papers with detailed Amharic & English solutions.',
+                      title: 'Past Entrance Exams',
+                      subtitle:
+                          '5+ years past papers with detailed Amharic & English solutions.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -172,7 +175,8 @@ class PremiumBottomSheet extends StatelessWidget {
                       iconColor: AppColors.primary,
                       tag: 'GRADES 9–12',
                       title: 'All Chapter Tests',
-                      subtitle: 'Grades 9–12 quizzes with detailed Amharic & English explanations.',
+                      subtitle:
+                          'Grades 9–12 quizzes with detailed Amharic & English explanations.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -184,8 +188,9 @@ class PremiumBottomSheet extends StatelessWidget {
                       icon: Icons.assignment_turned_in_rounded,
                       iconColor: const Color(0xFF3B82F6),
                       tag: 'FULL-LENGTH',
-                      title: 'Standardized Model Exams',
-                      subtitle: 'Realistic model tests with complete Amharic & English answer keys.',
+                      title: 'Past Model Exams',
+                      subtitle:
+                          'Different past model exams with complete Amharic & English answer keys.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -197,8 +202,9 @@ class PremiumBottomSheet extends StatelessWidget {
                       icon: Icons.school_rounded,
                       iconColor: const Color(0xFF8B5CF6),
                       tag: 'YEAR-END',
-                      title: 'Grade-Level Assessments',
-                      subtitle: 'Annual readiness tests with step-by-step bilingual explanations.',
+                      title: 'Grade-Level Assessments(9-12)',
+                      subtitle:
+                          'Annual readiness tests with step-by-step bilingual explanations.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -210,8 +216,9 @@ class PremiumBottomSheet extends StatelessWidget {
                       icon: Icons.emoji_events_rounded,
                       iconColor: const Color(0xFFD97706),
                       tag: 'LIVE RANKS',
-                      title: 'National Challenges',
-                      subtitle: 'Compete live, climb leaderboards & review full detailed solutions.',
+                      title: 'Daily Challenges',
+                      subtitle:
+                          'Compete live, climb leaderboards & review full detailed solutions.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -299,9 +306,7 @@ class PremiumBottomSheet extends StatelessWidget {
                 width: 0.8,
               ),
             ),
-            child: Center(
-              child: Icon(icon, color: iconColor, size: 21),
-            ),
+            child: Center(child: Icon(icon, color: iconColor, size: 21)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -322,28 +327,6 @@ class PremiumBottomSheet extends StatelessWidget {
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6.5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: iconColor.withValues(
-                          alpha: isDark ? 0.18 : 0.1,
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        tag,
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          color: iconColor,
-                          letterSpacing: 0.3,
-                        ),
                       ),
                     ),
                   ],
@@ -373,8 +356,12 @@ class PremiumBottomSheet extends StatelessWidget {
     final bgColor = dark ? AppColors.darkCard : AppColors.white;
     final cardBg = dark ? AppColors.darkSurface : const Color(0xFFF8FAFC);
     final borderColor = dark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-    final primaryTextColor = dark ? AppColors.textWhite : const Color(0xFF0F172A);
-    final secondaryTextColor = dark ? AppColors.darkGrey : AppColors.textSecondary;
+    final primaryTextColor = dark
+        ? AppColors.textWhite
+        : const Color(0xFF0F172A);
+    final secondaryTextColor = dark
+        ? AppColors.darkGrey
+        : AppColors.textSecondary;
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
@@ -418,10 +405,7 @@ class PremiumBottomSheet extends StatelessWidget {
               height: 68,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFF59E0B),
-                    Color(0xFFD97706),
-                  ],
+                  colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -487,10 +471,7 @@ class PremiumBottomSheet extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Divider(
-                      height: 1,
-                      color: borderColor,
-                    ),
+                    child: Divider(height: 1, color: borderColor),
                   ),
                   _pendingStatusRow(
                     icon: Icons.pending_rounded,

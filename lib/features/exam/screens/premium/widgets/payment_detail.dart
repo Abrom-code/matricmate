@@ -102,7 +102,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
           const Divider(height: 1),
           const SizedBox(height: 12),
 
-          // ── Account Number Row with Animated Copy Button ──
+          // ── Account Number & Name Row with Animated Copy Button ──
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -121,27 +121,64 @@ class _PaymentDetailState extends State<PaymentDetail> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    SelectableText(
-                      number,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                        color: isDark ? AppColors.textWhite : AppColors.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.credit_card_rounded,
+                          size: 17,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: SelectableText(
+                            number,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              color: isDark ? AppColors.textWhite : AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                    if (name.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.verified_user_rounded,
+                            size: 17,
+                            color: AppColors.success,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: SelectableText(
+                              name,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.2,
+                                color: isDark ? AppColors.textWhite : AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
               const SizedBox(width: 10),
 
-              // Animated Copy / Loading Button
+              // ── Animated Copy Button (Icon only) ──
               InkWell(
                 borderRadius: BorderRadius.circular(10),
                 onTap: _isCopying ? null : () => _handleCopy(number),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: _isCopied ? AppColors.success : AppColors.primary,
                     borderRadius: BorderRadius.circular(10),
@@ -154,100 +191,32 @@ class _PaymentDetailState extends State<PaymentDetail> {
                       ),
                     ],
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_isCopying) ...[
-                        const SizedBox(
-                          width: 13,
-                          height: 13,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'Copying...',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.white,
-                          ),
-                        ),
-                      ] else if (_isCopied) ...[
-                        const Icon(
-                          Icons.check_rounded,
-                          size: 14,
-                          color: AppColors.white,
-                        ),
-                        const SizedBox(width: 5),
-                        const Text(
-                          'Copied!',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.white,
-                          ),
-                        ),
-                      ] else ...[
-                        const Icon(
-                          Icons.copy_rounded,
-                          size: 14,
-                          color: AppColors.white,
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'Copy',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.white,
-                          ),
-                        ),
-                      ],
-                    ],
+                  child: Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: _isCopying
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.white,
+                              ),
+                            )
+                          : Icon(
+                              _isCopied
+                                  ? Icons.check_rounded
+                                  : Icons.copy_rounded,
+                              key: ValueKey<bool>(_isCopied),
+                              size: 18,
+                              color: AppColors.white,
+                            ),
+                    ),
                   ),
                 ),
               ),
             ],
           ),
-
-          // ── Account Holder Name Section (Prominent & Large) ───────
-          if (name.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              'ACCOUNT HOLDER',
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-                color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(
-                  Icons.verified_user_rounded,
-                  size: 17,
-                  color: AppColors.success,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: SelectableText(
-                    name,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
-                      color: isDark ? AppColors.textWhite : AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );

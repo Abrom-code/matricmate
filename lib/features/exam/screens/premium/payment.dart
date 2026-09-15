@@ -4,7 +4,6 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/link_input_field.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payment_detail.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/payment_tile.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/receipt_container.dart';
@@ -117,7 +116,7 @@ class PaymentScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'PROOF OF PAYMENT',
+                  'RECEIPT SCREENSHOT *',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -134,19 +133,13 @@ class PaymentScreen extends StatelessWidget {
             // ── Upload Form ────────────────────────────────────────
             Form(
               key: controller.paymentFormKey,
-              child: Column(
-                children: [
-                  const LinkInputField(),
-                  const SizedBox(height: 16),
-                  Obx(() {
-                    final file = controller.receipt.value;
-                    return GestureDetector(
-                      onTap: () => controller.pickReceipt(),
-                      child: ReceiptContainer(file: file),
-                    );
-                  }),
-                ],
-              ),
+              child: Obx(() {
+                final file = controller.receipt.value;
+                return GestureDetector(
+                  onTap: () => controller.pickReceipt(),
+                  child: ReceiptContainer(file: file),
+                );
+              }),
             ),
 
             const SizedBox(height: 24),
@@ -172,9 +165,7 @@ class PaymentScreen extends StatelessWidget {
             color: isDark ? AppColors.darkCard : AppColors.white,
             border: Border(
               top: BorderSide(
-                color: isDark
-                    ? AppColors.darkBorder
-                    : AppColors.borderPrimary,
+                color: isDark ? AppColors.darkBorder : AppColors.borderPrimary,
               ),
             ),
             boxShadow: [

@@ -16,21 +16,6 @@ class ReceiptContainer extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'PAYMENT RECEIPT SCREENSHOT *',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-                color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: double.infinity,
@@ -81,7 +66,9 @@ class ReceiptContainer extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
-                        color: isDark ? AppColors.textWhite : AppColors.textPrimary,
+                        color: isDark
+                            ? AppColors.textWhite
+                            : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -90,7 +77,9 @@ class ReceiptContainer extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.darkGrey
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],

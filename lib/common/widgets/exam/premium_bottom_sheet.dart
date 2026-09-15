@@ -69,8 +69,8 @@ class PremiumBottomSheet extends StatelessWidget {
                   children: [
                     // ── Premium Crown / Badge Icon ───────────────────
                     Container(
-                      width: 62,
-                      height: 62,
+                      width: 58,
+                      height: 58,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -93,12 +93,12 @@ class PremiumBottomSheet extends StatelessWidget {
                         child: Icon(
                           Icons.workspace_premium_rounded,
                           color: AppColors.white,
-                          size: 32,
+                          size: 30,
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
 
                     // ── Title & Subtitle ────────────────────────────
                     Row(
@@ -108,7 +108,7 @@ class PremiumBottomSheet extends StatelessWidget {
                         Text(
                           'Unlock Full Access',
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: 21,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.3,
                             color: primaryTextColor,
@@ -139,27 +139,27 @@ class PremiumBottomSheet extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
 
                     Text(
-                      'Get unlimited access to all subjects, past matric exams, and national challenges.',
+                      'All subjects • Past matric exams • Amharic explanations & offline.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 13,
-                        height: 1.4,
+                        fontSize: 12.5,
+                        height: 1.35,
                         color: secondaryTextColor,
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
 
-                    // ── The 5 Premium Features ───────────────────────
+                    // ── Core Features (Short & Clear) ────────────────
                     _featureCard(
                       icon: Icons.military_tech_rounded,
                       iconColor: const Color(0xFFF59E0B),
                       tag: '5+ YEARS',
                       title: 'National Entrance Exams',
-                      subtitle: '5+ years of past matric papers with full answer keys & step-by-step explanations.',
+                      subtitle: 'Past matric papers with full answer keys.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -171,8 +171,8 @@ class PremiumBottomSheet extends StatelessWidget {
                       icon: Icons.menu_book_rounded,
                       iconColor: AppColors.primary,
                       tag: 'GRADES 9–12',
-                      title: 'Chapter Tests for All Subjects',
-                      subtitle: 'Full access to targeted quizzes covering every chapter from Grade 9 to 12.',
+                      title: 'All Chapter Tests',
+                      subtitle: 'Unit quizzes covering every grade & chapter.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -185,7 +185,7 @@ class PremiumBottomSheet extends StatelessWidget {
                       iconColor: const Color(0xFF3B82F6),
                       tag: 'FULL-LENGTH',
                       title: 'Standardized Model Exams',
-                      subtitle: 'Realistic model tests designed by expert educators to simulate the real exam.',
+                      subtitle: 'Realistic exams designed by expert educators.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -198,7 +198,7 @@ class PremiumBottomSheet extends StatelessWidget {
                       iconColor: const Color(0xFF8B5CF6),
                       tag: 'YEAR-END',
                       title: 'Grade-Level Assessments',
-                      subtitle: 'Comprehensive yearly assessments to evaluate your overall grade readiness.',
+                      subtitle: 'Comprehensive yearly readiness assessments.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -210,8 +210,8 @@ class PremiumBottomSheet extends StatelessWidget {
                       icon: Icons.emoji_events_rounded,
                       iconColor: const Color(0xFFD97706),
                       tag: 'LIVE RANKS',
-                      title: 'Weekly & Monthly Challenges',
-                      subtitle: 'Compete in live national challenges, earn rankings, and climb the leaderboard.',
+                      title: 'National Challenges',
+                      subtitle: 'Compete live with peers and climb the leaderboard.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -219,8 +219,23 @@ class PremiumBottomSheet extends StatelessWidget {
                       isDark: dark,
                     ),
 
+                    // ── Support Feature with Emphasis on Amharic & Offline ──
+                    _featureCard(
+                      icon: Icons.translate_rounded,
+                      iconColor: AppColors.primary,
+                      tag: 'በአማርኛ • OFFLINE',
+                      title: 'Amharic Explanations (በአማርኛ)',
+                      subtitle: 'Step-by-step reasoning in Amharic with 100% offline access.',
+                      cardBg: cardBg,
+                      borderColor: borderColor,
+                      primaryText: primaryTextColor,
+                      secondaryText: secondaryTextColor,
+                      isDark: dark,
+                      isHighlighted: true,
+                    ),
+
                     // ── Primary Action Button ────────────────────────
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -276,34 +291,56 @@ class PremiumBottomSheet extends StatelessWidget {
     required Color primaryText,
     required Color secondaryText,
     required bool isDark,
+    bool isHighlighted = false,
   }) {
+    final effectiveCardBg = isHighlighted
+        ? (isDark
+            ? AppColors.primary.withValues(alpha: 0.16)
+            : AppColors.primary.withValues(alpha: 0.08))
+        : cardBg;
+
+    final effectiveBorderColor = isHighlighted
+        ? AppColors.primary.withValues(alpha: isDark ? 0.5 : 0.35)
+        : borderColor;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
       decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 1),
+        color: effectiveCardBg,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: effectiveBorderColor,
+          width: isHighlighted ? 1.2 : 1,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: isDark ? 0.2 : 0.12),
+              color: isHighlighted
+                  ? AppColors.primary.withValues(alpha: isDark ? 0.28 : 0.16)
+                  : iconColor.withValues(alpha: isDark ? 0.2 : 0.12),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: iconColor.withValues(alpha: isDark ? 0.35 : 0.25),
+                color: isHighlighted
+                    ? AppColors.primary.withValues(alpha: 0.45)
+                    : iconColor.withValues(alpha: isDark ? 0.35 : 0.25),
                 width: 0.8,
               ),
             ),
             child: Center(
-              child: Icon(icon, color: iconColor, size: 21),
+              child: Icon(
+                icon,
+                color: isHighlighted ? AppColors.primary : iconColor,
+                size: 20,
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,34 +364,36 @@ class PremiumBottomSheet extends StatelessWidget {
                     const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
+                        horizontal: 6.5,
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: iconColor.withValues(
-                          alpha: isDark ? 0.18 : 0.1,
-                        ),
+                        color: isHighlighted
+                            ? AppColors.primary
+                            : iconColor.withValues(
+                                alpha: isDark ? 0.18 : 0.1,
+                              ),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         tag,
                         style: TextStyle(
                           fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                          color: iconColor,
+                          fontWeight: FontWeight.w800,
+                          color: isHighlighted ? AppColors.white : iconColor,
                           letterSpacing: 0.3,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2.5),
                 Text(
                   subtitle,
                   style: TextStyle(
                     fontSize: 11.5,
                     color: secondaryText,
-                    height: 1.35,
+                    height: 1.3,
                   ),
                 ),
               ],

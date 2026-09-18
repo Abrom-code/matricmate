@@ -7,6 +7,7 @@ import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/local_storage/sync_prefs.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -425,6 +426,9 @@ class SubjectRepository {
       if (imageUrls.isNotEmpty) {
         await AppHelperFunctions.removeCachedImages(imageUrls);
       }
+
+      // 4. Reset sync timestamps so the next sync/download is a full fetch
+      await SyncPrefs.clearAll();
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

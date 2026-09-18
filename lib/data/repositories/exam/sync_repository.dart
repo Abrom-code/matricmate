@@ -243,8 +243,21 @@ class SyncRepository {
             .timeout(AppTimeouts.download);
       } else {
         // Delta: fetch questions updated since last sync
-        if (tests.isEmpty) {
-          // No new tests — just check for edited questions across these subjects
+        // Self-healing: identify any existing local entrance/model tests with 0 questions
+        final emptyTestRows = await db.rawQuery(
+          'SELECT t.id FROM tests t '
+          'LEFT JOIN questions q ON t.id = q.test_id '
+          'WHERE t.subject_id IN (${subjectIds.map((_) => '?').join(',')}) '
+          'AND t.type IN (\'entrance\', \'model\') '
+          'GROUP BY t.id HAVING COUNT(q.id) = 0',
+          subjectIds,
+        );
+        final emptyLocalTestIds = emptyTestRows.map((r) => r['id'] as int).toList();
+        final newTestIds = tests.map<int>((t) => t['id'] as int).toList();
+        final fullFetchTestIds = <int>{...newTestIds, ...emptyLocalTestIds}.toList();
+
+        if (fullFetchTestIds.isEmpty) {
+          // No new tests and no locally empty tests — just check for edited questions
           questionsData = await supabase
               .from('questions')
               .select('*, question_sections(title)')
@@ -252,13 +265,12 @@ class SyncRepository {
               .gt('updated_at', sinceIso)
               .timeout(AppTimeouts.download);
         } else {
-          // New tests + edited questions across entrance subjects
-          final newTestIds = tests.map<int>((t) => t['id'] as int).toList();
+          // New/empty tests (full fetch, no timestamp filter) + edited questions (delta)
           final results = await Future.wait([
             supabase
                 .from('questions')
                 .select('*, question_sections(title)')
-                .inFilter('test_id', newTestIds),
+                .inFilter('test_id', fullFetchTestIds),
             supabase
                 .from('questions')
                 .select('*, question_sections(title)')
@@ -414,19 +426,33 @@ class SyncRepository {
     // Delta sync — two-pronged fetch
     final futures = <Future<List<Map<String, dynamic>>>>[];
 
-    // Prong 1: ALL questions for brand-new tests (no updated_at filter)
-    if (newTestIds.isNotEmpty) {
+    final db = await _dbService.database;
+
+    // Self-healing: find existing local tests that have 0 questions stored
+    final emptyTestRows = await db.rawQuery(
+      'SELECT t.id FROM tests t '
+      'LEFT JOIN questions q ON t.id = q.test_id '
+      'WHERE t.subject_id IN (${subjectIds.map((_) => '?').join(',')}) '
+      'GROUP BY t.id HAVING COUNT(q.id) = 0',
+      subjectIds,
+    );
+    final emptyLocalTestIds = emptyTestRows.map((r) => r['id'] as int).toList();
+
+    // Combine brand-new tests + locally-empty tests for full fetch
+    final fullFetchTestIds = <int>{...newTestIds, ...emptyLocalTestIds}.toList();
+
+    // Prong 1: ALL questions for new or locally-empty tests (no updated_at filter)
+    if (fullFetchTestIds.isNotEmpty) {
       futures.add(
         supabase
             .from('questions')
             .select('*, question_sections(title)')
-            .inFilter('test_id', newTestIds)
+            .inFilter('test_id', fullFetchTestIds)
             .timeout(AppTimeouts.query),
       );
     }
 
     // Prong 2: Updated questions for already-local tests (delta filter)
-    final db = await _dbService.database;
     final testRows = await db.query(
       'tests',
       columns: ['id'],

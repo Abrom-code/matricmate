@@ -74,6 +74,12 @@ class RealtimeService {
     _questionsChannel = _supabase
         .channel('question_edits')
         .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'questions',
+          callback: (payload) => _onQuestionChanged(payload, subjectIds),
+        )
+        .onPostgresChanges(
           event: PostgresChangeEvent.update,
           schema: 'public',
           table: 'questions',

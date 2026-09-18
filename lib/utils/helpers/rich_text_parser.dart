@@ -193,6 +193,38 @@ class RichTextParser {
     return Text.rich(parse(text, baseStyle), textAlign: textAlign);
   }
 
+  // ── Nesting-aware close-tag finder ──────────────────────────────────────────
+
+  /// Finds the matching close tag `[/tagName]` for the open tag at [searchFrom],
+  /// correctly handling nested tags of the same type.
+  /// Returns the index of the closing tag, or -1 if not found.
+  static int _findCloseTag(String text, String tagName, int searchFrom, int end) {
+    final openPattern = '[$tagName]';
+    final closePattern = '[/$tagName]';
+    final lowerText = text.toLowerCase();
+    int depth = 1;
+    int pos = searchFrom;
+
+    while (pos < end) {
+      final nextClose = lowerText.indexOf(closePattern, pos);
+      if (nextClose == -1 || nextClose >= end) return -1; // no close tag found
+
+      // Count any nested opens between pos and nextClose
+      int searchPos = pos;
+      while (true) {
+        final nextOpen = lowerText.indexOf(openPattern, searchPos);
+        if (nextOpen == -1 || nextOpen >= nextClose) break;
+        depth++;
+        searchPos = nextOpen + openPattern.length;
+      }
+
+      depth--; // account for the close tag we found
+      if (depth == 0) return nextClose;
+      pos = nextClose + closePattern.length;
+    }
+    return -1;
+  }
+
   // ── Core recursive parser ─────────────────────────────────────────────────
 
   static void _parse(
@@ -207,6 +239,9 @@ class RichTextParser {
     for (final match in _tagRe.allMatches(text, start)) {
       if (match.start >= end) break;
 
+      // Skip matches that fall inside an already-consumed tag range
+      if (match.start < cursor) continue;
+
       // plain text before this tag
       if (match.start > cursor) {
         out.add(
@@ -218,12 +253,11 @@ class RichTextParser {
       final closeTag = match.group(2);
 
       if (openTag != null) {
-        // Find matching close tag
+        // Find matching close tag (nesting-aware)
         final tagName =
             (openTag.contains('=') ? openTag.split('=')[0] : openTag)
                 .toLowerCase();
-        final closePattern = '[/$tagName]';
-        final closeIdx = text.toLowerCase().indexOf(closePattern, match.end);
+        final closeIdx = _findCloseTag(text, tagName, match.end, end);
 
         if (closeIdx == -1) {
           // No close tag — treat as plain text
@@ -232,14 +266,14 @@ class RichTextParser {
           continue;
         }
 
+        final closePattern = '[/$tagName]';
         // Content between open and close
-        final inner = text.substring(match.end, closeIdx);
         final newStyle = _applyTag(openTag, style);
 
         if (tagName == 'sup' || tagName == 'sub') {
           // Superscript / subscript via WidgetSpan
           final List<InlineSpan> innerSpans = [];
-          _parse(inner, 0, inner.length, newStyle, innerSpans);
+          _parse(text, match.end, closeIdx, newStyle, innerSpans);
           out.add(
             WidgetSpan(
               alignment: tagName == 'sup'
@@ -254,12 +288,11 @@ class RichTextParser {
         } else {
           // Regular inline span — recurse for nesting
           final List<InlineSpan> innerSpans = [];
-          _parse(inner, 0, inner.length, newStyle, innerSpans);
+          _parse(text, match.end, closeIdx, newStyle, innerSpans);
           out.addAll(innerSpans);
         }
 
         cursor = closeIdx + closePattern.length;
-        // Skip iterations falling inside the consumed range
       } else if (closeTag != null) {
         // Orphan close tag — skip
         cursor = match.end;
@@ -274,6 +307,16 @@ class RichTextParser {
 
   // ── Tag → TextStyle mapping ───────────────────────────────────────────────
 
+  /// Combines existing and new [TextDecoration]s so both are visible.
+  static TextDecoration _combineDecoration(
+    TextStyle base,
+    TextDecoration added,
+  ) {
+    final existing = base.decoration;
+    if (existing == null || existing == TextDecoration.none) return added;
+    return TextDecoration.combine([existing, added]);
+  }
+
   static TextStyle _applyTag(String rawTag, TextStyle base) {
     final tag = rawTag.toLowerCase();
     if (tag == 'b') {
@@ -287,10 +330,14 @@ class RichTextParser {
       return base.copyWith(fontStyle: FontStyle.italic);
     }
     if (tag == 'u') {
-      return base.copyWith(decoration: TextDecoration.underline);
+      return base.copyWith(
+        decoration: _combineDecoration(base, TextDecoration.underline),
+      );
     }
     if (tag == 's') {
-      return base.copyWith(decoration: TextDecoration.lineThrough);
+      return base.copyWith(
+        decoration: _combineDecoration(base, TextDecoration.lineThrough),
+      );
     }
     if (tag == 'bi') {
       return base.copyWith(
@@ -339,3 +386,4 @@ class RichTextParser {
     return null;
   }
 }
+

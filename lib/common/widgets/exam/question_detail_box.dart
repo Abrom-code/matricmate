@@ -119,7 +119,7 @@ class QuestionDetailBox extends StatelessWidget {
 
           // ── Image ─────────────────────────────────────────────────────
           if (question.imageUrl != null) ...[
-            ImageSection(imgUrl: question.imageUrl),
+            ImageSection(key: ValueKey(question.imageUrl), imgUrl: question.imageUrl),
             const SizedBox(height: AppSizes.spaceBtwItems),
           ],
 

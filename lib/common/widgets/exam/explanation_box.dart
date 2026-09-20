@@ -159,7 +159,7 @@ class AppExplanationBox extends StatelessWidget {
                                 if (explanationImageUrl != null &&
                                     explanationImageUrl!.isNotEmpty) ...[
                                   const SizedBox(height: 12),
-                                  ImageSection(imgUrl: explanationImageUrl),
+                                  ImageSection(key: ValueKey(explanationImageUrl), imgUrl: explanationImageUrl),
                                 ],
                                 // ── Close button ───────────────────────────────────
                                 const SizedBox(height: 8),

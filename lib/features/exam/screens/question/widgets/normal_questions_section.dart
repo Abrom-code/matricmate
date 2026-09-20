@@ -264,7 +264,7 @@ class ExamQuestionSection extends GetView<QuestionController> {
                 examQn: q.questionText,
               ),
               const SizedBox(height: AppSizes.spaceBtwItems),
-              if (q.imageUrl != null) ImageSection(imgUrl: q.imageUrl),
+              if (q.imageUrl != null) ImageSection(key: ValueKey(q.imageUrl), imgUrl: q.imageUrl),
               if (q.imageUrl != null)
                 const SizedBox(height: AppSizes.spaceBtwItems),
               optionsColumn,
@@ -288,7 +288,7 @@ class ExamQuestionSection extends GetView<QuestionController> {
                     ),
                     if (q.imageUrl != null) ...[
                       const SizedBox(height: AppSizes.spaceBtwItems),
-                      ImageSection(imgUrl: q.imageUrl),
+                      ImageSection(key: ValueKey(q.imageUrl), imgUrl: q.imageUrl),
                     ],
                     const SizedBox(height: AppSizes.spaceBtwItems),
                   ],

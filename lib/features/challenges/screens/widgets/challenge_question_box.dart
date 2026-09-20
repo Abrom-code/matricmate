@@ -169,7 +169,7 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
 
           // ── Image Section (if present) ─────────────────────────────
           if (q.imageUrl != null && q.imageUrl!.isNotEmpty) ...[
-            ImageSection(imgUrl: q.imageUrl),
+            ImageSection(key: ValueKey(q.imageUrl), imgUrl: q.imageUrl),
             const SizedBox(height: AppSizes.spaceBtwItems),
           ],
 

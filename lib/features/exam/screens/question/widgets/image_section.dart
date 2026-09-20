@@ -24,6 +24,15 @@ class _ImageSectionState extends State<ImageSection> {
     _imageFuture = _loadImage();
   }
 
+  @override
+  void didUpdateWidget(covariant ImageSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reload image when the URL changes (e.g. swiping between questions)
+    if (oldWidget.imgUrl != widget.imgUrl) {
+      _imageFuture = _loadImage();
+    }
+  }
+
   Future<File?> _loadImage() async {
     if (widget.imgUrl == null || widget.imgUrl!.isEmpty) return null;
 

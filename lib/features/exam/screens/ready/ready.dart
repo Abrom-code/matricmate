@@ -64,23 +64,160 @@ class ReadyDialog extends StatelessWidget {
     );
   }
 
+  void _showInfoSheet(BuildContext context) {
+    final dark = AppHelperFunctions.isDark(context);
+    final meta = examTitle != null
+        ? _parseEntranceTitle(examTitle!)
+        : (year: null, code: null);
+    final hasDescription =
+        description != null && description!.trim().isNotEmpty;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: (dark ? AppColors.white : AppColors.darkerGrey)
+                      .withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // Sheet title
+            Row(
+              children: [
+                const Icon(
+                  Iconsax.info_circle_copy,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Test Details',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: dark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Year & Booklet Code chips
+            if (meta.year != null || meta.code != null) ...[
+              Row(
+                children: [
+                  if (meta.year != null)
+                    _MetaChip(
+                      icon: Icons.calendar_today_rounded,
+                      label: '${meta.year}',
+                      color: AppColors.secondary,
+                      dark: dark,
+                    ),
+                  if (meta.year != null && meta.code != null)
+                    const SizedBox(width: 8),
+                  if (meta.code != null)
+                    _MetaChip(
+                      icon: Icons.tag_rounded,
+                      label: 'B Code: ${meta.code}',
+                      color: Colors.teal,
+                      dark: dark,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+            ],
+
+            // Questions & Time info row
+            Row(
+              children: [
+                _MetaChip(
+                  icon: Iconsax.message_question_copy,
+                  label: '$qnCount questions',
+                  color: AppColors.primary,
+                  dark: dark,
+                ),
+                if (time > 0) ...[
+                  const SizedBox(width: 8),
+                  _MetaChip(
+                    icon: Iconsax.timer_1_copy,
+                    label: '$time min',
+                    color: Colors.blue,
+                    dark: dark,
+                  ),
+                ],
+              ],
+            ),
+
+            // Description
+            if (hasDescription) ...[
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.primary
+                      .withValues(alpha: dark ? 0.09 : 0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary
+                        .withValues(alpha: dark ? 0.25 : 0.15),
+                  ),
+                ),
+                child: Text(
+                  description!.trim(),
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    fontStyle: FontStyle.italic,
+                    color: dark
+                        ? AppColors.white.withValues(alpha: 0.88)
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final hasDraft = draft != null;
     final answered = draft?.selectedAnswers.length ?? 0;
+
+    // Determine if the info button should be shown
     final meta = examTitle != null
         ? _parseEntranceTitle(examTitle!)
         : (year: null, code: null);
-    final examYear = meta.year;
-    final examCode = meta.code;
-    final hasExamMeta = examYear != null || examCode != null;
+    final hasInfo = (description != null && description!.trim().isNotEmpty) ||
+        meta.year != null ||
+        meta.code != null;
 
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
-        // Portrait: cap at 620px. Landscape: cap at 85% of screen height.
         constraints: BoxConstraints(
           maxHeight: MediaQuery.orientationOf(context) == Orientation.landscape
               ? MediaQuery.sizeOf(context).height * 0.85
@@ -108,52 +245,8 @@ class ReadyDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
-                  // ── Entrance Exam Metadata (Year / Code chips) ───────────
-                  if (!hasDraft && hasExamMeta) ...[
-                    Row(
-                      children: [
-                        if (examYear != null)
-                          _MetaChip(
-                            icon: Icons.calendar_today_rounded,
-                            label: '$examYear',
-                            color: AppColors.secondary,
-                            dark: dark,
-                          ),
-                        if (examYear != null && examCode != null)
-                          const SizedBox(width: 8),
-                        if (examCode != null)
-                          _MetaChip(
-                            icon: Icons.tag_rounded,
-                            label: 'B Code: $examCode',
-                            color: Colors.teal,
-                            dark: dark,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-                  ],
-
-                  // ── Description / source info quote card (only when not paused) ──
-                  if (!hasDraft &&
-                      description != null &&
-                      description!.trim().isNotEmpty) ...[
-                    _ExpandableQuoteCard(text: description!),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-                  ],
-
-                  // Resume button (shown when in-progress draft exists)
+                  // ── Resume button (only when in-progress draft exists) ──
                   if (hasDraft) ...[
-                    Divider(color: AppColors.darkGrey.withValues(alpha: 0.15)),
-
-                    Text(
-                      'Continue',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.darkGrey,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-
                     _ActionButton(
                       label: 'Resume',
                       description:
@@ -171,22 +264,23 @@ class ReadyDialog extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: AppSizes.spaceBtwItems),
-                  ],
-                  Divider(
-                    height: 1,
-                    color: AppColors.darkGrey.withValues(alpha: 0.15),
-                  ),
-                  const SizedBox(height: AppSizes.spaceBtwItems),
-                  Text(
-                    'Start fresh',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.darkGrey,
-                      fontWeight: FontWeight.w600,
+                    Divider(
+                      height: 1,
+                      color: AppColors.darkGrey.withValues(alpha: 0.15),
                     ),
-                  ),
-                  const SizedBox(height: AppSizes.spaceBtwItems),
+                    const SizedBox(height: AppSizes.spaceBtwItems),
+                    Text(
+                      'Start fresh',
+                      style:
+                          Theme.of(context).textTheme.labelMedium?.copyWith(
+                                color: AppColors.darkGrey,
+                                fontWeight: FontWeight.w600,
+                              ),
+                    ),
+                    const SizedBox(height: AppSizes.spaceBtwItems),
+                  ],
 
-                  // Practice button
+                  // ── Practice button ──
                   _ActionButton(
                     label: 'Practice',
                     description:
@@ -198,7 +292,7 @@ class ReadyDialog extends StatelessWidget {
 
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
-                  // Exam button
+                  // ── Exam button ──
                   _ActionButton(
                     label: 'Exam',
                     description:
@@ -213,7 +307,23 @@ class ReadyDialog extends StatelessWidget {
               ),
             ),
 
-            // Close button overlay
+            // ── Info button (top-left) — only when test has metadata/description ──
+            if (hasInfo)
+              Positioned(
+                top: 6,
+                left: 6,
+                child: IconButton(
+                  onPressed: () => _showInfoSheet(context),
+                  tooltip: 'Test details',
+                  icon: Icon(
+                    Iconsax.info_circle_copy,
+                    color: AppColors.primary.withValues(alpha: 0.7),
+                    size: 22,
+                  ),
+                ),
+              ),
+
+            // ── Close button (top-right) ──
             Positioned(
               top: 6,
               right: 6,
@@ -307,135 +417,6 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-// ── Expandable quote card for test description ────────────────────────────────
-
-class _ExpandableQuoteCard extends StatefulWidget {
-  const _ExpandableQuoteCard({required this.text});
-  final String text;
-
-  @override
-  State<_ExpandableQuoteCard> createState() => _ExpandableQuoteCardState();
-}
-
-class _ExpandableQuoteCardState extends State<_ExpandableQuoteCard> {
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = AppHelperFunctions.isDark(context);
-    final text = widget.text.trim();
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => setState(() => _isExpanded = !_isExpanded),
-        borderRadius: BorderRadius.circular(10),
-        child: Stack(
-          children: [
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: dark ? 0.09 : 0.05),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: dark ? 0.3 : 0.18),
-                  width: 1,
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header row: Quote icon + Title + Animated chevron
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.format_quote_rounded,
-                        size: 18,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'About this test',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      const Spacer(),
-                      AnimatedRotation(
-                        turns: _isExpanded ? 0.5 : 0.0,
-                        duration: const Duration(milliseconds: 200),
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 18,
-                          color: AppColors.primary.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Quote body: 1-line ellipsis when collapsed, full text when expanded
-                  AnimatedCrossFade(
-                    firstChild: Text(
-                      '“$text”',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontStyle: FontStyle.italic,
-                        height: 1.35,
-                        color: dark
-                            ? AppColors.white.withValues(alpha: 0.88)
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                    secondChild: Text(
-                      '“$text”',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontStyle: FontStyle.italic,
-                        height: 1.45,
-                        color: dark
-                            ? AppColors.white.withValues(alpha: 0.95)
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                    crossFadeState: _isExpanded
-                        ? CrossFadeState.showSecond
-                        : CrossFadeState.showFirst,
-                    duration: const Duration(milliseconds: 200),
-                  ),
-                ],
-              ),
-            ),
-            // Left accent bar (blockquote style)
-            Positioned(
-              top: 0,
-              bottom: 0,
-              left: 0,
-              child: Container(
-                width: 4,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(10),
-                    bottomLeft: Radius.circular(10),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ── Meta chip (year / code) ───────────────────────────────────────────────────
 
 class _MetaChip extends StatelessWidget {
@@ -478,4 +459,3 @@ class _MetaChip extends StatelessWidget {
     );
   }
 }
-

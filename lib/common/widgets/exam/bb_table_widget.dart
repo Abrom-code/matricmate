@@ -51,8 +51,9 @@ class BBTableWidget extends StatelessWidget {
         ? AppColors.primary.withValues(alpha: 0.18)
         : Colors.teal.shade50;
 
+    // Dark mode needs a visibly lighter border so the table doesn't vanish
     final borderSide = BorderSide(
-      color: dark ? AppColors.darkBorder : Colors.grey.shade300,
+      color: dark ? Colors.white.withValues(alpha: 0.12) : Colors.grey.shade300,
       width: 0.8,
     );
     final tableBorder = TableBorder(
@@ -74,15 +75,22 @@ class BBTableWidget extends StatelessWidget {
         final content = col < row.length ? row[col] : '';
         final style = isHeader ? headerStyle : effectiveBaseStyle;
 
+        // Determine cell background
+        Color cellBg;
+        if (isHeader) {
+          cellBg = headerBg;
+        } else if (dark) {
+          // Alternating rows: subtle elevation so the table is visible
+          cellBg = i.isEven
+              ? Colors.white.withValues(alpha: 0.07)
+              : Colors.white.withValues(alpha: 0.03);
+        } else {
+          cellBg = i.isEven ? Colors.grey.shade50 : Colors.transparent;
+        }
+
         return TableCell(
           child: Container(
-            color: isHeader
-                ? headerBg
-                : (i.isEven && !isHeader)
-                ? (dark
-                      ? Colors.white.withValues(alpha: 0.03)
-                      : Colors.grey.shade50)
-                : Colors.transparent,
+            color: cellBg,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             // Constrains each cell to a max width so long text wraps,
             child: ConstrainedBox(

@@ -126,13 +126,6 @@ class SessionService {
     return result == SessionValidationResult.allowed;
   }
 
-  /// Device sessions are permanent and managed exclusively by admins.
-  /// This method is retained as a safe no-op so any external callers don't delete the device binding.
-  Future<void> removeSession(String uid, {String? deviceId}) async {
-    // Intentionally no-op: Device bindings MUST persist across logout.
-    // Device resets can only be performed by administrators in m_admin.
-  }
-
   // ── Realtime device-change watch ───────────────────────────────────────
 
   /// Watches this user's session row; fires [onDeviceChanged] on device mismatch.

@@ -253,7 +253,7 @@ class AuthenticationController extends GetxController
     }
   }
 
-  Future<void> logout({bool isDeviceMismatch = false}) async {
+  Future<void> logout() async {
     try {
       AppFullScreenLoader.openLoadingDialog('Logging out...');
       _initStarted = false;

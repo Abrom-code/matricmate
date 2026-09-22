@@ -137,11 +137,11 @@ class UserController extends GetxController {
 
   final RxBool isLoggingOut = false.obs;
 
-  Future<void> logOut({bool isDeviceMismatch = false}) async {
+  Future<void> logOut() async {
     if (isLoggingOut.value) return;
     try {
       isLoggingOut.value = true;
-      await AuthenticationController.instance.logout(isDeviceMismatch: isDeviceMismatch);
+      await AuthenticationController.instance.logout();
     } finally {
       isLoggingOut.value = false;
     }
@@ -172,7 +172,7 @@ class UserController extends GetxController {
           'Device Blocked!',
           'Another device is using this account!',
         );
-        await logOut(isDeviceMismatch: true);
+        await logOut();
         return false;
       }
 
@@ -193,7 +193,7 @@ class UserController extends GetxController {
             'Session Ended',
             'Your account was signed in on another device.',
           );
-          logOut(isDeviceMismatch: true);
+          logOut();
         },
       );
 

@@ -23,12 +23,10 @@ class LoginController extends GetxController {
 
   final rememberMe = false.obs;
   final hidePassword = true.obs;
-  final isUpdating = false.obs;
 
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
   final RxBool isLogging = false.obs;
-  final RxInt trials = 0.obs;
 
   GlobalKey<FormState> loginFormkey = GlobalKey<FormState>();
 

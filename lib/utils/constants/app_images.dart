@@ -1,7 +1,4 @@
 class AppImages {
-  // logo
-  static const String transparentLogo =
-      'assets/images/logo/transparent_logo.png';
   static const String appIcon =
       'assets/icons/icon.png';
   static const String transparentIcon =

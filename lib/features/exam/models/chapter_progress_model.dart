@@ -2,6 +2,7 @@ class ChapterProgressModel {
   final int chapterId;
   final int grade;
   final int totalTests;
+  final int freeTests;
   final int completedTests;
   final int inProgressTests;
   final double? avgScore;
@@ -10,6 +11,7 @@ class ChapterProgressModel {
     required this.chapterId,
     required this.grade,
     required this.totalTests,
+    this.freeTests = 0,
     required this.completedTests,
     this.inProgressTests = 0,
     this.avgScore,
@@ -20,6 +22,7 @@ class ChapterProgressModel {
       chapterId: map['chapter_id'] as int? ?? (map['grade'] as int? ?? 0),
       grade: map['grade'] as int? ?? 9,
       totalTests: map['total_tests'] as int? ?? 0,
+      freeTests: map['free_tests'] as int? ?? 0,
       completedTests: map['completed_tests'] as int? ?? 0,
       inProgressTests: map['in_progress_tests'] as int? ?? 0,
       avgScore: map['avg_score'] != null
@@ -29,6 +32,7 @@ class ChapterProgressModel {
   }
 
   bool get hasTests => totalTests > 0;
+  bool get isAllPremium => totalTests > 0 && freeTests == 0;
   bool get isCompleted => totalTests > 0 && completedTests >= totalTests;
   bool get isInProgress =>
       inProgressTests > 0 || (completedTests > 0 && completedTests < totalTests);

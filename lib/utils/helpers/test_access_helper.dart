@@ -47,6 +47,21 @@ class TestAccessHelper {
     );
   }
 
+  /// Opens the upgrade [PremiumBottomSheet] or redirects to [Routes.paymentVerification]
+  /// if the user already has a pending payment.
+  static void openPremiumSheet({required UserModel user}) {
+    if (user.isPending) {
+      Get.toNamed(Routes.paymentVerification);
+      return;
+    }
+
+    Get.bottomSheet(
+      const PremiumBottomSheet(),
+      isScrollControlled: true,
+    );
+  }
+
+
   /// Sorts a list of tests based on user subscription status:
   /// - For inactive or pending users, free tests (`isPremium == false`) appear first on top.
   /// - For active subscribers (all tests unlocked), original order is preserved.

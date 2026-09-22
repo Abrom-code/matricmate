@@ -456,6 +456,7 @@ class DatabaseService extends GetxController {
           c.id AS chapter_id,
           c.grade AS grade,
           COUNT(t.id) AS total_tests,
+          COUNT(CASE WHEN t.is_premium = 0 THEN 1 END) AS free_tests,
           COUNT(CASE WHEN r.isCompleted = 1 THEN 1 END) AS completed_tests,
           COUNT(CASE WHEN r.isCompleted = 0 THEN 1 END) AS in_progress_tests,
           AVG(CASE WHEN r.isCompleted = 1 AND r.correctAnswers IS NOT NULL THEN (CAST(r.correctAnswers AS REAL) / MAX(1, t.question_count)) * 100 END) AS avg_score
@@ -479,6 +480,7 @@ class DatabaseService extends GetxController {
         SELECT 
           t.grade AS grade,
           COUNT(t.id) AS total_tests,
+          COUNT(CASE WHEN t.is_premium = 0 THEN 1 END) AS free_tests,
           COUNT(CASE WHEN r.isCompleted = 1 THEN 1 END) AS completed_tests,
           COUNT(CASE WHEN r.isCompleted = 0 THEN 1 END) AS in_progress_tests,
           AVG(CASE WHEN r.isCompleted = 1 AND r.correctAnswers IS NOT NULL THEN (CAST(r.correctAnswers AS REAL) / MAX(1, t.question_count)) * 100 END) AS avg_score

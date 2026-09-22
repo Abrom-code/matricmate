@@ -13,6 +13,7 @@ class ChapterTile extends StatelessWidget {
     this.chapterNumber,
     this.isSection = false,
     this.progress,
+    this.isLocked = false,
   });
 
   final String chapter, chapterTitle;
@@ -21,6 +22,7 @@ class ChapterTile extends StatelessWidget {
   final int? chapterNumber;
   final bool isSection;
   final ChapterProgressModel? progress;
+  final bool isLocked;
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +50,12 @@ class ChapterTile extends StatelessWidget {
         color: dark ? AppColors.darkCard : AppColors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isCompleted
-              ? AppColors.success.withValues(alpha: dark ? 0.35 : 0.25)
-              : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
-          width: isCompleted ? 1.3 : 1.0,
+          color: isLocked
+              ? Colors.amber.withValues(alpha: dark ? 0.40 : 0.28)
+              : isCompleted
+                  ? AppColors.success.withValues(alpha: dark ? 0.35 : 0.25)
+                  : (dark ? AppColors.darkBorder : AppColors.borderPrimary),
+          width: (isLocked || isCompleted) ? 1.3 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
@@ -75,51 +79,82 @@ class ChapterTile extends StatelessWidget {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: isCompleted
-                        ? AppColors.success.withValues(
+                    color: isLocked
+                        ? Colors.amber.withValues(
                             alpha: dark ? 0.20 : 0.12,
                           )
-                        : AppColors.primary.withValues(
-                            alpha: dark ? 0.18 : 0.10,
-                          ),
+                        : isCompleted
+                            ? AppColors.success.withValues(
+                                alpha: dark ? 0.20 : 0.12,
+                              )
+                            : AppColors.primary.withValues(
+                                alpha: dark ? 0.18 : 0.10,
+                              ),
                     borderRadius: BorderRadius.circular(15),
-                    border: isCompleted
+                    border: isLocked
                         ? Border.all(
-                            color: AppColors.success.withValues(alpha: 0.4),
+                            color: Colors.amber.withValues(alpha: 0.35),
                             width: 1,
                           )
-                        : null,
+                        : isCompleted
+                            ? Border.all(
+                                color: AppColors.success.withValues(alpha: 0.4),
+                                width: 1,
+                              )
+                            : null,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        isSection ? 'SEC' : 'CH',
-                        style: TextStyle(
-                          fontSize: 8.0,
-                          fontWeight: FontWeight.w800,
-                          color: isCompleted
-                              ? AppColors.success
-                              : AppColors.primary,
-                          letterSpacing: 0.5,
+                  child: isLocked
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.lock_rounded,
+                              size: 16,
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              badgeText,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                                color: Colors.amber,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              isSection ? 'SEC' : 'CH',
+                              style: TextStyle(
+                                fontSize: 8.0,
+                                fontWeight: FontWeight.w800,
+                                color: isCompleted
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            Text(
+                              badgeText,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                                color: isCompleted
+                                    ? AppColors.success
+                                    : (dark
+                                        ? AppColors.textWhite
+                                        : AppColors.primary),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      Text(
-                        badgeText,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                          color: isCompleted
-                              ? AppColors.success
-                              : (dark
-                                  ? AppColors.textWhite
-                                  : AppColors.primary),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
+
 
                 const SizedBox(width: 14),
 
@@ -191,7 +226,9 @@ class ChapterTile extends StatelessWidget {
                                               height: 5,
                                               color: isCompleted
                                                   ? AppColors.success
-                                                  : AppColors.primary,
+                                                  : (isLocked
+                                                      ? Colors.amber
+                                                      : AppColors.primary),
                                             ),
                                           if (inProgWidth > 0)
                                             Container(
@@ -232,7 +269,7 @@ class ChapterTile extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // ── Trailing Chevron or Soon Pill ────────────────────────────
+                // ── Trailing Chevron, Lock Key, or Soon Pill ────────────────
                 if (!hasTests)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -272,3 +309,4 @@ class ChapterTile extends StatelessWidget {
     );
   }
 }
+

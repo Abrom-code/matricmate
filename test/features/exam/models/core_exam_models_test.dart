@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
+import 'package:matricmate/features/exam/models/chapter_progress_model.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -80,5 +81,36 @@ void main() {
       expect(passageBlock.isPassage, isTrue);
       expect(standaloneBlock.isPassage, isFalse);
     });
+
+    test('ChapterProgressModel accurately identifies isAllPremium', () {
+      final allPremiumChapter = ChapterProgressModel.fromMap({
+        'chapter_id': 2,
+        'grade': 12,
+        'total_tests': 3,
+        'free_tests': 0,
+        'completed_tests': 0,
+      });
+
+      final mixedChapter = ChapterProgressModel.fromMap({
+        'chapter_id': 1,
+        'grade': 12,
+        'total_tests': 3,
+        'free_tests': 1,
+        'completed_tests': 1,
+      });
+
+      final emptyChapter = ChapterProgressModel.fromMap({
+        'chapter_id': 3,
+        'grade': 12,
+        'total_tests': 0,
+        'free_tests': 0,
+        'completed_tests': 0,
+      });
+
+      expect(allPremiumChapter.isAllPremium, isTrue);
+      expect(mixedChapter.isAllPremium, isFalse);
+      expect(emptyChapter.isAllPremium, isFalse);
+    });
   });
 }
+

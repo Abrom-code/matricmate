@@ -6,9 +6,11 @@ import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/chapter_tile.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ChapterScreen extends StatefulWidget {
@@ -224,6 +226,8 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
         );
       }
 
+      final user = UserController.instance.user.value;
+
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
         itemCount: sections.length,
@@ -231,6 +235,8 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
           final section = sections[index];
           final hasTests = controller.chapterHasTests[section.id] ?? false;
           final progress = controller.chapterProgress[section.id];
+          final isLocked =
+              (progress?.isAllPremium ?? false) && !user.isActive;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -240,7 +246,12 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
               chapterTitle: section.title,
               chapterNumber: section.chapterNumber,
               progress: progress,
+              isLocked: isLocked,
               onTap: () async {
+                if (isLocked) {
+                  TestAccessHelper.openPremiumSheet(user: user);
+                  return;
+                }
                 if (hasTests) {
                   await Get.toNamed(
                     Routes.testLists,
@@ -333,7 +344,10 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
             );
           }
 
+          final user = UserController.instance.user.value;
           final combinedGradeProgress = controller.gradeTestProgress[grade];
+          final isGradeLocked =
+              (combinedGradeProgress?.isAllPremium ?? false) && !user.isActive;
 
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
@@ -345,7 +359,12 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
                   padding: const EdgeInsets.only(bottom: 16),
                   child: AllChaptersButton(
                     progress: combinedGradeProgress,
+                    isLocked: isGradeLocked,
                     onPressed: () async {
+                      if (isGradeLocked) {
+                        TestAccessHelper.openPremiumSheet(user: user);
+                        return;
+                      }
                       await Get.toNamed(
                         Routes.gradeTests,
                         arguments: {
@@ -364,6 +383,8 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
               final hasTests =
                   controller.chapterHasTests[chapter.id] ?? false;
               final progress = controller.chapterProgress[chapter.id];
+              final isLocked =
+                  (progress?.isAllPremium ?? false) && !user.isActive;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -374,7 +395,12 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
                   chapterTitle: chapter.title,
                   chapterNumber: chapter.chapterNumber,
                   progress: progress,
+                  isLocked: isLocked,
                   onTap: () async {
+                    if (isLocked) {
+                      TestAccessHelper.openPremiumSheet(user: user);
+                      return;
+                    }
                     if (hasTests) {
                       await Get.toNamed(
                         Routes.testLists,

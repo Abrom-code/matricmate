@@ -7,10 +7,12 @@ class AllChaptersButton extends StatelessWidget {
     super.key,
     required this.onPressed,
     this.progress,
+    this.isLocked = false,
   });
 
   final VoidCallback onPressed;
   final ChapterProgressModel? progress;
+  final bool isLocked;
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +53,9 @@ class AllChaptersButton extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
-                    Icons.layers_rounded,
-                    color: AppColors.white,
+                  child: Icon(
+                    isLocked ? Icons.lock_rounded : Icons.layers_rounded,
+                    color: isLocked ? Colors.amber : AppColors.white,
                     size: 22,
                   ),
                 ),
@@ -155,7 +157,6 @@ class AllChaptersButton extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // ── Trailing Chevron ─────────────────────────────────
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.white,
@@ -167,5 +168,6 @@ class AllChaptersButton extends StatelessWidget {
         ),
       ),
     );
+
   }
 }

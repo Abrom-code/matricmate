@@ -138,8 +138,8 @@ class _PausedTestCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => Get.dialog(
-          ReadyDialog(
+        onTap: () => Get.to(
+          () => ReadyScreen(
             qnCount: total,
             time: info.testTime,
             testId: draft.testId,

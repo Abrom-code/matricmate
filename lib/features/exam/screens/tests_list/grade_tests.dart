@@ -236,14 +236,15 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
                           ToastHelper.info('No questions added yet!');
                           return;
                         }
-                        Get.dialog(
-                          ReadyDialog(
+                        Get.to(
+                          () => ReadyScreen(
                             qnCount: qnCount,
                             time: time,
                             testId: test.id,
                             id: 0,
                             examTitle: test.title,
                             description: test.description,
+                            subjectName: ctrl.subjectName,
                             draft: ctrl.isInProgress(test.id)
                                 ? ctrl.testResults[test.id]
                                 : null,

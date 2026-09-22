@@ -198,7 +198,7 @@ class NotificationTestOpener {
     final test = ctrl.chapterTest.firstWhereOrNull((t) => t.id == testId);
     if (test == null) return;
 
-    _openReadyDialog(
+    _openReadyScreen(
       test: test,
       id: 1,
       draft: ctrl.isInProgress(testId) ? ctrl.testResults[testId] : null,
@@ -231,7 +231,7 @@ class NotificationTestOpener {
     final test = ctrl.chapterTests.firstWhereOrNull((t) => t.id == testId);
     if (test == null) return;
 
-    _openReadyDialog(
+    _openReadyScreen(
       test: test,
       id: 0,
       draft: ctrl.isInProgress(testId) ? ctrl.testResults[testId] : null,
@@ -252,6 +252,7 @@ class NotificationTestOpener {
       arguments: {
         'subject': data['subject'] ?? '',
         'subject_id': int.tryParse('${data['subject_id']}') ?? 0,
+        'test_type': testType,
       },
     );
 
@@ -271,7 +272,7 @@ class NotificationTestOpener {
     final test = list.firstWhereOrNull((t) => t.id == testId);
     if (test == null) return;
 
-    _openReadyDialog(
+    _openReadyScreen(
       test: test,
       id: 2,
       draft: ctrl.isInProgress(testId) ? ctrl.testResults[testId] : null,
@@ -280,9 +281,9 @@ class NotificationTestOpener {
     );
   }
 
-  // ── Shared helpers ────────────────────────────────────────────────────
+  // ── Shared helpers ────────────────────────────────────────────────----
 
-  static void _openReadyDialog({
+  static void _openReadyScreen({
     required TestModel test,
     required int id,
     required dynamic draft,

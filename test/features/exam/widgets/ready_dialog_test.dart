@@ -5,40 +5,39 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 
 void main() {
-  Future<void> pumpReadyDialog(
+  Future<void> pumpReadyScreen(
     WidgetTester tester, {
     ResultModel? draft,
     String? title,
   }) {
     return tester.pumpWidget(
       GetMaterialApp(
-        home: Scaffold(
-          body: ReadyDialog(
-            qnCount: 100,
-            time: 120,
-            testId: 41,
-            id: 7,
-            draft: draft,
-            examTitle: title,
-          ),
+        home: ReadyScreen(
+          qnCount: 100,
+          time: 120,
+          testId: 41,
+          id: 7,
+          draft: draft,
+          examTitle: title,
         ),
       ),
     );
   }
 
-  testWidgets('shows entrance year, code, and both start modes', (
+  testWidgets('shows exam title and both mode cards without right check icon', (
     tester,
   ) async {
-    await pumpReadyDialog(tester, title: '2023 Physics 4');
+    await pumpReadyScreen(tester, title: '2023 Physics 4');
 
-    expect(find.text('Ready to start?'), findsOneWidget);
-    expect(find.text('2023'), findsOneWidget);
-    expect(find.text('B Code: 4'), findsOneWidget);
-    expect(find.text('Practice'), findsOneWidget);
-    expect(find.text('Exam'), findsOneWidget);
+    expect(find.text('Test Overview'), findsOneWidget);
+    expect(find.text('2023 Physics 4'), findsOneWidget);
+    expect(find.text('Practice Mode'), findsOneWidget);
+    expect(find.text('Real Exam Mode'), findsOneWidget);
+    expect(find.byIcon(Icons.check_rounded), findsNothing);
+    expect(find.text('Start in Practice Mode'), findsOneWidget);
   });
 
-  testWidgets('offers resume details for an in-progress exam draft', (
+  testWidgets('offers resume banner and button for an in-progress draft', (
     tester,
   ) async {
     final draft = ResultModel(
@@ -51,10 +50,32 @@ void main() {
       remainingSeconds: 3600,
     );
 
-    await pumpReadyDialog(tester, draft: draft);
+    await pumpReadyScreen(tester, draft: draft, title: 'Chemistry Final');
 
-    expect(find.text('Continue?'), findsOneWidget);
-    expect(find.text('Resume'), findsOneWidget);
-    expect(find.textContaining('question 3'), findsOneWidget);
+    expect(find.text('Paused Attempt In Progress'), findsOneWidget);
+    expect(find.text('Resume from Question 3'), findsOneWidget);
+    expect(find.textContaining('Start Fresh'), findsOneWidget);
+  });
+
+  testWidgets('ReadyDialog adapter renders ReadyScreen correctly', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const GetMaterialApp(
+        home: Scaffold(
+          body: ReadyDialog(
+            qnCount: 50,
+            time: 60,
+            testId: 10,
+            id: 1,
+            examTitle: 'Grade 11 Biology',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Grade 11 Biology'), findsOneWidget);
+    expect(find.text('Practice Mode'), findsOneWidget);
+    expect(find.text('Real Exam Mode'), findsOneWidget);
   });
 }

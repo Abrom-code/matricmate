@@ -26,6 +26,7 @@ import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
 import 'package:matricmate/features/exam/screens/entrance/entrance.dart';
 import 'package:matricmate/features/exam/screens/entrance/entrance_exams.dart';
 import 'package:matricmate/features/exam/screens/paused_tests/paused_tests_screen.dart';
+import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/question/question.dart';
 import 'package:matricmate/features/exam/screens/result/result.dart';
 import 'package:matricmate/features/exam/screens/result/review.dart';
@@ -95,6 +96,10 @@ class AppRoutes {
       name: Routes.testLists,
       page: () => const ChapterTestScreen(),
       binding: TestBinding(),
+    ),
+    GetPage(
+      name: Routes.testOverview,
+      page: () => ReadyScreen.fromArgs(Get.arguments ?? {}),
     ),
     GetPage(
       name: Routes.questions,

@@ -38,8 +38,8 @@ class ResumeBanner extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => Get.dialog(
-          ReadyDialog(
+        onTap: () => Get.to(
+          () => ReadyScreen(
             qnCount: total,
             time: testTime,
             testId: draft.testId,

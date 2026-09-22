@@ -244,8 +244,8 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                           ToastHelper.info('No questions added yet!');
                           return;
                         }
-                        Get.dialog(
-                          ReadyDialog(
+                        Get.to(
+                          () => ReadyScreen(
                             qnCount: qnCount,
                             time: time,
                             testId: test.id,

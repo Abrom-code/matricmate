@@ -323,8 +323,8 @@ class _ExamList extends StatelessWidget {
                       ToastHelper.info('No questions added yet!');
                       return;
                     }
-                    Get.dialog(
-                      ReadyDialog(
+                    Get.to(
+                      () => ReadyScreen(
                         qnCount:
                             controller.testQuestionCounts[test.id] ??
                             test.questionCount,
@@ -333,6 +333,7 @@ class _ExamList extends StatelessWidget {
                         id: 2,
                         examTitle: test.title,
                         description: test.description,
+                        subjectName: controller.subjectName,
                         draft: controller.isInProgress(test.id)
                             ? controller.testResults[test.id]
                             : null,

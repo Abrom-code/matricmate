@@ -126,6 +126,7 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
+          titleSpacing: 0,
           title: Text(
             widget.title,
             maxLines: 1,
@@ -138,7 +139,7 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
               final passage = _ctrl.currentPassage;
               if (passage == null) return const SizedBox.shrink();
               return Padding(
-                padding: const EdgeInsets.only(right: AppSizes.xs),
+                padding: const EdgeInsets.only(right: 4),
                 child: ChallengePassageLayoutCtrl(
                   passage: passage,
                   isHidden: _ctrl.isPassageHidden,
@@ -151,27 +152,27 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
             Obx(() {
               if (_ctrl.questions.isEmpty) return const SizedBox.shrink();
               final currentQ = _ctrl.questions[_ctrl.currentIndex.value];
-              return Padding(
-                padding: const EdgeInsets.only(right: AppSizes.xs),
-                child: IconButton(
-                  onPressed: () => ReportQuestionBottomSheet.show(
-                    context,
-                    challengeQuestionId: currentQ.id,
-                    questionNumber: _ctrl.currentIndex.value + 1,
-                  ),
-                  icon: const Icon(Iconsax.flag_copy, size: 18),
-                  tooltip: 'Report question',
-                  visualDensity: VisualDensity.compact,
+              return IconButton(
+                onPressed: () => ReportQuestionBottomSheet.show(
+                  context,
+                  challengeQuestionId: currentQ.id,
+                  questionNumber: _ctrl.currentIndex.value + 1,
                 ),
+                icon: const Icon(Iconsax.flag_copy, size: 17),
+                tooltip: 'Report question',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                visualDensity: VisualDensity.compact,
               );
             }),
+            const SizedBox(width: 4),
 
             // ── Live Timer Badge ────────────────────────────────────
             Obx(() {
               final isUrgent = _ctrl.remainingSeconds.value < 300; // < 5 mins
               return Container(
-                margin: const EdgeInsets.only(right: AppSizes.md),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: isUrgent
                       ? AppColors.error.withValues(alpha: 0.15)
@@ -187,14 +188,14 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
                   children: [
                     Icon(
                       Iconsax.timer_1_copy,
-                      size: 14,
+                      size: 13,
                       color: isUrgent ? AppColors.error : AppColors.primary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       _ctrl.formattedRemainingTime,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w800,
                         color: isUrgent ? AppColors.error : AppColors.primary,
                       ),

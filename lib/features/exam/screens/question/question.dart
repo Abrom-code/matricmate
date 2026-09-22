@@ -86,14 +86,17 @@ class _QuestionScreenState extends State<QuestionScreen> {
             elevation: 0,
             scrolledUnderElevation: 0,
             toolbarHeight: Appbar.toolbarHeight(context),
+            leadingWidth: 46,
             leading: Padding(
-              padding: const EdgeInsets.only(left: 4),
+              padding: const EdgeInsets.only(left: 6),
               child: IconButton(
                 onPressed: () => _handleExit(controller),
                 tooltip: controller.isExamMode ? 'Pause' : 'Exit',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
                 icon: Container(
-                  width: 34,
-                  height: 34,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: AppColors.white.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
@@ -110,208 +113,212 @@ class _QuestionScreenState extends State<QuestionScreen> {
                 ),
               ),
             ),
-            title: Builder(
-              builder: (ctx) {
-                final hasPassage = currentQ?.passageId != null;
-                final sectionTitle =
-                    (currentQ?.sectionTitle?.trim().isNotEmpty == true)
-                    ? currentQ!.sectionTitle!.trim()
-                    : null;
-                if (hasPassage) {
-                  return PassageLayoutCtrl(controller: controller);
-                }
-
-                if (sectionTitle == null) {
-                  final counterText = hasData
-                      ? 'Question ${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
-                      : 'Loading...';
-
-                  if (!controller.isTimed) {
-                    return Text(
-                      counterText,
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    );
+            title: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.center,
+              child: Builder(
+                builder: (ctx) {
+                  final hasPassage = currentQ?.passageId != null;
+                  final sectionTitle =
+                      (currentQ?.sectionTitle?.trim().isNotEmpty == true)
+                      ? currentQ!.sectionTitle!.trim()
+                      : null;
+                  if (hasPassage) {
+                    return PassageLayoutCtrl(controller: controller);
                   }
 
-                  return Obx(() {
-                    final remaining = controller.remainingSeconds.value;
-                    final isLowTime = remaining < 300;
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${controller.currentIndex.value + 1}/${controller.testQuestions.length}',
+                  if (sectionTitle == null) {
+                    final counterText = hasData
+                        ? 'Question ${controller.currentIndex.value + 1} of ${controller.testQuestions.length}'
+                        : 'Loading...';
+
+                    if (!controller.isTimed) {
+                      return Text(
+                        counterText,
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                      );
+                    }
+
+                    return Obx(() {
+                      final remaining = controller.remainingSeconds.value;
+                      final isLowTime = remaining < 300;
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${controller.currentIndex.value + 1}/${controller.testQuestions.length}',
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isLowTime
+                                  ? Colors.red.withValues(alpha: 0.3)
+                                  : AppColors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isLowTime
+                                    ? Colors.redAccent
+                                    : AppColors.white.withValues(alpha: 0.25),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.timer_outlined,
+                                  size: 13,
+                                  color: isLowTime
+                                      ? Colors.amberAccent
+                                      : const Color(0xFFD1FAE5),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  controller.formattedTime(remaining),
+                                  style: TextStyle(
+                                    color: isLowTime
+                                        ? Colors.amberAccent
+                                        : const Color(0xFFD1FAE5),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    });
+                  }
+
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          sectionTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: AppColors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                      ),
+                      if (controller.isTimed) ...[
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isLowTime
-                                ? Colors.red.withValues(alpha: 0.3)
-                                : AppColors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isLowTime
-                                  ? Colors.redAccent
-                                  : AppColors.white.withValues(alpha: 0.25),
-                              width: 1,
+                        Obx(() {
+                          final remaining = controller.remainingSeconds.value;
+                          final isLowTime = remaining < 300;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2.5,
                             ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.timer_outlined,
-                                size: 13,
+                            decoration: BoxDecoration(
+                              color: isLowTime
+                                  ? Colors.red.withValues(alpha: 0.3)
+                                  : AppColors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              controller.formattedTime(remaining),
+                              style: TextStyle(
                                 color: isLowTime
                                     ? Colors.amberAccent
                                     : const Color(0xFFD1FAE5),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                controller.formattedTime(remaining),
-                                style: TextStyle(
-                                  color: isLowTime
-                                      ? Colors.amberAccent
-                                      : const Color(0xFFD1FAE5),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  });
-                }
-
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        sectionTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    if (controller.isTimed) ...[
-                      const SizedBox(width: 8),
-                      Obx(() {
-                        final remaining = controller.remainingSeconds.value;
-                        final isLowTime = remaining < 300;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2.5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isLowTime
-                                ? Colors.red.withValues(alpha: 0.3)
-                                : AppColors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            controller.formattedTime(remaining),
-                            style: TextStyle(
-                              color: isLowTime
-                                  ? Colors.amberAccent
-                                  : const Color(0xFFD1FAE5),
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        }),
+                      ],
                     ],
-                  ],
-                );
-              },
+                  );
+                },
+              ),
             ),
             centerTitle: true,
             actions: [
               if (currentQ != null) ...[
                 // Report Question Button
-                Padding(
-                  padding: const EdgeInsets.only(right: 2),
-                  child: IconButton(
-                    onPressed: () => ReportQuestionBottomSheet.show(
-                      context,
-                      questionId: currentQ.id,
-                      testId: currentQ.testId,
-                      questionNumber: controller.currentIndex.value + 1,
+                IconButton(
+                  onPressed: () => ReportQuestionBottomSheet.show(
+                    context,
+                    questionId: currentQ.id,
+                    testId: currentQ.testId,
+                    questionNumber: controller.currentIndex.value + 1,
+                  ),
+                  tooltip: 'Report question',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                  icon: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
                     ),
-                    tooltip: 'Report question',
-                    icon: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Iconsax.flag_copy,
-                          color: AppColors.white,
-                          size: 16.5,
-                        ),
+                    child: const Center(
+                      child: Icon(
+                        Iconsax.flag_copy,
+                        color: AppColors.white,
+                        size: 15.5,
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(width: 4),
                 // Bookmark Button
                 Obx(() {
                   final isSaved = controller.isBookmarked(currentQ.id);
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: IconButton(
-                      onPressed: isSaved
-                          ? () => bookmarkController.removeFromBookmark(
-                                currentQ.id,
-                              )
-                          : () => bookmarkController.addToBookmark(currentQ.id),
-                      tooltip: isSaved ? 'Remove bookmark' : 'Bookmark',
-                      icon: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: isSaved
-                              ? Colors.amber.withValues(alpha: 0.25)
-                              : AppColors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            isSaved
-                                ? Iconsax.archive_minus
-                                : Iconsax.archive_add_copy,
-                            color: isSaved ? Colors.amber : AppColors.white,
-                            size: 18,
-                          ),
+                  return IconButton(
+                    onPressed: isSaved
+                        ? () => bookmarkController.removeFromBookmark(
+                              currentQ.id,
+                            )
+                        : () => bookmarkController.addToBookmark(currentQ.id),
+                    tooltip: isSaved ? 'Remove bookmark' : 'Bookmark',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                    icon: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isSaved
+                            ? Colors.amber.withValues(alpha: 0.25)
+                            : AppColors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          isSaved
+                              ? Iconsax.archive_minus
+                              : Iconsax.archive_add_copy,
+                          color: isSaved ? Colors.amber : AppColors.white,
+                          size: 17,
                         ),
                       ),
                     ),
                   );
                 }),
+                const SizedBox(width: 8),
               ],
             ],
             bottom: PreferredSize(

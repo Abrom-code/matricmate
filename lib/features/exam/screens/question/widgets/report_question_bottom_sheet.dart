@@ -6,7 +6,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
-import 'package:matricmate/utils/network_manager/network_manager.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ReportQuestionBottomSheet extends StatefulWidget {
   final int? questionId;
@@ -43,7 +43,8 @@ class ReportQuestionBottomSheet extends StatefulWidget {
   }
 
   @override
-  State<ReportQuestionBottomSheet> createState() => _ReportQuestionBottomSheetState();
+  State<ReportQuestionBottomSheet> createState() =>
+      _ReportQuestionBottomSheetState();
 }
 
 class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
@@ -59,13 +60,10 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
   }
 
   Future<void> _submit() async {
-    final isConnected = await NetworkManager.instance.isConnected();
-    if (!isConnected) {
-      ToastHelper.warning('No Internet Connection');
-      return;
-    }
+    final userId = UserController.instance.user.value.id.isNotEmpty
+        ? UserController.instance.user.value.id
+        : (Supabase.instance.client.auth.currentUser?.id ?? '');
 
-    final userId = UserController.instance.user.value.id;
     if (userId.isEmpty) {
       ToastHelper.warning('Please log in to report questions.');
       return;
@@ -80,14 +78,16 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
         challengeQuestionId: widget.challengeQuestionId,
         testId: widget.testId,
         reason: _selectedReason,
-        comment: _commentController.text.trim().isEmpty ? null : _commentController.text.trim(),
+        comment: _commentController.text.trim().isEmpty
+            ? null
+            : _commentController.text.trim(),
       );
 
       await _repository.submitReport(report);
 
       if (mounted) {
         Navigator.of(context).pop();
-        ToastHelper.success('Thank you! Question reported for review.');
+        ToastHelper.success('Report sent');
       }
     } catch (_) {
       // Toast or error handling inside repository/AppExceptionHandler
@@ -136,47 +136,31 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
           ),
           const SizedBox(height: 16),
 
-          // Header Row
+          // Header Row (without subtitle)
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: Colors.amber.withValues(alpha: dark ? 0.2 : 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Center(
-                  child: Icon(
-                    Iconsax.flag_copy,
-                    size: 20,
-                    color: Colors.amber,
-                  ),
+                  child: Icon(Iconsax.flag_copy, size: 18, color: Colors.amber),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Report Question',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    Text(
-                      widget.questionNumber != null
-                          ? 'Question #${widget.questionNumber} feedback'
-                          : 'Help us improve test accuracy',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  widget.questionNumber != null
+                      ? 'Report Question #${widget.questionNumber}'
+                      : 'Report Question',
+                  style: const TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
                 ),
               ),
               IconButton(
@@ -186,7 +170,7 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
           // Flexible scrollable content
           Flexible(
@@ -200,37 +184,46 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.1,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      color: dark
+                          ? AppColors.darkGrey
+                          : AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 10),
 
-                  // Reason Options List
+                  // Reason Options List (clean, without subtitles)
                   ...QuestionReportModel.reasons.map((r) {
                     final isSelected = _selectedReason == r.key;
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(bottom: 7),
                       child: InkWell(
                         onTap: () => setState(() => _selectedReason = r.key),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 11,
+                          ),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? (dark
-                                    ? AppColors.primary.withValues(alpha: 0.15)
-                                    : AppColors.primary.withValues(alpha: 0.08))
+                                      ? AppColors.primary.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : AppColors.primary.withValues(
+                                          alpha: 0.08,
+                                        ))
                                 : (dark
-                                    ? AppColors.darkInputFill
-                                    : const Color(0xFFF8FAFC)),
-                            borderRadius: BorderRadius.circular(14),
+                                      ? AppColors.darkInputFill
+                                      : const Color(0xFFF8FAFC)),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.primary
                                   : (dark
-                                      ? AppColors.darkBorder
-                                      : const Color(0xFFE2E8F0)),
+                                        ? AppColors.darkBorder
+                                        : const Color(0xFFE2E8F0)),
                               width: isSelected ? 1.5 : 1.0,
                             ),
                           ),
@@ -243,34 +236,27 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
                                 size: 18,
                                 color: isSelected
                                     ? AppColors.primary
-                                    : (dark ? AppColors.darkGrey : Colors.black38),
+                                    : (dark
+                                          ? AppColors.darkGrey
+                                          : Colors.black38),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      r.title,
-                                      style: TextStyle(
-                                        fontSize: 13.5,
-                                        fontWeight: isSelected
-                                            ? FontWeight.w700
-                                            : FontWeight.w600,
-                                        color: isSelected
-                                            ? (dark ? AppColors.white : AppColors.primary)
-                                            : (dark ? AppColors.white : const Color(0xFF1E293B)),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      r.description,
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
+                                child: Text(
+                                  r.title,
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? (dark
+                                              ? AppColors.white
+                                              : AppColors.primary)
+                                        : (dark
+                                              ? AppColors.white
+                                              : const Color(0xFF1E293B)),
+                                  ),
                                 ),
                               ),
                             ],
@@ -289,7 +275,9 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.1,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      color: dark
+                          ? AppColors.darkGrey
+                          : AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -306,20 +294,28 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
                       hintText: 'e.g. Choice B should be correct because...',
                       hintStyle: TextStyle(
                         fontSize: 12.5,
-                        color: dark ? AppColors.darkInputHint : AppColors.lightInputHint,
+                        color: dark
+                            ? AppColors.darkInputHint
+                            : AppColors.lightInputHint,
                       ),
                       filled: true,
-                      fillColor: dark ? AppColors.darkInputFill : const Color(0xFFF8FAFC),
+                      fillColor: dark
+                          ? AppColors.darkInputFill
+                          : const Color(0xFFF8FAFC),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide(
-                          color: dark ? AppColors.darkInputBorder : const Color(0xFFE2E8F0),
+                          color: dark
+                              ? AppColors.darkInputBorder
+                              : const Color(0xFFE2E8F0),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide(
-                          color: dark ? AppColors.darkInputBorder : const Color(0xFFE2E8F0),
+                          color: dark
+                              ? AppColors.darkInputBorder
+                              : const Color(0xFFE2E8F0),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -331,7 +327,9 @@ class _ReportQuestionBottomSheetState extends State<ReportQuestionBottomSheet> {
                       ),
                       counterStyle: TextStyle(
                         fontSize: 11,
-                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                        color: dark
+                            ? AppColors.darkGrey
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ),

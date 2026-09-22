@@ -1,12 +1,10 @@
 class ReportReasonOption {
   final String key;
   final String title;
-  final String description;
 
   const ReportReasonOption({
     required this.key,
     required this.title,
-    required this.description,
   });
 }
 
@@ -37,32 +35,22 @@ class QuestionReportModel {
     ReportReasonOption(
       key: 'wrong_answer',
       title: 'Wrong Correct Answer',
-      description: 'The indicated answer is not correct.',
-    ),
-    ReportReasonOption(
-      key: 'typo',
-      title: 'Typo or Spelling Mistake',
-      description: 'There is a spelling or grammatical error in text/choices.',
     ),
     ReportReasonOption(
       key: 'unclear',
       title: 'Confusing or Incomplete Question',
-      description: 'The question text is ambiguous, misleading, or cut off.',
     ),
     ReportReasonOption(
       key: 'broken_image',
       title: 'Missing or Broken Diagram/Image',
-      description: 'The image or graph failed to load or is not visible.',
     ),
     ReportReasonOption(
       key: 'bad_explanation',
       title: 'Inaccurate Explanation',
-      description: 'The solution explanation contains mistakes or misleading steps.',
     ),
     ReportReasonOption(
       key: 'other',
       title: 'Other Issue',
-      description: 'Any other problem not covered above.',
     ),
   ];
 

@@ -14,7 +14,6 @@ dependencies:
   intl: ^0.20.2
   get: ^4.7.3
   connectivity_plus: ^7.1.0
-  smooth_page_indicator: ^2.0.1
   sqflite: ^2.4.2
   path: ^1.9.1
   supabase_flutter: ^2.12.2
@@ -45,9 +44,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icons/icon.png"
+  image_path: "store_assets/icons/icon.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icons/adaptive_foreground.png"
+  adaptive_icon_foreground: "store_assets/icons/adaptive_foreground.png"
   remove_alpha_ios: true
 
 flutter:

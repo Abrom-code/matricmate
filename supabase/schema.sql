@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     id                  uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     first_name          text NOT NULL DEFAULT '',
     last_name           text DEFAULT '',
+    full_name           text GENERATED ALWAYS AS (TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, ''))) STORED,
     email               text NOT NULL,
     stream              text DEFAULT 'natural',
     subscription_status text NOT NULL DEFAULT 'inactive',
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 
 CREATE INDEX IF NOT EXISTS users_subscription_idx ON public.users (subscription_status);
 CREATE INDEX IF NOT EXISTS users_stream_idx       ON public.users (stream);
+CREATE INDEX IF NOT EXISTS idx_users_full_name    ON public.users (full_name);
 
 -- public.user_sessions (Single-device session enforcement)
 CREATE TABLE IF NOT EXISTS public.user_sessions (
@@ -487,7 +489,21 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
+DECLARE
+    v_full text;
+    v_first text;
+    v_last text;
 BEGIN
+    v_full := TRIM(COALESCE(NEW.raw_user_meta_data->>'full_name', ''));
+    v_first := COALESCE(NEW.raw_user_meta_data->>'first_name', '');
+    v_last := COALESCE(NEW.raw_user_meta_data->>'last_name', '');
+
+    -- If first_name was not provided, but full_name was, split it automatically
+    IF v_first = '' AND v_full <> '' THEN
+        v_first := split_part(v_full, ' ', 1);
+        v_last := TRIM(SUBSTRING(v_full FROM LENGTH(v_first) + 1));
+    END IF;
+
     INSERT INTO public.users (
         id,
         first_name,
@@ -498,8 +514,8 @@ BEGIN
         created_at
     ) VALUES (
         NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
-        COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
+        v_first,
+        v_last,
         COALESCE(NEW.email, ''),
         COALESCE(NEW.raw_user_meta_data->>'stream', 'natural'),
         'inactive',

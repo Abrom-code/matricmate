@@ -236,8 +236,14 @@ class UserController extends GetxController {
       if (authUser == null) return;
 
       final metadata = authUser.userMetadata ?? {};
-      final fName = metadata['first_name']?.toString() ?? '';
-      final lName = metadata['last_name']?.toString() ?? '';
+      final fullNameMeta = (metadata['full_name'] as String?)?.trim() ?? '';
+      var fName = metadata['first_name']?.toString() ?? '';
+      var lName = metadata['last_name']?.toString() ?? '';
+      if (fName.isEmpty && fullNameMeta.isNotEmpty) {
+        final parsed = UserModel.parseFullName(fullNameMeta);
+        fName = parsed.$1;
+        lName = parsed.$2;
+      }
       final streamStr = metadata['stream']?.toString() ?? 'natural';
 
       final newUser = UserModel(

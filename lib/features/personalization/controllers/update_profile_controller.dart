@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
+import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -18,8 +19,7 @@ class UpdateProfileController extends GetxController {
   final UserRepository _userRepository = Get.find<UserRepository>();
   final UserController _userController = Get.find<UserController>();
 
-  late TextEditingController firstName;
-  late TextEditingController lastName;
+  late TextEditingController fullName;
   late RxString selectedStream;
 
   final RxBool isUpdating = false.obs;
@@ -32,8 +32,7 @@ class UpdateProfileController extends GetxController {
 
     final user = _userController.user.value;
 
-    firstName = TextEditingController(text: user.firstName);
-    lastName = TextEditingController(text: user.lastName);
+    fullName = TextEditingController(text: user.fullName);
     selectedStream = (user.stream.isNotEmpty ? user.stream : 'natural').obs;
   }
 
@@ -53,10 +52,11 @@ class UpdateProfileController extends GetxController {
       }
 
       final currentUser = _userController.user.value;
+      final (fName, lName) = UserModel.parseFullName(fullName.text);
 
       final updatedUser = currentUser.copyWith(
-        firstName: firstName.text.trim(),
-        lastName: lastName.text.trim(),
+        firstName: fName,
+        lastName: lName,
         stream: selectedStream.value,
       );
 
@@ -99,8 +99,7 @@ class UpdateProfileController extends GetxController {
 
   @override
   void onClose() {
-    firstName.dispose();
-    lastName.dispose();
+    fullName.dispose();
     super.onClose();
   }
 }

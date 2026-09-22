@@ -21,8 +21,7 @@ class SignupController extends GetxController {
 
   final hidePassword = true.obs;
   final hideConfirmPassword = true.obs;
-  final firstName = TextEditingController();
-  final lastName = TextEditingController();
+  final fullName = TextEditingController();
   final email = TextEditingController();
   final password = TextEditingController();
   final confirmPassword = TextEditingController();
@@ -43,8 +42,7 @@ class SignupController extends GetxController {
 
   @override
   void onClose() {
-    firstName.dispose();
-    lastName.dispose();
+    fullName.dispose();
     email.dispose();
     password.dispose();
     confirmPassword.dispose();
@@ -76,8 +74,8 @@ class SignupController extends GetxController {
         return;
       }
 
-      final fName = firstName.text.trim();
-      final lName = lastName.text.trim();
+      final fullNameStr = fullName.text.trim();
+      final (fName, lName) = UserModel.parseFullName(fullNameStr);
       final emailStr = email.text.trim();
       final streamStr = selectedStream.value.trim();
 
@@ -89,6 +87,7 @@ class SignupController extends GetxController {
             data: {
               'first_name': fName,
               'last_name': lName,
+              'full_name': fullNameStr,
               'stream': streamStr,
             },
           );

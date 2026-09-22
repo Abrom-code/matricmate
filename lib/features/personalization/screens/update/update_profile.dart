@@ -70,7 +70,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 10),
 
-              // ── Card 1: Names ────────────────────────────────
+              // ── Card 1: Name ─────────────────────────────────
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -88,150 +88,77 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   ],
                 ),
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: controller.firstName,
-                      textCapitalization: TextCapitalization.sentences,
-                      style: TextStyle(
-                        color: dark ? AppColors.white : const Color(0xFF0F172A),
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      validator: (val) =>
-                          AppValidator.validateEmptyText('First Name', val),
-                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                      decoration: InputDecoration(
-                        labelText: 'First Name',
-                        labelStyle: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w500,
-                          color: dark
-                              ? AppColors.darkInputLabel
-                              : AppColors.lightInputLabel,
-                        ),
-                        floatingLabelStyle: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                        hintStyle: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w400,
-                          color: dark
-                              ? AppColors.darkInputHint
-                              : AppColors.lightInputHint,
-                        ),
-                        prefixIcon: Icon(
-                          Iconsax.user_copy,
-                          size: 18,
-                          color: dark
-                              ? AppColors.darkInputLabel
-                              : AppColors.lightInputLabel,
-                        ),
-                        filled: true,
-                        fillColor: dark
-                            ? AppColors.darkInputFill
-                            : AppColors.lightInputFill,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: dark
-                                ? AppColors.darkInputBorder
-                                : AppColors.lightInputBorder,
-                            width: 1.2,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: dark
-                                ? AppColors.darkInputBorder
-                                : AppColors.lightInputBorder,
-                            width: 1.2,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                            width: 1.6,
-                          ),
-                        ),
+                child: TextFormField(
+                  controller: controller.fullName,
+                  textCapitalization: TextCapitalization.words,
+                  keyboardType: TextInputType.name,
+                  style: TextStyle(
+                    color: dark ? AppColors.white : const Color(0xFF0F172A),
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  validator: (val) =>
+                      AppValidator.validateEmptyText('Full Name', val),
+                  onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                  decoration: InputDecoration(
+                    labelText: 'Full Name',
+                    hintText: 'e.g. Abebe Bikila',
+                    labelStyle: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w500,
+                      color: dark
+                          ? AppColors.darkInputLabel
+                          : AppColors.lightInputLabel,
+                    ),
+                    floatingLabelStyle: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                    hintStyle: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w400,
+                      color: dark
+                          ? AppColors.darkInputHint
+                          : AppColors.lightInputHint,
+                    ),
+                    prefixIcon: Icon(
+                      Iconsax.user_copy,
+                      size: 18,
+                      color: dark
+                          ? AppColors.darkInputLabel
+                          : AppColors.lightInputLabel,
+                    ),
+                    filled: true,
+                    fillColor: dark
+                        ? AppColors.darkInputFill
+                        : AppColors.lightInputFill,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: dark
+                            ? AppColors.darkInputBorder
+                            : AppColors.lightInputBorder,
+                        width: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: controller.lastName,
-                      textCapitalization: TextCapitalization.sentences,
-                      style: TextStyle(
-                        color: dark ? AppColors.white : const Color(0xFF0F172A),
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      validator: (val) =>
-                          AppValidator.validateEmptyText('Last Name', val),
-                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                      decoration: InputDecoration(
-                        labelText: 'Last Name',
-                        labelStyle: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w500,
-                          color: dark
-                              ? AppColors.darkInputLabel
-                              : AppColors.lightInputLabel,
-                        ),
-                        floatingLabelStyle: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                        hintStyle: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w400,
-                          color: dark
-                              ? AppColors.darkInputHint
-                              : AppColors.lightInputHint,
-                        ),
-                        prefixIcon: Icon(
-                          Iconsax.user_copy,
-                          size: 18,
-                          color: dark
-                              ? AppColors.darkInputLabel
-                              : AppColors.lightInputLabel,
-                        ),
-                        filled: true,
-                        fillColor: dark
-                            ? AppColors.darkInputFill
-                            : AppColors.lightInputFill,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: dark
-                                ? AppColors.darkInputBorder
-                                : AppColors.lightInputBorder,
-                            width: 1.2,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: dark
-                                ? AppColors.darkInputBorder
-                                : AppColors.lightInputBorder,
-                            width: 1.2,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                            width: 1.6,
-                          ),
-                        ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: dark
+                            ? AppColors.darkInputBorder
+                            : AppColors.lightInputBorder,
+                        width: 1.2,
                       ),
                     ),
-                  ],
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 1.6,
+                      ),
+                    ),
+                  ),
                 ),
               ),
 

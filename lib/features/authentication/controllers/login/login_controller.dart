@@ -79,8 +79,14 @@ class LoginController extends GetxController {
         final existingProfile = await userRepo.fetchCurrentUserDetails();
         if (existingProfile == null) {
           final metadata = user.userMetadata ?? {};
-          final fName = (metadata['first_name'] as String?) ?? '';
-          final lName = (metadata['last_name'] as String?) ?? '';
+          final fullNameMeta = (metadata['full_name'] as String?)?.trim() ?? '';
+          var fName = (metadata['first_name'] as String?) ?? '';
+          var lName = (metadata['last_name'] as String?) ?? '';
+          if (fName.isEmpty && fullNameMeta.isNotEmpty) {
+            final parsed = UserModel.parseFullName(fullNameMeta);
+            fName = parsed.$1;
+            lName = parsed.$2;
+          }
           final streamStr =
               (metadata['stream'] as String?)?.toLowerCase().trim() ??
                   'natural';

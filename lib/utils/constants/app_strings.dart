@@ -1,5 +1,6 @@
 class AppTextStrings {
   // -- Authentication Form Text
+  static const String fullName = 'Full Name';
   static const String firstName = 'First Name';
   static const String lastName = 'Last Name';
   static const String email = 'E-Mail';

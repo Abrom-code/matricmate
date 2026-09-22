@@ -37,10 +37,20 @@ class UserModel {
 
   /// FROM JSON (Supabase → Dart)
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    var firstName = json['first_name']?.toString() ?? '';
+    var lastName = json['last_name']?.toString() ?? '';
+    final fullName = json['full_name']?.toString() ?? '';
+
+    if (firstName.isEmpty && lastName.isEmpty && fullName.isNotEmpty) {
+      final (f, l) = UserModel.parseFullName(fullName);
+      firstName = f;
+      lastName = l;
+    }
+
     return UserModel(
       id: json['id']?.toString() ?? '',
-      firstName: json['first_name']?.toString() ?? '',
-      lastName: json['last_name']?.toString() ?? '',
+      firstName: firstName,
+      lastName: lastName,
       email: json['email']?.toString() ?? '',
       stream: json['stream']?.toString() ?? '',
       status: json['subscription_status']?.toString() ?? 'inactive',
@@ -133,9 +143,17 @@ class UserModel {
   );
 
   /// FULL NAME
-  String get fullName => '$firstName $lastName';
+  String get fullName => '$firstName $lastName'.trim();
 
   static List<String> nameParts(String fullName) => fullName.split(' ');
+
+  /// Splits a single full name string into (firstName, lastName)
+  static (String, String) parseFullName(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final first = parts.isNotEmpty ? parts.first : '';
+    final last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+    return (first, last);
+  }
 
   /// User is active if status is 'active' AND subscription has not expired.
   /// Legacy users without an expiry date are treated as active (lifetime).

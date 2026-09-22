@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/exam/question_detail_box.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
@@ -57,27 +56,17 @@ class BookmarkedQnContainer extends GetView<BookmarkController> {
             ),
             headerRight: Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md,
-                vertical: AppSizes.xs,
+                horizontal: 8,
+                vertical: 4,
               ),
               decoration: BoxDecoration(
                 color: Colors.green.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppSizes.lg),
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Iconsax.tick_circle_copy, color: Colors.green, size: 14),
-                  SizedBox(width: AppSizes.xs),
-                  Text(
-                    'Answer shown',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+              child: const Icon(
+                Icons.done_all_rounded,
+                color: Colors.green,
+                size: 16,
               ),
             ),
             // ── Passage ────────────────────────────────────────────────

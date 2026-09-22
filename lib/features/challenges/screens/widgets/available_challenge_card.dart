@@ -323,6 +323,7 @@ class AvailableChallengeCard extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
                     foregroundColor: const Color(0xFF04342C),
+                    side: const BorderSide(color: AppColors.secondary),
                     elevation: 0,
                     padding: EdgeInsets.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,

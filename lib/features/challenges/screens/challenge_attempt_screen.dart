@@ -6,6 +6,7 @@ import 'package:matricmate/features/challenges/controllers/challenge_attempt_con
 import 'package:matricmate/features/challenges/screens/widgets/challenge_passage_container.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_passage_layout_ctrl.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
+import 'package:matricmate/features/exam/screens/question/widgets/report_question_bottom_sheet.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -142,6 +143,25 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
                   passage: passage,
                   isHidden: _ctrl.isPassageHidden,
                   onToggle: _ctrl.togglePassage,
+                ),
+              );
+            }),
+
+            // ── Report Flag Button ──────────────────────────────────
+            Obx(() {
+              if (_ctrl.questions.isEmpty) return const SizedBox.shrink();
+              final currentQ = _ctrl.questions[_ctrl.currentIndex.value];
+              return Padding(
+                padding: const EdgeInsets.only(right: AppSizes.xs),
+                child: IconButton(
+                  onPressed: () => ReportQuestionBottomSheet.show(
+                    context,
+                    challengeQuestionId: currentQ.id,
+                    questionNumber: _ctrl.currentIndex.value + 1,
+                  ),
+                  icon: const Icon(Iconsax.flag_copy, size: 18),
+                  tooltip: 'Report question',
+                  visualDensity: VisualDensity.compact,
                 ),
               );
             }),

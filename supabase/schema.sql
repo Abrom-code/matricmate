@@ -202,6 +202,29 @@ CREATE TABLE IF NOT EXISTS public.test_attempts (
 CREATE INDEX IF NOT EXISTS test_attempts_user_idx ON public.test_attempts (user_id);
 CREATE INDEX IF NOT EXISTS test_attempts_test_idx ON public.test_attempts (test_id);
 
+-- public.question_reports
+CREATE TABLE IF NOT EXISTS public.question_reports (
+    id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id               uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    question_id           integer REFERENCES public.questions(id) ON DELETE CASCADE,
+    challenge_question_id uuid REFERENCES public.challenge_questions(id) ON DELETE CASCADE,
+    test_id               integer REFERENCES public.tests(id) ON DELETE SET NULL,
+    reason                text NOT NULL,
+    comment               text,
+    status                text NOT NULL DEFAULT 'pending',
+    admin_notes           text,
+    created_at            timestamptz NOT NULL DEFAULT now(),
+    resolved_at           timestamptz,
+    resolved_by           uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+    CONSTRAINT chk_question_or_challenge CHECK (question_id IS NOT NULL OR challenge_question_id IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_question_reports_status      ON public.question_reports (status);
+CREATE INDEX IF NOT EXISTS idx_question_reports_question    ON public.question_reports (question_id);
+CREATE INDEX IF NOT EXISTS idx_question_reports_challenge_q ON public.question_reports (challenge_question_id);
+CREATE INDEX IF NOT EXISTS idx_question_reports_user        ON public.question_reports (user_id);
+CREATE INDEX IF NOT EXISTS idx_question_reports_created_at  ON public.question_reports (created_at DESC);
+
 -- ─────────────────────────────────────────────────────────────────────
 -- 5. PAYMENT SUBSYSTEM
 -- ─────────────────────────────────────────────────────────────────────
@@ -1512,6 +1535,7 @@ ALTER TABLE public.challenge_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.challenge_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.challenge_answers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.challenge_rewards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.question_reports ENABLE ROW LEVEL SECURITY;
 
 -- 11.1 Users policies
 DROP POLICY IF EXISTS "Users can view own profile or admin" ON public.users;
@@ -1823,6 +1847,29 @@ CREATE POLICY "Challenge rewards view policy" ON public.challenge_rewards
 DROP POLICY IF EXISTS "Admins can manage challenge rewards" ON public.challenge_rewards;
 CREATE POLICY "Admins can manage challenge rewards" ON public.challenge_rewards
     FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+-- 11.8b Question reports policies
+DROP POLICY IF EXISTS "Users can insert question reports" ON public.question_reports;
+CREATE POLICY "Users can insert question reports"
+    ON public.question_reports
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can view own reports" ON public.question_reports;
+CREATE POLICY "Users can view own reports"
+    ON public.question_reports
+    FOR SELECT
+    TO authenticated
+    USING (auth.uid() = user_id OR public.is_admin());
+
+DROP POLICY IF EXISTS "Admins full management of question reports" ON public.question_reports;
+CREATE POLICY "Admins full management of question reports"
+    ON public.question_reports
+    FOR ALL
+    TO authenticated
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
 
 -- 11.9 Storage bucket RLS policies for 'receipts'
 DROP POLICY IF EXISTS "Students can upload receipts to own folder" ON storage.objects;

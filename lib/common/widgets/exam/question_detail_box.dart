@@ -12,6 +12,8 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/bb_table_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/features/exam/screens/question/widgets/report_question_bottom_sheet.dart';
 import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// Reusable question detail card for bookmarks and review screens.
@@ -89,7 +91,31 @@ class QuestionDetailBox extends StatelessWidget {
           // ── Header ────────────────────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [headerLeft, headerRight],
+            children: [
+              headerLeft,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () => ReportQuestionBottomSheet.show(
+                      context,
+                      questionId: question.id,
+                      testId: question.testId,
+                    ),
+                    icon: Icon(
+                      Iconsax.flag_copy,
+                      size: 16.5,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    ),
+                    tooltip: 'Report question',
+                    padding: const EdgeInsets.all(6),
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 6),
+                  headerRight,
+                ],
+              ),
+            ],
           ),
 
           Divider(

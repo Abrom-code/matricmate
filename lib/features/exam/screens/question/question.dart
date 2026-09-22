@@ -10,6 +10,7 @@ import 'package:matricmate/features/exam/screens/question/widgets/passage_contai
 import 'package:matricmate/features/exam/screens/question/widgets/passage_layout_ctrl.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/progress_fab.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_navigator_sheet.dart';
+import 'package:matricmate/features/exam/screens/question/widgets/report_question_bottom_sheet.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -248,7 +249,36 @@ class _QuestionScreenState extends State<QuestionScreen> {
             ),
             centerTitle: true,
             actions: [
-              if (currentQ != null)
+              if (currentQ != null) ...[
+                // Report Question Button
+                Padding(
+                  padding: const EdgeInsets.only(right: 2),
+                  child: IconButton(
+                    onPressed: () => ReportQuestionBottomSheet.show(
+                      context,
+                      questionId: currentQ.id,
+                      testId: currentQ.testId,
+                      questionNumber: controller.currentIndex.value + 1,
+                    ),
+                    tooltip: 'Report question',
+                    icon: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Iconsax.flag_copy,
+                          color: AppColors.white,
+                          size: 16.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Bookmark Button
                 Obx(() {
                   final isSaved = controller.isBookmarked(currentQ.id);
                   return Padding(
@@ -282,6 +312,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     ),
                   );
                 }),
+              ],
             ],
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(3),

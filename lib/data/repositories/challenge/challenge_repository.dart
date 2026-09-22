@@ -38,14 +38,14 @@ class ChallengeRepository {
           .select('*, subjects(name), challenge_questions(id), challenge_attempts(count)')
           .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
           .order('created_at', ascending: false)
-          .timeout(AppTimeouts.query);
-    } catch (_) {
+          .timeout(const Duration(seconds: 6));
+    } on PostgrestException catch (_) {
       rows = await _sb
           .from('leaderboard_challenges')
           .select('*, subjects(name), challenge_questions(id)')
           .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
           .order('created_at', ascending: false)
-          .timeout(AppTimeouts.query);
+          .timeout(const Duration(seconds: 6));
     }
 
     final list = (rows as List)

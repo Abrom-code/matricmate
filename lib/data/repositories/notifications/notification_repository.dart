@@ -3,6 +3,7 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,6 +23,12 @@ class NotificationRepository {
     String userStream, {
     DateTime? signupAt,
   }) async {
+    final isOnline = await NetworkManager.instance.isConnected();
+    if (!isOnline) {
+      debugPrint('[Notifications] Device offline — skipping remote sync');
+      return;
+    }
+
     try {
       debugPrint(
         '[Notifications] syncFromRemote userId=$userId stream=$userStream signupAt=$signupAt',
@@ -176,8 +183,8 @@ class NotificationRepository {
         '[Notifications] upserted ${rows.length - skipped} rows to local DB'
         '${skipped > 0 ? " ($skipped dismissed — skipped)" : ""}',
       );
-    } catch (e, st) {
-      debugPrint('[Notifications] syncFromRemote failed: $e\n$st');
+    } catch (e) {
+      debugPrint('[Notifications] syncFromRemote failed: $e');
       throw AppExceptionHandler.handle(e);
     }
   }

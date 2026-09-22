@@ -251,8 +251,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                 child: Center(
                                   child: ChallengeOfflineState(
                                     dark: dark,
-                                    isRefreshing: _ctrl.isRefreshing.value ||
-                                        _ctrl.isLoading.value,
+                                    isRefreshing: _ctrl.isRefreshing.value,
                                     onRefresh: () =>
                                         _ctrl.loadAllChallenges(isManual: true),
                                   ),

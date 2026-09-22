@@ -367,14 +367,19 @@ class ChallengeHomeController extends GetxController {
     }
   }
 
+  bool _isLoadingAllChallenges = false;
+
   Future<void> loadAllChallenges({bool showLoading = true, bool isManual = false}) async {
+    if (_isLoadingAllChallenges) return;
+    _isLoadingAllChallenges = true;
+
     if (showLoading && !isManual) {
       isLoading.value = true;
     }
     isRefreshing.value = true;
     try {
       // 1. Fast Internet Reachability Check
-      final hasNet = await NetworkManager.instance.isConnected();
+      final hasNet = await NetworkManager.instance.isConnected(force: isManual);
       if (!hasNet) {
         isOffline.value = true;
         availableChallenges.clear();
@@ -472,6 +477,7 @@ class ChallengeHomeController extends GetxController {
     } finally {
       isLoading.value = false;
       isRefreshing.value = false;
+      _isLoadingAllChallenges = false;
     }
   }
 

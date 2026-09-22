@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
 class NetworkManager extends GetxController {
   static NetworkManager get instance => Get.find();
@@ -12,7 +12,8 @@ class NetworkManager extends GetxController {
   static const Duration _cacheTtl = Duration(seconds: 4);
 
   /// Returns true if device has an active network interface and internet access.
-  Future<bool> isConnected() async {
+  /// Set [force] to true to bypass cache and verify live internet status immediately.
+  Future<bool> isConnected({bool force = false}) async {
     try {
       // 1. Quick check for network interface availability (< 2ms)
       final connectivityResult = await _connectivity.checkConnectivity();
@@ -26,58 +27,62 @@ class NetworkManager extends GetxController {
 
       // 2. Return cached reachability if validated within the last 4 seconds
       final now = DateTime.now();
-      if (_lastReachableAt != null &&
+      if (!force &&
+          _lastReachableAt != null &&
           now.difference(_lastReachableAt!) < _cacheTtl) {
         return true;
       }
 
-      // 3. Verify actual internet reachability (fast DNS lookup first, HTTP fallback)
+      // 3. Ultra-fast parallel IP socket probe (30-80ms online, max 600ms offline)
       final hasInternetAccess = await _checkInternetReachability();
 
       if (hasInternetAccess) {
         _lastReachableAt = DateTime.now();
+      } else {
+        _lastReachableAt = null;
       }
 
       return hasInternetAccess;
     } catch (_) {
+      _lastReachableAt = null;
       return false;
     }
   }
 
-  /// Performs low-latency internet reachability check.
-  /// Uses raw DNS lookup (~20-50ms) first, falling back to HTTP HEAD if needed.
+  /// Performs ultra low-latency internet reachability check.
+  /// Uses parallel raw IP socket probes to bypass DNS lookup entirely.
+  /// Completes in 30-80ms when online, and at most 600ms when offline.
   Future<bool> _checkInternetReachability() async {
-    // Fast path: DNS resolution (ultra lightweight, no TLS handshake overhead)
-    try {
-      final lookup = await InternetAddress.lookup('google.com').timeout(
-        const Duration(milliseconds: 1000),
-      );
-      if (lookup.isNotEmpty && lookup[0].rawAddress.isNotEmpty) {
-        return true;
+    final completer = Completer<bool>();
+    int pending = 3;
+
+    void onProbeDone(bool success) {
+      if (success) {
+        if (!completer.isCompleted) completer.complete(true);
+      } else {
+        pending--;
+        if (pending == 0 && !completer.isCompleted) {
+          completer.complete(false);
+        }
       }
-    } catch (_) {}
+    }
 
-    // Fallback path: Lightweight HTTP request
+    _rawProbe('8.8.8.8', 53).then(onProbeDone);
+    _rawProbe('1.1.1.1', 53).then(onProbeDone);
+    _rawProbe('1.1.1.1', 443).then(onProbeDone);
+
+    return completer.future;
+  }
+
+  Future<bool> _rawProbe(String host, int port) async {
     try {
-      final endpoints = [
-        'https://www.google.com',
-        'https://www.cloudflare.com',
-      ];
-
-      final results = await Future.wait(
-        endpoints.map((url) async {
-          try {
-            await http
-                .head(Uri.parse(url))
-                .timeout(const Duration(milliseconds: 1000));
-            return true;
-          } catch (_) {
-            return false;
-          }
-        }),
+      final socket = await Socket.connect(
+        host,
+        port,
+        timeout: const Duration(milliseconds: 600),
       );
-
-      return results.any((reachable) => reachable);
+      socket.destroy();
+      return true;
     } catch (_) {
       return false;
     }

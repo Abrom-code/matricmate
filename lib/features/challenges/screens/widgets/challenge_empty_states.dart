@@ -143,10 +143,11 @@ class ChallengeOfflineState extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  side: const BorderSide(
-                    color: AppColors.primary,
-                    width: 1.5,
-                  ),
+                  disabledBackgroundColor:
+                      AppColors.primary.withValues(alpha: 0.75),
+                  disabledForegroundColor: Colors.white,
+                  side: BorderSide.none,
+                  elevation: 0,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 10,

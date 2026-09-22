@@ -273,7 +273,7 @@ class ChallengeArchiveController extends GetxController {
     }
     try {
       // 1. Fast Internet Reachability Check
-      final hasNet = await NetworkManager.instance.isConnected();
+      final hasNet = await NetworkManager.instance.isConnected(force: isManual);
       if (!hasNet) {
         isOffline.value = true;
         final localChallenges = await _loadLocalArchivedChallenges();

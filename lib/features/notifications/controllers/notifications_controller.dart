@@ -21,6 +21,7 @@ class NotificationsController extends GetxController
   final RxInt unreadCount = 0.obs;
   final RxBool isLoading = false.obs;
   final RxBool isNotificationPermissionGranted = true.obs;
+  bool _isSyncing = false;
 
   // ── Filter state ────────────────────────────────────────────────────
   final Rx<NotificationFilter> selectedFilter = NotificationFilter.all.obs;
@@ -193,12 +194,15 @@ class NotificationsController extends GetxController
         '[Notifications] loadNotifications userId=$_userId syncRemote=$syncRemote',
       );
 
-      if (syncRemote) {
+      if (syncRemote && !_isSyncing) {
+        _isSyncing = true;
         try {
           final signupAt = UserController.instance.user.value.createdAt;
           await _repo.syncFromRemote(_userId, _userStream, signupAt: signupAt);
         } catch (e) {
           debugPrint('[Notifications] syncFromRemote failed: $e');
+        } finally {
+          _isSyncing = false;
         }
       }
 

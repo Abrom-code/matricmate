@@ -526,7 +526,6 @@ class _ToastWidgetState extends State<_ToastWidget>
                 },
                 child: _ToastCard(
                   item: widget.item,
-                  progressAnim: _progressCtrl,
                   onDismiss: _dismiss,
                 ),
               ),
@@ -543,12 +542,10 @@ class _ToastWidgetState extends State<_ToastWidget>
 class _ToastCard extends StatelessWidget {
   const _ToastCard({
     required this.item,
-    required this.progressAnim,
     required this.onDismiss,
   });
 
   final _ToastItem item;
-  final Animation<double> progressAnim;
   final VoidCallback onDismiss;
 
   static _ToastTheme _themeFor(ToastVariant variant) {
@@ -584,7 +581,6 @@ class _ToastCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = _themeFor(item.variant);
     final brightness = Theme.of(context).brightness;
-    final isError = item.variant == ToastVariant.error;
 
     final bg = SnackbarColors.surface(brightness);
     final titleColor = SnackbarColors.text(brightness);
@@ -725,20 +721,6 @@ class _ToastCard extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // ── Progress bar ───────────────────────────────────────
-              if (item.duration != null && !isError)
-                AnimatedBuilder(
-                  animation: progressAnim,
-                  builder: (_, __) => LinearProgressIndicator(
-                    value: progressAnim.value,
-                    minHeight: 2,
-                    backgroundColor: t.accent.withValues(alpha: 0.12),
-                    valueColor: AlwaysStoppedAnimation(
-                      t.accent.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),

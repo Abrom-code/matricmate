@@ -18,6 +18,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChallengeArchiveController extends GetxController {
@@ -94,7 +95,7 @@ class ChallengeArchiveController extends GetxController {
     _preloadLocalArchivedChallenges();
     loadArchive();
     _startRealtime();
-    ever(UserController.instance.user, (_) => loadArchive(isManual: false));
+    ever(UserController.instance.user, (_) => loadArchive(showLoading: false, isManual: false));
   }
 
   @override
@@ -264,13 +265,30 @@ class ChallengeArchiveController extends GetxController {
     }
   }
 
-  Future<void> loadArchive({bool isManual = false}) async {
+  Future<void> loadArchive({bool showLoading = true, bool isManual = false}) async {
     if (isManual) {
       isManualRefreshing.value = true;
-    } else if (challenges.isEmpty) {
+    } else if (showLoading) {
       isLoading.value = true;
     }
     try {
+      // 1. Fast Internet Reachability Check
+      final hasNet = await NetworkManager.instance.isConnected();
+      if (!hasNet) {
+        isOffline.value = true;
+        final localChallenges = await _loadLocalArchivedChallenges();
+        if (localChallenges.isNotEmpty || challenges.isEmpty) {
+          challenges.value = localChallenges;
+        }
+        await refreshDownloadStates();
+        await refreshAttemptStates(checkOnline: false);
+
+        if (isManual) {
+          ToastHelper.warning('No internet connection. Showing offline data.');
+        }
+        return;
+      }
+
       final deleted = await _db.getDeletedChallengeIds();
       deletedChallengeIds.assignAll(deleted);
 
@@ -316,7 +334,7 @@ class ChallengeArchiveController extends GetxController {
         challenges.value = localChallenges;
       }
       await refreshDownloadStates();
-      await refreshAttemptStates();
+      await refreshAttemptStates(checkOnline: false);
 
       if (isManual) {
         ToastHelper.warning('No internet connection. Showing offline data.');
@@ -352,7 +370,7 @@ class ChallengeArchiveController extends GetxController {
     return 'Completed';
   }
 
-  Future<void> refreshAttemptStates() async {
+  Future<void> refreshAttemptStates({bool checkOnline = true}) async {
     try {
       final deleted = await _db.getDeletedChallengeIds();
       deletedChallengeIds.assignAll(deleted);
@@ -363,13 +381,18 @@ class ChallengeArchiveController extends GetxController {
       final scores = await _db.getChallengePracticeScores();
       practiceScores.assignAll(scores);
 
-      final userId = UserController.instance.user.value.id;
-      if (userId.isNotEmpty) {
-        final online = await _repo.fetchUserSubmittedChallengeIds(userId);
-        attemptedIds.addAll(online.difference(deleted));
+      if (checkOnline && !isOffline.value) {
+        final userId = UserController.instance.user.value.id.isNotEmpty
+            ? UserController.instance.user.value.id
+            : (Supabase.instance.client.auth.currentUser?.id ?? '');
+        if (userId.isNotEmpty) {
+          final online = await _repo.fetchUserSubmittedChallengeIds(userId);
+          attemptedIds.addAll(online.difference(deleted));
 
-        final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
-        inProgressIds.assignAll(inProg.difference(deleted));
+          final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
+          inProgressIds.assignAll(inProg.difference(deleted));
+          inProgressIds.removeAll(attemptedIds);
+        }
       }
     } catch (_) {}
   }
@@ -381,7 +404,13 @@ class ChallengeArchiveController extends GetxController {
     }
     return false;
   }
-  bool isAttemptedOrPracticed(String challengeId) => attemptedIds.contains(challengeId);
+  bool isAttemptedOrPracticed(String challengeId, {String? setId}) {
+    if (attemptedIds.contains(challengeId)) return true;
+    if (setId != null && setId.isNotEmpty && attemptedIds.contains(setId)) {
+      return true;
+    }
+    return false;
+  }
   bool isInProgress(String challengeId) => inProgressIds.contains(challengeId);
 
   void markInProgress(String challengeId) {

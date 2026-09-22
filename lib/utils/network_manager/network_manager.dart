@@ -16,9 +16,8 @@ class NetworkManager extends GetxController {
     try {
       // 1. Quick check for network interface availability (< 2ms)
       final connectivityResult = await _connectivity.checkConnectivity();
-      final hasNetworkInterface = !connectivityResult.contains(
-        ConnectivityResult.none,
-      );
+      final hasNetworkInterface = connectivityResult.isNotEmpty &&
+          !connectivityResult.contains(ConnectivityResult.none);
 
       if (!hasNetworkInterface) {
         _lastReachableAt = null;
@@ -70,7 +69,7 @@ class NetworkManager extends GetxController {
           try {
             await http
                 .head(Uri.parse(url))
-                .timeout(const Duration(milliseconds: 1500));
+                .timeout(const Duration(milliseconds: 1000));
             return true;
           } catch (_) {
             return false;

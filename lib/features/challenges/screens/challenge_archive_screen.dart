@@ -73,7 +73,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
         ],
       ),
       body: Obx(() {
-        if (_ctrl.isLoading.value && _ctrl.challenges.isEmpty) {
+        if (_ctrl.isLoading.value) {
           return const AppCircularLoading(
             title: 'Loading challenges...',
           );

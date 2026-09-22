@@ -14,8 +14,8 @@ class ChallengeRepository {
   final _sb = Supabase.instance.client;
 
   Future<void> _checkConnectivity() async {
-    final hasInterface = await NetworkManager.instance.hasNetworkInterface();
-    if (!hasInterface) {
+    final connected = await NetworkManager.instance.isConnected();
+    if (!connected) {
       throw const AppFailure(
         title: 'No Connection',
         message: 'Challenges require an active internet connection.',
@@ -38,14 +38,14 @@ class ChallengeRepository {
           .select('*, subjects(name), challenge_questions(id), challenge_attempts(count)')
           .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
           .order('created_at', ascending: false)
-          .timeout(AppTimeouts.sync);
+          .timeout(AppTimeouts.query);
     } catch (_) {
       rows = await _sb
           .from('leaderboard_challenges')
           .select('*, subjects(name), challenge_questions(id)')
           .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
           .order('created_at', ascending: false)
-          .timeout(AppTimeouts.sync);
+          .timeout(AppTimeouts.query);
     }
 
     final list = (rows as List)
@@ -660,7 +660,7 @@ class ChallengeRepository {
       query = query.eq('subject_id', subjectId);
     }
 
-    final rows = await query.order('created_at', ascending: false).timeout(AppTimeouts.sync);
+    final rows = await query.order('created_at', ascending: false).timeout(AppTimeouts.query);
     final list = (rows as List)
         .map((r) => LeaderboardChallengeModel.fromJson(r as Map<String, dynamic>))
         .toList();
@@ -808,7 +808,7 @@ class ChallengeRepository {
           .from('challenge_attempts')
           .select('challenge_id')
           .eq('user_id', userId)
-          .eq('status', 'submitted')
+          .neq('status', 'in_progress')
           .timeout(AppTimeouts.query);
       return rows
           .map((r) => r['challenge_id']?.toString() ?? '')

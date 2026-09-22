@@ -169,9 +169,19 @@ class ChallengeAttemptController extends GetxController
     } catch (e) {
       Get.back();
       final msg = e.toString().toLowerCase();
-      if (msg.contains('already_submitted')) {
+      if (msg.contains('already_submitted') ||
+          msg.contains('invalid_or_completed_attempt') ||
+          msg.contains('already completed')) {
+        if (Get.isRegistered<ChallengeHomeController>()) {
+          ChallengeHomeController.instance.markAttemptedOrPracticed(challengeId);
+          ChallengeHomeController.instance.clearInProgress(challengeId);
+        }
+        if (Get.isRegistered<ChallengeArchiveController>()) {
+          ChallengeArchiveController.instance.markAttemptedOrPracticed(challengeId);
+          ChallengeArchiveController.instance.clearInProgress(challengeId);
+        }
         ToastHelper.info(
-          'You have already submitted your attempt for this challenge.',
+          'You have already completed this challenge.',
         );
         NavigationController.navigateToTab(1);
       } else if (msg.contains('challenge_not_started') ||

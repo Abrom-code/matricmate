@@ -142,20 +142,24 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // ── TabBar ────────────────────────────────────────────────
-          Container(
-            decoration: BoxDecoration(
-              color: dark ? AppColors.darkCard : AppColors.white,
-              border: Border(
-                bottom: BorderSide(
-                  color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+      body: Obx(() {
+        if (_ctrl.isLoading.value) {
+          return const AppCircularLoading(title: 'Loading challenges...');
+        }
+
+        return Column(
+          children: [
+            // ── TabBar ────────────────────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                color: dark ? AppColors.darkCard : AppColors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+                  ),
                 ),
               ),
-            ),
-            child: Obx(
-              () => TabBar(
+              child: TabBar(
                 controller: _tabCtrl,
                 isScrollable: false,
                 labelPadding: const EdgeInsets.symmetric(horizontal: 4),
@@ -226,19 +230,10 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                 ],
               ),
             ),
-          ),
 
-          // ── Tab Views ─────────────────────────────────────────────
-          Expanded(
-            child: Obx(() {
-              if (_ctrl.isLoading.value &&
-                  _ctrl.availableChallenges.isEmpty &&
-                  _ctrl.completedChallenges.isEmpty &&
-                  !_ctrl.isOffline.value) {
-                return const AppCircularLoading(title: 'Loading challenges...');
-              }
-
-              return TabBarView(
+            // ── Tab Views ─────────────────────────────────────────────
+            Expanded(
+              child: TabBarView(
                 controller: _tabCtrl,
                 children: [
                   // Tab 1: Available Challenges
@@ -545,11 +540,11 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                           ),
                   ),
                 ],
-              );
-            }),
-          ),
-        ],
-      ),
+              ),
+            ),
+          ],
+        );
+      }),
     );
   }
 }

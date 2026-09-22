@@ -21,6 +21,7 @@ import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
+import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChallengeHomeController extends GetxController {
@@ -367,11 +368,27 @@ class ChallengeHomeController extends GetxController {
   }
 
   Future<void> loadAllChallenges({bool showLoading = true, bool isManual = false}) async {
-    if (showLoading && completedChallenges.isEmpty && availableChallenges.isEmpty) {
+    if (showLoading && !isManual) {
       isLoading.value = true;
     }
     isRefreshing.value = true;
     try {
+      // 1. Fast Internet Reachability Check
+      final hasNet = await NetworkManager.instance.isConnected();
+      if (!hasNet) {
+        isOffline.value = true;
+        availableChallenges.clear();
+        final local = await _loadLocalChallenges();
+        completedChallenges.assignAll(local);
+        await refreshDownloadStates();
+        await refreshAttemptStates(checkOnline: false);
+
+        if (isManual) {
+          ToastHelper.warning('No internet connection. Showing offline data.');
+        }
+        return;
+      }
+
       final streamTag = userStream.toLowerCase().trim();
       final isNatural = streamTag == 'natural';
       final subjectsList = Get.isRegistered<SubjectsController>()
@@ -447,7 +464,7 @@ class ChallengeHomeController extends GetxController {
       final local = await _loadLocalChallenges();
       completedChallenges.assignAll(local);
       await refreshDownloadStates();
-      await refreshAttemptStates();
+      await refreshAttemptStates(checkOnline: false);
 
       if (isManual) {
         ToastHelper.warning('No internet connection. Showing offline data.');
@@ -684,7 +701,7 @@ class ChallengeHomeController extends GetxController {
       return;
     }
 
-    if (isAttemptedOrPracticed(challenge.id)) {
+    if (isAttemptedOrPracticed(challenge.id, setId: challenge.setId)) {
       openCompletedChallenge(challenge);
       return;
     }
@@ -718,7 +735,13 @@ class ChallengeHomeController extends GetxController {
     inProgressIds.remove(challengeId);
   }
 
-  bool isAttemptedOrPracticed(String challengeId) => attemptedIds.contains(challengeId);
+  bool isAttemptedOrPracticed(String challengeId, {String? setId}) {
+    if (attemptedIds.contains(challengeId)) return true;
+    if (setId != null && setId.isNotEmpty && attemptedIds.contains(setId)) {
+      return true;
+    }
+    return false;
+  }
 
   bool isInProgress(String challengeId) => inProgressIds.contains(challengeId);
 
@@ -744,7 +767,7 @@ class ChallengeHomeController extends GetxController {
     return 'Completed';
   }
 
-  Future<void> refreshAttemptStates() async {
+  Future<void> refreshAttemptStates({bool checkOnline = true}) async {
     try {
       final deleted = await _db.getDeletedChallengeIds();
       deletedChallengeIds.assignAll(deleted);
@@ -755,13 +778,18 @@ class ChallengeHomeController extends GetxController {
       final scores = await _db.getChallengePracticeScores();
       practiceScores.assignAll(scores);
 
-      final userId = UserController.instance.user.value.id;
-      if (userId.isNotEmpty) {
-        final online = await _repo.fetchUserSubmittedChallengeIds(userId);
-        attemptedIds.addAll(online.difference(deleted));
+      if (checkOnline && !isOffline.value) {
+        final userId = UserController.instance.user.value.id.isNotEmpty
+            ? UserController.instance.user.value.id
+            : (Supabase.instance.client.auth.currentUser?.id ?? '');
+        if (userId.isNotEmpty) {
+          final online = await _repo.fetchUserSubmittedChallengeIds(userId);
+          attemptedIds.addAll(online.difference(deleted));
 
-        final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
-        inProgressIds.assignAll(inProg.difference(deleted));
+          final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
+          inProgressIds.assignAll(inProg.difference(deleted));
+          inProgressIds.removeAll(attemptedIds);
+        }
       }
     } catch (_) {}
   }

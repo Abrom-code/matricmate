@@ -25,9 +25,8 @@ class CompletedChallengeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final isPremium = ctrl.isPremium;
-      final isDone = ctrl.isAttemptedOrPracticed(challenge.id);
+      final isDone = ctrl.isAttemptedOrPracticed(challenge.id, setId: challenge.setId);
       final isPending = UserController.instance.user.value.isPending;
-      final scoreText = ctrl.getScoreText(challenge.id);
 
       final closeDateStr = challenge.endsAt != null
           ? 'Closes ${DateFormat('MMM dd').format(challenge.endsAt!)}'
@@ -99,39 +98,13 @@ class CompletedChallengeCard extends StatelessWidget {
                 const Spacer(),
 
                 if (isDone) ...[
-                  // Completed badge (consistent with other tests)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle_outline_rounded,
-                          size: 11,
-                          color: AppColors.primary,
-                        ),
-                        SizedBox(width: 3.5),
-                        Text(
-                          'COMPLETED',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ],
+                  // Double check completed icon
+                  const Tooltip(
+                    message: 'Completed',
+                    child: Icon(
+                      Icons.done_all_rounded,
+                      size: 19,
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -175,125 +148,77 @@ class CompletedChallengeCard extends StatelessWidget {
             const SizedBox(height: 14),
 
             // ── 3. Meta Chips Row ───────────────────────────────────────
-            if (isDone) ...[
-              // Completed UI consistent with other tests
-              Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle_outline_rounded,
-                    size: 14,
-                    color: AppColors.primary,
+            Row(
+              children: [
+                // Closes Date Chip
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    scoreText,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.5,
-                    ),
+                  decoration: BoxDecoration(
+                    color: dark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(width: 14),
-                  const Icon(
-                    Icons.timer_outlined,
-                    size: 14,
-                    color: AppColors.textSecondary,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.event_busy_rounded,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        closeDateStr,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '$durationMins mins',
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: 1.0,
-                  minHeight: 4,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
-              ),
-            ] else ...[
-              Row(
-                children: [
-                  // Closes Date Chip
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: dark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.event_busy_rounded,
-                          size: 14,
+
+                const SizedBox(width: 10),
+
+                // Duration Chip
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: dark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.timer_outlined,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$durationMins mins',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
                           color: AppColors.textSecondary,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          closeDateStr,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-
-                  const SizedBox(width: 10),
-
-                  // Duration Chip
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: dark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.timer_outlined,
-                          size: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '$durationMins mins',
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
 
             const SizedBox(height: 20),
 

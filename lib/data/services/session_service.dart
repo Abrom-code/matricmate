@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
-import 'package:matricmate/utils/helpers/snackbar_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Result type so callers can distinguish a network failure from a blocked device.
@@ -23,22 +23,60 @@ class SessionService {
 
   Future<SessionValidationResult> validateSessionDetailed(
     String uid,
-    String deviceId,
-  ) async {
+    String deviceId, {
+    String? email,
+  }) async {
     try {
-      final userEmail = _supabase.auth.currentUser?.email?.toLowerCase().trim();
+      final userEmail = email?.toLowerCase().trim() ??
+          _supabase.auth.currentUser?.email?.toLowerCase().trim();
       if (isWhitelistedTester(userEmail)) {
-        // Reviewer/test account: keep session record updated but never block
+        // Reviewer/admin test account: automatically update session device without ever blocking
         try {
-          await _supabase.from('user_sessions').upsert({
-            'user_id': uid,
-            'device_id': deviceId,
-            'trial': 9999,
-          }, onConflict: 'user_id').timeout(AppTimeouts.bestEffort);
+          final deviceInfo = await DeviceService.getDeviceInfo();
+          final effectiveDeviceId =
+              deviceId.isNotEmpty ? deviceId : deviceInfo.deviceId;
+          await _supabase.rpc(
+            'bind_user_device',
+            params: {
+              'p_device_id': effectiveDeviceId,
+              'p_device_model': deviceInfo.deviceModel,
+              'p_os_version': deviceInfo.osVersion,
+            },
+          ).timeout(AppTimeouts.bestEffort);
         } catch (_) {}
         return SessionValidationResult.allowed;
       }
 
+      // Fetch persistent device metadata (brand, model, OS)
+      final deviceInfo = await DeviceService.getDeviceInfo();
+      final effectiveDeviceId = deviceId.isNotEmpty ? deviceId : deviceInfo.deviceId;
+
+      // 1. Primary: Server-side secure RPC enforcement
+      try {
+        final rpcRes = await _supabase.rpc(
+          'bind_user_device',
+          params: {
+            'p_device_id': effectiveDeviceId,
+            'p_device_model': deviceInfo.deviceModel,
+            'p_os_version': deviceInfo.osVersion,
+          },
+        ).timeout(AppTimeouts.query);
+
+        if (rpcRes is Map) {
+          final status = rpcRes['status']?.toString();
+          if (status == 'allowed') {
+            return SessionValidationResult.allowed;
+          } else if (status == 'blocked') {
+            return SessionValidationResult.blocked;
+          }
+        }
+      } catch (rpcErr) {
+        if (kDebugMode) {
+          debugPrint('[SessionService] bind_user_device RPC failed, using fallback check: $rpcErr');
+        }
+      }
+
+      // 2. Direct table fallback if RPC is not deployed
       final existing = await _supabase
           .from('user_sessions')
           .select()
@@ -46,21 +84,29 @@ class SessionService {
           .maybeSingle()
           .timeout(AppTimeouts.query);
 
-      // First login → create session (omits 'trial' so Supabase table DEFAULT governs initial count)
-      if (existing == null) {
+      // First login or device unlocked by admin (device_id is null)
+      if (existing == null || existing['device_id'] == null) {
         await _supabase.from('user_sessions').upsert({
           'user_id': uid,
-          'device_id': deviceId,
+          'device_id': effectiveDeviceId,
+          'device_model': deviceInfo.deviceModel,
+          'os_version': deviceInfo.osVersion,
+          'last_active_at': DateTime.now().toIso8601String(),
         }, onConflict: 'user_id').timeout(AppTimeouts.query);
         return SessionValidationResult.allowed;
       }
 
-      // Same device → allow
-      if (existing['device_id'] == deviceId) {
+      // Same device -> allow and refresh last_active_at
+      if (existing['device_id'] == effectiveDeviceId) {
+        try {
+          await _supabase.from('user_sessions').update({
+            'last_active_at': DateTime.now().toIso8601String(),
+          }).eq('user_id', uid).timeout(AppTimeouts.bestEffort);
+        } catch (_) {}
         return SessionValidationResult.allowed;
       }
 
-      // Different device → block
+      // Different device -> block
       return SessionValidationResult.blocked;
     } catch (e, st) {
       if (kDebugMode) {
@@ -71,82 +117,20 @@ class SessionService {
   }
 
   /// Convenience wrapper — true only when explicitly allowed.
-  Future<bool> validateSession(String uid, String deviceId) async {
-    final result = await validateSessionDetailed(uid, deviceId);
+  Future<bool> validateSession(
+    String uid,
+    String deviceId, {
+    String? email,
+  }) async {
+    final result = await validateSessionDetailed(uid, deviceId, email: email);
     return result == SessionValidationResult.allowed;
   }
 
-  Future<int> getTrial(String uid) async {
-    try {
-      final response = await _supabase
-          .from('user_sessions')
-          .select('trial')
-          .eq('user_id', uid)
-          .maybeSingle()
-          .timeout(AppTimeouts.query);
-
-      if (response == null) return -1;
-
-      return (response['trial'] as int?) ?? 0;
-    } catch (e) {
-      SnackbarHelper.error(
-        'Session Error',
-        'Could not retrieve device change limit. Please try again.',
-      );
-      return -1;
-    }
-  }
-
-  Future<bool> updateDevice(String uid, String deviceId, int trial) async {
-    try {
-      // 1. Attempt Supabase RPC if configured on backend
-      try {
-        await _supabase.rpc(
-          'switch_device',
-          params: {'new_device_id': deviceId},
-        ).timeout(AppTimeouts.query);
-        return true;
-      } catch (_) {
-        // Fallback to direct table upsert if RPC is not deployed yet
-      }
-
-      // 2. Direct table update fallback
-      final response = await _supabase
-          .from('user_sessions')
-          .upsert({
-            'user_id': uid,
-            'device_id': deviceId,
-            'trial': trial,
-            'updated_at': DateTime.now().toIso8601String(),
-          }, onConflict: 'user_id')
-          .select()
-          .timeout(AppTimeouts.query);
-      if (kDebugMode) {
-        debugPrint('[SessionService] updateDevice response: $response');
-      }
-      return response.isNotEmpty;
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('[SessionService] updateDevice error: $e\n$st');
-      }
-      SnackbarHelper.error(
-        'Device Update Failed',
-        'Could not update your device. Please try again.',
-      );
-      return false;
-    }
-  }
-
+  /// Device sessions are permanent and managed exclusively by admins.
+  /// This method is retained as a safe no-op so any external callers don't delete the device binding.
   Future<void> removeSession(String uid, {String? deviceId}) async {
-    try {
-      var query = _supabase.from('user_sessions').delete().eq('user_id', uid);
-      if (deviceId != null && deviceId.isNotEmpty) {
-        query = query.eq('device_id', deviceId);
-      }
-      await query.timeout(AppTimeouts.bestEffort);
-    } catch (e) {
-      // Non-critical — session cleanup failure should not block logout
-    }
+    // Intentionally no-op: Device bindings MUST persist across logout.
+    // Device resets can only be performed by administrators in m_admin.
   }
 
   // ── Realtime device-change watch ───────────────────────────────────────
@@ -155,9 +139,11 @@ class SessionService {
   void watchSession({
     required String uid,
     required String currentDeviceId,
+    String? email,
     required void Function() onDeviceChanged,
   }) {
-    final userEmail = _supabase.auth.currentUser?.email?.toLowerCase().trim();
+    final userEmail = email?.toLowerCase().trim() ??
+        _supabase.auth.currentUser?.email?.toLowerCase().trim();
     if (isWhitelistedTester(userEmail)) {
       return; // Do not terminate sessions for whitelisted review/test accounts
     }

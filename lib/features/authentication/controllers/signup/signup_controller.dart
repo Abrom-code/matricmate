@@ -129,7 +129,11 @@ class SignupController extends GetxController {
 
       final deviceId = results[1] as String;
 
-      final isAllowed = await SessionService().validateSession(uid, deviceId);
+      final isAllowed = await SessionService().validateSession(
+        uid,
+        deviceId,
+        email: email.text.trim(),
+      );
 
       if (!isAllowed) {
         await _authenticationRepository.logout();

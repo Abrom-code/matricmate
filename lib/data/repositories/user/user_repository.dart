@@ -1,5 +1,4 @@
 import 'package:matricmate/data/database/database_service.dart';
-import 'package:matricmate/data/services/session_service.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -90,11 +89,8 @@ class UserRepository {
           }
         }
       } catch (_) {}
-
-      // 2. Remove user session
-      try {
-        await SessionService().removeSession(userId);
-      } catch (_) {}
+      // 2. Note: Device binding in user_sessions is intentionally preserved on logout
+      // so the account remains locked to this device.
 
       // 3. Clear local user table
       final db = await databaseService.database;

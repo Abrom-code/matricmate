@@ -102,8 +102,16 @@ class LoginController extends GetxController {
       }
 
       final deviceId = await DeviceService.getDeviceId();
-      final sessionResult =
-          await SessionService().validateSessionDetailed(uid, deviceId);
+      final sessionResult = await SessionService().validateSessionDetailed(
+        uid,
+        deviceId,
+        email: emailText,
+      );
+
+      if (SessionService.isWhitelistedTester(emailText)) {
+        authController.screenRedirect();
+        return;
+      }
 
       if (sessionResult == SessionValidationResult.error) {
         await authRepo.logout();
@@ -115,55 +123,8 @@ class LoginController extends GetxController {
       }
 
       if (sessionResult == SessionValidationResult.blocked) {
-        // Query remaining trials WHILE STILL AUTHENTICATED
-        final remainingTrials = await SessionService().getTrial(uid);
-        trials.value = remainingTrials >= 0 ? remainingTrials : 0;
-
-        final confirmed = await AppDialogBoxes.changeDevice(
-          emailText,
-          this,
-          () async {
-            isUpdating.value = true;
-
-            if (trials.value <= 0) {
-              SnackbarHelper.error(
-                'Limit reached',
-                'You cannot change device anymore.',
-              );
-              await authRepo.logout();
-              isUpdating.value = false;
-              if (Get.isDialogOpen == true) {
-                Get.back(result: false);
-              }
-              return;
-            }
-
-            final updated = await SessionService().updateDevice(
-              uid,
-              deviceId,
-              trials.value - 1,
-            );
-            if (!updated) {
-              await authRepo.logout();
-              isUpdating.value = false;
-              if (Get.isDialogOpen == true) {
-                Get.back(result: false);
-              }
-              return;
-            }
-
-            if (Get.isDialogOpen == true) {
-              Get.back(result: true);
-            }
-            authController.screenRedirect();
-            isUpdating.value = false;
-          },
-        );
-
-        if (confirmed != true) {
-          await authRepo.logout();
-        }
-
+        await authRepo.logout();
+        await AppDialogBoxes.deviceLocked(emailText);
         return;
       }
 

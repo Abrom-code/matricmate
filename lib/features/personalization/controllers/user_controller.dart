@@ -159,9 +159,15 @@ class UserController extends GetxController {
 
       final deviceId = await DeviceService.getDeviceId();
 
-      final isAllowed = await _sessionService.validateSession(uid, deviceId);
+      final isAllowed = await _sessionService.validateSession(
+        uid,
+        deviceId,
+        email: freshUser.email,
+      );
 
-      if (!isAllowed) {
+      final isWhitelisted = SessionService.isWhitelistedTester(freshUser.email);
+
+      if (!isAllowed && !isWhitelisted) {
         SnackbarHelper.warning(
           'Device Blocked!',
           'Another device is using this account!',
@@ -180,7 +186,9 @@ class UserController extends GetxController {
       _sessionService.watchSession(
         uid: uid,
         currentDeviceId: deviceId,
+        email: freshUser.email,
         onDeviceChanged: () {
+          if (SessionService.isWhitelistedTester(freshUser.email)) return;
           SnackbarHelper.warning(
             'Session Ended',
             'Your account was signed in on another device.',

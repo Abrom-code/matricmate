@@ -796,5 +796,177 @@ class AppDialogBoxes {
       ),
     );
   }
+
+  /// Shows the device locked dialog informing the user their account is bound to another phone.
+  static Future<bool?> deviceLocked(String email) {
+    final context = Get.context;
+    final dark = context != null ? AppHelperFunctions.isDark(context) : true;
+
+    return Get.dialog<bool>(
+      Dialog(
+        backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+        elevation: 16,
+        shadowColor: Colors.black.withValues(alpha: dark ? 0.5 : 0.15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+            width: 1.2,
+          ),
+        ),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 390),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Dual-Ring Device Icon Badge ─────────────────────────
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.14 : 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.22 : 0.14),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.phonelink_lock_rounded,
+                          color: Color(0xFFEF4444),
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // ── Title ─────────────────────────────────────────────
+                Text(
+                  'Account Locked to Device',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: dark ? AppColors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // ── Subtitle ──────────────────────────────────────────
+                Text(
+                  'This account is registered on another phone. Each subscription is valid for strictly one device. If you lost or changed your phone, please contact support on Telegram to request a device transfer.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    height: 1.45,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                  ),
+                ),
+
+                // ── Account Email Chip ────────────────────────────────
+                if (email.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: dark
+                          ? AppColors.darkSurface
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: dark
+                            ? AppColors.darkInputBorder
+                            : const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.alternate_email_rounded,
+                          size: 14,
+                          color: dark
+                              ? AppColors.darkInputLabel
+                              : AppColors.lightInputLabel,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            email,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: dark
+                                  ? AppColors.white
+                                  : const Color(0xFF334155),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 16),
+                const TelegramChatButton(),
+                const SizedBox(height: 18),
+
+                // ── Close Button ────────────────────────────────────
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: OutlinedButton(
+                    onPressed: () => Get.back(result: false),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      side: BorderSide(
+                        color: dark
+                            ? AppColors.darkInputBorder
+                            : const Color(0xFFCBD5E1),
+                        width: 1.2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Close',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.0,
+                        color: dark
+                            ? AppColors.white
+                            : const Color(0xFF334155),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 

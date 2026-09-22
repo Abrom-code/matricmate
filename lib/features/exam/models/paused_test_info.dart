@@ -6,6 +6,7 @@ class PausedTestInfoModel {
   final String testTitle;
   final int testTime;
   final String testType;
+  final String? testDescription;
   final String subjectName;
   final bool? subjectIsNatural;
   final bool? subjectIsCommon;
@@ -15,6 +16,7 @@ class PausedTestInfoModel {
     required this.testTitle,
     required this.testTime,
     required this.testType,
+    this.testDescription,
     required this.subjectName,
     this.subjectIsNatural,
     this.subjectIsCommon,
@@ -26,6 +28,7 @@ class PausedTestInfoModel {
       testTitle: map['test_title'] as String? ?? '',
       testTime: map['test_time'] as int? ?? -1,
       testType: map['test_type'] as String? ?? '',
+      testDescription: map['test_description'] as String?,
       subjectName: map['subject_name'] as String? ?? '',
       subjectIsNatural: map['subject_is_natural'] != null
           ? (map['subject_is_natural'] == 1)

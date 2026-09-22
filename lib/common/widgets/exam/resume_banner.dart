@@ -14,6 +14,7 @@ class ResumeBanner extends StatelessWidget {
     required this.total,
     required this.draft,
     required this.testTime,
+    this.description,
   });
 
   final String testTitle;
@@ -21,6 +22,7 @@ class ResumeBanner extends StatelessWidget {
   final int total;
   final ResultModel draft;
   final int testTime;
+  final String? description;
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +45,8 @@ class ResumeBanner extends StatelessWidget {
             testId: draft.testId,
             id: -1,
             draft: draft,
+            examTitle: testTitle.isNotEmpty ? testTitle : null,
+            description: description,
           ),
         ),
         child: Row(

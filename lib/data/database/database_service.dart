@@ -690,7 +690,8 @@ class DatabaseService extends GetxController {
       return await db.rawQuery(
         '''
         SELECT r.*, t.title AS test_title, t.time AS test_time,
-               t.type AS test_type, s.name AS subject_name,
+               t.type AS test_type, t.description AS test_description,
+               s.name AS subject_name,
                s.is_natural AS subject_is_natural, s.is_common AS subject_is_common
         FROM results r
         JOIN tests t ON r.test_id = t.id

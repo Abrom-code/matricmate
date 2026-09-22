@@ -145,7 +145,8 @@ class _PausedTestCard extends StatelessWidget {
             testId: draft.testId,
             id: -1,
             draft: draft,
-            examTitle: info.testType == 'entrance' ? info.testTitle : null,
+            examTitle: info.testTitle.isNotEmpty ? info.testTitle : null,
+            description: info.testDescription,
           ),
         ),
         child: Container(

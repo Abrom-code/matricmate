@@ -296,7 +296,8 @@ class NotificationTestOpener {
         testId: test.id,
         id: id,
         draft: draft,
-        examTitle: examTitle,
+        examTitle: examTitle ?? test.title,
+        description: test.description,
       ),
     );
   }

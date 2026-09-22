@@ -197,8 +197,8 @@ class SubjectModeModal extends StatelessWidget {
                 subtitle: 'Entrance and model exams from multiple years',
                 chips: totalMockExams > 0
                     ? [
-                        '$entranceCount Entrance Papers',
-                        if (modelCount > 0) '$modelCount Model Tests',
+                        '$entranceCount Entrances',
+                        if (modelCount > 0) '$modelCount Models',
                       ]
                     : ['Coming soon'],
                 isDisabled: totalMockExams == 0,

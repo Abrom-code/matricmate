@@ -8,19 +8,6 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-/// Parses year and code from entrance exam title (e.g. "2023 Physics 4").
-({int? year, int? code}) _parseEntranceTitle(String title) {
-  final numbers = RegExp(
-    r'\d+',
-  ).allMatches(title).map((m) => int.parse(m.group(0)!)).toList();
-  if (numbers.isEmpty) return (year: null, code: null);
-  final year = numbers.first >= 1900 && numbers.first <= 2100
-      ? numbers.first
-      : null;
-  final code = numbers.length >= 2 ? numbers.last : null;
-  return (year: year, code: code);
-}
-
 class ReadyDialog extends StatelessWidget {
   const ReadyDialog({
     super.key,
@@ -38,10 +25,10 @@ class ReadyDialog extends StatelessWidget {
   /// Non-null when the user has an in-progress attempt to resume.
   final ResultModel? draft;
 
-  /// When provided (entrance exams), year and code are parsed and displayed.
+  /// Test title.
   final String? examTitle;
 
-  /// Optional description or source info for the test.
+  /// Description or source info for the test.
   final String? description;
 
   void _launch({
@@ -66,135 +53,147 @@ class ReadyDialog extends StatelessWidget {
 
   void _showInfoSheet(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final meta = examTitle != null
-        ? _parseEntranceTitle(examTitle!)
-        : (year: null, code: null);
     final hasDescription =
         description != null && description!.trim().isNotEmpty;
+    final hasTitle = examTitle != null && examTitle!.trim().isNotEmpty;
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: (dark ? AppColors.white : AppColors.darkerGrey)
-                      .withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            // Sheet title
-            Row(
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Iconsax.info_circle_copy,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Test Details',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: dark ? AppColors.white : AppColors.textPrimary,
+                // Drag handle
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: (dark ? AppColors.white : AppColors.darkerGrey)
+                          .withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ],
-            ),
 
-            const SizedBox(height: 16),
-
-            // Year & Booklet Code chips
-            if (meta.year != null || meta.code != null) ...[
-              Row(
-                children: [
-                  if (meta.year != null)
-                    _MetaChip(
-                      icon: Icons.calendar_today_rounded,
-                      label: '${meta.year}',
-                      color: AppColors.secondary,
-                      dark: dark,
+                // Sheet title
+                Row(
+                  children: [
+                    const Icon(
+                      Iconsax.info_circle_copy,
+                      size: 20,
+                      color: AppColors.primary,
                     ),
-                  if (meta.year != null && meta.code != null)
                     const SizedBox(width: 8),
-                  if (meta.code != null)
+                    Expanded(
+                      child: Text(
+                        'Test Details',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: dark ? AppColors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (hasTitle) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    examTitle!.trim(),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: dark ? AppColors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 14),
+
+                // Questions & Time info row
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
                     _MetaChip(
-                      icon: Icons.tag_rounded,
-                      label: 'B Code: ${meta.code}',
-                      color: Colors.teal,
+                      icon: Iconsax.message_question_copy,
+                      label: '$qnCount questions',
+                      color: AppColors.primary,
                       dark: dark,
                     ),
-                ],
-              ),
-              const SizedBox(height: 14),
-            ],
-
-            // Questions & Time info row
-            Row(
-              children: [
-                _MetaChip(
-                  icon: Iconsax.message_question_copy,
-                  label: '$qnCount questions',
-                  color: AppColors.primary,
-                  dark: dark,
+                    if (time > 0)
+                      _MetaChip(
+                        icon: Iconsax.timer_1_copy,
+                        label: '$time min',
+                        color: Colors.blue,
+                        dark: dark,
+                      ),
+                  ],
                 ),
-                if (time > 0) ...[
-                  const SizedBox(width: 8),
-                  _MetaChip(
-                    icon: Iconsax.timer_1_copy,
-                    label: '$time min',
-                    color: Colors.blue,
-                    dark: dark,
+
+                // Description
+                if (hasDescription) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(
+                        alpha: dark ? 0.09 : 0.05,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(
+                          alpha: dark ? 0.25 : 0.15,
+                        ),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'DESCRIPTION',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          description!.trim(),
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.5,
+                            color: dark
+                                ? AppColors.white.withValues(alpha: 0.9)
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ],
             ),
-
-            // Description
-            if (hasDescription) ...[
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.primary
-                      .withValues(alpha: dark ? 0.09 : 0.05),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.primary
-                        .withValues(alpha: dark ? 0.25 : 0.15),
-                  ),
-                ),
-                child: Text(
-                  description!.trim(),
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.5,
-                    fontStyle: FontStyle.italic,
-                    color: dark
-                        ? AppColors.white.withValues(alpha: 0.88)
-                        : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -206,13 +205,10 @@ class ReadyDialog extends StatelessWidget {
     final hasDraft = draft != null;
     final answered = draft?.selectedAnswers.length ?? 0;
 
-    // Determine if the info button should be shown
-    final meta = examTitle != null
-        ? _parseEntranceTitle(examTitle!)
-        : (year: null, code: null);
-    final hasInfo = (description != null && description!.trim().isNotEmpty) ||
-        meta.year != null ||
-        meta.code != null;
+    final hasDescription =
+        description != null && description!.trim().isNotEmpty;
+    final hasTitle = examTitle != null && examTitle!.trim().isNotEmpty;
+    final hasInfo = hasDescription || hasTitle || time > 0 || qnCount > 0;
 
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
@@ -224,119 +220,153 @@ class ReadyDialog extends StatelessWidget {
               : 620,
           maxWidth: 480,
         ),
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.defaultSpace,
-                AppSizes.defaultSpace,
-                AppSizes.defaultSpace,
-                AppSizes.defaultSpace,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSizes.defaultSpace),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header (Headline + Info & Close) ────────────────────
+              Row(
                 children: [
-                  // ── Title ─────────────────────────────────────────────
-                  const SizedBox(height: AppSizes.xs),
-                  Text(
-                    hasDraft ? 'Continue?' : 'Ready to start?',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                  Expanded(
+                    child: Text(
+                      hasDraft ? 'Continue?' : 'Ready to start?',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800, fontSize: 20),
+                    ),
                   ),
-                  const SizedBox(height: AppSizes.spaceBtwItems),
-
-                  // ── Resume button (only when in-progress draft exists) ──
-                  if (hasDraft) ...[
-                    _ActionButton(
-                      label: 'Resume',
-                      description:
-                          'Continue from question ${answered + 1} where you left off',
-                      icon: Icons.play_arrow_rounded,
-                      color: AppColors.secondary,
-                      onTap: () {
-                        final wasExam = draft!.checkedQuestions.isEmpty;
-                        final wasTimed = draft!.remainingSeconds > 0;
-                        _launch(
-                          examMode: wasExam,
-                          isTimed: wasTimed,
-                          resume: true,
-                        );
-                      },
+                  if (hasInfo) ...[
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(
+                        minWidth: 24,
+                        minHeight: 24,
+                      ),
+                      onPressed: () => _showInfoSheet(context),
+                      tooltip: 'Test details',
+                      icon: Icon(
+                        Iconsax.info_circle_copy,
+                        color: AppColors.primary.withValues(alpha: 0.8),
+                        size: 20,
+                      ),
                     ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-                    Divider(
-                      height: 1,
-                      color: AppColors.darkGrey.withValues(alpha: 0.15),
-                    ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
-                    Text(
-                      'Start fresh',
-                      style:
-                          Theme.of(context).textTheme.labelMedium?.copyWith(
-                                color: AppColors.darkGrey,
-                                fontWeight: FontWeight.w600,
-                              ),
-                    ),
-                    const SizedBox(height: AppSizes.spaceBtwItems),
                   ],
-
-                  // ── Practice button ──
-                  _ActionButton(
-                    label: 'Practice',
-                    description:
-                        'Check answers as you go — no timer, no pressure',
-                    icon: Iconsax.book_copy,
-                    color: AppColors.primary,
-                    onTap: () => _launch(examMode: false),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
+                    onPressed: () => Get.back(),
+                    tooltip: 'Close',
+                    icon: const Icon(
+                      Iconsax.close_circle_copy,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
                   ),
-
-                  const SizedBox(height: AppSizes.spaceBtwItems),
-
-                  // ── Exam button ──
-                  _ActionButton(
-                    label: 'Exam',
-                    description:
-                        'Answers hidden until you finish. $time-min timer applies',
-                    icon: Iconsax.timer_1_copy,
-                    color: Colors.blue,
-                    onTap: () => _launch(examMode: true),
-                  ),
-
-                  const SizedBox(height: AppSizes.spaceBtwItems / 2),
                 ],
               ),
-            ),
 
-            // ── Info button (top-left) — only when test has metadata/description ──
-            if (hasInfo)
-              Positioned(
-                top: 6,
-                left: 6,
-                child: IconButton(
-                  onPressed: () => _showInfoSheet(context),
-                  tooltip: 'Test details',
-                  icon: Icon(
-                    Iconsax.info_circle_copy,
-                    color: AppColors.primary.withValues(alpha: 0.7),
-                    size: 22,
+              // ── Test Title (full width) ────────────────────────────
+              if (hasTitle) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(
+                      alpha: dark ? 0.10 : 0.06,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(
+                        alpha: dark ? 0.22 : 0.14,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          examTitle!.trim(),
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: dark
+                                ? AppColors.white.withValues(alpha: 0.95)
+                                : AppColors.textPrimary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
+
+              const SizedBox(height: AppSizes.spaceBtwItems),
+
+              // ── Resume button (only when in-progress draft exists) ──
+              if (hasDraft) ...[
+                _ActionButton(
+                  label: 'Resume',
+                  description:
+                      'Continue from question ${answered + 1} where you left off',
+                  icon: Icons.play_arrow_rounded,
+                  color: AppColors.secondary,
+                  onTap: () {
+                    final wasExam = draft!.checkedQuestions.isEmpty;
+                    final wasTimed = draft!.remainingSeconds > 0;
+                    _launch(examMode: wasExam, isTimed: wasTimed, resume: true);
+                  },
+                ),
+                const SizedBox(height: AppSizes.spaceBtwItems),
+                Divider(
+                  height: 1,
+                  color: AppColors.darkGrey.withValues(alpha: 0.15),
+                ),
+                const SizedBox(height: AppSizes.spaceBtwItems),
+                Text(
+                  'Start fresh',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppColors.darkGrey,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.spaceBtwItems),
+              ],
+
+              // ── Practice button ──
+              _ActionButton(
+                label: 'Practice',
+                description: 'Check answers as for each questions',
+                icon: Iconsax.book_copy,
+                color: AppColors.primary,
+                onTap: () => _launch(examMode: false),
               ),
 
-            // ── Close button (top-right) ──
-            Positioned(
-              top: 6,
-              right: 6,
-              child: IconButton(
-                onPressed: () => Get.back(),
-                icon: const Icon(
-                  Iconsax.close_circle_copy,
-                  color: AppColors.error,
-                  size: 22,
-                ),
+              const SizedBox(height: AppSizes.spaceBtwItems),
+
+              // ── Exam button ──
+              _ActionButton(
+                label: 'Exam',
+                description: 'Answers hidden until you finish. $time-min timer',
+                icon: Iconsax.timer_1_copy,
+                color: Colors.blue,
+                onTap: () => _launch(examMode: true),
               ),
-            ),
-          ],
+
+              const SizedBox(height: AppSizes.spaceBtwItems / 2),
+            ],
+          ),
         ),
       ),
     );

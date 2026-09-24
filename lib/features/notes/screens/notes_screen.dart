@@ -8,7 +8,6 @@ import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/screens/widgets/note_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -357,20 +356,20 @@ class _NotesScreenState extends State<NotesScreen>
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: const Color(0xFF10B981).withValues(alpha: 0.25),
+            color: const Color(0xFFEF4444).withValues(alpha: 0.22),
             shape: BoxShape.circle,
           ),
           child: IconButton(
             padding: EdgeInsets.zero,
-            tooltip: 'All $gradeLabel notes downloaded',
-            onPressed: () {
-              ToastHelper.info(
-                'All $gradeLabel notes are downloaded for offline reading.',
-              );
-            },
+            tooltip: 'Remove all $gradeLabel notes from device',
+            onPressed: () => _confirmDeleteAllGradeNotes(
+              context,
+              currentGrade,
+              gradeLabel,
+            ),
             icon: const Icon(
-              Icons.check_circle_rounded,
-              color: Color(0xFFD1FAE5),
+              Icons.delete_outline_rounded,
+              color: Colors.white,
               size: 20,
             ),
           ),
@@ -397,6 +396,138 @@ class _NotesScreenState extends State<NotesScreen>
         ),
       );
     });
+  }
+
+  void _confirmDeleteAllGradeNotes(
+    BuildContext context,
+    int grade,
+    String gradeLabel,
+  ) {
+    final dark = AppHelperFunctions.isDark(context);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+          elevation: 16,
+          shadowColor: Colors.black.withValues(alpha: dark ? 0.5 : 0.15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+              width: 1.2,
+            ),
+          ),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 380),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.15 : 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.25 : 0.16),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.delete_outline_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Remove $gradeLabel Notes?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: dark ? AppColors.textWhite : AppColors.textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'This will remove all downloaded $gradeLabel notes from your device storage. You can re-download them anytime.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.45,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: dark ? AppColors.white : AppColors.textPrimary,
+                            side: BorderSide(
+                              color: dark ? AppColors.darkBorder : const Color(0xFFCBD5E1),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            controller.deleteAllGradeNotes(grade);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF4444),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text(
+                            'Remove All',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildEmptyState({

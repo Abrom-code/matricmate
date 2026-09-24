@@ -427,4 +427,57 @@ class NotesRepository {
       );
     } catch (_) {}
   }
+
+  /// Deletes all downloaded note files for a specific grade of a subject.
+  Future<void> deleteAllDownloadedNotesForGrade(int subjectId, int grade) async {
+    try {
+      final db = await _dbService.database;
+      final rows = await db.query(
+        'notes',
+        columns: ['id', 'local_file_path', 'file_key'],
+        where: 'subject_id = ? AND grade = ? AND is_downloaded = 1',
+        whereArgs: [subjectId, grade],
+      );
+
+      for (final r in rows) {
+        final path = r['local_file_path'] as String?;
+        if (path != null) {
+          final file = File(path);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        }
+        try {
+          final tempDir = await getTemporaryDirectory();
+          final cacheDir = Directory('${tempDir.path}/notes_cache');
+          if (await cacheDir.exists()) {
+            final id = r['id'];
+            final key = (r['file_key'] as String? ?? '').split('/').last;
+            for (final entity in cacheDir.listSync()) {
+              if (entity is File &&
+                  (entity.path.contains('note_$id') ||
+                      (key.isNotEmpty && entity.path.contains(key)))) {
+                try {
+                  entity.deleteSync();
+                } catch (_) {}
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      await db.update(
+        'notes',
+        {
+          'is_downloaded': 0,
+          'local_file_path': null,
+          'downloaded_at': null,
+        },
+        where: 'subject_id = ? AND grade = ?',
+        whereArgs: [subjectId, grade],
+      );
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
 }

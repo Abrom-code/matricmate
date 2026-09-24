@@ -330,6 +330,29 @@ class NotesController extends GetxController {
     }
   }
 
+  /// Delete all downloaded notes in a grade from device storage
+  Future<void> deleteAllGradeNotes(int grade) async {
+    final gradeLabel =
+        grade == 0 ? (isCommon ? 'Subject' : 'General') : 'Grade $grade';
+    try {
+      await _repo.deleteAllDownloadedNotesForGrade(subjectId, grade);
+
+      for (int i = 0; i < subjectNotes.length; i++) {
+        if (subjectNotes[i].grade == grade || (isCommon && grade == 0)) {
+          subjectNotes[i] = subjectNotes[i].copyWith(
+            isDownloaded: false,
+            localFilePath: null,
+            downloadedAt: null,
+          );
+        }
+      }
+
+      ToastHelper.info('All $gradeLabel notes removed from device');
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
+  }
+
   /// Mark a note as completed both in local SQLite and reactive state
   Future<void> markNoteCompleted(int noteId) async {
     try {

@@ -62,7 +62,11 @@ class NoteTile extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(18),
-            onTap: onTap,
+            onTap: isLocked
+                ? onTap
+                : liveNote.isDownloaded
+                    ? onTap
+                    : (isDownloading ? null : () => ctrl.downloadNote(liveNote)),
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Row(

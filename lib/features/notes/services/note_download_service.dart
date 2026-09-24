@@ -65,6 +65,7 @@ class NoteDownloadService {
     required NoteModel note,
     required void Function(double progress) onProgress,
     DownloadCancellationToken? cancellationToken,
+    bool skipDbWrite = false,
   }) async {
     if (cancellationToken?.isCancelled == true) {
       throw 'Download cancelled';
@@ -129,20 +130,17 @@ class NoteDownloadService {
         throw 'Downloaded note file is empty or incomplete';
       }
 
-      // Rename temp file to final target file
+      // Rename temp file to final target file (atomic; throws on failure)
       final finalFile = File(targetPath);
       if (await finalFile.exists()) {
         await finalFile.delete();
       }
       await tempFile.rename(targetPath);
 
-      // Verify target file exists and is not empty
-      if (!finalFile.existsSync() || finalFile.lengthSync() == 0) {
-        throw 'Failed to finalize downloaded note file';
+      // Update SQLite record (skipped during batch — controller does it in one transaction)
+      if (!skipDbWrite) {
+        await _repo.markNoteDownloaded(note.id, targetPath);
       }
-
-      // Update SQLite record
-      await _repo.markNoteDownloaded(note.id, targetPath);
 
       onProgress(1.0);
       return targetPath;

@@ -235,6 +235,7 @@ class NotesController extends GetxController {
       onCancel: cancelCurrentDownload,
     );
 
+    final List<({int noteId, String localPath})> downloadedEntries = [];
     try {
       for (int i = 0; i < toDownload.length; i++) {
         if (_currentCancellationToken?.isCancelled == true) break;
@@ -249,6 +250,7 @@ class NotesController extends GetxController {
           final localPath = await _downloadService.downloadNote(
             note: note,
             cancellationToken: _currentCancellationToken,
+            skipDbWrite: true,
             onProgress: (p) {
               downloadProgress[note.id] = p;
               final overallProgress = (i + p) / toDownload.length;
@@ -256,6 +258,8 @@ class NotesController extends GetxController {
               batchDownloadProgress.value = overallProgress;
             },
           );
+
+          downloadedEntries.add((noteId: note.id, localPath: localPath));
 
           final idx = subjectNotes.indexWhere((n) => n.id == note.id);
           if (idx != -1) {
@@ -281,11 +285,20 @@ class NotesController extends GetxController {
         batchDownloadCompletedCount.value = i + 1;
       }
 
+      if (downloadedEntries.isNotEmpty) {
+        await _repo.markMultipleNotesDownloaded(downloadedEntries);
+      }
+
       if (_currentCancellationToken?.isCancelled != true) {
         DownloadProgressDialog.hide();
         ToastHelper.success('$gradeLabel notes downloaded!');
       }
     } catch (e) {
+      if (downloadedEntries.isNotEmpty) {
+        try {
+          await _repo.markMultipleNotesDownloaded(downloadedEntries);
+        } catch (_) {}
+      }
       DownloadProgressDialog.hide();
       if (_currentCancellationToken?.isCancelled != true) {
         AppExceptionHandler.handleResponse(e);
@@ -339,6 +352,11 @@ class NotesController extends GetxController {
     final user = UserController.instance.user.value;
     if (liveNote.isPremium && !user.isActive) {
       TestAccessHelper.openPremiumSheet(user: user);
+      return;
+    }
+
+    if (!liveNote.isDownloaded) {
+      downloadNote(liveNote);
       return;
     }
 

@@ -332,15 +332,61 @@ class NotesRepository {
     }
   }
 
+  /// Marks multiple notes as downloaded in a single SQLite transaction.
+  /// Much faster than calling [markNoteDownloaded] per note during batch downloads.
+  Future<void> markMultipleNotesDownloaded(
+      List<({int noteId, String localPath})> entries) async {
+    if (entries.isEmpty) return;
+    try {
+      final db = await _dbService.database;
+      final now = DateTime.now().toIso8601String();
+      await db.transaction((txn) async {
+        for (final e in entries) {
+          await txn.update(
+            'notes',
+            {
+              'is_downloaded': 1,
+              'local_file_path': e.localPath,
+              'downloaded_at': now,
+            },
+            where: 'id = ?',
+            whereArgs: [e.noteId],
+          );
+        }
+      });
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
   /// Removes downloaded file and updates database.
   Future<void> deleteNoteFile(int noteId) async {
     try {
       final note = await getNoteById(noteId);
-      if (note != null && note.localFilePath != null) {
-        final file = File(note.localFilePath!);
-        if (await file.exists()) {
-          await file.delete();
+      if (note != null) {
+        if (note.localFilePath != null) {
+          final file = File(note.localFilePath!);
+          if (await file.exists()) {
+            await file.delete();
+          }
         }
+        try {
+          final tempDir = await getTemporaryDirectory();
+          final cacheDir = Directory('${tempDir.path}/notes_cache');
+          if (await cacheDir.exists()) {
+            final files = cacheDir.listSync();
+            for (final entity in files) {
+              if (entity is File &&
+                  (entity.path.contains('note_$noteId') ||
+                      (note.fileKey.isNotEmpty &&
+                          entity.path.contains(note.fileKey.split('/').last)))) {
+                try {
+                  entity.deleteSync();
+                } catch (_) {}
+              }
+            }
+          }
+        } catch (_) {}
       }
 
       final db = await _dbService.database;

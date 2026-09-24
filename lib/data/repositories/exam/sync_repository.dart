@@ -184,20 +184,20 @@ class SyncRepository {
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
+      final targetProgress = imgUrls.isEmpty ? 1.0 : 0.80;
       await _withProgress(
         batch.commit(noResult: true),
         0.65,
-        0.80,
+        targetProgress,
         (p) => onStep('Saving to device…', p),
       );
 
       // Step 5 — download images (0.80 → 1.0)
       if (imgUrls.isNotEmpty) {
-        await _withProgress(
-          AppHelperFunctions.downloadImages(imgUrls),
-          0.80,
-          1.0,
-          (p) => onStep('Downloading images…', p),
+        onStep('Downloading images…', 0.80);
+        await AppHelperFunctions.downloadImages(
+          imgUrls,
+          onProgress: (p) => onStep('Downloading images…', 0.80 + (p * 0.20)),
         );
       }
 

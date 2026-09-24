@@ -156,20 +156,20 @@ class SubjectRepository {
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
+      final targetProgress = imgUrls.isEmpty ? 1.0 : 0.86;
       await _withProgress(
         batch.commit(noResult: true),
         0.72,
-        0.86,
+        targetProgress,
         (p) => onStep('Saving to device…', p),
       );
 
       // Step 4 — Images (0.86 → 1.0)
       if (imgUrls.isNotEmpty) {
-        await _withProgress(
-          AppHelperFunctions.downloadImages(imgUrls),
-          0.86,
-          1.0,
-          (p) => onStep('Downloading images…', p),
+        onStep('Downloading images…', 0.86);
+        await AppHelperFunctions.downloadImages(
+          imgUrls,
+          onProgress: (p) => onStep('Downloading images…', 0.86 + (p * 0.14)),
         );
       }
 

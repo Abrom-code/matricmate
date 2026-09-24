@@ -137,10 +137,14 @@ class UserController extends GetxController {
 
   final RxBool isLoggingOut = false.obs;
 
+  /// Guard so the 'Device Blocked' toast is only shown once per session.
+  bool _blockHandled = false;
+
   Future<void> logOut() async {
     if (isLoggingOut.value) return;
     try {
       isLoggingOut.value = true;
+      _blockHandled = false; // reset so next login can show blocked message
       await AuthenticationController.instance.logout();
     } finally {
       isLoggingOut.value = false;
@@ -168,11 +172,14 @@ class UserController extends GetxController {
       final isWhitelisted = SessionService.isWhitelistedTester(freshUser.email);
 
       if (!isAllowed && !isWhitelisted) {
-        SnackbarHelper.warning(
-          'Device Blocked!',
-          'Another device is using this account!',
-        );
-        await logOut();
+        if (!_blockHandled) {
+          _blockHandled = true;
+          SnackbarHelper.warning(
+            'Device Blocked!',
+            'Another device is using this account!',
+          );
+          await logOut();
+        }
         return false;
       }
 

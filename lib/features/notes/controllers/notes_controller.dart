@@ -116,15 +116,15 @@ class NotesController extends GetxController {
       return;
     }
 
+    // Mark as downloading immediately so the UI updates without delay
+    isDownloading[note.id] = true;
+
     try {
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         ToastHelper.warning('No Internet connection!');
         return;
       }
-
-      isDownloading[note.id] = true;
-      downloadProgress[note.id] = 0.05;
 
       final localPath = await _downloadService.downloadNote(
         note: note,
@@ -304,7 +304,8 @@ class NotesController extends GetxController {
       await _downloadService.deleteNoteFile(note.id);
       final idx = subjectNotes.indexWhere((n) => n.id == note.id);
       if (idx != -1) {
-        subjectNotes[idx] = note.copyWith(
+        // Always use the current list entry, not the stale passed-in snapshot
+        subjectNotes[idx] = subjectNotes[idx].copyWith(
           isDownloaded: false,
           localFilePath: null,
           downloadedAt: null,
@@ -332,8 +333,11 @@ class NotesController extends GetxController {
 
   /// Open note directly into reader
   void openNote(NoteModel note) {
+    // Always use the live note from subjectNotes to reflect latest state
+    final liveNote = subjectNotes.firstWhereOrNull((n) => n.id == note.id) ?? note;
+
     final user = UserController.instance.user.value;
-    if (note.isPremium && !user.isActive) {
+    if (liveNote.isPremium && !user.isActive) {
       TestAccessHelper.openPremiumSheet(user: user);
       return;
     }
@@ -341,7 +345,7 @@ class NotesController extends GetxController {
     Get.toNamed(
       Routes.noteReader,
       arguments: {
-        'note': note,
+        'note': liveNote,
         'subject_title': title,
         'subject_id': subjectId,
         'is_common': isCommon,

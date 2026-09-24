@@ -283,9 +283,7 @@ class _NotesScreenState extends State<NotesScreen>
       final allDownloaded = totalCount > 0 && downloadedCount == totalCount;
       final isBulkDownloading =
           controller.isGradeDownloading[currentGrade] ?? false;
-      final isAnyNoteDownloading =
-          notes.any((n) => controller.isDownloading[n.id] == true);
-      final isBusy = isBulkDownloading || isAnyNoteDownloading;
+      final isBusy = isBulkDownloading;
       final bulkProgress = controller.gradeDownloadProgress[currentGrade];
 
       if (isBusy) {

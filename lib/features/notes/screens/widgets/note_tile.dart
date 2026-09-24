@@ -45,12 +45,10 @@ class NoteTile extends StatelessWidget {
           color: cardBg,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isDownloading
-                ? ChallengeColors.accent
-                : isLocked
+            color: isLocked
                     ? Colors.amber.withValues(alpha: dark ? 0.40 : 0.28)
                     : borderColor,
-            width: (isDownloading || isLocked) ? 1.3 : 1,
+            width: isLocked ? 1.3 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -294,14 +292,20 @@ class NoteTile extends StatelessWidget {
                   const SizedBox(width: 10),
 
                   // ── Action: Download / Read / Progress ──────────────────────
-                  _buildTrailingAction(
-                    context: context,
-                    dark: dark,
-                    isLocked: isLocked,
-                    isDownloading: isDownloading,
-                    progress: progress,
-                    note: liveNote,
-                    ctrl: ctrl,
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Center(
+                      child: _buildTrailingAction(
+                        context: context,
+                        dark: dark,
+                        isLocked: isLocked,
+                        isDownloading: isDownloading,
+                        progress: progress,
+                        note: liveNote,
+                        ctrl: ctrl,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -354,10 +358,11 @@ class NoteTile extends StatelessWidget {
     required NoteModel note,
     required NotesController ctrl,
   }) {
+    // ── Downloading: compact circular progress ──
     if (isDownloading) {
       return SizedBox(
-        width: 36,
-        height: 36,
+        width: 32,
+        height: 32,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -367,20 +372,28 @@ class NoteTile extends StatelessWidget {
               color: ChallengeColors.accent,
               backgroundColor: ChallengeColors.accent.withValues(alpha: 0.15),
             ),
-            if (progress != null)
+            if (progress != null && progress > 0)
               Text(
-                '${(progress * 100).toInt()}%',
+                '${(progress * 100).toInt()}',
                 style: const TextStyle(
-                  fontSize: 8.5,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
                   color: ChallengeColors.accent,
+                  height: 1.0,
                 ),
+              )
+            else
+              Icon(
+                Icons.arrow_downward_rounded,
+                size: 12,
+                color: ChallengeColors.accent.withValues(alpha: 0.6),
               ),
           ],
         ),
       );
     }
 
+    // ── Locked ──
     if (isLocked) {
       return Icon(
         Icons.chevron_right_rounded,
@@ -389,6 +402,7 @@ class NoteTile extends StatelessWidget {
       );
     }
 
+    // ── Downloaded: popup menu ──
     if (note.isDownloaded) {
       return PopupMenuButton<String>(
         icon: Icon(
@@ -422,13 +436,12 @@ class NoteTile extends StatelessWidget {
       );
     }
 
-    // Not downloaded -> show download button
-    return IconButton(
-      tooltip: 'Download note',
-      onPressed: () => ctrl.downloadNote(note),
-      icon: Container(
-        width: 36,
-        height: 36,
+    // ── Not downloaded: download button ──
+    return GestureDetector(
+      onTap: () => ctrl.downloadNote(note),
+      child: Container(
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
           color: ChallengeColors.accent.withValues(alpha: dark ? 0.2 : 0.08),
           shape: BoxShape.circle,
@@ -436,7 +449,7 @@ class NoteTile extends StatelessWidget {
         child: const Center(
           child: Icon(
             Icons.arrow_downward_rounded,
-            size: 18,
+            size: 17,
             color: ChallengeColors.accent,
           ),
         ),

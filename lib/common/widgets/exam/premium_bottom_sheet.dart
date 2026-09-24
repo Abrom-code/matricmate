@@ -69,39 +69,6 @@ class PremiumBottomSheet extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── Premium Crown / Badge Icon ───────────────────
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.primary,
-                            AppColors.primary.withValues(alpha: 0.85),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.workspace_premium_rounded,
-                          color: AppColors.white,
-                          size: 30,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
                     // ── Title & Subtitle ────────────────────────────
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -144,7 +111,7 @@ class PremiumBottomSheet extends StatelessWidget {
                     const SizedBox(height: 5),
 
                     Text(
-                      'All tests with detailed Amharic (በአማርኛ) & English explanations • 100% Offline',
+                      'All questions, notes, exams & challenges with step-by-step Amharic (በአማርኛ) explanations • 100% Offline',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -155,14 +122,41 @@ class PremiumBottomSheet extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // ── The 5 Core Premium Features ──────────────────
+                    // ── 1. Practice Questions ────────────────────────
+                    _featureCard(
+                      icon: Icons.quiz_rounded,
+                      iconColor: AppColors.primary,
+                      title: 'Over 20,000+ Practice Questions',
+                      subtitle:
+                          'Complete chapter tests for Natural and Social streams across 10 subjects.',
+                      cardBg: cardBg,
+                      borderColor: borderColor,
+                      primaryText: primaryTextColor,
+                      secondaryText: secondaryTextColor,
+                      isDark: dark,
+                    ),
+
+                    // ── 2. Notes ────────────────────────────────────
+                    _featureCard(
+                      icon: Icons.menu_book_rounded,
+                      iconColor: const Color(0xFF0EA5E9),
+                      title: 'Grade 9–12 Chapter Notes',
+                      subtitle:
+                          'Comprehensive summary notes, key formulas & concepts for offline reading.',
+                      cardBg: cardBg,
+                      borderColor: borderColor,
+                      primaryText: primaryTextColor,
+                      secondaryText: secondaryTextColor,
+                      isDark: dark,
+                    ),
+
+                    // ── 3. Entrance & Model Exams ───────────────────
                     _featureCard(
                       icon: Icons.military_tech_rounded,
                       iconColor: const Color(0xFFF59E0B),
-                      tag: '5+ YEARS',
-                      title: 'Past Entrance Exams',
+                      title: 'Past Entrance & Model Exams',
                       subtitle:
-                          '5+ years past papers with detailed Amharic & English solutions.',
+                          'National matric past exams & full-length regional model exams with solutions.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -170,55 +164,27 @@ class PremiumBottomSheet extends StatelessWidget {
                       isDark: dark,
                     ),
 
-                    _featureCard(
-                      icon: Icons.menu_book_rounded,
-                      iconColor: AppColors.primary,
-                      tag: 'GRADES 9–12',
-                      title: 'All Chapter Tests',
-                      subtitle:
-                          'Grades 9–12 quizzes with detailed Amharic & English explanations.',
-                      cardBg: cardBg,
-                      borderColor: borderColor,
-                      primaryText: primaryTextColor,
-                      secondaryText: secondaryTextColor,
-                      isDark: dark,
-                    ),
-
-                    _featureCard(
-                      icon: Icons.assignment_turned_in_rounded,
-                      iconColor: const Color(0xFF3B82F6),
-                      tag: 'FULL-LENGTH',
-                      title: 'Past Model Exams',
-                      subtitle:
-                          'Different past model exams with complete Amharic & English answer keys.',
-                      cardBg: cardBg,
-                      borderColor: borderColor,
-                      primaryText: primaryTextColor,
-                      secondaryText: secondaryTextColor,
-                      isDark: dark,
-                    ),
-
-                    _featureCard(
-                      icon: Icons.school_rounded,
-                      iconColor: const Color(0xFF8B5CF6),
-                      tag: 'YEAR-END',
-                      title: 'Grade-Level Assessments(9-12)',
-                      subtitle:
-                          'Annual readiness tests with step-by-step bilingual explanations.',
-                      cardBg: cardBg,
-                      borderColor: borderColor,
-                      primaryText: primaryTextColor,
-                      secondaryText: secondaryTextColor,
-                      isDark: dark,
-                    ),
-
+                    // ── 4. Live Challenge Competitions ──────────────
                     _featureCard(
                       icon: Icons.emoji_events_rounded,
-                      iconColor: const Color(0xFFD97706),
-                      tag: 'LIVE RANKS',
-                      title: 'Daily Challenges',
+                      iconColor: const Color(0xFFEC4899),
+                      title: 'Live Challenge Competitions',
                       subtitle:
-                          'Compete live, climb leaderboards & review full detailed solutions.',
+                          'Real-time challenges, 1v1 battles, daily tournaments & leaderboards.',
+                      cardBg: cardBg,
+                      borderColor: borderColor,
+                      primaryText: primaryTextColor,
+                      secondaryText: secondaryTextColor,
+                      isDark: dark,
+                    ),
+
+                    // ── 5. Detailed Amharic Explanations ────────────
+                    _featureCard(
+                      icon: Icons.translate_rounded,
+                      iconColor: const Color(0xFF10B981),
+                      title: 'Detailed Amharic Explanations',
+                      subtitle:
+                          'Step-by-step Amharic (በአማርኛ) and English solutions for every question.',
                       cardBg: cardBg,
                       borderColor: borderColor,
                       primaryText: primaryTextColor,
@@ -275,7 +241,6 @@ class PremiumBottomSheet extends StatelessWidget {
   static Widget _featureCard({
     required IconData icon,
     required Color iconColor,
-    required String tag,
     required String title,
     required String subtitle,
     required Color cardBg,
@@ -314,22 +279,16 @@ class PremiumBottomSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: primaryText,
-                          letterSpacing: -0.1,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: primaryText,
+                    letterSpacing: -0.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
                 Text(

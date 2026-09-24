@@ -172,7 +172,7 @@ class UserModel {
       subscriptionExpiresAt != null &&
       subscriptionExpiresAt!.isBefore(DateTime.now());
 
-  bool get exceededUploadLimit => receiptUploadCount >= 3;
+  bool get exceededUploadLimit => receiptUploadCount >= 2;
 
   /// Human-readable remaining time (e.g. "184 days left").
   String get remainingDaysText {

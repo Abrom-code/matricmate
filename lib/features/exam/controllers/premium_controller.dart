@@ -36,7 +36,7 @@ class PremiumController extends GetxController {
   final showReceiptError = false.obs;
   final isUploading = false.obs;
 
-  static const int maxUploads = 3;
+  static const int maxUploads = 2;
 
   final receiptCount = 0.obs;
   bool get exceededUploadLimit =>

@@ -81,7 +81,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
             ),
             const SizedBox(height: 14),
             Text(
-              'Chapter Completed!',
+              note.grade == 0 ? 'Reading Completed!' : 'Chapter Completed!',
               style: TextStyle(
                 fontSize: 19,
                 fontWeight: FontWeight.w900,
@@ -90,7 +90,9 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'You finished reading ${note.title}. Ready to test your retention with practice questions?',
+              note.chapterId != null
+                  ? 'You finished reading ${note.title}. Ready to test your retention with practice questions?'
+                  : 'You finished reading ${note.title}. Great job reviewing your concepts!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,

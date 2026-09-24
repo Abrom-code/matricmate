@@ -36,8 +36,22 @@ class PaymentConfig {
 
 /// Single source of truth for payment config loaded from `app_config`.
 class PaymentConfigService {
-  PaymentConfigService._();
+  PaymentConfigService._() {
+    _rebuildMethods();
+  }
   static final instance = PaymentConfigService._();
+
+  /// Hardcoded account numbers per requirement:
+  /// - Telebirr: 0960586811
+  /// - CBE: 1000435011237
+  /// - Abyssinia: 165093089
+  /// These account numbers are never loaded or overridden from Supabase app_config.
+  static const hardcodedAccounts = <String, String>{
+    'payment_telebirr': '0960586811',
+    'payment_cbe_birr': '1000435011237',
+    'payment_cbe': '1000435011237',
+    'payment_abyssinia': '165093089',
+  };
 
   // Internal mutable state (built-ins keyed by DB key)──
   final _accounts = <String, String>{};
@@ -74,6 +88,8 @@ class PaymentConfigService {
 
   /// Dynamic plan prices in ETB loaded from `app_config` (keyed by plan key e.g. '1_year').
   final planPrices = <String, int>{}.obs;
+
+  bool _hasExplicit1YearPlanPrice = false;
 
   /// Returns the price for a plan, using dynamic app_config price if present,
   /// falling back to the plan's defaultPrice.
@@ -154,6 +170,10 @@ class PaymentConfigService {
     isLoading.value = true;
     hasError.value = false;
 
+    if (force) {
+      _hasExplicit1YearPlanPrice = false;
+    }
+
     try {
       final rows = await Supabase.instance.client
           .from('app_config')
@@ -170,8 +190,9 @@ class PaymentConfigService {
       }
       _rebuildMethods();
       debugPrint(
-        '[PaymentConfig] methods built: ${methods.map((m) => m.label).toList()}',
+        '[PaymentConfig] methods built: ${methods.map((m) => '${m.label}(${m.account})').toList()}',
       );
+      debugPrint('[PaymentConfig] dynamic plan prices: $planPrices');
       isLoaded.value = true;
       hasError.value = false;
     } catch (e, st) {
@@ -191,8 +212,10 @@ class PaymentConfigService {
     switch (key) {
       case 'payment_telebirr':
       case 'payment_cbe_birr':
+      case 'payment_cbe':
       case 'payment_abyssinia':
-        _accounts.remove(key);
+        // Hardcoded accounts are never removed
+        break;
 
       case 'payment_telebirr_holder':
       case 'payment_cbe_birr_holder':
@@ -226,15 +249,30 @@ class PaymentConfigService {
             'https://abopia.github.io/matricmate/privacy_policy.html';
 
       case 'plan_price_6_months':
+      case 'price_6_months':
         planPrices.remove('6_months');
       case 'plan_price_1_year':
+      case 'price_1_year':
+        _hasExplicit1YearPlanPrice = false;
         planPrices.remove('1_year');
       case 'plan_price_2_years':
+      case 'price_2_years':
         planPrices.remove('2_years');
       case 'plan_price_3_years':
+      case 'price_3_years':
         planPrices.remove('3_years');
       case 'plan_price_4_years':
+      case 'price_4_years':
         planPrices.remove('4_years');
+      case 'subscription_price':
+      case 'subscription_amount':
+      case 'payment_amount':
+      case 'premium_price':
+      case 'amount':
+      case 'price':
+        if (!_hasExplicit1YearPlanPrice) {
+          planPrices.remove('1_year');
+        }
     }
 
     _rebuildMethods();
@@ -251,6 +289,17 @@ class PaymentConfigService {
 
   // Internal helpers
 
+  int? _parsePrice(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    final directInt = int.tryParse(trimmed);
+    if (directInt != null) return directInt;
+    final directDouble = double.tryParse(trimmed);
+    if (directDouble != null) return directDouble.round();
+    final digits = trimmed.replaceAll(RegExp(r'[^0-9]'), '');
+    return int.tryParse(digits);
+  }
+
   void _applyToState(Map<String, dynamic> row) {
     final key = row['key']?.toString() ?? '';
     // Guard against literal "EMPTY" string from Supabase dashboard
@@ -258,11 +307,13 @@ class PaymentConfigService {
     final value = (raw == 'EMPTY') ? '' : raw;
 
     switch (key) {
-      // Account numbers
+      // Account numbers - hardcoded per requirement, do NOT overwrite from Supabase
       case 'payment_telebirr':
       case 'payment_cbe_birr':
+      case 'payment_cbe':
       case 'payment_abyssinia':
-        _accounts[key] = value;
+        // Ignored: Telebirr (0960586811), CBE (1000435011237), Abyssinia (165093089)
+        break;
 
       // Holder names
       case 'payment_telebirr_holder':
@@ -274,31 +325,44 @@ class PaymentConfigService {
       case 'payment_extra_accounts':
         _accounts['payment_extra_accounts'] = value;
 
-      // Plan prices
+      // Plan prices & dynamic amounts from Supabase
       case 'plan_price_6_months':
-        final parsed = int.tryParse(value);
+      case 'price_6_months':
+        final parsed = _parsePrice(value);
         if (parsed != null && parsed > 0) planPrices['6_months'] = parsed;
 
       case 'plan_price_1_year':
-        final parsed = int.tryParse(value);
-        if (parsed != null && parsed > 0) planPrices['1_year'] = parsed;
+      case 'price_1_year':
+        final parsed = _parsePrice(value);
+        if (parsed != null && parsed > 0) {
+          planPrices['1_year'] = parsed;
+          _hasExplicit1YearPlanPrice = true;
+        }
 
       case 'plan_price_2_years':
-        final parsed = int.tryParse(value);
+      case 'price_2_years':
+        final parsed = _parsePrice(value);
         if (parsed != null && parsed > 0) planPrices['2_years'] = parsed;
 
       case 'plan_price_3_years':
-        final parsed = int.tryParse(value);
+      case 'price_3_years':
+        final parsed = _parsePrice(value);
         if (parsed != null && parsed > 0) planPrices['3_years'] = parsed;
 
       case 'plan_price_4_years':
-        final parsed = int.tryParse(value);
+      case 'price_4_years':
+        final parsed = _parsePrice(value);
         if (parsed != null && parsed > 0) planPrices['4_years'] = parsed;
 
-      // Legacy subscription price fallback
+      // Legacy or alternative subscription price / amount keys
       case 'subscription_price':
-        final parsed = int.tryParse(value);
-        if (parsed != null && parsed > 0 && !planPrices.containsKey('1_year')) {
+      case 'subscription_amount':
+      case 'payment_amount':
+      case 'premium_price':
+      case 'amount':
+      case 'price':
+        final parsed = _parsePrice(value);
+        if (parsed != null && parsed > 0 && !_hasExplicit1YearPlanPrice) {
           planPrices['1_year'] = parsed;
         }
 
@@ -340,7 +404,7 @@ class PaymentConfigService {
     final result = <PaymentConfig>[];
 
     for (final b in _builtIns) {
-      final account = _accounts[b.key] ?? '';
+      final account = hardcodedAccounts[b.key] ?? _accounts[b.key] ?? '';
       if (account.isEmpty) continue; // hidden until admin sets the account
       result.add(
         PaymentConfig(

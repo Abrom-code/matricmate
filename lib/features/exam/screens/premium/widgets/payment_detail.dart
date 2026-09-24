@@ -51,8 +51,12 @@ class _PaymentDetailState extends State<PaymentDetail> {
   Widget build(BuildContext context) {
     final isDark = AppHelperFunctions.isDark(context);
     final controller = PremiumController.instance;
-    final number = widget.payment.account;
-    final name = widget.payment.holder;
+    final activePayment = controller.selectedPayment.value ?? widget.payment;
+    final number = activePayment.account.isNotEmpty
+        ? activePayment.account
+        : (PaymentConfigService.hardcodedAccounts[activePayment.key] ??
+            widget.payment.account);
+    final name = activePayment.holder;
 
     return Padding(
       padding: const EdgeInsets.only(top: 14),

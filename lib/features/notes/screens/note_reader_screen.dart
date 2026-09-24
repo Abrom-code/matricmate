@@ -446,8 +446,8 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
               padding: EdgeInsets.zero,
               icon: Icon(
                 _isLandscape
-                    ? Icons.stay_current_landscape_rounded
-                    : Icons.stay_current_portrait_rounded,
+                    ? Icons.crop_portrait_rounded
+                    : Icons.screen_rotation_rounded,
                 color: AppColors.white,
                 size: 20,
               ),

@@ -65,7 +65,6 @@ class PaymentConfigService {
       label: 'Telebirr',
       subtitle: 'Fast mobile payment',
       icon: Icons.account_balance_wallet,
-      isFeatured: true,
     ),
     _BuiltIn(
       key: 'payment_cbe_birr',
@@ -413,7 +412,6 @@ class PaymentConfigService {
           account: account,
           holder: _holders[b.holderKey] ?? '',
           icon: b.icon,
-          isFeatured: b.isFeatured,
         ),
       );
     }
@@ -466,7 +464,6 @@ class _BuiltIn {
     required this.label,
     required this.subtitle,
     required this.icon,
-    this.isFeatured = false,
   });
 
   final String key;
@@ -474,7 +471,6 @@ class _BuiltIn {
   final String label;
   final String subtitle;
   final IconData icon;
-  final bool isFeatured;
 }
 
 /// Alias for [PaymentConfigService] providing dynamic app configuration.

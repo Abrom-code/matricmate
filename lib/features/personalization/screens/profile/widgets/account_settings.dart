@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -77,10 +76,7 @@ class AccountSettings extends StatelessWidget {
                     color: AppColors.textSecondary,
                     size: 20,
                   ),
-                  onTap: () => Get.bottomSheet(
-                    const PremiumBottomSheet(),
-                    isScrollControlled: true,
-                  ),
+                  onTap: () => Get.toNamed(Routes.premium),
                 );
               }),
               divider,

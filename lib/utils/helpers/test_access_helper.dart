@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -25,7 +24,7 @@ class TestAccessHelper {
   /// Handles user interaction when tapping a test tile:
   /// - Invokes [onStart] if the user has access.
   /// - Routes to payment verification screen if the user has a pending receipt.
-  /// - Opens the upgrade [PremiumBottomSheet] if the user is inactive.
+  /// - Navigates directly to [Routes.premium] if the user is inactive.
   static void handleTestTap({
     required TestModel test,
     required UserModel user,
@@ -41,13 +40,10 @@ class TestAccessHelper {
       return;
     }
 
-    Get.bottomSheet(
-      const PremiumBottomSheet(),
-      isScrollControlled: true,
-    );
+    Get.toNamed(Routes.premium);
   }
 
-  /// Opens the upgrade [PremiumBottomSheet] or redirects to [Routes.paymentVerification]
+  /// Navigates to [Routes.premium] or redirects to [Routes.paymentVerification]
   /// if the user already has a pending payment.
   static void openPremiumSheet({required UserModel user}) {
     if (user.isPending) {
@@ -55,10 +51,7 @@ class TestAccessHelper {
       return;
     }
 
-    Get.bottomSheet(
-      const PremiumBottomSheet(),
-      isScrollControlled: true,
-    );
+    Get.toNamed(Routes.premium);
   }
 
 

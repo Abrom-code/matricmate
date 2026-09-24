@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
@@ -432,7 +431,7 @@ class ChallengeArchiveController extends GetxController {
         Get.toNamed(Routes.paymentVerification);
         return;
       }
-      Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
+      Get.toNamed(Routes.premium);
       return;
     }
 

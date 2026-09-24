@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_archive_controller.dart';
@@ -300,10 +299,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                           if (isPending) {
                             Get.toNamed(Routes.paymentVerification);
                           } else {
-                            Get.bottomSheet(
-                              const PremiumBottomSheet(),
-                              isScrollControlled: true,
-                            );
+                            Get.toNamed(Routes.premium);
                           }
                         },
                         icon: Icon(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -120,10 +119,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                     // ── 2. Upgrade to Premium Banner ─────────────────
                     if (isInactive) ...[
                       PremiumBanner(
-                        onTap: () => Get.bottomSheet(
-                          const PremiumBottomSheet(),
-                          isScrollControlled: true,
-                        ),
+                        onTap: () => Get.toNamed(Routes.premium),
                       ),
                       const SizedBox(height: 16),
                     ],

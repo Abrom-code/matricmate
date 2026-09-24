@@ -199,7 +199,6 @@ class PaymentScreen extends StatelessWidget {
       bottomNavigationBar: Obx(() {
         final isLoading = controller.isUploading.value;
         final hasReceipt = controller.receipt.value != null;
-        final price = controller.selectedPlanPrice;
 
         return Container(
           padding: EdgeInsets.fromLTRB(

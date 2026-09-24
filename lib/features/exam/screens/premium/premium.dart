@@ -233,7 +233,6 @@ class PremiumScreen extends StatelessWidget {
           final isPending = UserController.instance.user.value.isPending;
           final hasMethod = controller.selectedPayment.value != null;
           final price = controller.selectedPlanPrice;
-          final selectedPlan = controller.selectedPlan.value;
 
           return Container(
             padding: EdgeInsets.fromLTRB(

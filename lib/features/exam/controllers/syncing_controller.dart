@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
+import 'package:matricmate/data/repositories/notes/notes_repository.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
@@ -125,16 +126,22 @@ class SyncingController extends GetxController {
       final results = await Future.wait([
         SyncPrefs.lastSubjectsSync(),
         SyncPrefs.lastChaptersSync(),
+        SyncPrefs.lastNotesSync(),
         UserController.instance.fetchUserRecord(),
       ]);
 
       final sinceSubjects = results[0] as DateTime?;
       final sinceChapters = results[1] as DateTime?;
-      final isValidUser = results[2] as bool;
+      final sinceNotes = results[2] as DateTime?;
+      final isValidUser = results[3] as bool;
 
       // Sync subjects (delta)
       await syncSubjects(since: sinceSubjects);
       await SyncPrefs.saveSubjectsSync(syncStarted);
+
+      // Sync notes metadata for all active subjects (lightweight delta sync)
+      await _syncNotesMetadata(since: sinceNotes);
+      await SyncPrefs.saveNotesSync(syncStarted);
 
       final localSubjects = await _subjectRepo.getLocalSubjects();
       final downloadedIds = localSubjects
@@ -158,6 +165,24 @@ class SyncingController extends GetxController {
       rethrow;
     } finally {
       refreshing.value = false;
+    }
+  }
+
+  // ── Notes metadata sync ───────────────────────────────────────────────────
+
+  Future<void> _syncNotesMetadata({DateTime? since}) async {
+    try {
+      final notesRepo = NotesRepository();
+      final remoteNotes = await notesRepo.fetchAllRemoteNotes(since: since);
+      if (remoteNotes.isNotEmpty || since == null) {
+        // If since == null (first full sync), pruneDeleted ensures local is exact mirror
+        await notesRepo.saveNotesBatch(
+          remoteNotes,
+          pruneDeleted: since == null,
+        );
+      }
+    } catch (_) {
+      // Non-fatal — best effort so syncAll proceeds smoothly
     }
   }
 

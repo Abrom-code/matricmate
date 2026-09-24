@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/dialogs/download_progress_dialog.dart';
 import 'package:matricmate/data/repositories/notes/notes_repository.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
 import 'package:matricmate/features/notes/services/note_download_service.dart';
@@ -27,6 +28,15 @@ class NotesController extends GetxController {
   final RxMap<int, double> gradeDownloadProgress = <int, double>{}.obs;
   final RxMap<int, bool> isGradeDownloading = <int, bool>{}.obs;
 
+  // Batch download state & cancellation for full-screen dialog
+  DownloadCancellationToken? _currentCancellationToken;
+  final RxDouble batchDownloadProgress = 0.0.obs;
+  final RxString batchDownloadCurrentItem = ''.obs;
+  final RxInt batchDownloadCompletedCount = 0.obs;
+  final RxInt batchDownloadTotalCount = 0.obs;
+  final RxString batchDownloadTitle = ''.obs;
+  final RxInt activeBatchGrade = (-1).obs;
+
   late String title;
   late int subjectId;
   late bool isCommon;
@@ -47,23 +57,28 @@ class NotesController extends GetxController {
   /// Loads notes from local SQLite first, then refreshes from remote if connected.
   Future<void> loadSubjectNotes({bool forceRemote = false}) async {
     try {
-      isLoading.value = true;
+      if (subjectNotes.isEmpty) {
+        isLoading.value = true;
+      }
 
-      // 1. Paint immediately from local SQLite
+      // 1. Paint immediately from local SQLite (zero-delay offline first)
       final local = await _repo.getLocalNotes(subjectId);
-      // Validate that files recorded as downloaded actually exist on disk
       final validated = _validateLocalFiles(local);
       subjectNotes.assignAll(validated);
 
-      // 2. Fetch metadata from Supabase if online or forced
+      // 2. Fetch metadata from Supabase if online
       final isConnected = await NetworkManager.instance.isConnected();
       if (isConnected) {
         final remote = await _repo.fetchRemoteNotes(subjectId);
-        if (remote.isNotEmpty) {
-          await _repo.saveNotesBatch(remote);
-          final updated = await _repo.getLocalNotes(subjectId);
-          subjectNotes.assignAll(_validateLocalFiles(updated));
-        }
+        await _repo.saveNotesBatch(
+          remote,
+          subjectId: subjectId,
+          pruneDeleted: true,
+        );
+        final updated = await _repo.getLocalNotes(subjectId);
+        subjectNotes.assignAll(_validateLocalFiles(updated));
+      } else if (forceRemote) {
+        ToastHelper.warning("You're offline. Showing saved notes.");
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -135,14 +150,52 @@ class NotesController extends GetxController {
     }
   }
 
-  /// Bulk download all undownloaded notes in a grade sequentially
+  /// Cancels the currently active download process (batch or single)
+  void cancelCurrentDownload() {
+    if (_currentCancellationToken != null &&
+        !_currentCancellationToken!.isCancelled) {
+      _currentCancellationToken!.cancel();
+    }
+    DownloadProgressDialog.hide();
+    isGradeDownloading.clear();
+    gradeDownloadProgress.clear();
+    isDownloading.clear();
+    downloadProgress.clear();
+    activeBatchGrade.value = -1;
+    batchDownloadProgress.value = 0.0;
+    batchDownloadCurrentItem.value = '';
+    batchDownloadCompletedCount.value = 0;
+    batchDownloadTotalCount.value = 0;
+    ToastHelper.info('Download cancelled');
+  }
+
+  /// Opens or re-opens the full screen download progress dialog if a batch is active
+  void showActiveDownloadProgressDialog() {
+    if (activeBatchGrade.value != -1 && batchDownloadTotalCount.value > 0) {
+      DownloadProgressDialog.show(
+        title: batchDownloadTitle.value,
+        subtitle: title,
+        progress: batchDownloadProgress,
+        currentItem: batchDownloadCurrentItem,
+        completedCount: batchDownloadCompletedCount,
+        totalCount: batchDownloadTotalCount.value,
+        onCancel: cancelCurrentDownload,
+      );
+    }
+  }
+
+  /// Bulk download all undownloaded notes in a grade sequentially with full screen progress and cancel support
   Future<void> downloadAllGradeNotes(int grade) async {
-    if (isGradeDownloading[grade] == true) return;
+    if (isGradeDownloading[grade] == true) {
+      // Re-open progress dialog if already downloading
+      showActiveDownloadProgressDialog();
+      return;
+    }
 
     final user = UserController.instance.user.value;
     final gradeNotes = getNotesByGrade(grade);
     final toDownload = gradeNotes.where((n) => !n.isDownloaded).toList();
-    final gradeLabel = grade == 0 ? 'General' : 'Grade $grade';
+    final gradeLabel = grade == 0 ? (isCommon ? 'Subject' : 'General') : 'Grade $grade';
 
     if (toDownload.isEmpty) {
       ToastHelper.info('All $gradeLabel notes are already downloaded!');
@@ -161,19 +214,47 @@ class NotesController extends GetxController {
       return;
     }
 
+    _currentCancellationToken = DownloadCancellationToken();
     isGradeDownloading[grade] = true;
-    gradeDownloadProgress[grade] = 0.01;
+    activeBatchGrade.value = grade;
+    gradeDownloadProgress[grade] = 0.0;
+
+    batchDownloadTitle.value = 'Downloading $gradeLabel Notes';
+    batchDownloadProgress.value = 0.0;
+    batchDownloadCompletedCount.value = 0;
+    batchDownloadTotalCount.value = toDownload.length;
+    batchDownloadCurrentItem.value = toDownload.first.title;
+
+    DownloadProgressDialog.show(
+      title: 'Downloading $gradeLabel Notes',
+      subtitle: title,
+      progress: batchDownloadProgress,
+      currentItem: batchDownloadCurrentItem,
+      completedCount: batchDownloadCompletedCount,
+      totalCount: toDownload.length,
+      onCancel: cancelCurrentDownload,
+    );
 
     try {
       for (int i = 0; i < toDownload.length; i++) {
+        if (_currentCancellationToken?.isCancelled == true) break;
+
         final note = toDownload[i];
+        batchDownloadCurrentItem.value = note.title;
+        batchDownloadCompletedCount.value = i;
         isDownloading[note.id] = true;
-        downloadProgress[note.id] = 0.1;
+        downloadProgress[note.id] = 0.0;
 
         try {
           final localPath = await _downloadService.downloadNote(
             note: note,
-            onProgress: (p) => downloadProgress[note.id] = p,
+            cancellationToken: _currentCancellationToken,
+            onProgress: (p) {
+              downloadProgress[note.id] = p;
+              final overallProgress = (i + p) / toDownload.length;
+              gradeDownloadProgress[grade] = overallProgress;
+              batchDownloadProgress.value = overallProgress;
+            },
           );
 
           final idx = subjectNotes.indexWhere((n) => n.id == note.id);
@@ -184,20 +265,36 @@ class NotesController extends GetxController {
               downloadedAt: DateTime.now().toIso8601String(),
             );
           }
+        } catch (e) {
+          if (_currentCancellationToken?.isCancelled == true) {
+            break;
+          }
+          rethrow;
         } finally {
           isDownloading[note.id] = false;
           downloadProgress.remove(note.id);
         }
 
-        gradeDownloadProgress[grade] = (i + 1) / toDownload.length;
+        final nextProgress = (i + 1) / toDownload.length;
+        gradeDownloadProgress[grade] = nextProgress;
+        batchDownloadProgress.value = nextProgress;
+        batchDownloadCompletedCount.value = i + 1;
       }
 
-      ToastHelper.success('$gradeLabel notes downloaded!');
+      if (_currentCancellationToken?.isCancelled != true) {
+        DownloadProgressDialog.hide();
+        ToastHelper.success('$gradeLabel notes downloaded!');
+      }
     } catch (e) {
-      AppExceptionHandler.handleResponse(e);
+      DownloadProgressDialog.hide();
+      if (_currentCancellationToken?.isCancelled != true) {
+        AppExceptionHandler.handleResponse(e);
+      }
     } finally {
       isGradeDownloading[grade] = false;
       gradeDownloadProgress.remove(grade);
+      activeBatchGrade.value = -1;
+      _currentCancellationToken = null;
     }
   }
 
@@ -219,7 +316,21 @@ class NotesController extends GetxController {
     }
   }
 
-  /// Open note detail or directly into reader
+  /// Mark a note as completed both in local SQLite and reactive state
+  Future<void> markNoteCompleted(int noteId) async {
+    try {
+      await _repo.markNoteCompleted(noteId);
+      final idx = subjectNotes.indexWhere((n) => n.id == noteId);
+      if (idx != -1) {
+        subjectNotes[idx] = subjectNotes[idx].copyWith(
+          isCompleted: true,
+          completedAt: DateTime.now().toIso8601String(),
+        );
+      }
+    } catch (_) {}
+  }
+
+  /// Open note directly into reader
   void openNote(NoteModel note) {
     final user = UserController.instance.user.value;
     if (note.isPremium && !user.isActive) {
@@ -228,7 +339,7 @@ class NotesController extends GetxController {
     }
 
     Get.toNamed(
-      Routes.noteDetail,
+      Routes.noteReader,
       arguments: {
         'note': note,
         'subject_title': title,

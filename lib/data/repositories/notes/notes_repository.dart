@@ -65,6 +65,20 @@ class NotesRepository {
     }
   }
 
+  /// Fetches all notes across all subjects from local SQLite.
+  Future<List<NoteModel>> getAllLocalNotes() async {
+    try {
+      final db = await _dbService.database;
+      final rows = await db.query(
+        'notes',
+        orderBy: 'subject_id ASC, chapter_number ASC, order_index ASC',
+      );
+      return rows.map((r) => NoteModel.fromMap(r)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   /// Fetches remote notes for a subject from Supabase.
   Future<List<Map<String, dynamic>>> fetchRemoteNotes(int subjectId) async {
     try {
@@ -77,6 +91,22 @@ class NotesRepository {
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       // If table doesn't exist yet on remote Supabase, return empty gracefully
+      return [];
+    }
+  }
+
+  /// Fetches all remote notes across all subjects from Supabase (optionally delta sync).
+  Future<List<Map<String, dynamic>>> fetchAllRemoteNotes({DateTime? since}) async {
+    try {
+      var query = _supabase.from('notes').select();
+      if (since != null) {
+        query = query.gte('updated_at', since.toIso8601String());
+      }
+      final response = await query
+          .order('chapter_number', ascending: true)
+          .timeout(AppTimeouts.query);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
       return [];
     }
   }
@@ -119,10 +149,43 @@ class NotesRepository {
   /// Saves or updates a batch of notes in SQLite.
   /// Preserves existing `local_file_path` and `is_downloaded` flags.
   /// If remote file_key changed, invalidates stale local copy.
-  Future<void> saveNotesBatch(List<Map<String, dynamic>> notesData) async {
-    if (notesData.isEmpty) return;
+  /// If [pruneDeleted] is true, removes local notes that no longer exist in [notesData].
+  Future<void> saveNotesBatch(
+    List<Map<String, dynamic>> notesData, {
+    int? subjectId,
+    bool pruneDeleted = false,
+  }) async {
     try {
       final db = await _dbService.database;
+
+      // Clean up notes deleted from remote
+      if (pruneDeleted) {
+        final remoteIds = notesData
+            .map((e) => (e['id'] as num?)?.toInt() ?? 0)
+            .where((id) => id > 0)
+            .toSet();
+
+        final List<NoteModel> localNotes = subjectId != null
+            ? await getLocalNotes(subjectId)
+            : await getAllLocalNotes();
+
+        for (final local in localNotes) {
+          if (!remoteIds.contains(local.id)) {
+            if (local.localFilePath != null) {
+              final f = File(local.localFilePath!);
+              if (f.existsSync()) {
+                try {
+                  f.deleteSync();
+                } catch (_) {}
+              }
+            }
+            await db.delete('notes', where: 'id = ?', whereArgs: [local.id]);
+          }
+        }
+      }
+
+      if (notesData.isEmpty) return;
+
       final batch = db.batch();
 
       for (final raw in notesData) {
@@ -141,10 +204,17 @@ class NotesRepository {
             ? rawKey.trim()
             : (rawUrl?.trim() ?? '');
 
-        // Check if existing record has download status
+        // Check if existing record has download and completion status
         final existing = await db.query(
           'notes',
-          columns: ['is_downloaded', 'local_file_path', 'downloaded_at', 'file_key'],
+          columns: [
+            'is_downloaded',
+            'local_file_path',
+            'downloaded_at',
+            'file_key',
+            'is_completed',
+            'completed_at',
+          ],
           where: 'id = ?',
           whereArgs: [id],
           limit: 1,
@@ -176,10 +246,14 @@ class NotesRepository {
             map['local_file_path'] = existing.first['local_file_path'];
             map['downloaded_at'] = existing.first['downloaded_at'];
           }
+          map['is_completed'] = existing.first['is_completed'] ?? 0;
+          map['completed_at'] = existing.first['completed_at'];
         } else {
           map['is_downloaded'] = 0;
           map['local_file_path'] = null;
           map['downloaded_at'] = null;
+          map['is_completed'] = 0;
+          map['completed_at'] = null;
         }
 
         batch.insert(
@@ -208,12 +282,32 @@ class NotesRepository {
             'local_file_path': map['local_file_path'],
             'is_downloaded': map['is_downloaded'] ?? 0,
             'downloaded_at': map['downloaded_at'],
+            'is_completed': map['is_completed'] ?? 0,
+            'completed_at': map['completed_at'],
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
 
       await batch.commit(noResult: true);
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  /// Marks a note as completed (read) in SQLite.
+  Future<void> markNoteCompleted(int noteId) async {
+    try {
+      final db = await _dbService.database;
+      await db.update(
+        'notes',
+        {
+          'is_completed': 1,
+          'completed_at': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [noteId],
+      );
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

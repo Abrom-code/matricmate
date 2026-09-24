@@ -40,7 +40,6 @@ import 'package:matricmate/features/personalization/screens/profile/profile.dart
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
 import 'package:matricmate/bindings/notes/notes_binding.dart';
 import 'package:matricmate/features/notes/screens/notes_screen.dart';
-import 'package:matricmate/features/notes/screens/note_detail_screen.dart';
 import 'package:matricmate/features/notes/screens/note_reader_screen.dart';
 import 'package:matricmate/features/personalization/screens/update/update_profile.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
@@ -95,10 +94,6 @@ class AppRoutes {
       name: Routes.notes,
       page: () => const NotesScreen(),
       binding: NotesBinding(),
-    ),
-    GetPage(
-      name: Routes.noteDetail,
-      page: () => const NoteDetailScreen(),
     ),
     GetPage(
       name: Routes.noteReader,

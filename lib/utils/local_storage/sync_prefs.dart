@@ -7,10 +7,12 @@ class SyncPrefs {
   static const _subjectsKey = 'sync_ts_subjects';
   static const _entranceKey = 'sync_ts_entrance';
   static const _chaptersKey = 'sync_ts_chapters';
+  static const _notesKey = 'sync_ts_notes';
 
   static Future<DateTime?> lastSubjectsSync() => _get(_subjectsKey);
   static Future<DateTime?> lastEntranceSync() => _get(_entranceKey);
   static Future<DateTime?> lastChaptersSync() => _get(_chaptersKey);
+  static Future<DateTime?> lastNotesSync() => _get(_notesKey);
 
   static Future<void> saveSubjectsSync(DateTime time) =>
       _save(_subjectsKey, time);
@@ -18,6 +20,8 @@ class SyncPrefs {
       _save(_entranceKey, time);
   static Future<void> saveChaptersSync(DateTime time) =>
       _save(_chaptersKey, time);
+  static Future<void> saveNotesSync(DateTime time) =>
+      _save(_notesKey, time);
 
   /// Clears all sync timestamps (e.g. on sign-out or "force full sync").
   static Future<void> clearAll() async {
@@ -25,6 +29,7 @@ class SyncPrefs {
     await prefs.remove(_subjectsKey);
     await prefs.remove(_entranceKey);
     await prefs.remove(_chaptersKey);
+    await prefs.remove(_notesKey);
   }
 
   static Future<DateTime?> _get(String key) async {

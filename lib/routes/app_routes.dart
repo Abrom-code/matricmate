@@ -24,7 +24,6 @@ class Routes {
 
   // notes
   static const notes = '/notes';
-  static const noteDetail = '/note-detail';
   static const noteReader = '/note-reader';
 
   // premium

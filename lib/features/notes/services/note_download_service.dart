@@ -5,6 +5,25 @@ import 'package:matricmate/features/notes/models/note_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// Token used to cancel active note downloads immediately.
+class DownloadCancellationToken {
+  bool _isCancelled = false;
+  http.Client? _activeClient;
+
+  bool get isCancelled => _isCancelled;
+
+  void attachClient(http.Client client) {
+    _activeClient = client;
+  }
+
+  void cancel() {
+    _isCancelled = true;
+    try {
+      _activeClient?.close();
+    } catch (_) {}
+  }
+}
+
 class NoteDownloadService {
   static final NoteDownloadService instance = NoteDownloadService._();
   NoteDownloadService._();
@@ -45,7 +64,12 @@ class NoteDownloadService {
   Future<String> downloadNote({
     required NoteModel note,
     required void Function(double progress) onProgress,
+    DownloadCancellationToken? cancellationToken,
   }) async {
+    if (cancellationToken?.isCancelled == true) {
+      throw 'Download cancelled';
+    }
+
     // 1. Request temporary presigned URL from Supabase Edge Function
     final signedUrl = await _repo.getNoteSignedUrl(note.id);
 
@@ -57,7 +81,13 @@ class NoteDownloadService {
       await tempFile.delete();
     }
 
+    if (cancellationToken?.isCancelled == true) {
+      throw 'Download cancelled';
+    }
+
     final client = http.Client();
+    cancellationToken?.attachClient(client);
+
     try {
       final request = http.Request('GET', Uri.parse(signedUrl));
       final response = await client.send(request);
@@ -72,6 +102,13 @@ class NoteDownloadService {
       final sink = tempFile.openWrite();
 
       await for (final chunk in response.stream) {
+        if (cancellationToken?.isCancelled == true) {
+          try {
+            await sink.close();
+          } catch (_) {}
+          throw 'Download cancelled';
+        }
+
         sink.add(chunk);
         receivedBytes += chunk.length;
         if (totalBytes > 0) {
@@ -82,6 +119,10 @@ class NoteDownloadService {
 
       await sink.flush();
       await sink.close();
+
+      if (cancellationToken?.isCancelled == true) {
+        throw 'Download cancelled';
+      }
 
       // Verify file integrity
       if (!tempFile.existsSync() || tempFile.lengthSync() == 0) {
@@ -106,10 +147,18 @@ class NoteDownloadService {
       onProgress(1.0);
       return targetPath;
     } catch (e) {
-      // Clean up temp file on failure
+      // Clean up temp file on failure or cancellation
       if (await tempFile.exists()) {
-        await tempFile.delete();
+        try {
+          await tempFile.delete();
+        } catch (_) {}
       }
+
+      if (cancellationToken?.isCancelled == true ||
+          e.toString().toLowerCase().contains('cancelled')) {
+        throw 'Download cancelled';
+      }
+
       throw AppExceptionHandler.handle(e);
     } finally {
       client.close();

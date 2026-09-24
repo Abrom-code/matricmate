@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
 import 'package:matricmate/features/notes/services/note_download_service.dart';
@@ -20,13 +21,23 @@ class NoteReaderScreen extends StatefulWidget {
 class _NoteReaderScreenState extends State<NoteReaderScreen> {
   late NoteModel note;
   late String subjectTitle;
-  List<TestModel> chapterTests = [];
 
   int _currentPage = 0;
   int _totalPages = 0;
   bool _isReady = false;
   bool _nightMode = false;
   bool _hasPromptedCompletion = false;
+  bool _isLandscape = false;
+
+  PDFViewController? _pdfViewController;
+  bool _isDraggingSlider = false;
+  double? _dragHandleTop;
+  int _sliderDragPage = 0;
+  int _lastJumpingPage = -1;
+  bool _showSliderBubble = false;
+  Timer? _bubbleHideTimer;
+  Timer? _pageThrottleTimer;
+  int? _pendingTargetPage;
 
   String? _resolvedFilePath;
   bool _isLoadingFile = true;
@@ -38,9 +49,6 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     final args = Get.arguments ?? {};
     note = args['note'] as NoteModel;
     subjectTitle = args['subject_title'] ?? 'Subject';
-    if (args['chapter_tests'] != null) {
-      chapterTests = List<TestModel>.from(args['chapter_tests']);
-    }
 
     _resolveFile();
   }
@@ -91,9 +99,186 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _bubbleHideTimer?.cancel();
+    _pageThrottleTimer?.cancel();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    super.dispose();
+  }
+
+  void _toggleOrientation() {
+    setState(() {
+      _isLandscape = !_isLandscape;
+    });
+    if (_isLandscape) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
+  }
+
+  void _onSliderDrag(
+      double localY, double availableTrack, double handleHeight, double topMargin) {
+    if (_totalPages <= 1 || availableTrack <= 0) return;
+    _bubbleHideTimer?.cancel();
+
+    final clampedY =
+        (localY - topMargin - handleHeight / 2).clamp(0.0, availableTrack);
+    final fraction = (clampedY / availableTrack).clamp(0.0, 1.0);
+    final targetPage =
+        (fraction * (_totalPages - 1)).round().clamp(0, _totalPages - 1);
+
+    setState(() {
+      _isDraggingSlider = true;
+      _showSliderBubble = true;
+      _dragHandleTop = clampedY;
+      _sliderDragPage = targetPage;
+      _currentPage = targetPage;
+    });
+
+    if (targetPage != _lastJumpingPage) {
+      _pendingTargetPage = targetPage;
+      if (_pageThrottleTimer == null || !_pageThrottleTimer!.isActive) {
+        _lastJumpingPage = targetPage;
+        _pdfViewController?.setPage(targetPage);
+        _pageThrottleTimer = Timer(const Duration(milliseconds: 60), () {
+          if (_pendingTargetPage != null &&
+              _pendingTargetPage != _lastJumpingPage) {
+            _lastJumpingPage = _pendingTargetPage!;
+            _pdfViewController?.setPage(_pendingTargetPage!);
+          }
+        });
+      }
+    }
+  }
+
+  void _onSliderDragEnd() {
+    _pageThrottleTimer?.cancel();
+    if (_pendingTargetPage != null && _pendingTargetPage != _lastJumpingPage) {
+      _lastJumpingPage = _pendingTargetPage!;
+      _pdfViewController?.setPage(_pendingTargetPage!);
+    }
+    _bubbleHideTimer?.cancel();
+    _bubbleHideTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (mounted) {
+        setState(() {
+          _isDraggingSlider = false;
+          _showSliderBubble = false;
+          _dragHandleTop = null;
+        });
+      }
+    });
+  }
+
+  Widget _buildRightSlider(double maxHeight) {
+    if (!_isReady || _totalPages <= 1) return const SizedBox.shrink();
+
+    const double topMargin = 16.0;
+    const double bottomMargin = 24.0;
+    const double handleHeight = 34.0;
+    const double handleWidth = 26.0;
+    final double availableTrack =
+        (maxHeight - handleHeight - topMargin - bottomMargin).clamp(0.0, maxHeight);
+
+    final double normalFraction = _totalPages > 1
+        ? (_currentPage / (_totalPages - 1)).clamp(0.0, 1.0)
+        : 0.0;
+    final double handleTop =
+        topMargin + (_dragHandleTop ?? (normalFraction * availableTrack));
+    final displayPage =
+        (_isDraggingSlider ? _sliderDragPage : _currentPage) + 1;
+
+    return Positioned(
+      top: 0,
+      right: 0,
+      bottom: 0,
+      width: 44,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onVerticalDragStart: (details) {
+          _onSliderDrag(
+              details.localPosition.dy, availableTrack, handleHeight, topMargin);
+        },
+        onVerticalDragUpdate: (details) {
+          _onSliderDrag(
+              details.localPosition.dy, availableTrack, handleHeight, topMargin);
+        },
+        onVerticalDragEnd: (_) => _onSliderDragEnd(),
+        onTapDown: (details) {
+          _onSliderDrag(
+              details.localPosition.dy, availableTrack, handleHeight, topMargin);
+        },
+        onTapUp: (_) => _onSliderDragEnd(),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedPositioned(
+              duration: _isDraggingSlider
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              top: handleTop,
+              right: 0,
+              child: AnimatedOpacity(
+                opacity: (_isDraggingSlider || _showSliderBubble) ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 180),
+                child: AnimatedScale(
+                  scale: _isDraggingSlider ? 1.08 : 1.0,
+                  duration: const Duration(milliseconds: 120),
+                  child: Container(
+                    width: handleWidth,
+                    height: handleHeight,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.only(left: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xF01E1E1E),
+                      borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(17),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          blurRadius: 6,
+                          offset: const Offset(-1, 1.5),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '$displayPage',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1.0,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showCompletionSheet() {
     if (_hasPromptedCompletion || !mounted) return;
     _hasPromptedCompletion = true;
+
+    // Mark note as completed in SQLite & reactive state
+    NotesController.instance.markNoteCompleted(note.id);
 
     final dark = AppHelperFunctions.isDark(context);
 
@@ -295,7 +480,19 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
               size: 20,
             ),
           ),
-          // Save for offline action if not yet downloaded
+          // Orientation toggle button (Portrait / Landscape)
+          IconButton(
+            tooltip: _isLandscape ? 'Portrait Mode' : 'Landscape Mode',
+            onPressed: _toggleOrientation,
+            icon: Icon(
+              _isLandscape
+                  ? Icons.stay_current_landscape_rounded
+                  : Icons.stay_current_portrait_rounded,
+              color: AppColors.white,
+              size: 20,
+            ),
+          ),
+          // Save for offline action if not yet downloaded (check icon removed)
           Obx(() {
             final liveNote = NotesController.instance.subjectNotes
                     .firstWhereOrNull((n) => n.id == note.id) ??
@@ -304,16 +501,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                 NotesController.instance.isDownloading[note.id] ?? false;
 
             if (liveNote.isDownloaded) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Center(
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    color: Color(0xFFD1FAE5),
-                    size: 20,
-                  ),
-                ),
-              );
+              return const SizedBox.shrink();
             }
 
             return IconButton(
@@ -354,27 +542,10 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                   },
                 );
               },
-              icon: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.quiz_rounded, size: 14, color: AppColors.white),
-                    SizedBox(width: 4),
-                    Text(
-                      'Test',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.white,
-                      ),
-                    ),
-                  ],
-                ),
+              icon: const Icon(
+                Icons.quiz_rounded,
+                color: AppColors.white,
+                size: 20,
               ),
             ),
         ],
@@ -445,46 +616,75 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                         style: TextStyle(fontSize: 14),
                       ),
                     )
-                  : Stack(
-                      children: [
-                        PDFView(
-                          filePath: _resolvedFilePath,
-                          enableSwipe: true,
-                          swipeHorizontal: false,
-                          autoSpacing: true,
-                          pageFling: true,
-                          nightMode: _nightMode,
-                          onRender: (pages) {
-                            setState(() {
-                              _totalPages = pages ?? 0;
-                              _isReady = true;
-                            });
-                          },
-                          onViewCreated: (_) {},
-                          onPageChanged: (page, total) {
-                            setState(() {
-                              _currentPage = page ?? 0;
-                              _totalPages = total ?? _totalPages;
-                            });
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Stack(
+                          children: [
+                            PDFView(
+                              filePath: _resolvedFilePath,
+                              enableSwipe: true,
+                              swipeHorizontal: false,
+                              autoSpacing: false,
+                              pageFling: false,
+                              pageSnap: false,
+                              fitPolicy: FitPolicy.WIDTH,
+                              nightMode: _nightMode,
+                              onRender: (pages) {
+                                setState(() {
+                                  _totalPages = pages ?? 0;
+                                  _isReady = true;
+                                });
+                              },
+                              onViewCreated: (controller) {
+                                _pdfViewController = controller;
+                              },
+                              onPageChanged: (page, total) {
+                                setState(() {
+                                  _currentPage = page ?? 0;
+                                  _totalPages = total ?? _totalPages;
+                                  if (!_isDraggingSlider) {
+                                    _showSliderBubble = true;
+                                  }
+                                });
 
-                            // Trigger completion when reaching the last page
-                            if (_totalPages > 0 &&
-                                _currentPage >= _totalPages - 1 &&
-                                !_hasPromptedCompletion) {
-                              Future.delayed(
-                                const Duration(milliseconds: 600),
-                                _showCompletionSheet,
-                              );
-                            }
-                          },
-                        ),
-                        if (!_isReady)
-                          const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.primary,
+                                if (!_isDraggingSlider) {
+                                  _bubbleHideTimer?.cancel();
+                                  _bubbleHideTimer = Timer(
+                                    const Duration(milliseconds: 1500),
+                                    () {
+                                      if (mounted && !_isDraggingSlider) {
+                                        setState(() {
+                                          _showSliderBubble = false;
+                                        });
+                                      }
+                                    },
+                                  );
+                                }
+
+                                // Trigger completion when reaching the last page
+                                if (_totalPages > 0 &&
+                                    _currentPage >= _totalPages - 1 &&
+                                    !_hasPromptedCompletion) {
+                                  NotesController.instance
+                                      .markNoteCompleted(note.id);
+                                  Future.delayed(
+                                    const Duration(milliseconds: 600),
+                                    _showCompletionSheet,
+                                  );
+                                }
+                              },
                             ),
-                          ),
-                      ],
+                            if (!_isReady)
+                              const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            // ── Right Side Fast-Scroll Slider & Bubble ─────────
+                            _buildRightSlider(constraints.maxHeight),
+                          ],
+                        );
+                      },
                     ),
     );
   }

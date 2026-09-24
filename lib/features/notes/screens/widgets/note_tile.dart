@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -22,13 +23,22 @@ class NoteTile extends StatelessWidget {
     final ctrl = NotesController.instance;
 
     return Obx(() {
-      final isDownloading = ctrl.isDownloading[note.id] ?? false;
-      final progress = ctrl.downloadProgress[note.id];
+      final liveNote =
+          ctrl.subjectNotes.firstWhereOrNull((n) => n.id == note.id) ?? note;
+      final isDownloading = ctrl.isDownloading[liveNote.id] ?? false;
+      final progress = ctrl.downloadProgress[liveNote.id];
       final user = UserController.instance.user.value;
-      final isLocked = note.isPremium && !user.isActive;
+      final isLocked = liveNote.isPremium && !user.isActive;
+      final isCompleted = liveNote.isCompleted;
 
       final cardBg = dark ? AppColors.darkSurface : AppColors.white;
       final borderColor = dark ? AppColors.darkBorder : AppColors.borderPrimary;
+
+      final badgeText = (liveNote.grade == 0 || liveNote.chapterNumber <= 0)
+          ? 'ALL'
+          : (liveNote.chapterNumber < 10
+              ? '0${liveNote.chapterNumber}'
+              : '${liveNote.chapterNumber}');
 
       return Container(
         decoration: BoxDecoration(
@@ -36,9 +46,11 @@ class NoteTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isDownloading
-                ? const Color(0xFF8B5CF6)
-                : borderColor,
-            width: isDownloading ? 1.5 : 1,
+                ? ChallengeColors.accent
+                : isLocked
+                    ? Colors.amber.withValues(alpha: dark ? 0.40 : 0.28)
+                    : borderColor,
+            width: (isDownloading || isLocked) ? 1.3 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -58,78 +70,165 @@ class NoteTile extends StatelessWidget {
               child: Row(
                 children: [
                   // ── Chapter / Unit Number Squircle ──────────────────────────
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isLocked
-                            ? [AppColors.grey, AppColors.darkGrey]
-                            : const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: isLocked
-                          ? null
-                          : [
-                              BoxShadow(
-                                color: const Color(0xFF8B5CF6)
-                                    .withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                    ),
-                    child: Center(
-                      child: isLocked
-                          ? const Icon(Icons.lock_rounded,
-                              color: AppColors.white, size: 22)
-                          : (note.grade == 0 || note.chapterNumber <= 0)
-                              ? const Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.menu_book_rounded,
-                                      color: AppColors.white,
-                                      size: 18,
-                                    ),
-                                    SizedBox(height: 1),
-                                    Text(
-                                      'ALL',
-                                      style: TextStyle(
-                                        color: Color(0xFFDDD6FE),
-                                        fontSize: 8.5,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: isLocked
+                              ? Colors.amber.withValues(
+                                  alpha: dark ? 0.20 : 0.12,
                                 )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'UNIT',
-                                      style: TextStyle(
-                                        color: Color(0xFFDDD6FE),
-                                        fontSize: 8.5,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 0.5,
-                                      ),
+                              : null,
+                          gradient: isLocked
+                              ? null
+                              : isCompleted
+                                  ? const LinearGradient(
+                                      colors: [
+                                        Color(0xFF10B981),
+                                        Color(0xFF047857),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : const LinearGradient(
+                                      colors: [
+                                        ChallengeColors.accent,
+                                        Color(0xFF0369A1),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                     ),
-                                    Text(
-                                      '${note.chapterNumber}',
-                                      style: const TextStyle(
+                          borderRadius: BorderRadius.circular(14),
+                          border: isLocked
+                              ? Border.all(
+                                  color: Colors.amber.withValues(alpha: 0.35),
+                                  width: 1,
+                                )
+                              : isCompleted
+                                  ? Border.all(
+                                      color: const Color(0xFF10B981)
+                                          .withValues(alpha: 0.5),
+                                      width: 1,
+                                    )
+                                  : null,
+                          boxShadow: isLocked
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: (isCompleted
+                                            ? const Color(0xFF10B981)
+                                            : ChallengeColors.accent)
+                                        .withValues(alpha: 0.32),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                        ),
+                        child: isLocked
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.lock_rounded,
+                                    size: 16,
+                                    color: Colors.amber,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    badgeText,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.3,
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : (liveNote.grade == 0 ||
+                                    liveNote.chapterNumber <= 0)
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.menu_book_rounded,
                                         color: AppColors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w900,
-                                        height: 1.0,
+                                        size: 18,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 1),
+                                      Text(
+                                        'ALL',
+                                        style: TextStyle(
+                                          color: AppColors.white
+                                              .withValues(alpha: 0.85),
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'UNIT',
+                                        style: TextStyle(
+                                          color: AppColors.white
+                                              .withValues(alpha: 0.85),
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${liveNote.chapterNumber}',
+                                        style: const TextStyle(
+                                          color: AppColors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900,
+                                          height: 1.0,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                      ),
+                      if (isCompleted && !isLocked)
+                        Positioned(
+                          right: -4,
+                          bottom: -4,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: cardBg,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black
+                                      .withValues(alpha: dark ? 0.35 : 0.12),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
                                 ),
-                    ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.check_rounded,
+                                size: 12.5,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
 
                   const SizedBox(width: 14),
@@ -140,7 +239,7 @@ class NoteTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          note.title,
+                          liveNote.title,
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w800,
@@ -152,11 +251,11 @@ class NoteTile extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (note.description != null &&
-                            note.description!.isNotEmpty) ...[
+                        if (liveNote.description != null &&
+                            liveNote.description!.isNotEmpty) ...[
                           const SizedBox(height: 3),
                           Text(
-                            note.description!,
+                            liveNote.description!,
                             style: TextStyle(
                               fontSize: 11.5,
                               color: dark
@@ -169,52 +268,22 @@ class NoteTile extends StatelessWidget {
                         ],
                         const SizedBox(height: 8),
 
-                        // Chips: Pages, File Size, Type, Premium
+                        // Chips: Pages, File Size
                         Wrap(
                           spacing: 6,
                           runSpacing: 4,
                           children: [
-                            if (note.formattedPages.isNotEmpty)
+                            if (liveNote.formattedPages.isNotEmpty)
                               _buildMetadataChip(
                                 dark: dark,
-                                text: note.formattedPages,
+                                text: liveNote.formattedPages,
                                 icon: Icons.menu_book_rounded,
                               ),
-                            if (note.formattedSize.isNotEmpty)
+                            if (liveNote.formattedSize.isNotEmpty)
                               _buildMetadataChip(
                                 dark: dark,
-                                text: note.formattedSize,
+                                text: liveNote.formattedSize,
                                 icon: Icons.attach_file_rounded,
-                              ),
-                            if (note.isPremium)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.star_rounded,
-                                      size: 11,
-                                      color: Colors.amber,
-                                    ),
-                                    SizedBox(width: 3),
-                                    Text(
-                                      'PRO',
-                                      style: TextStyle(
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.amber,
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ),
                           ],
                         ),
@@ -228,8 +297,10 @@ class NoteTile extends StatelessWidget {
                   _buildTrailingAction(
                     context: context,
                     dark: dark,
+                    isLocked: isLocked,
                     isDownloading: isDownloading,
                     progress: progress,
+                    note: liveNote,
                     ctrl: ctrl,
                   ),
                 ],
@@ -277,8 +348,10 @@ class NoteTile extends StatelessWidget {
   Widget _buildTrailingAction({
     required BuildContext context,
     required bool dark,
+    required bool isLocked,
     required bool isDownloading,
     required double? progress,
+    required NoteModel note,
     required NotesController ctrl,
   }) {
     if (isDownloading) {
@@ -291,8 +364,8 @@ class NoteTile extends StatelessWidget {
             CircularProgressIndicator(
               value: progress,
               strokeWidth: 2.5,
-              color: const Color(0xFF8B5CF6),
-              backgroundColor: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+              color: ChallengeColors.accent,
+              backgroundColor: ChallengeColors.accent.withValues(alpha: 0.15),
             ),
             if (progress != null)
               Text(
@@ -300,7 +373,7 @@ class NoteTile extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 8.5,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF8B5CF6),
+                  color: ChallengeColors.accent,
                 ),
               ),
           ],
@@ -308,67 +381,42 @@ class NoteTile extends StatelessWidget {
       );
     }
 
+    if (isLocked) {
+      return Icon(
+        Icons.chevron_right_rounded,
+        size: 22,
+        color: dark ? AppColors.darkGrey : AppColors.grey,
+      );
+    }
+
     if (note.isDownloaded) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Offline checkmark badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: dark ? 0.2 : 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
+      return PopupMenuButton<String>(
+        icon: Icon(
+          Icons.more_vert_rounded,
+          size: 18,
+          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+        ),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+        onSelected: (val) {
+          if (val == 'delete') {
+            ctrl.deleteDownloadedNote(note);
+          }
+        },
+        itemBuilder: (_) => [
+          const PopupMenuItem(
+            value: 'delete',
+            child: Row(
               children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  size: 13,
-                  color: AppColors.success,
-                ),
-                SizedBox(width: 4),
+                Icon(Icons.delete_outline_rounded,
+                    size: 16, color: AppColors.error),
+                SizedBox(width: 8),
                 Text(
-                  'Saved',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.success,
-                  ),
+                  'Remove from device',
+                  style: TextStyle(fontSize: 12.5, color: AppColors.error),
                 ),
               ],
             ),
-          ),
-          // Context menu to delete if needed
-          PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_vert_rounded,
-              size: 18,
-              color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            onSelected: (val) {
-              if (val == 'delete') {
-                ctrl.deleteDownloadedNote(note);
-              }
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline_rounded,
-                        size: 16, color: AppColors.error),
-                    SizedBox(width: 8),
-                    Text(
-                      'Remove from device',
-                      style: TextStyle(fontSize: 12.5, color: AppColors.error),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       );
@@ -382,14 +430,14 @@ class NoteTile extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: const Color(0xFF8B5CF6).withValues(alpha: dark ? 0.2 : 0.08),
+          color: ChallengeColors.accent.withValues(alpha: dark ? 0.2 : 0.08),
           shape: BoxShape.circle,
         ),
         child: const Center(
           child: Icon(
             Icons.arrow_downward_rounded,
             size: 18,
-            color: Color(0xFF8B5CF6),
+            color: ChallengeColors.accent,
           ),
         ),
       ),

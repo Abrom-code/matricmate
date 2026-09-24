@@ -16,6 +16,8 @@ class NoteModel {
   final String? localFilePath;
   final bool isDownloaded;
   final String? downloadedAt;
+  final bool isCompleted;
+  final String? completedAt;
 
   const NoteModel({
     required this.id,
@@ -35,6 +37,8 @@ class NoteModel {
     this.localFilePath,
     this.isDownloaded = false,
     this.downloadedAt,
+    this.isCompleted = false,
+    this.completedAt,
   });
 
   /// Human-readable file size (e.g., "2.4 MB", "420 KB")
@@ -87,6 +91,10 @@ class NoteModel {
           map['is_downloaded'] == true ||
           map['is_downloaded'] == '1',
       downloadedAt: map['downloaded_at']?.toString(),
+      isCompleted: map['is_completed'] == 1 ||
+          map['is_completed'] == true ||
+          map['is_completed'] == '1',
+      completedAt: map['completed_at']?.toString(),
     );
   }
 
@@ -109,6 +117,8 @@ class NoteModel {
       'local_file_path': localFilePath,
       'is_downloaded': isDownloaded ? 1 : 0,
       'downloaded_at': downloadedAt,
+      'is_completed': isCompleted ? 1 : 0,
+      'completed_at': completedAt,
     };
   }
 
@@ -130,6 +140,8 @@ class NoteModel {
     String? localFilePath,
     bool? isDownloaded,
     String? downloadedAt,
+    bool? isCompleted,
+    String? completedAt,
   }) {
     return NoteModel(
       id: id ?? this.id,
@@ -149,6 +161,8 @@ class NoteModel {
       localFilePath: localFilePath ?? this.localFilePath,
       isDownloaded: isDownloaded ?? this.isDownloaded,
       downloadedAt: downloadedAt ?? this.downloadedAt,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: completedAt ?? this.completedAt,
     );
   }
 }

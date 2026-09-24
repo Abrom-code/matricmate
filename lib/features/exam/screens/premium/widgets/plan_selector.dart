@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
-import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/features/exam/models/subscription_plan.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -11,13 +10,14 @@ class PlanSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = PremiumController.instance;
     final cfg = PaymentConfigService.instance;
     final isDark = AppHelperFunctions.isDark(context);
+    final plan = SubscriptionPlan.featured;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Section Header ──────────────────────────────────────────
         Row(
           children: [
             Container(
@@ -34,7 +34,7 @@ class PlanSelector extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              '1. CHOOSE DURATION',
+              '1. SUBSCRIPTION PLAN',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -53,269 +53,184 @@ class PlanSelector extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
 
-        // Horizontal scrollable list of plan cards
-        SizedBox(
-          height: 168,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-            itemCount: SubscriptionPlan.all.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final plan = SubscriptionPlan.all[index];
-              return Obx(() {
-                final isSelected = controller.selectedPlan.value == plan;
-                final price = cfg.getPriceForPlan(plan.key, plan.defaultPrice);
-                final monthlyPrice = (price / plan.durationMonths).round();
+        // ── Price Card with Basic Features List (No Border) ─────────
+        Obx(() {
+          final price = cfg.getPriceForPlan(plan.key, plan.defaultPrice);
+          final monthlyPrice = (price / plan.durationMonths).round();
 
-                return _ModernPlanCard(
-                  plan: plan,
-                  price: price,
-                  monthlyPrice: monthlyPrice,
-                  isSelected: isSelected,
-                  isDark: isDark,
-                  onTap: () => controller.selectedPlan.value = plan,
-                );
-              });
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ModernPlanCard extends StatelessWidget {
-  const _ModernPlanCard({
-    required this.plan,
-    required this.price,
-    required this.monthlyPrice,
-    required this.isSelected,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  final SubscriptionPlan plan;
-  final int price;
-  final int monthlyPrice;
-  final bool isSelected;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isFeatured = plan.isFeatured;
-
-    final activeBorderColor = AppColors.primary;
-
-    final inactiveBorderColor = isFeatured
-        ? const Color(0xFFF59E0B).withValues(alpha: 0.5)
-        : (isDark ? AppColors.darkBorder : AppColors.borderPrimary);
-
-    final cardBg = isSelected
-        ? (isDark
-            ? AppColors.primary.withValues(alpha: 0.15)
-            : AppColors.primary.withValues(alpha: 0.08))
-        : (isDark ? AppColors.darkCard : AppColors.white);
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeInOut,
-            width: 142,
-            padding: const EdgeInsets.fromLTRB(14, 18, 14, 14),
+          return Container(
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isSelected ? activeBorderColor : inactiveBorderColor,
-                width: isSelected ? 2 : (isFeatured ? 1.4 : 1),
-              ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.18),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Header: Title + Radio
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      plan.title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2,
-                        color: isDark ? AppColors.textWhite : AppColors.textPrimary,
-                      ),
-                    ),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isSelected
-                            ? AppColors.primary
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
-                                  ? AppColors.darkGrey
-                                  : AppColors.grey),
-                          width: 2,
-                        ),
-                      ),
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              size: 13,
-                              color: AppColors.white,
-                            )
-                          : null,
-                    ),
-                  ],
-                ),
-
-                // Subtitle (e.g. "Full exam prep")
-                Text(
-                  plan.subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColors.darkGrey
-                        : AppColors.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const Divider(height: 12, thickness: 0.5),
-
-                // Price and monthly calculation
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '$price',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
-                              color: isSelected
-                                  ? (isDark
-                                      ? AppColors.primary.withValues(alpha: 0.9)
-                                      : AppColors.primary)
-                                  : (isDark
-                                      ? AppColors.textWhite
-                                      : AppColors.textPrimary),
-                            ),
-                          ),
-                          TextSpan(
-                            text: ' ETB',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: isDark
-                                  ? AppColors.darkGrey
-                                  : AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '~$monthlyPrice ETB / mo',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: isDark
-                            ? AppColors.darkGrey
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+              color: isDark ? AppColors.darkCard : AppColors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
-          ),
-        ),
-
-        // Featured / Best Value Badge
-        if (isFeatured || plan.badgeText != null)
-          Positioned(
-            top: -8,
-            right: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFF59E0B),
-                    Color(0xFFD97706),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFD97706).withValues(alpha: 0.45),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.star_rounded,
-                    size: 12,
-                    color: AppColors.white,
-                  ),
-                  SizedBox(width: 3),
-                  Text(
-                    'BEST VALUE',
-                    style: TextStyle(
-                      color: AppColors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top: Price & duration
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              '$price',
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'ETB',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? AppColors.darkGrey
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '/ Year',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? AppColors.darkGrey
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '1 Year Full Access (~$monthlyPrice ETB / mo)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: isDark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(
+                          alpha: isDark ? 0.2 : 0.1,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '12 Months',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+                Divider(
+                  height: 1,
+                  thickness: 0.8,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : AppColors.borderPrimary,
+                ),
+                const SizedBox(height: 14),
+
+                // Basic list of included features
+                _featureItem(
+                  'Over 20,000+ chapter practice questions',
+                  isDark,
+                ),
+                const SizedBox(height: 8),
+                _featureItem(
+                  'Grade 9–12 summary notes & formula sheets',
+                  isDark,
+                ),
+                const SizedBox(height: 8),
+                _featureItem(
+                  'Past national entrance & model exams',
+                  isDark,
+                ),
+                const SizedBox(height: 8),
+                _featureItem(
+                  'Step-by-step Amharic (በአማርኛ) explanations',
+                  isDark,
+                ),
+                const SizedBox(height: 8),
+                _featureItem(
+                  '100% offline access & live challenges',
+                  isDark,
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  static Widget _featureItem(String text, bool isDark) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 18,
+          height: 18,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.check_rounded,
+              size: 12,
+              color: AppColors.primary,
             ),
           ),
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+              color: isDark ? AppColors.textWhite : AppColors.textPrimary,
+              height: 1.3,
+            ),
+          ),
+        ),
       ],
     );
   }

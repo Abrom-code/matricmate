@@ -63,7 +63,7 @@ class AccountSettings extends StatelessWidget {
             if (isInactive) ...[
               Obx(() {
                 final price = PaymentConfigService.instance
-                    .getPriceForPlan('6_months', 150);
+                    .getPriceForPlan('1_year', 200);
                 return AppListTile(
                   icon: const Icon(
                     Icons.card_membership_rounded,
@@ -71,7 +71,7 @@ class AccountSettings extends StatelessWidget {
                     size: 20,
                   ),
                   title: 'Unlock Full Access',
-                  subtitle: 'Starting from $price ETB',
+                  subtitle: '$price ETB / Year',
                   trailing: const Icon(
                     Icons.chevron_right_rounded,
                     color: AppColors.textSecondary,

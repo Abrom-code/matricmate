@@ -98,7 +98,7 @@ class PaymentConfigService {
   }
 
   /// Subscription price for the featured (1 year) plan in ETB (convenience).
-  int get subscriptionPrice => planPrices['1_year'] ?? 250;
+  int get subscriptionPrice => planPrices['1_year'] ?? 200;
 
   /// Telegram support link (loaded from app_config 'telegram_support_link', falls back to hardcoded).
   final telegramSupportLink = 'https://t.me/matericetbot'.obs;

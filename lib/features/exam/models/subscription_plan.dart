@@ -34,50 +34,21 @@ class SubscriptionPlan {
   /// Optional badge text (e.g. "⭐ Best Value", "SAVE 15%").
   final String? badgeText;
 
-  /// All available plans in display order.
+  /// All available plans in display order (yearly only).
   static const List<SubscriptionPlan> all = [
-    SubscriptionPlan(
-      key: '6_months',
-      title: '6 Months',
-      durationMonths: 6,
-      defaultPrice: 150,
-      subtitle: 'Semester prep',
-    ),
     SubscriptionPlan(
       key: '1_year',
       title: '1 Year',
       durationMonths: 12,
-      defaultPrice: 250,
-      subtitle: 'Full exam prep',
+      defaultPrice: 200,
+      subtitle: 'Full exam prep & all features',
       isFeatured: true,
-      badgeText: '⭐ Best Value',
-    ),
-    SubscriptionPlan(
-      key: '2_years',
-      title: '2 Years',
-      durationMonths: 24,
-      defaultPrice: 400,
-      subtitle: 'Grades 11 & 12',
-    ),
-    SubscriptionPlan(
-      key: '3_years',
-      title: '3 Years',
-      durationMonths: 36,
-      defaultPrice: 550,
-      subtitle: 'Grades 10 – 12',
-    ),
-    SubscriptionPlan(
-      key: '4_years',
-      title: '4 Years',
-      durationMonths: 48,
-      defaultPrice: 650,
-      subtitle: 'Full High School',
+      badgeText: null,
     ),
   ];
 
   /// The 1-year plan (pre-selected default).
-  static SubscriptionPlan get featured =>
-      all.firstWhere((p) => p.isFeatured, orElse: () => all[1]);
+  static SubscriptionPlan get featured => all.first;
 
   /// Look up a plan by key; returns null for legacy rows with no plan.
   static SubscriptionPlan? byKey(String? key) {
@@ -85,7 +56,38 @@ class SubscriptionPlan {
     try {
       return all.firstWhere((p) => p.key == key);
     } catch (_) {
-      return null;
+      switch (key) {
+        case '6_months':
+          return const SubscriptionPlan(
+            key: '6_months',
+            title: '6 Months',
+            durationMonths: 6,
+            defaultPrice: 150,
+          );
+        case '2_years':
+          return const SubscriptionPlan(
+            key: '2_years',
+            title: '2 Years',
+            durationMonths: 24,
+            defaultPrice: 400,
+          );
+        case '3_years':
+          return const SubscriptionPlan(
+            key: '3_years',
+            title: '3 Years',
+            durationMonths: 36,
+            defaultPrice: 550,
+          );
+        case '4_years':
+          return const SubscriptionPlan(
+            key: '4_years',
+            title: '4 Years',
+            durationMonths: 48,
+            defaultPrice: 650,
+          );
+        default:
+          return null;
+      }
     }
   }
 

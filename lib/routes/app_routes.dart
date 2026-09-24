@@ -22,6 +22,11 @@ class Routes {
   static const pausedTests = '/paused-tests';
   static const testOverview = '/test-overview';
 
+  // notes
+  static const notes = '/notes';
+  static const noteDetail = '/note-detail';
+  static const noteReader = '/note-reader';
+
   // premium
   static const premium = '/premium';
   static const payment = '/payment';

@@ -151,7 +151,7 @@ class SubjectModeModal extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 2, bottom: 12),
                 child: Text(
-                  'Choose Practice Mode',
+                  'Choose Study & Practice Mode',
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
@@ -161,7 +161,34 @@ class SubjectModeModal extends StatelessWidget {
                 ),
               ),
 
-              // ── Option 1: Tests ──────────────────────────────────────
+              // ── Option 1: Notes ──────────────────────────────────────
+              _ModeOptionTile(
+                dark: dark,
+                icon: Iconsax.document_text_copy,
+                iconGradient: const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                title: 'Notes',
+                subtitle: subject.isCommon
+                    ? 'Section summaries and study guides'
+                    : 'Chapter notes, summaries & formula guides',
+                chips: subject.isCommon
+                    ? const ['Section Notes', 'Offline PDF']
+                    : const ['Grades 9 – 12', 'Chapter Notes'],
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Get.toNamed(
+                    Routes.notes,
+                    arguments: {
+                      'title': subject.name,
+                      'id': subject.id,
+                      'is_common': subject.isCommon,
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              // ── Option 2: Tests ──────────────────────────────────────
               _ModeOptionTile(
                 dark: dark,
                 icon: Iconsax.book_1_copy,
@@ -304,7 +331,7 @@ class SubjectModeModal extends StatelessWidget {
 
                   // ── Subtitle ──────────────────────────────────────────
                   Text(
-                    'This will remove all downloaded chapters, tests, and exams for ${subject.name} from your device. You can download it again anytime.',
+                    'This will remove all downloaded chapters, tests, exams, and notes for ${subject.name} from your device. You can download it again anytime.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13.5,

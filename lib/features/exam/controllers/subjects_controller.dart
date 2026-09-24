@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
+import 'package:matricmate/data/repositories/notes/notes_repository.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/models/paused_test_info.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
@@ -241,6 +242,7 @@ class SubjectsController extends GetxController {
     try {
       isLoading.value = true;
       await _repo.deleteSubject(subject.id);
+      await NotesRepository().deleteAllDownloadedNotesForSubject(subject.id);
       await loadLocalSubjects();
       await loadPausedTests();
       ToastHelper.success('${subject.name} removed from device');

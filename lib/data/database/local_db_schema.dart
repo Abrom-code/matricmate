@@ -200,5 +200,36 @@ class DBschema {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_local_challenge_questions_set ON local_challenge_questions(set_id, order_index)',
     );
+
+    // ── Notes Table (for chapter & grade notes) ──────────────────────────────
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS notes (
+        id INTEGER PRIMARY KEY,
+        subject_id INTEGER NOT NULL,
+        chapter_id INTEGER,
+        grade INTEGER NOT NULL,
+        chapter_number INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        file_url TEXT NOT NULL,
+        file_type TEXT NOT NULL DEFAULT 'pdf',
+        file_size_bytes INTEGER DEFAULT 0,
+        page_count INTEGER DEFAULT 0,
+        is_premium INTEGER DEFAULT 0,
+        order_index INTEGER DEFAULT 0,
+        local_file_path TEXT,
+        is_downloaded INTEGER DEFAULT 0,
+        downloaded_at TEXT,
+        FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+        FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE SET NULL
+      );
+    ''');
+
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_notes_subject_grade ON notes(subject_id, grade)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_notes_chapter ON notes(chapter_id)',
+    );
   }
 }

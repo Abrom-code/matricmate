@@ -24,7 +24,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 16,
+      version: 17,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -227,6 +227,38 @@ class DatabaseService extends GetxController {
             );
           } catch (_) {}
         }
+        if (oldVersion < 17) {
+          try {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS notes (
+                id INTEGER PRIMARY KEY,
+                subject_id INTEGER NOT NULL,
+                chapter_id INTEGER,
+                grade INTEGER NOT NULL,
+                chapter_number INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                file_url TEXT NOT NULL,
+                file_type TEXT NOT NULL DEFAULT 'pdf',
+                file_size_bytes INTEGER DEFAULT 0,
+                page_count INTEGER DEFAULT 0,
+                is_premium INTEGER DEFAULT 0,
+                order_index INTEGER DEFAULT 0,
+                local_file_path TEXT,
+                is_downloaded INTEGER DEFAULT 0,
+                downloaded_at TEXT,
+                FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+                FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE SET NULL
+              )
+            ''');
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_notes_subject_grade ON notes(subject_id, grade)',
+            );
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_notes_chapter ON notes(chapter_id)',
+            );
+          } catch (_) {}
+        }
       },
       onOpen: (db) async {
         try {
@@ -285,6 +317,34 @@ class DatabaseService extends GetxController {
               deleted_at TEXT NOT NULL
             )
           ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS notes (
+              id INTEGER PRIMARY KEY,
+              subject_id INTEGER NOT NULL,
+              chapter_id INTEGER,
+              grade INTEGER NOT NULL,
+              chapter_number INTEGER NOT NULL,
+              title TEXT NOT NULL,
+              description TEXT,
+              file_url TEXT NOT NULL,
+              file_type TEXT NOT NULL DEFAULT 'pdf',
+              file_size_bytes INTEGER DEFAULT 0,
+              page_count INTEGER DEFAULT 0,
+              is_premium INTEGER DEFAULT 0,
+              order_index INTEGER DEFAULT 0,
+              local_file_path TEXT,
+              is_downloaded INTEGER DEFAULT 0,
+              downloaded_at TEXT,
+              FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+              FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE SET NULL
+            )
+          ''');
+          await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_notes_subject_grade ON notes(subject_id, grade)',
+          );
+          await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_notes_chapter ON notes(chapter_id)',
+          );
         } catch (_) {}
       },
     );
@@ -640,6 +700,7 @@ class DatabaseService extends GetxController {
       final db = await instance.database;
 
       await db.transaction((txn) async {
+        await txn.delete('notes');
         await txn.delete('bookmarks');
         await txn.delete('notifications');
         await txn.delete('notification_dismissals');

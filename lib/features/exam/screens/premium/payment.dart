@@ -179,9 +179,11 @@ class PaymentScreen extends StatelessWidget {
                 key: controller.paymentFormKey,
                 child: Obx(() {
                   final file = controller.receipt.value;
+                  final hasError =
+                      controller.showReceiptError.value && file == null;
                   return GestureDetector(
                     onTap: () => controller.pickReceipt(),
-                    child: ReceiptContainer(file: file),
+                    child: ReceiptContainer(file: file, hasError: hasError),
                   );
                 }),
               ),
@@ -246,9 +248,7 @@ class PaymentScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          hasReceipt
-                              ? 'Submit Receipt ($price ETB)'
-                              : 'Upload Receipt to Submit ($price ETB)',
+                          hasReceipt ? 'Submit Receipt' : 'Upload Receipt',
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,

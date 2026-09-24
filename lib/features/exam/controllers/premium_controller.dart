@@ -33,6 +33,7 @@ class PremiumController extends GetxController {
   final selectedPayment = Rxn<PaymentConfig>();
 
   final receipt = Rxn<XFile>();
+  final showReceiptError = false.obs;
   final isUploading = false.obs;
 
   static const int maxUploads = 3;
@@ -117,7 +118,10 @@ class PremiumController extends GetxController {
     try {
       final picker = ImagePicker();
       final file = await picker.pickImage(source: ImageSource.gallery);
-      if (file != null) receipt.value = file;
+      if (file != null) {
+        receipt.value = file;
+        showReceiptError.value = false;
+      }
     } catch (_) {
       ToastHelper.error('Failed to pick image');
     }
@@ -125,17 +129,17 @@ class PremiumController extends GetxController {
 
   Future<void> completePayment() async {
     try {
-      if (!paymentFormKey.currentState!.validate()) return;
-
       if (exceededUploadLimit) {
         Get.offNamed(Routes.contactAdmin);
         return;
       }
 
       if (receipt.value == null) {
-        ToastHelper.warning('Please upload receipt!');
+        showReceiptError.value = true;
         return;
       }
+
+      if (!paymentFormKey.currentState!.validate()) return;
 
       final payment = selectedPayment.value;
       if (payment == null) {
@@ -208,6 +212,7 @@ class PremiumController extends GetxController {
       await _userController.fetchUserRecord();
 
       receipt.value = null;
+      showReceiptError.value = false;
       urlFiledController.clear();
       receiptCount.value = 0;
 
@@ -228,6 +233,7 @@ class PremiumController extends GetxController {
 
   @override
   void onClose() {
+    showReceiptError.value = false;
     urlFiledController.dispose();
     super.onClose();
   }

@@ -215,7 +215,7 @@ class DBschema {
         file_type TEXT NOT NULL DEFAULT 'pdf',
         file_size_bytes INTEGER DEFAULT 0,
         page_count INTEGER DEFAULT 0,
-        is_premium INTEGER DEFAULT 0,
+        is_premium INTEGER DEFAULT 1,
         order_index INTEGER DEFAULT 0,
         local_file_path TEXT,
         is_downloaded INTEGER DEFAULT 0,

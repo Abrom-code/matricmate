@@ -132,7 +132,13 @@ class NotesRepository {
             'file_type': map['file_type'] ?? 'pdf',
             'file_size_bytes': map['file_size_bytes'] ?? 0,
             'page_count': map['page_count'] ?? 0,
-            'is_premium': (map['is_premium'] == true || map['is_premium'] == 1) ? 1 : 0,
+            'is_premium': (map['is_premium'] == null)
+                ? 1
+                : (map['is_premium'] == true ||
+                        map['is_premium'] == 1 ||
+                        map['is_premium'] == '1')
+                    ? 1
+                    : 0,
             'order_index': map['order_index'] ?? 0,
             'local_file_path': map['local_file_path'],
             'is_downloaded': map['is_downloaded'] ?? 0,

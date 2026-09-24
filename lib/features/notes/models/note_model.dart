@@ -28,7 +28,7 @@ class NoteModel {
     this.fileType = 'pdf',
     this.fileSizeBytes = 0,
     this.pageCount = 0,
-    this.isPremium = false,
+    this.isPremium = true,
     this.orderIndex = 0,
     this.localFilePath,
     this.isDownloaded = false,
@@ -67,9 +67,11 @@ class NoteModel {
           (map['file_size'] as num?)?.toInt() ??
           0,
       pageCount: (map['page_count'] as num?)?.toInt() ?? 0,
-      isPremium: map['is_premium'] == true ||
-          map['is_premium'] == 1 ||
-          map['is_premium'] == '1',
+      isPremium: map['is_premium'] == null
+          ? true
+          : (map['is_premium'] == true ||
+              map['is_premium'] == 1 ||
+              map['is_premium'] == '1'),
       orderIndex: (map['order_index'] as num?)?.toInt() ?? 0,
       localFilePath: map['local_file_path']?.toString(),
       isDownloaded: map['is_downloaded'] == 1 ||

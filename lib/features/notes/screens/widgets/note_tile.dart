@@ -6,6 +6,7 @@ import 'package:matricmate/features/notes/models/note_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class NoteTile extends StatelessWidget {
   const NoteTile({
@@ -66,7 +67,9 @@ class NoteTile extends StatelessWidget {
                 ? onTap
                 : liveNote.isDownloaded
                     ? onTap
-                    : (isDownloading ? null : () => ctrl.downloadNote(liveNote)),
+                    : (isDownloading
+                        ? null
+                        : () => ToastHelper.info('Please download this note first')),
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Row(

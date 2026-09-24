@@ -379,7 +379,7 @@ class NotesController extends GetxController {
     }
 
     if (!liveNote.isDownloaded) {
-      downloadNote(liveNote);
+      ToastHelper.info('Please download this note first');
       return;
     }
 

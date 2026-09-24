@@ -38,18 +38,18 @@ class SubjectModeModal extends StatelessWidget {
 
     final notesSubtitle = subject.isCommon
         ? 'Section summaries, revision guides & formula sheets'
-        : 'Chapter notes & revision summaries for Grades 9 – 12';
+        : 'Chapter notes & summaries for Grades 9 – 12';
 
     final testsSubtitle = subject.isCommon
         ? 'Section-by-section practice tests and timed quizzes'
-        : 'Chapter and full-grade practice tests for Grades 9 – 12';
+        : 'Chapter and full-grade tests for Grades 9 – 12';
 
     final String examSubtitle;
     if (totalMockExams == 0) {
       examSubtitle = 'National entrance and model exams coming soon';
     } else if (entranceCount > 0 && modelCount > 0) {
       examSubtitle =
-          'Practice with $entranceCount entrance and $modelCount model exams';
+          'Past years $entranceCount entrance and $modelCount model exams';
     } else if (entranceCount > 0) {
       examSubtitle =
           'Practice with $entranceCount past national entrance exam papers';

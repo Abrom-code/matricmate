@@ -142,9 +142,10 @@ class NotesController extends GetxController {
     final user = UserController.instance.user.value;
     final gradeNotes = getNotesByGrade(grade);
     final toDownload = gradeNotes.where((n) => !n.isDownloaded).toList();
+    final gradeLabel = grade == 0 ? 'General' : 'Grade $grade';
 
     if (toDownload.isEmpty) {
-      ToastHelper.info('All Grade $grade notes are already downloaded!');
+      ToastHelper.info('All $gradeLabel notes are already downloaded!');
       return;
     }
 
@@ -191,7 +192,7 @@ class NotesController extends GetxController {
         gradeDownloadProgress[grade] = (i + 1) / toDownload.length;
       }
 
-      ToastHelper.success('Grade $grade notes downloaded!');
+      ToastHelper.success('$gradeLabel notes downloaded!');
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
-import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/screens/widgets/note_tile.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -16,17 +15,37 @@ class NotesScreen extends StatefulWidget {
   State<NotesScreen> createState() => _NotesScreenState();
 }
 
-class _NotesScreenState extends State<NotesScreen> {
+class _NotesScreenState extends State<NotesScreen>
+    with SingleTickerProviderStateMixin {
   NotesController get controller => NotesController.instance;
+
+  static const List<Map<String, dynamic>> _tabs = [
+    {'label': 'Grade 9', 'grade': 9},
+    {'label': 'Grade 10', 'grade': 10},
+    {'label': 'Grade 11', 'grade': 11},
+    {'label': 'Grade 12', 'grade': 12},
+    {'label': 'General', 'grade': 0},
+  ];
+
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final title = controller.title;
     final isCommon = controller.isCommon;
     final dark = AppHelperFunctions.isDark(context);
-
-    final tabController =
-        isCommon ? null : Get.find<GradeSelectionController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -95,7 +114,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     ),
                   ),
                   child: TabBar(
-                    controller: tabController!.tabController,
+                    controller: _tabController,
                     indicator: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: AppColors.white.withValues(alpha: 0.22),
@@ -110,14 +129,14 @@ class _NotesScreenState extends State<NotesScreen> {
                     unselectedLabelColor:
                         AppColors.white.withValues(alpha: 0.70),
                     labelPadding: EdgeInsets.zero,
-                    tabs: tabController.tabs.map((t) {
+                    tabs: _tabs.map((t) {
                       return Tab(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                             child: Text(
-                              t['label'],
+                              t['label'] as String,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 12.5,
@@ -134,7 +153,7 @@ class _NotesScreenState extends State<NotesScreen> {
       ),
       body: isCommon
           ? _buildCommonNotesView(context, dark)
-          : _buildGradedNotesView(context, tabController!, dark),
+          : _buildGradedNotesView(context, dark),
     );
   }
 
@@ -170,16 +189,13 @@ class _NotesScreenState extends State<NotesScreen> {
     });
   }
 
-  Widget _buildGradedNotesView(
-    BuildContext context,
-    GradeSelectionController tabController,
-    bool dark,
-  ) {
+  Widget _buildGradedNotesView(BuildContext context, bool dark) {
     return TabBarView(
-      controller: tabController.tabController,
-      children: List.generate(tabController.tabs.length, (index) {
-        final tab = tabController.tabs[index];
+      controller: _tabController,
+      children: List.generate(_tabs.length, (index) {
+        final tab = _tabs[index];
         final grade = tab['grade'] as int;
+        final isGeneral = grade == 0;
 
         return Obx(() {
           if (controller.isLoading.value && controller.subjectNotes.isEmpty) {
@@ -191,8 +207,11 @@ class _NotesScreenState extends State<NotesScreen> {
           if (notes.isEmpty) {
             return _buildEmptyState(
               dark: dark,
-              title: 'No Notes for Grade $grade',
-              subtitle: 'Chapter notes for Grade $grade are coming soon.',
+              title:
+                  isGeneral ? 'No General Notes' : 'No Notes for Grade $grade',
+              subtitle: isGeneral
+                  ? 'Formulas, multi-grade summaries, and resources will appear here.'
+                  : 'Chapter notes for Grade $grade are coming soon.',
             );
           }
 
@@ -207,7 +226,7 @@ class _NotesScreenState extends State<NotesScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
             itemCount: notes.length + 1,
             itemBuilder: (context, itemIndex) {
-              // Top item: Grade bulk download banner
+              // Top item: Bulk download banner
               if (itemIndex == 0) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -249,6 +268,9 @@ class _NotesScreenState extends State<NotesScreen> {
     required bool isBulkDownloading,
     required double? bulkProgress,
   }) {
+    final isGeneral = grade == 0;
+    final label = isGeneral ? 'General' : 'Grade $grade';
+
     if (allDownloaded) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -259,15 +281,15 @@ class _NotesScreenState extends State<NotesScreen> {
             color: AppColors.success.withValues(alpha: 0.3),
           ),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.check_circle_rounded,
+            const Icon(Icons.check_circle_rounded,
                 color: AppColors.success, size: 18),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'All Grade Notes Downloaded • Ready for Offline Study',
-                style: TextStyle(
+                'All $label Notes Downloaded • Ready for Offline Study',
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: AppColors.success,
@@ -331,8 +353,8 @@ class _NotesScreenState extends State<NotesScreen> {
                     children: [
                       Text(
                         isBulkDownloading
-                            ? 'Downloading Grade $grade Notes...'
-                            : 'Download All Grade $grade Notes',
+                            ? 'Downloading $label Notes...'
+                            : 'Download All $label Notes',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,

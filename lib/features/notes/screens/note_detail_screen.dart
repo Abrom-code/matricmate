@@ -208,7 +208,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Unit ${note.chapterNumber} Note',
+              note.grade == 0
+                  ? 'General Resource'
+                  : 'Unit ${note.chapterNumber} Note',
               style: const TextStyle(
                 color: AppColors.white,
                 fontSize: 17,
@@ -217,7 +219,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               ),
             ),
             Text(
-              '$subjectTitle • Grade ${note.grade}',
+              note.grade == 0
+                  ? '$subjectTitle • All Grades'
+                  : '$subjectTitle • Grade ${note.grade}',
               style: const TextStyle(
                 color: Color(0xFFD1FAE5),
                 fontSize: 11,
@@ -265,7 +269,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Unit ${note.chapterNumber}',
+                          note.grade == 0
+                              ? 'General'
+                              : 'Unit ${note.chapterNumber}',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
@@ -284,7 +290,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Grade ${note.grade}',
+                          note.grade == 0
+                              ? 'All Grades'
+                              : 'Grade ${note.grade}',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -405,7 +413,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       onPressed: _onReadNote,
                       icon: const Icon(Icons.menu_book_rounded, size: 20),
                       label: Text(
-                        note.isDownloaded ? 'Read Chapter Note' : 'Download & Read',
+                        note.isDownloaded ? 'Read Note' : 'Download & Read',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -417,10 +425,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            if (note.chapterId != null) ...[
+              const SizedBox(height: 24),
 
-            // ── Section Header: Chapter Practice Tests ───────────────────────
-            Row(
+              // ── Section Header: Chapter Practice Tests ───────────────────────
+              Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
@@ -628,6 +637,50 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 },
               );
             }),
+          ] else ...[
+            const SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: dark ? AppColors.darkSurface : const Color(0xFFF5F3FF),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6)
+                          .withValues(alpha: dark ? 0.25 : 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.auto_stories_rounded,
+                      color: Color(0xFF8B5CF6),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'This is a multi-grade reference resource. Chapter-by-chapter practice tests are available under individual grade units in Test Mode.',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.4,
+                        color: dark
+                            ? AppColors.darkGrey
+                            : const Color(0xFF4C1D95),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           ],
         ),
       ),

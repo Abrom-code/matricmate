@@ -85,29 +85,50 @@ class NoteTile extends StatelessWidget {
                       child: isLocked
                           ? const Icon(Icons.lock_rounded,
                               color: AppColors.white, size: 22)
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'UNIT',
-                                  style: TextStyle(
-                                    color: Color(0xFFDDD6FE),
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.5,
-                                  ),
+                          : (note.grade == 0 || note.chapterNumber <= 0)
+                              ? const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.menu_book_rounded,
+                                      color: AppColors.white,
+                                      size: 18,
+                                    ),
+                                    SizedBox(height: 1),
+                                    Text(
+                                      'ALL',
+                                      style: TextStyle(
+                                        color: Color(0xFFDDD6FE),
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'UNIT',
+                                      style: TextStyle(
+                                        color: Color(0xFFDDD6FE),
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${note.chapterNumber}',
+                                      style: const TextStyle(
+                                        color: AppColors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                        height: 1.0,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  '${note.chapterNumber}',
-                                  style: const TextStyle(
-                                    color: AppColors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    height: 1.0,
-                                  ),
-                                ),
-                              ],
-                            ),
                     ),
                   ),
 

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.notes (
     chapter_number  INT NOT NULL DEFAULT 0,                             -- 0 for general notes, 1, 2, 3... for unit notes
     title           VARCHAR(255) NOT NULL,                              -- e.g. "Unit 1: Vectors & Kinematics"
     description     TEXT,                                               -- Short summary of key concepts
-    file_key        TEXT NOT NULL,                                      -- Cloudflare R2 object key (e.g. "biology/11/bioG11C1_MatricET.pdf")
+    file_key        TEXT,                                               -- Cloudflare R2 object key (e.g. "biology/11/bioG11C1_MatricET.pdf")
     file_url        TEXT,                                               -- Optional fallback
     file_type       VARCHAR(20) NOT NULL DEFAULT 'pdf',
     file_size_bytes BIGINT DEFAULT 0,                                   -- Size in bytes (optional)
@@ -21,6 +21,22 @@ CREATE TABLE IF NOT EXISTS public.notes (
     order_index     INT DEFAULT 0,                                      -- Display sort order
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure file_key column and grade constraint exist if table already existed prior to this migration
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+          AND table_name = 'notes' 
+          AND column_name = 'file_key'
+    ) THEN
+        ALTER TABLE public.notes ADD COLUMN file_key TEXT;
+    END IF;
+
+    ALTER TABLE public.notes DROP CONSTRAINT IF EXISTS notes_grade_check;
+    ALTER TABLE public.notes ADD CONSTRAINT notes_grade_check CHECK (grade BETWEEN 0 AND 12);
+END $$;
 
 -- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_notes_subject_grade ON public.notes(subject_id, grade);
@@ -31,10 +47,20 @@ CREATE INDEX IF NOT EXISTS idx_notes_order ON public.notes(subject_id, grade, or
 ALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to note metadata (file binary is protected in private R2 bucket)
-CREATE POLICY "Allow public read access to notes"
-ON public.notes FOR SELECT
-TO public
-USING (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+          AND tablename = 'notes' 
+          AND policyname = 'Allow public read access to notes'
+    ) THEN
+        CREATE POLICY "Allow public read access to notes"
+        ON public.notes FOR SELECT
+        TO public
+        USING (true);
+    END IF;
+END $$;
 
 -- Auto-fill trigger: When chapter_id is provided, automatically populate subject_id, grade, and chapter_number
 CREATE OR REPLACE FUNCTION fn_auto_fill_note_details()

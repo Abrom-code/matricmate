@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PremiumBanner extends StatelessWidget {
@@ -23,9 +25,6 @@ class PremiumBanner extends StatelessWidget {
           );
 
     final titleColor = dark ? Colors.white : const Color(0xFF1C1C1E);
-    final subtitleColor = dark
-        ? const Color(0xFF8E8E93)
-        : const Color(0xFF6C6C70);
     final iconBg = dark
         ? const Color(0xFFFFD60A).withValues(alpha: 0.15)
         : const Color(0xFFFFD60A).withValues(alpha: 0.25);
@@ -37,90 +36,97 @@ class PremiumBanner extends StatelessWidget {
         ? const Color(0xFF2A2A2A)
         : const Color(0xFFFFD60A).withValues(alpha: 0.4);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: cardBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: 1),
-        ),
-        child: Stack(
-          children: [
-            // Radial glow — top right
-            Positioned(
-              right: -16,
-              top: -32,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      glowColor.withValues(alpha: dark ? 0.10 : 0.14),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-              child: Row(
-                children: [
-                  // ── Icon box ────────────────────────────────────────
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: iconBg,
-                    ),
-                    child: const Icon(
-                      Icons.bolt_rounded,
-                      color: Color(0xFFFFD60A),
-                      size: 22,
-                    ),
-                  ),
-
-                  const SizedBox(width: 14),
-
-                  // ── Copy ────────────────────────────────────────────
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Unlock Premium',
-                          style: TextStyle(
-                            color: titleColor,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.1,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Full access to all tests & content',
-                          style: TextStyle(
-                            color: subtitleColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 1),
+          ),
+          child: Stack(
+            children: [
+              // Radial glow — top right
+              Positioned(
+                right: -16,
+                top: -32,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        glowColor.withValues(alpha: dark ? 0.10 : 0.14),
+                        Colors.transparent,
                       ],
                     ),
                   ),
+                ),
+              ),
 
-                  const SizedBox(width: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                child: Row(
+                  children: [
+                    // ── Icon box ────────────────────────────────────────
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: iconBg,
+                      ),
+                      child: const Icon(
+                        Icons.bolt_rounded,
+                        color: Color(0xFFFFD60A),
+                        size: 22,
+                      ),
+                    ),
 
-                  // ── CTA ─────────────────────────────────────────────
-                  GestureDetector(
-                    onTap: onTap,
-                    child: Container(
+                    const SizedBox(width: 14),
+
+                    // ── Copy ────────────────────────────────────────────
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Unlock Premium',
+                            style: TextStyle(
+                              color: titleColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.1,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Obx(() {
+                            final price = PaymentConfigService.instance
+                                .getPriceForPlan('1_year', 200);
+                            return Text(
+                              'Buy with $price Birr only',
+                              style: TextStyle(
+                                color: dark
+                                    ? const Color(0xFFFFD60A)
+                                    : const Color(0xFFD97706),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // ── CTA ─────────────────────────────────────────────
+                    Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 10,
@@ -139,11 +145,11 @@ class PremiumBanner extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

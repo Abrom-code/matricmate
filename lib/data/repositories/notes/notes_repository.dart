@@ -81,8 +81,44 @@ class NotesRepository {
     }
   }
 
+  /// Calls the Supabase Edge Function `get-note-url` to get a temporary signed URL for R2.
+  Future<String> getNoteSignedUrl(int noteId) async {
+    try {
+      final response = await _supabase.functions.invoke(
+        'get-note-url',
+        body: {'note_id': noteId},
+      );
+
+      final data = response.data;
+      if (response.status == 200 && data is Map && data['url'] != null) {
+        return data['url'].toString();
+      }
+
+      final errorMsg = data is Map && data['error'] != null
+          ? data['error'].toString()
+          : 'Unable to open this note right now. Please try again.';
+      throw errorMsg;
+    } on FunctionException catch (e) {
+      if (e.status == 401) {
+        throw 'You must be logged in to access this note.';
+      } else if (e.status == 403) {
+        throw 'Premium access is required to view this note.';
+      } else if (e.status == 404) {
+        throw 'Note or file not found.';
+      }
+      final details = e.details;
+      if (details is Map && details['error'] != null) {
+        throw details['error'].toString();
+      }
+      throw 'Unable to open this note right now. Please try again.';
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
   /// Saves or updates a batch of notes in SQLite.
   /// Preserves existing `local_file_path` and `is_downloaded` flags.
+  /// If remote file_key changed, invalidates stale local copy.
   Future<void> saveNotesBatch(List<Map<String, dynamic>> notesData) async {
     if (notesData.isEmpty) return;
     try {
@@ -93,25 +129,53 @@ class NotesRepository {
         final id = (raw['id'] as num?)?.toInt() ?? 0;
         if (id == 0) continue;
 
-        // Check if existing record has download status
-        final existing = await db.query(
-          'notes',
-          columns: ['is_downloaded', 'local_file_path', 'downloaded_at'],
-          where: 'id = ?',
-          whereArgs: [id],
-          limit: 1,
-        );
-
         final map = Map<String, dynamic>.from(raw);
         // Normalize column names
         if (map.containsKey('file_size') && !map.containsKey('file_size_bytes')) {
           map['file_size_bytes'] = map['file_size'];
         }
 
+        final rawKey = map['file_key']?.toString();
+        final rawUrl = map['file_url']?.toString();
+        final fileKey = (rawKey != null && rawKey.trim().isNotEmpty)
+            ? rawKey.trim()
+            : (rawUrl?.trim() ?? '');
+
+        // Check if existing record has download status
+        final existing = await db.query(
+          'notes',
+          columns: ['is_downloaded', 'local_file_path', 'downloaded_at', 'file_key'],
+          where: 'id = ?',
+          whereArgs: [id],
+          limit: 1,
+        );
+
         if (existing.isNotEmpty) {
-          map['is_downloaded'] = existing.first['is_downloaded'];
-          map['local_file_path'] = existing.first['local_file_path'];
-          map['downloaded_at'] = existing.first['downloaded_at'];
+          final oldKey = existing.first['file_key']?.toString();
+          final isKeyChanged = oldKey != null &&
+              oldKey.isNotEmpty &&
+              fileKey.isNotEmpty &&
+              oldKey != fileKey;
+
+          if (isKeyChanged) {
+            // Remote file changed: delete old local file and invalidate
+            final oldPath = existing.first['local_file_path']?.toString();
+            if (oldPath != null) {
+              final oldFile = File(oldPath);
+              if (oldFile.existsSync()) {
+                try {
+                  oldFile.deleteSync();
+                } catch (_) {}
+              }
+            }
+            map['is_downloaded'] = 0;
+            map['local_file_path'] = null;
+            map['downloaded_at'] = null;
+          } else {
+            map['is_downloaded'] = existing.first['is_downloaded'];
+            map['local_file_path'] = existing.first['local_file_path'];
+            map['downloaded_at'] = existing.first['downloaded_at'];
+          }
         } else {
           map['is_downloaded'] = 0;
           map['local_file_path'] = null;
@@ -128,7 +192,8 @@ class NotesRepository {
             'chapter_number': map['chapter_number'] ?? 1,
             'title': map['title'] ?? '',
             'description': map['description'],
-            'file_url': map['file_url'] ?? '',
+            'file_key': fileKey,
+            'file_url': map['file_url'] ?? fileKey,
             'file_type': map['file_type'] ?? 'pdf',
             'file_size_bytes': map['file_size_bytes'] ?? 0,
             'page_count': map['page_count'] ?? 0,

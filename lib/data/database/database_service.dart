@@ -24,7 +24,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 17,
+      version: 18,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -257,6 +257,11 @@ class DatabaseService extends GetxController {
             await db.execute(
               'CREATE INDEX IF NOT EXISTS idx_notes_chapter ON notes(chapter_id)',
             );
+          } catch (_) {}
+        }
+        if (oldVersion < 18) {
+          try {
+            await db.execute('ALTER TABLE notes ADD COLUMN file_key TEXT');
           } catch (_) {}
         }
       },

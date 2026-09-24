@@ -6,7 +6,8 @@ class NoteModel {
   final int chapterNumber;
   final String title;
   final String? description;
-  final String fileUrl;
+  final String fileKey;
+  final String? fileUrl;
   final String fileType;
   final int fileSizeBytes;
   final int pageCount;
@@ -24,7 +25,8 @@ class NoteModel {
     required this.chapterNumber,
     required this.title,
     this.description,
-    required this.fileUrl,
+    required this.fileKey,
+    this.fileUrl,
     this.fileType = 'pdf',
     this.fileSizeBytes = 0,
     this.pageCount = 0,
@@ -53,6 +55,12 @@ class NoteModel {
   }
 
   factory NoteModel.fromMap(Map<String, dynamic> map) {
+    final rawKey = map['file_key']?.toString();
+    final rawUrl = map['file_url']?.toString();
+    final key = (rawKey != null && rawKey.trim().isNotEmpty)
+        ? rawKey.trim()
+        : (rawUrl?.trim() ?? '');
+
     return NoteModel(
       id: (map['id'] as num?)?.toInt() ?? 0,
       subjectId: (map['subject_id'] as num?)?.toInt() ?? 0,
@@ -61,7 +69,8 @@ class NoteModel {
       chapterNumber: (map['chapter_number'] as num?)?.toInt() ?? 1,
       title: map['title']?.toString() ?? '',
       description: map['description']?.toString(),
-      fileUrl: map['file_url']?.toString() ?? '',
+      fileKey: key,
+      fileUrl: rawUrl,
       fileType: map['file_type']?.toString() ?? 'pdf',
       fileSizeBytes: (map['file_size_bytes'] as num?)?.toInt() ??
           (map['file_size'] as num?)?.toInt() ??
@@ -90,7 +99,8 @@ class NoteModel {
       'chapter_number': chapterNumber,
       'title': title,
       'description': description,
-      'file_url': fileUrl,
+      'file_key': fileKey,
+      'file_url': fileUrl ?? fileKey,
       'file_type': fileType,
       'file_size_bytes': fileSizeBytes,
       'page_count': pageCount,
@@ -110,6 +120,7 @@ class NoteModel {
     int? chapterNumber,
     String? title,
     String? description,
+    String? fileKey,
     String? fileUrl,
     String? fileType,
     int? fileSizeBytes,
@@ -128,6 +139,7 @@ class NoteModel {
       chapterNumber: chapterNumber ?? this.chapterNumber,
       title: title ?? this.title,
       description: description ?? this.description,
+      fileKey: fileKey ?? this.fileKey,
       fileUrl: fileUrl ?? this.fileUrl,
       fileType: fileType ?? this.fileType,
       fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,

@@ -162,8 +162,44 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               },
               icon: const Icon(Icons.download_rounded, size: 20),
               label: Text(
-                'Download Now (${note.formattedSize})',
+                'Download for Offline (${note.formattedSize})',
                 style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                side: BorderSide(
+                  color:
+                      dark ? AppColors.darkInputBorder : AppColors.borderPrimary,
+                ),
+              ),
+              onPressed: () {
+                Get.back();
+                Get.toNamed(
+                  Routes.noteReader,
+                  arguments: {
+                    'note': note,
+                    'subject_title': subjectTitle,
+                    'chapter_tests': chapterTests.toList(),
+                  },
+                );
+              },
+              icon: const Icon(Icons.chrome_reader_mode_rounded, size: 18),
+              label: Text(
+                'Read Online Now',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: dark ? AppColors.white : AppColors.textPrimary,
+                ),
               ),
             ),
           ),

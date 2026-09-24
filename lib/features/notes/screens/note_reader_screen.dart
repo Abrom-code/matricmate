@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
+import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
+import 'package:matricmate/features/notes/services/note_download_service.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -25,6 +28,10 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
   bool _nightMode = false;
   bool _hasPromptedCompletion = false;
 
+  String? _resolvedFilePath;
+  bool _isLoadingFile = true;
+  String? _fileError;
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +40,54 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     subjectTitle = args['subject_title'] ?? 'Subject';
     if (args['chapter_tests'] != null) {
       chapterTests = List<TestModel>.from(args['chapter_tests']);
+    }
+
+    _resolveFile();
+  }
+
+  /// Resolves the file to read. Offline-first: opens local file directly if available.
+  /// Otherwise requests a temporary signed URL from Supabase and streams into cache.
+  Future<void> _resolveFile() async {
+    // 1. Offline copy check
+    if (note.isDownloaded &&
+        note.localFilePath != null &&
+        File(note.localFilePath!).existsSync() &&
+        File(note.localFilePath!).lengthSync() > 0) {
+      if (mounted) {
+        setState(() {
+          _resolvedFilePath = note.localFilePath;
+          _isLoadingFile = false;
+          _fileError = null;
+        });
+      }
+      return;
+    }
+
+    // 2. Online streaming via Cloudflare R2 temporary signed URL
+    if (mounted) {
+      setState(() {
+        _isLoadingFile = true;
+        _fileError = null;
+      });
+    }
+
+    try {
+      final cachedPath = await NoteDownloadService.instance.cacheNoteForViewing(
+        note: note,
+      );
+      if (mounted) {
+        setState(() {
+          _resolvedFilePath = cachedPath;
+          _isLoadingFile = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _fileError = e.toString();
+          _isLoadingFile = false;
+        });
+      }
     }
   }
 
@@ -172,7 +227,6 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final filePath = note.localFilePath;
 
     return Scaffold(
       backgroundColor: _nightMode
@@ -241,6 +295,48 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
               size: 20,
             ),
           ),
+          // Save for offline action if not yet downloaded
+          Obx(() {
+            final liveNote = NotesController.instance.subjectNotes
+                    .firstWhereOrNull((n) => n.id == note.id) ??
+                note;
+            final isDownloading =
+                NotesController.instance.isDownloading[note.id] ?? false;
+
+            if (liveNote.isDownloaded) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Center(
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFFD1FAE5),
+                    size: 20,
+                  ),
+                ),
+              );
+            }
+
+            return IconButton(
+              tooltip: 'Save note for offline reading',
+              onPressed: isDownloading
+                  ? null
+                  : () => NotesController.instance.downloadNote(note),
+              icon: isDownloading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.white,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.download_rounded,
+                      color: AppColors.white,
+                      size: 20,
+                    ),
+            );
+          }),
           // Practice quick button
           if (note.chapterId != null)
             IconButton(
@@ -283,52 +379,113 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
             ),
         ],
       ),
-      body: filePath == null || filePath.isEmpty
-          ? const Center(
-              child: Text(
-                'Note file not found on device.',
-                style: TextStyle(fontSize: 14),
+      body: _isLoadingFile
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(color: AppColors.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading note...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: dark ? AppColors.textWhite : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
               ),
             )
-          : Stack(
-              children: [
-                PDFView(
-                  filePath: filePath,
-                  enableSwipe: true,
-                  swipeHorizontal: false,
-                  autoSpacing: true,
-                  pageFling: true,
-                  nightMode: _nightMode,
-                  onRender: (pages) {
-                    setState(() {
-                      _totalPages = pages ?? 0;
-                      _isReady = true;
-                    });
-                  },
-                  onViewCreated: (_) {},
-                  onPageChanged: (page, total) {
-                    setState(() {
-                      _currentPage = page ?? 0;
-                      _totalPages = total ?? _totalPages;
-                    });
-
-                    // Trigger completion when reaching the last page
-                    if (_totalPages > 0 &&
-                        _currentPage >= _totalPages - 1 &&
-                        !_hasPromptedCompletion) {
-                      Future.delayed(
-                        const Duration(milliseconds: 600),
-                        _showCompletionSheet,
-                      );
-                    }
-                  },
-                ),
-                if (!_isReady)
-                  const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+          : _fileError != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(28.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          size: 46,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          _fileError!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            height: 1.4,
+                            color: dark
+                                ? AppColors.textWhite
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: _resolveFile,
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: const Text('Try Again'),
+                        ),
+                      ],
+                    ),
                   ),
-              ],
-            ),
+                )
+              : _resolvedFilePath == null
+                  ? const Center(
+                      child: Text(
+                        'Note file not found on device.',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    )
+                  : Stack(
+                      children: [
+                        PDFView(
+                          filePath: _resolvedFilePath,
+                          enableSwipe: true,
+                          swipeHorizontal: false,
+                          autoSpacing: true,
+                          pageFling: true,
+                          nightMode: _nightMode,
+                          onRender: (pages) {
+                            setState(() {
+                              _totalPages = pages ?? 0;
+                              _isReady = true;
+                            });
+                          },
+                          onViewCreated: (_) {},
+                          onPageChanged: (page, total) {
+                            setState(() {
+                              _currentPage = page ?? 0;
+                              _totalPages = total ?? _totalPages;
+                            });
+
+                            // Trigger completion when reaching the last page
+                            if (_totalPages > 0 &&
+                                _currentPage >= _totalPages - 1 &&
+                                !_hasPromptedCompletion) {
+                              Future.delayed(
+                                const Duration(milliseconds: 600),
+                                _showCompletionSheet,
+                              );
+                            }
+                          },
+                        ),
+                        if (!_isReady)
+                          const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                      ],
+                    ),
     );
   }
 }

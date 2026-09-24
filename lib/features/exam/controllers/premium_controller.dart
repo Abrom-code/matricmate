@@ -35,9 +35,12 @@ class PremiumController extends GetxController {
   final receipt = Rxn<XFile>();
   final isUploading = false.obs;
 
+  static const int maxUploads = 3;
+
   final receiptCount = 0.obs;
   bool get exceededUploadLimit =>
-      _userController.user.value.exceededUploadLimit || receiptCount.value >= 2;
+      _userController.user.value.exceededUploadLimit ||
+      receiptCount.value >= maxUploads;
 
   late final TextEditingController urlFiledController;
   late GlobalKey<FormState> paymentFormKey;

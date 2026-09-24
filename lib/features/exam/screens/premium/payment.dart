@@ -99,6 +99,7 @@ class PaymentScreen extends StatelessWidget {
 
             // ── Verification Section ───────────────────────────────
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   padding: const EdgeInsets.all(6),
@@ -115,15 +116,55 @@ class PaymentScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'RECEIPT SCREENSHOT *',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                    color: isDark
-                        ? AppColors.darkGrey
-                        : AppColors.textSecondary,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'RECEIPT SCREENSHOT *',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: isDark
+                              ? AppColors.darkGrey
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Obx(() {
+                        final max = PremiumController.maxUploads;
+                        final count = controller.receiptCount.value;
+                        final remaining = (max - count).clamp(0, max);
+                        final text = count > 0
+                            ? 'Only $max uploads allowed ($remaining left)'
+                            : 'Only $max uploads allowed';
+                        final warnColor = isDark
+                            ? const Color(0xFFFBBF24)
+                            : const Color(0xFFD97706);
+
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              size: 13,
+                              color: warnColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              text,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: warnColor,
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ],
                   ),
                 ),
               ],

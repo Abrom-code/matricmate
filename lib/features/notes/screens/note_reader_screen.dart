@@ -22,14 +22,19 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
   late NoteModel note;
   late String subjectTitle;
 
-  int _currentPage = 0;
+  // ── Page tracking (ValueNotifier to avoid rebuilding PDFView) ──────
+  final ValueNotifier<int> _pageNotifier = ValueNotifier<int>(0);
   int _totalPages = 0;
   bool _isReady = false;
   bool _nightMode = false;
   bool _hasPromptedCompletion = false;
   bool _isLandscape = false;
+  bool _isOnLastPage = false;
+  bool _showCompletionPanel = false;
 
   PDFViewController? _pdfViewController;
+
+  // ── Slider state ───────────────────────────────────────────────────
   bool _isDraggingSlider = false;
   double? _dragHandleTop;
   int _sliderDragPage = 0;
@@ -38,6 +43,8 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
   Timer? _bubbleHideTimer;
   Timer? _pageThrottleTimer;
   int? _pendingTargetPage;
+  double _dragStartY = 0.0;
+  double _dragStartHandleTop = 0.0;
 
   String? _resolvedFilePath;
   bool _isLoadingFile = true;
@@ -103,6 +110,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
   void dispose() {
     _bubbleHideTimer?.cancel();
     _pageThrottleTimer?.cancel();
+    _pageNotifier.dispose();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -127,23 +135,40 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     }
   }
 
-  void _onSliderDrag(
-      double localY, double availableTrack, double handleHeight, double topMargin) {
-    if (_totalPages <= 1 || availableTrack <= 0) return;
-    _bubbleHideTimer?.cancel();
+  // ── Slider Handle Drag (only when user touches the handle) ─────────
 
-    final clampedY =
-        (localY - topMargin - handleHeight / 2).clamp(0.0, availableTrack);
-    final fraction = (clampedY / availableTrack).clamp(0.0, 1.0);
-    final targetPage =
-        (fraction * (_totalPages - 1)).round().clamp(0, _totalPages - 1);
+  void _onHandleDragStart(DragStartDetails details, double currentHandleTop) {
+    if (_totalPages <= 1) return;
+    _bubbleHideTimer?.cancel();
+    _pageThrottleTimer?.cancel();
+
+    _dragStartY = details.globalPosition.dy;
+    _dragStartHandleTop = currentHandleTop;
 
     setState(() {
       _isDraggingSlider = true;
       _showSliderBubble = true;
-      _dragHandleTop = clampedY;
+      _dragHandleTop = currentHandleTop;
+      _sliderDragPage = _pageNotifier.value;
+    });
+  }
+
+  void _onHandleDragUpdate(
+      DragUpdateDetails details, double availableTrack, double topMargin) {
+    if (_totalPages <= 1 || availableTrack <= 0) return;
+    _bubbleHideTimer?.cancel();
+
+    final deltaY = details.globalPosition.dy - _dragStartY;
+    final newHandleTop = (_dragStartHandleTop + deltaY)
+        .clamp(topMargin, topMargin + availableTrack);
+    final fraction =
+        ((newHandleTop - topMargin) / availableTrack).clamp(0.0, 1.0);
+    final targetPage =
+        (fraction * (_totalPages - 1)).round().clamp(0, _totalPages - 1);
+
+    setState(() {
+      _dragHandleTop = newHandleTop;
       _sliderDragPage = targetPage;
-      _currentPage = targetPage;
     });
 
     if (targetPage != _lastJumpingPage) {
@@ -151,7 +176,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
       if (_pageThrottleTimer == null || !_pageThrottleTimer!.isActive) {
         _lastJumpingPage = targetPage;
         _pdfViewController?.setPage(targetPage);
-        _pageThrottleTimer = Timer(const Duration(milliseconds: 60), () {
+        _pageThrottleTimer = Timer(const Duration(milliseconds: 80), () {
           if (_pendingTargetPage != null &&
               _pendingTargetPage != _lastJumpingPage) {
             _lastJumpingPage = _pendingTargetPage!;
@@ -162,7 +187,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     }
   }
 
-  void _onSliderDragEnd() {
+  void _onHandleDragEnd() {
     _pageThrottleTimer?.cancel();
     if (_pendingTargetPage != null && _pendingTargetPage != _lastJumpingPage) {
       _lastJumpingPage = _pendingTargetPage!;
@@ -180,6 +205,8 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     });
   }
 
+  // ── Right-Side Slider Widget ───────────────────────────────────────
+
   Widget _buildRightSlider(double maxHeight) {
     if (!_isReady || _totalPages <= 1) return const SizedBox.shrink();
 
@@ -188,53 +215,48 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     const double handleHeight = 34.0;
     const double handleWidth = 26.0;
     final double availableTrack =
-        (maxHeight - handleHeight - topMargin - bottomMargin).clamp(0.0, maxHeight);
+        (maxHeight - handleHeight - topMargin - bottomMargin)
+            .clamp(0.0, maxHeight);
 
-    final double normalFraction = _totalPages > 1
-        ? (_currentPage / (_totalPages - 1)).clamp(0.0, 1.0)
-        : 0.0;
-    final double handleTop =
-        topMargin + (_dragHandleTop ?? (normalFraction * availableTrack));
-    final displayPage =
-        (_isDraggingSlider ? _sliderDragPage : _currentPage) + 1;
+    // Use ValueListenableBuilder so only the slider rebuilds on page change,
+    // not the entire Stack (which would force PDFView to re-composite).
+    return ValueListenableBuilder<int>(
+      valueListenable: _pageNotifier,
+      builder: (context, currentPage, _) {
+        final double normalFraction = _totalPages > 1
+            ? (currentPage / (_totalPages - 1)).clamp(0.0, 1.0)
+            : 0.0;
+        final double handleTop =
+            _dragHandleTop ?? (topMargin + (normalFraction * availableTrack));
+        final displayPage =
+            (_isDraggingSlider ? _sliderDragPage : currentPage) + 1;
+        final isVisible = _isDraggingSlider || _showSliderBubble;
 
-    return Positioned(
-      top: 0,
-      right: 0,
-      bottom: 0,
-      width: 44,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onVerticalDragStart: (details) {
-          _onSliderDrag(
-              details.localPosition.dy, availableTrack, handleHeight, topMargin);
-        },
-        onVerticalDragUpdate: (details) {
-          _onSliderDrag(
-              details.localPosition.dy, availableTrack, handleHeight, topMargin);
-        },
-        onVerticalDragEnd: (_) => _onSliderDragEnd(),
-        onTapDown: (details) {
-          _onSliderDrag(
-              details.localPosition.dy, availableTrack, handleHeight, topMargin);
-        },
-        onTapUp: (_) => _onSliderDragEnd(),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            AnimatedPositioned(
-              duration: _isDraggingSlider
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              top: handleTop,
-              right: 0,
+        return AnimatedPositioned(
+          duration: _isDraggingSlider
+              ? Duration.zero
+              : const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          top: handleTop,
+          right: 0,
+          child: IgnorePointer(
+            ignoring: !isVisible,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onVerticalDragStart: (details) =>
+                  _onHandleDragStart(details, handleTop),
+              onVerticalDragUpdate: (details) =>
+                  _onHandleDragUpdate(details, availableTrack, topMargin),
+              onVerticalDragEnd: (_) => _onHandleDragEnd(),
+              onVerticalDragCancel: () => _onHandleDragEnd(),
               child: AnimatedOpacity(
-                opacity: (_isDraggingSlider || _showSliderBubble) ? 1.0 : 0.0,
+                opacity: isVisible ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 180),
-                child: AnimatedScale(
-                  scale: _isDraggingSlider ? 1.08 : 1.0,
-                  duration: const Duration(milliseconds: 120),
+                child: Container(
+                  width: handleWidth + 14,
+                  height: handleHeight + 12,
+                  alignment: Alignment.centerRight,
+                  color: Colors.transparent,
                   child: Container(
                     width: handleWidth,
                     height: handleHeight,
@@ -267,145 +289,74 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  void _showCompletionSheet() {
-    if (_hasPromptedCompletion || !mounted) return;
+  void _triggerCompletion() {
+    if (_hasPromptedCompletion) return;
     _hasPromptedCompletion = true;
-
-    // Mark note as completed in SQLite & reactive state
     NotesController.instance.markNoteCompleted(note.id);
+    // Slight delay so user sees the last page first
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        setState(() => _showCompletionPanel = true);
+      }
+    });
+  }
 
-    final dark = AppHelperFunctions.isDark(context);
+  // ── Test Button (slides up at bottom on last page) ─────────────────
 
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-        decoration: BoxDecoration(
-          color: dark ? AppColors.darkCard : AppColors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(
-            color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+  Widget _buildCompletionPanel() {
+    // Only show test button if note has a chapter
+    if (note.chapterId == null) return const SizedBox.shrink();
+
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+      offset: _showCompletionPanel ? Offset.zero : const Offset(0, 1.5),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 280),
+        opacity: _showCompletionPanel ? 1.0 : 0.0,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          height: 48,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              shadowColor: AppColors.primary.withValues(alpha: 0.35),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () {
+              Get.toNamed(
+                Routes.testLists,
+                arguments: {
+                  'subject_id': note.subjectId,
+                  'grade': note.grade,
+                  'subject': subjectTitle,
+                  'chapter': note.title,
+                  'chapter_id': note.chapterId,
+                  'chapter_number': note.chapterNumber,
+                },
+              );
+            },
+            icon: const Icon(Icons.quiz_rounded, size: 18),
+            label: const Text(
+              'Practice Tests',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.check_circle_rounded,
-                  color: Color(0xFF10B981),
-                  size: 32,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              note.grade == 0 ? 'Reading Completed!' : 'Chapter Completed!',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w900,
-                color: dark ? AppColors.white : AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              note.chapterId != null
-                  ? 'You finished reading ${note.title}. Ready to test your retention with practice questions?'
-                  : 'You finished reading ${note.title}. Great job reviewing your concepts!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.4,
-                color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 22),
-            if (note.chapterId != null) ...[
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  onPressed: () {
-                    Get.back();
-                    Get.toNamed(
-                      Routes.testLists,
-                      arguments: {
-                        'subject_id': note.subjectId,
-                        'grade': note.grade,
-                        'subject': subjectTitle,
-                        'chapter': note.title,
-                        'chapter_id': note.chapterId,
-                        'chapter_number': note.chapterNumber,
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.quiz_rounded, size: 18),
-                  label: const Text(
-                    'Practice Chapter Tests Now',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  side: BorderSide(
-                    color: dark ? AppColors.darkInputBorder : AppColors.borderPrimary,
-                  ),
-                ),
-                onPressed: () {
-                  Get.back();
-                  Get.back(); // Return to note list
-                },
-                child: Text(
-                  'Back to Notes List',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: dark ? AppColors.white : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
-      isScrollControlled: true,
     );
   }
 
@@ -459,7 +410,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
             ),
             Text(
               _totalPages > 0
-                  ? 'Page ${_currentPage + 1} of $_totalPages'
+                  ? 'Page ${_pageNotifier.value + 1} of $_totalPages'
                   : 'Reading note...',
               style: const TextStyle(
                 color: Color(0xFFD1FAE5),
@@ -471,83 +422,66 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
         ),
         actions: [
           // Night mode toggle
-          IconButton(
-            tooltip: _nightMode ? 'Light Mode' : 'Night Mode',
-            onPressed: () => setState(() => _nightMode = !_nightMode),
-            icon: Icon(
-              _nightMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: AppColors.white,
-              size: 20,
-            ),
-          ),
-          // Orientation toggle button (Portrait / Landscape)
-          IconButton(
-            tooltip: _isLandscape ? 'Portrait Mode' : 'Landscape Mode',
-            onPressed: _toggleOrientation,
-            icon: Icon(
-              _isLandscape
-                  ? Icons.stay_current_landscape_rounded
-                  : Icons.stay_current_portrait_rounded,
-              color: AppColors.white,
-              size: 20,
-            ),
-          ),
-          // Save for offline action if not yet downloaded (check icon removed)
-          Obx(() {
-            final liveNote = NotesController.instance.subjectNotes
-                    .firstWhereOrNull((n) => n.id == note.id) ??
-                note;
-            final isDownloading =
-                NotesController.instance.isDownloading[note.id] ?? false;
-
-            if (liveNote.isDownloaded) {
-              return const SizedBox.shrink();
-            }
-
-            return IconButton(
-              tooltip: 'Save note for offline reading',
-              onPressed: isDownloading
-                  ? null
-                  : () => NotesController.instance.downloadNote(note),
-              icon: isDownloading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.white,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.download_rounded,
-                      color: AppColors.white,
-                      size: 20,
-                    ),
-            );
-          }),
-          // Practice quick button
-          if (note.chapterId != null)
-            IconButton(
-              tooltip: 'Practice chapter tests',
-              onPressed: () {
-                Get.toNamed(
-                  Routes.testLists,
-                  arguments: {
-                    'subject_id': note.subjectId,
-                    'grade': note.grade,
-                    'subject': subjectTitle,
-                    'chapter': note.title,
-                    'chapter_id': note.chapterId,
-                    'chapter_number': note.chapterNumber,
-                  },
-                );
-              },
-              icon: const Icon(
-                Icons.quiz_rounded,
+          SizedBox(
+            width: 36,
+            child: IconButton(
+              tooltip: _nightMode ? 'Light Mode' : 'Night Mode',
+              onPressed: () => setState(() => _nightMode = !_nightMode),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                _nightMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
                 color: AppColors.white,
                 size: 20,
               ),
             ),
+          ),
+          // Orientation toggle
+          SizedBox(
+            width: 36,
+            child: IconButton(
+              tooltip: _isLandscape ? 'Portrait Mode' : 'Landscape Mode',
+              onPressed: _toggleOrientation,
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                _isLandscape
+                    ? Icons.stay_current_landscape_rounded
+                    : Icons.stay_current_portrait_rounded,
+                color: AppColors.white,
+                size: 20,
+              ),
+            ),
+          ),
+          // Practice quick button
+          if (note.chapterId != null)
+            SizedBox(
+              width: 36,
+              child: IconButton(
+                tooltip: 'Practice chapter tests',
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  Get.toNamed(
+                    Routes.testLists,
+                    arguments: {
+                      'subject_id': note.subjectId,
+                      'grade': note.grade,
+                      'subject': subjectTitle,
+                      'chapter': note.title,
+                      'chapter_id': note.chapterId,
+                      'chapter_number': note.chapterNumber,
+                    },
+                  );
+                },
+                icon: const Icon(
+                  Icons.quiz_rounded,
+                  color: AppColors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          const SizedBox(width: 4),
         ],
       ),
       body: _isLoadingFile
@@ -624,7 +558,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                               filePath: _resolvedFilePath,
                               enableSwipe: true,
                               swipeHorizontal: false,
-                              autoSpacing: false,
+                              autoSpacing: true,
                               pageFling: false,
                               pageSnap: false,
                               fitPolicy: FitPolicy.WIDTH,
@@ -639,38 +573,47 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                                 _pdfViewController = controller;
                               },
                               onPageChanged: (page, total) {
-                                setState(() {
-                                  _currentPage = page ?? 0;
-                                  _totalPages = total ?? _totalPages;
-                                  if (!_isDraggingSlider) {
-                                    _showSliderBubble = true;
-                                  }
-                                });
+                                if (_isDraggingSlider) return;
+                                final newPage = page ?? 0;
+                                final newTotal = total ?? _totalPages;
 
-                                if (!_isDraggingSlider) {
-                                  _bubbleHideTimer?.cancel();
-                                  _bubbleHideTimer = Timer(
-                                    const Duration(milliseconds: 1500),
-                                    () {
-                                      if (mounted && !_isDraggingSlider) {
-                                        setState(() {
-                                          _showSliderBubble = false;
-                                        });
-                                      }
-                                    },
-                                  );
+                                // Update total if changed (rare, only on render)
+                                if (_totalPages != newTotal) {
+                                  _totalPages = newTotal;
                                 }
 
-                                // Trigger completion when reaching the last page
-                                if (_totalPages > 0 &&
-                                    _currentPage >= _totalPages - 1 &&
-                                    !_hasPromptedCompletion) {
-                                  NotesController.instance
-                                      .markNoteCompleted(note.id);
-                                  Future.delayed(
-                                    const Duration(milliseconds: 600),
-                                    _showCompletionSheet,
-                                  );
+                                // Update page via ValueNotifier (no setState → no PDFView rebuild)
+                                if (_pageNotifier.value != newPage) {
+                                  _pageNotifier.value = newPage;
+                                }
+
+                                // Show slider bubble briefly
+                                if (!_showSliderBubble) {
+                                  setState(() {
+                                    _showSliderBubble = true;
+                                  });
+                                }
+
+                                _bubbleHideTimer?.cancel();
+                                _bubbleHideTimer = Timer(
+                                  const Duration(milliseconds: 1500),
+                                  () {
+                                    if (mounted && !_isDraggingSlider) {
+                                      setState(() {
+                                        _showSliderBubble = false;
+                                      });
+                                    }
+                                  },
+                                );
+
+                                // Track last-page state & trigger inline completion
+                                final onLast = _totalPages > 0 &&
+                                    newPage >= _totalPages - 1;
+                                if (onLast != _isOnLastPage) {
+                                  _isOnLastPage = onLast;
+                                }
+                                if (onLast && !_hasPromptedCompletion) {
+                                  _triggerCompletion();
                                 }
                               },
                             ),
@@ -682,6 +625,13 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                               ),
                             // ── Right Side Fast-Scroll Slider & Bubble ─────────
                             _buildRightSlider(constraints.maxHeight),
+                            // ── Bottom Completion Panel ──────────────────────
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: _buildCompletionPanel(),
+                            ),
                           ],
                         );
                       },

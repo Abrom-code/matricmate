@@ -172,15 +172,21 @@ class TestTile extends StatelessWidget {
                   children: [
                     // Title
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
                             testName,
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: tt.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: cs.onSurface,
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              height: 1.25,
+                              color: dark
+                                  ? AppColors.textWhite
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ),

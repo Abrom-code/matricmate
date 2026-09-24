@@ -19,22 +19,25 @@ class PremiumBanner extends StatelessWidget {
             end: Alignment.bottomRight,
           )
         : const LinearGradient(
-            colors: [Color(0xFFFFFBEE), Color(0xFFFFF3CC)],
+            colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           );
 
     final titleColor = dark ? Colors.white : const Color(0xFF1C1C1E);
+    final goldAccent = dark
+        ? const Color(0xFFFFD60A)
+        : const Color(0xFFD97706);
     final iconBg = dark
         ? const Color(0xFFFFD60A).withValues(alpha: 0.15)
-        : const Color(0xFFFFD60A).withValues(alpha: 0.25);
-    final glowColor = const Color(0xFFFFD60A);
-    final ctaBg = const Color(0xFFFFD60A);
-    final ctaText = const Color(0xFF0A0A0A); // always dark on yellow
+        : const Color(0xFFD97706).withValues(alpha: 0.14);
+    final glowColor = dark ? const Color(0xFFFFD60A) : const Color(0xFFD97706);
+    final ctaBg = dark ? const Color(0xFFFFD60A) : const Color(0xFFD97706);
+    final ctaText = dark ? const Color(0xFF0A0A0A) : Colors.white;
 
     final borderColor = dark
         ? const Color(0xFF2A2A2A)
-        : const Color(0xFFFFD60A).withValues(alpha: 0.4);
+        : const Color(0xFFD97706).withValues(alpha: 0.35);
 
     return GestureDetector(
       onTap: onTap,
@@ -83,9 +86,9 @@ class PremiumBanner extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         color: iconBg,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.bolt_rounded,
-                        color: Color(0xFFFFD60A),
+                        color: goldAccent,
                         size: 22,
                       ),
                     ),

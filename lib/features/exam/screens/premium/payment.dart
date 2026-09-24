@@ -243,7 +243,7 @@ class PaymentScreen extends StatelessWidget {
                       children: [
                         const Icon(
                           Icons.check_circle_outline_rounded,
-                          size: 20,
+                          size: 15,
                           color: AppColors.white,
                         ),
                         const SizedBox(width: 8),

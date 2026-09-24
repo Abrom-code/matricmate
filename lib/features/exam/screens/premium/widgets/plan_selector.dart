@@ -5,8 +5,15 @@ import 'package:matricmate/features/exam/models/subscription_plan.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
-class PlanSelector extends StatelessWidget {
+class PlanSelector extends StatefulWidget {
   const PlanSelector({super.key});
+
+  @override
+  State<PlanSelector> createState() => _PlanSelectorState();
+}
+
+class _PlanSelectorState extends State<PlanSelector> {
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,15 +46,6 @@ class PlanSelector extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.6,
-                color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'One-time payment',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
                 color: isDark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
@@ -134,26 +132,6 @@ class PlanSelector extends StatelessWidget {
                         ),
                       ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(
-                          alpha: isDark ? 0.2 : 0.1,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        '12 Months',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
 
@@ -165,32 +143,112 @@ class PlanSelector extends StatelessWidget {
                       ? Colors.white.withValues(alpha: 0.08)
                       : AppColors.borderPrimary,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
 
-                // Basic list of included features
-                _featureItem(
-                  'Over 20,000+ chapter practice questions',
-                  isDark,
+                // ── Expandable Header with Chevron ───────────────────
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: isDark ? 0.2 : 0.1,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.check_circle_outline_rounded,
+                                  size: 14,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  "What's included in 1 Year Access",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? AppColors.textWhite
+                                        : AppColors.textPrimary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        AnimatedRotation(
+                          turns: _isExpanded ? -0.25 : 0.25,
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          child: Icon(
+                            Icons.chevron_right_rounded,
+                            size: 20,
+                            color: isDark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 8),
-                _featureItem(
-                  'Grade 9–12 summary notes & formula sheets',
-                  isDark,
-                ),
-                const SizedBox(height: 8),
-                _featureItem(
-                  'Past national entrance & model exams',
-                  isDark,
-                ),
-                const SizedBox(height: 8),
-                _featureItem(
-                  'Step-by-step Amharic (በአማርኛ) explanations',
-                  isDark,
-                ),
-                const SizedBox(height: 8),
-                _featureItem(
-                  '100% offline access & live challenges',
-                  isDark,
+
+                // ── Animated Expandable Feature List ────────────────
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: _isExpanded
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 12),
+                            _featureItem(
+                              'Over 20,000+ chapter practice questions',
+                              isDark,
+                            ),
+                            const SizedBox(height: 8),
+                            _featureItem(
+                              'Grade 9–12 summary notes & formula sheets',
+                              isDark,
+                            ),
+                            const SizedBox(height: 8),
+                            _featureItem(
+                              'Past national entrance & model exams',
+                              isDark,
+                            ),
+                            const SizedBox(height: 8),
+                            _featureItem(
+                              'Step-by-step Amharic (በአማርኛ) explanations',
+                              isDark,
+                            ),
+                            const SizedBox(height: 8),
+                            _featureItem(
+                              '100% offline access & live challenges',
+                              isDark,
+                            ),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ],
             ),

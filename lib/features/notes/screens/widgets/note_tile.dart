@@ -263,11 +263,12 @@ class NoteTile extends StatelessWidget {
                             liveNote.description!,
                             style: TextStyle(
                               fontSize: 11.5,
+                              height: 1.35,
                               color: dark
                                   ? AppColors.darkGrey
                                   : AppColors.textSecondary,
                             ),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],

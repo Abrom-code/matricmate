@@ -69,7 +69,10 @@ class PremiumBanner extends StatelessWidget {
               ),
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     // ── Icon box ────────────────────────────────────────
@@ -96,7 +99,7 @@ class PremiumBanner extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Unlock Premium',
+                            'Upgrade Premium',
                             style: TextStyle(
                               color: titleColor,
                               fontSize: 15,
@@ -109,13 +112,13 @@ class PremiumBanner extends StatelessWidget {
                             final price = PaymentConfigService.instance
                                 .getPriceForPlan('1_year', 200);
                             return Text(
-                              'Buy with $price Birr only',
+                              'With $price Birr only',
                               style: TextStyle(
                                 color: dark
                                     ? const Color(0xFFFFD60A)
                                     : const Color(0xFFD97706),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
                               ),
                             );
                           }),
@@ -136,7 +139,7 @@ class PremiumBanner extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        'Upgrade',
+                        'BUY',
                         style: TextStyle(
                           color: ctaText,
                           fontSize: 13,

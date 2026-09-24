@@ -193,6 +193,21 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
       _lastJumpingPage = _pendingTargetPage!;
       _pdfViewController?.setPage(_pendingTargetPage!);
     }
+
+    final finalPage = _pendingTargetPage ?? _lastJumpingPage;
+    if (finalPage >= 0) {
+      _pageNotifier.value = finalPage;
+      final inLast3 = _totalPages > 0 &&
+          finalPage >= (_totalPages - 3).clamp(0, _totalPages - 1);
+      if (inLast3 != _showCompletionPanel) {
+        setState(() => _showCompletionPanel = inLast3);
+      }
+      final onLast = _totalPages > 0 && finalPage >= _totalPages - 1;
+      if (onLast && !_hasPromptedCompletion) {
+        _triggerCompletion();
+      }
+    }
+
     _bubbleHideTimer?.cancel();
     _bubbleHideTimer = Timer(const Duration(milliseconds: 1400), () {
       if (mounted) {
@@ -299,15 +314,9 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     if (_hasPromptedCompletion) return;
     _hasPromptedCompletion = true;
     NotesController.instance.markNoteCompleted(note.id);
-    // Slight delay so user sees the last page first
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) {
-        setState(() => _showCompletionPanel = true);
-      }
-    });
   }
 
-  // ── Test Button (slides up at bottom on last page) ─────────────────
+  // ── Test Button (slides up at bottom when last 3 pages left) ──────
 
   Widget _buildCompletionPanel() {
     // Only show test button if note has a chapter
@@ -320,7 +329,9 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 280),
         opacity: _showCompletionPanel ? 1.0 : 0.0,
-        child: Container(
+        child: IgnorePointer(
+          ignoring: !_showCompletionPanel,
+          child: Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           height: 48,
           child: ElevatedButton.icon(
@@ -357,8 +368,9 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -564,9 +576,17 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                               fitPolicy: FitPolicy.WIDTH,
                               nightMode: _nightMode,
                               onRender: (pages) {
+                                final total = pages ?? 0;
+                                final initialPage = _pageNotifier.value;
+                                final inLast3 = total > 0 &&
+                                    initialPage >=
+                                        (total - 3).clamp(0, total - 1);
                                 setState(() {
-                                  _totalPages = pages ?? 0;
+                                  _totalPages = total;
                                   _isReady = true;
+                                  if (inLast3) {
+                                    _showCompletionPanel = true;
+                                  }
                                 });
                               },
                               onViewCreated: (controller) {
@@ -606,9 +626,19 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                                   },
                                 );
 
-                                // Track last-page state & trigger inline completion
-                                final onLast = _totalPages > 0 &&
-                                    newPage >= _totalPages - 1;
+                                // Display practice button when in the last 3 pages
+                                final isInLast3Pages = newTotal > 0 &&
+                                    newPage >=
+                                        (newTotal - 3).clamp(0, newTotal - 1);
+                                if (isInLast3Pages != _showCompletionPanel) {
+                                  setState(() {
+                                    _showCompletionPanel = isInLast3Pages;
+                                  });
+                                }
+
+                                // Track last-page state & mark note as completed
+                                final onLast = newTotal > 0 &&
+                                    newPage >= newTotal - 1;
                                 if (onLast != _isOnLastPage) {
                                   _isOnLastPage = onLast;
                                 }

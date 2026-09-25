@@ -154,17 +154,26 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
   }
 
   void _onHandleDragUpdate(
-      DragUpdateDetails details, double availableTrack, double topMargin) {
+    DragUpdateDetails details,
+    double availableTrack,
+    double topMargin,
+  ) {
     if (_totalPages <= 1 || availableTrack <= 0) return;
     _bubbleHideTimer?.cancel();
 
     final deltaY = details.globalPosition.dy - _dragStartY;
-    final newHandleTop = (_dragStartHandleTop + deltaY)
-        .clamp(topMargin, topMargin + availableTrack);
-    final fraction =
-        ((newHandleTop - topMargin) / availableTrack).clamp(0.0, 1.0);
-    final targetPage =
-        (fraction * (_totalPages - 1)).round().clamp(0, _totalPages - 1);
+    final newHandleTop = (_dragStartHandleTop + deltaY).clamp(
+      topMargin,
+      topMargin + availableTrack,
+    );
+    final fraction = ((newHandleTop - topMargin) / availableTrack).clamp(
+      0.0,
+      1.0,
+    );
+    final targetPage = (fraction * (_totalPages - 1)).round().clamp(
+      0,
+      _totalPages - 1,
+    );
 
     setState(() {
       _dragHandleTop = newHandleTop;
@@ -197,7 +206,8 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     final finalPage = _pendingTargetPage ?? _lastJumpingPage;
     if (finalPage >= 0) {
       _pageNotifier.value = finalPage;
-      final inLast3 = _totalPages > 0 &&
+      final inLast3 =
+          _totalPages > 0 &&
           finalPage >= (_totalPages - 3).clamp(0, _totalPages - 1);
       if (inLast3 != _showCompletionPanel) {
         setState(() => _showCompletionPanel = inLast3);
@@ -230,8 +240,10 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     const double handleHeight = 34.0;
     const double handleWidth = 26.0;
     final double availableTrack =
-        (maxHeight - handleHeight - topMargin - bottomMargin)
-            .clamp(0.0, maxHeight);
+        (maxHeight - handleHeight - topMargin - bottomMargin).clamp(
+          0.0,
+          maxHeight,
+        );
 
     // Use ValueListenableBuilder so only the slider rebuilds on page change,
     // not the entire Stack (which would force PDFView to re-composite).
@@ -332,54 +344,52 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
         child: IgnorePointer(
           ignoring: !_showCompletionPanel,
           child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          height: 48,
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              elevation: 4,
-              shadowColor: AppColors.primary.withValues(alpha: 0.35),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            height: 48,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 4,
+                shadowColor: AppColors.primary.withValues(alpha: 0.35),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
-            ),
-            onPressed: () {
-              Get.toNamed(
-                Routes.testLists,
-                arguments: {
-                  'subject_id': note.subjectId,
-                  'grade': note.grade,
-                  'subject': subjectTitle,
-                  'chapter': note.title,
-                  'chapter_id': note.chapterId,
-                  'chapter_number': note.chapterNumber,
-                },
-              );
-            },
-            icon: const Icon(Icons.quiz_rounded, size: 18),
-            label: const Text(
-              'Practice Tests',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
+              onPressed: () {
+                Get.toNamed(
+                  Routes.testLists,
+                  arguments: {
+                    'subject_id': note.subjectId,
+                    'grade': note.grade,
+                    'subject': subjectTitle,
+                    'chapter': note.title,
+                    'chapter_id': note.chapterId,
+                    'chapter_number': note.chapterNumber,
+                  },
+                );
+              },
+              icon: const Icon(Icons.quiz_rounded, size: 18),
+              label: const Text(
+                'Practice Tests',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
               ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
+    final bgColor = _nightMode
+        ? const Color(0xFF121212)
+        : (dark ? AppColors.black : const Color(0xFFE2E8F0));
 
     return Scaffold(
-      backgroundColor: _nightMode
-          ? const Color(0xFF121212)
-          : (dark ? AppColors.black : const Color(0xFFE2E8F0)),
+      backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
@@ -515,157 +525,157 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
               ),
             )
           : _fileError != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(28.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline_rounded,
-                          size: 46,
-                          color: AppColors.error,
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          _fileError!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            height: 1.4,
-                            color: dark
-                                ? AppColors.textWhite
-                                : AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _resolveFile,
-                          icon: const Icon(Icons.refresh_rounded, size: 18),
-                          label: const Text('Try Again'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(28.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      size: 46,
+                      color: AppColors.error,
                     ),
-                  ),
-                )
-              : _resolvedFilePath == null
-                  ? const Center(
-                      child: Text(
-                        'Note file not found on device.',
-                        style: TextStyle(fontSize: 14),
+                    const SizedBox(height: 14),
+                    Text(
+                      _fileError!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 1.4,
+                        color: dark
+                            ? AppColors.textWhite
+                            : AppColors.textPrimary,
                       ),
-                    )
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Stack(
-                          children: [
-                            PDFView(
-                              filePath: _resolvedFilePath,
-                              enableSwipe: true,
-                              swipeHorizontal: false,
-                              autoSpacing: true,
-                              pageFling: false,
-                              pageSnap: false,
-                              fitPolicy: FitPolicy.WIDTH,
-                              nightMode: _nightMode,
-                              onRender: (pages) {
-                                final total = pages ?? 0;
-                                final initialPage = _pageNotifier.value;
-                                final inLast3 = total > 0 &&
-                                    initialPage >=
-                                        (total - 3).clamp(0, total - 1);
-                                setState(() {
-                                  _totalPages = total;
-                                  _isReady = true;
-                                  if (inLast3) {
-                                    _showCompletionPanel = true;
-                                  }
-                                });
-                              },
-                              onViewCreated: (controller) {
-                                _pdfViewController = controller;
-                              },
-                              onPageChanged: (page, total) {
-                                if (_isDraggingSlider) return;
-                                final newPage = page ?? 0;
-                                final newTotal = total ?? _totalPages;
+                    ),
+                    const SizedBox(height: 18),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _resolveFile,
+                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                      label: const Text('Try Again'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : _resolvedFilePath == null
+          ? const Center(
+              child: Text(
+                'Note file not found on device.',
+                style: TextStyle(fontSize: 14),
+              ),
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                return Stack(
+                  children: [
+                    PDFView(
+                      filePath: _resolvedFilePath,
+                      enableSwipe: true,
+                      swipeHorizontal: false,
+                      autoSpacing: false,
+                      pageFling: false,
+                      pageSnap: false,
+                      fitPolicy: FitPolicy.WIDTH,
+                      nightMode: _nightMode,
+                      backgroundColor: bgColor,
+                      onRender: (pages) {
+                        final total = pages ?? 0;
+                        final initialPage = _pageNotifier.value;
+                        final inLast3 =
+                            total > 0 &&
+                            initialPage >= (total - 3).clamp(0, total - 1);
+                        setState(() {
+                          _totalPages = total;
+                          _isReady = true;
+                          if (inLast3) {
+                            _showCompletionPanel = true;
+                          }
+                        });
+                      },
+                      onViewCreated: (controller) {
+                        _pdfViewController = controller;
+                      },
+                      onPageChanged: (page, total) {
+                        if (_isDraggingSlider) return;
+                        final newPage = page ?? 0;
+                        final newTotal = total ?? _totalPages;
 
-                                // Update total if changed (rare, only on render)
-                                if (_totalPages != newTotal) {
-                                  _totalPages = newTotal;
-                                }
+                        // Update total if changed (rare, only on render)
+                        if (_totalPages != newTotal) {
+                          _totalPages = newTotal;
+                        }
 
-                                // Update page via ValueNotifier (no setState → no PDFView rebuild)
-                                if (_pageNotifier.value != newPage) {
-                                  _pageNotifier.value = newPage;
-                                }
+                        // Update page via ValueNotifier (no setState → no PDFView rebuild)
+                        if (_pageNotifier.value != newPage) {
+                          _pageNotifier.value = newPage;
+                        }
 
-                                // Show slider bubble briefly
-                                if (!_showSliderBubble) {
-                                  setState(() {
-                                    _showSliderBubble = true;
-                                  });
-                                }
+                        // Show slider bubble briefly
+                        if (!_showSliderBubble) {
+                          setState(() {
+                            _showSliderBubble = true;
+                          });
+                        }
 
-                                _bubbleHideTimer?.cancel();
-                                _bubbleHideTimer = Timer(
-                                  const Duration(milliseconds: 1500),
-                                  () {
-                                    if (mounted && !_isDraggingSlider) {
-                                      setState(() {
-                                        _showSliderBubble = false;
-                                      });
-                                    }
-                                  },
-                                );
-
-                                // Display practice button when in the last 3 pages
-                                final isInLast3Pages = newTotal > 0 &&
-                                    newPage >=
-                                        (newTotal - 3).clamp(0, newTotal - 1);
-                                if (isInLast3Pages != _showCompletionPanel) {
-                                  setState(() {
-                                    _showCompletionPanel = isInLast3Pages;
-                                  });
-                                }
-
-                                // Track last-page state & mark note as completed
-                                final onLast = newTotal > 0 &&
-                                    newPage >= newTotal - 1;
-                                if (onLast != _isOnLastPage) {
-                                  _isOnLastPage = onLast;
-                                }
-                                if (onLast && !_hasPromptedCompletion) {
-                                  _triggerCompletion();
-                                }
-                              },
-                            ),
-                            if (!_isReady)
-                              const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            // ── Right Side Fast-Scroll Slider & Bubble ─────────
-                            _buildRightSlider(constraints.maxHeight),
-                            // ── Bottom Completion Panel ──────────────────────
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              child: _buildCompletionPanel(),
-                            ),
-                          ],
+                        _bubbleHideTimer?.cancel();
+                        _bubbleHideTimer = Timer(
+                          const Duration(milliseconds: 1500),
+                          () {
+                            if (mounted && !_isDraggingSlider) {
+                              setState(() {
+                                _showSliderBubble = false;
+                              });
+                            }
+                          },
                         );
+
+                        // Display practice button when in the last 3 pages
+                        final isInLast3Pages =
+                            newTotal > 0 &&
+                            newPage >= (newTotal - 3).clamp(0, newTotal - 1);
+                        if (isInLast3Pages != _showCompletionPanel) {
+                          setState(() {
+                            _showCompletionPanel = isInLast3Pages;
+                          });
+                        }
+
+                        // Track last-page state & mark note as completed
+                        final onLast = newTotal > 0 && newPage >= newTotal - 1;
+                        if (onLast != _isOnLastPage) {
+                          _isOnLastPage = onLast;
+                        }
+                        if (onLast && !_hasPromptedCompletion) {
+                          _triggerCompletion();
+                        }
                       },
                     ),
+                    if (!_isReady)
+                      const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    // ── Right Side Fast-Scroll Slider & Bubble ─────────
+                    _buildRightSlider(constraints.maxHeight),
+                    // ── Bottom Completion Panel ──────────────────────
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: _buildCompletionPanel(),
+                    ),
+                  ],
+                );
+              },
+            ),
     );
   }
 }

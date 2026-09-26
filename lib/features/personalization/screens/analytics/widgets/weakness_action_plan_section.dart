@@ -346,20 +346,33 @@ class WeaknessActionPlanSection extends StatelessWidget {
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                                  horizontal: 9,
                                   vertical: 5,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  ch.hasNoteCompleted ? 'Review' : 'Read Note',
-                                  style: const TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.primary,
+                                  color: AppColors.primary.withValues(
+                                    alpha: dark ? 0.2 : 0.08,
                                   ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      ch.hasNoteCompleted ? 'Review' : 'Read Note',
+                                      style: const TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    const Icon(
+                                      Icons.chevron_right_rounded,
+                                      size: 13,
+                                      color: AppColors.primary,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -469,22 +482,9 @@ class WeaknessActionPlanSection extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () {
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () {
                             if (rec.type == RecommendationType.readNote ||
                                 rec.type == RecommendationType.exploreNotes) {
                               if (rec.subjectId != null) {
@@ -505,11 +505,35 @@ class WeaknessActionPlanSection extends StatelessWidget {
                               controller.switchTab(AnalyticsTab.tests);
                             }
                           },
-                          child: Text(
-                            rec.badgeText,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(
+                                alpha: dark ? 0.2 : 0.08,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  rec.badgeText,
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 3),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 14,
+                                  color: AppColors.primary,
+                                ),
+                              ],
                             ),
                           ),
                         ),

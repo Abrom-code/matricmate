@@ -7,6 +7,7 @@ import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
+import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -29,6 +30,9 @@ class NavigationController extends GetxController {
     // Ensure BookmarkController is registered before BookmarkScreen builds.
     if (!Get.isRegistered<BookmarkController>()) {
       Get.lazyPut<BookmarkController>(() => BookmarkController(), fenix: true);
+    }
+    if (!Get.isRegistered<AnalyticsController>()) {
+      Get.lazyPut<AnalyticsController>(() => AnalyticsController(), fenix: true);
     }
 
     pages = [
@@ -75,6 +79,9 @@ class NavigationController extends GetxController {
         NotificationsController.instance.loadNotifications(syncRemote: true),
       );
     }
+    if (index == 3 && Get.isRegistered<AnalyticsController>()) {
+      unawaited(AnalyticsController.instance.loadAll());
+    }
   }
 
   /// Called when the user swipes — syncs the nav bar indicator.
@@ -84,6 +91,9 @@ class NavigationController extends GetxController {
       unawaited(
         NotificationsController.instance.loadNotifications(syncRemote: true),
       );
+    }
+    if (index == 3 && Get.isRegistered<AnalyticsController>()) {
+      unawaited(AnalyticsController.instance.loadAll());
     }
   }
 

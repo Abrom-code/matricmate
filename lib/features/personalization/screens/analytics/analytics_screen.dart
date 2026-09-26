@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/analytics_filter_sheet.dart';
@@ -26,16 +27,33 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   late final AnalyticsController controller;
+  Worker? _navWorker;
 
   @override
   void initState() {
     super.initState();
-    controller = Get.put(AnalyticsController());
+    controller = Get.isRegistered<AnalyticsController>()
+        ? Get.find<AnalyticsController>()
+        : Get.put(AnalyticsController());
+
+    // Instant load when screen is first displayed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadAll();
+    });
+
+    // Auto-reload instantly whenever user navigates to the Analytics tab (index 3)
+    if (Get.isRegistered<NavigationController>()) {
+      _navWorker = ever(NavigationController.instance.selectedIdx, (index) {
+        if (index == 3) {
+          controller.loadAll();
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
-    Get.delete<AnalyticsController>(force: true);
+    _navWorker?.dispose();
     super.dispose();
   }
 

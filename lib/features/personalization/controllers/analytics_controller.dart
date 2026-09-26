@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 
 // ── Data classes ──────────────────────────────────────────────────────────────
@@ -446,10 +447,39 @@ class AnalyticsController extends GetxController {
   // ── Load all data ────────────────────────────────────────────────────────
 
   Future<void> loadAll() async {
-    isLoading.value = true;
+    // Only show full blocking loader if we have zero data loaded yet
+    if (testsCompleted.value == 0 && totalNotesCount.value == 0) {
+      isLoading.value = true;
+    }
     try {
-      final userId = UserController.instance.user.value.id;
-      if (userId.isEmpty) return;
+      var userId = UserController.instance.user.value.id;
+      if (userId.isEmpty) {
+        final local = await UserRepository().getLocalUser();
+        if (local != null && local.id.isNotEmpty) {
+          userId = local.id;
+          UserController.instance.user.value = local;
+        }
+      }
+      if (userId.isEmpty) {
+        final db = await _db.database;
+        final userRows = await db.query('user', limit: 1);
+        if (userRows.isNotEmpty) {
+          userId = userRows.first['id']?.toString() ?? '';
+        }
+      }
+      if (userId.isEmpty) {
+        final db = await _db.database;
+        final resRows = await db.rawQuery(
+          'SELECT user_id FROM results WHERE user_id IS NOT NULL AND user_id != "" LIMIT 1',
+        );
+        if (resRows.isNotEmpty) {
+          userId = resRows.first['user_id']?.toString() ?? '';
+        }
+      }
+      if (userId.isEmpty) {
+        isLoading.value = false;
+        return;
+      }
       await Future.wait([
         _loadSummary(userId),
         _loadTrend(userId),
@@ -461,6 +491,8 @@ class AnalyticsController extends GetxController {
         _loadNotesAnalytics(userId),
       ]);
       await _loadWeaknessAndRecommendations(userId);
+    } catch (_) {
+      // Ignore background errors
     } finally {
       isLoading.value = false;
     }

@@ -17,18 +17,26 @@ class WeakestAreasCard extends StatelessWidget {
 
     if (areas.isEmpty) return const SizedBox.shrink();
 
+    // Deep amber & warm gold palette
+    final alertColor = dark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+    final alertBorderColor = dark ? const Color(0xFFF59E0B) : const Color(0xFFD97706);
+    final alertBadgeBg = dark
+        ? const Color(0xFFF59E0B).withValues(alpha: 0.20)
+        : const Color(0xFFF59E0B).withValues(alpha: 0.12);
+    final alertLinkColor = dark ? const Color(0xFFFDE68A) : const Color(0xFFB45309);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.35 : 0.20),
+          color: alertBorderColor.withValues(alpha: dark ? 0.35 : 0.22),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.12 : 0.04),
+            color: alertBorderColor.withValues(alpha: dark ? 0.12 : 0.04),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -44,15 +52,15 @@ class WeakestAreasCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withValues(
-                    alpha: dark ? 0.25 : 0.12,
+                  color: alertBorderColor.withValues(
+                    alpha: dark ? 0.22 : 0.12,
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     Iconsax.radar_copy,
-                    color: Color(0xFFEF4444),
+                    color: alertColor,
                     size: 19,
                   ),
                 ),
@@ -64,10 +72,10 @@ class WeakestAreasCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Text(
+                        Text(
                           'Priority Focus Alert',
                           style: TextStyle(
-                            color: Color(0xFFEF4444),
+                            color: alertColor,
                             fontWeight: FontWeight.w800,
                             fontSize: 14.5,
                             letterSpacing: -0.2,
@@ -80,15 +88,15 @@ class WeakestAreasCard extends StatelessWidget {
                             vertical: 1.5,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                            color: alertBadgeBg,
                             borderRadius: BorderRadius.circular(5),
                           ),
                           child: Text(
                             '${areas.length} Focus',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFFEF4444),
+                              color: alertColor,
                             ),
                           ),
                         ),
@@ -139,16 +147,16 @@ class WeakestAreasCard extends StatelessWidget {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                          color: alertBadgeBg,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
                           child: Text(
                             area.name.isNotEmpty ? area.name[0] : 'S',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFFEF4444),
+                              color: alertColor,
                             ),
                           ),
                         ),
@@ -183,17 +191,15 @@ class WeakestAreasCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444).withValues(
-                            alpha: dark ? 0.22 : 0.10,
-                          ),
+                          color: alertBadgeBg,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           '-${gap.toStringAsFixed(0)}% Gap',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFFEF4444),
+                            color: alertColor,
                           ),
                         ),
                       ),
@@ -251,8 +257,8 @@ class WeakestAreasCard extends StatelessWidget {
                       backgroundColor: dark
                           ? Colors.white.withValues(alpha: 0.07)
                           : const Color(0xFFE2E8F0),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFFEF4444),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        dark ? const Color(0xFFF59E0B) : const Color(0xFFD97706),
                       ),
                     ),
                   ),
@@ -263,10 +269,10 @@ class WeakestAreasCard extends StatelessWidget {
                     children: [
                       Text(
                         'Accuracy: ${currentPct.toStringAsFixed(0)}%',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFFEF4444),
+                          color: alertColor,
                         ),
                       ),
                       Text(
@@ -298,14 +304,14 @@ class WeakestAreasCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
-                      color: dark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                      color: alertLinkColor,
                     ),
                   ),
                   const SizedBox(width: 4),
                   Icon(
                     Icons.arrow_forward_rounded,
                     size: 13,
-                    color: dark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                    color: alertLinkColor,
                   ),
                 ],
               ),

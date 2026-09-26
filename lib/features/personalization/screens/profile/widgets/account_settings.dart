@@ -16,7 +16,7 @@ class AccountSettings extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final userCtrl = UserController.instance;
-    final isInactive = userCtrl.user.value.isInactive;
+    final needsUpgrade = userCtrl.user.value.needsUpgrade;
     final isPending = userCtrl.user.value.isPending;
 
     return Obx(() {
@@ -59,7 +59,7 @@ class AccountSettings extends StatelessWidget {
               onTap: () => Get.toNamed(Routes.editProfile),
             ),
             divider,
-            if (isInactive) ...[
+            if (needsUpgrade) ...[
               Obx(() {
                 final price = PaymentConfigService.instance
                     .getPriceForPlan('1_year', 200);

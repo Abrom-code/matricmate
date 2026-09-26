@@ -16,7 +16,7 @@ class WeakestAreasCard extends StatelessWidget {
     if (areas.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.12 : 0.05),
         borderRadius: BorderRadius.circular(20),
@@ -38,8 +38,8 @@ class WeakestAreasCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF4444).withValues(
                     alpha: dark ? 0.25 : 0.15,
@@ -50,7 +50,7 @@ class WeakestAreasCard extends StatelessWidget {
                   child: Icon(
                     Iconsax.radar_copy,
                     color: Color(0xFFEF4444),
-                    size: 20,
+                    size: 18,
                   ),
                 ),
               ),
@@ -60,11 +60,11 @@ class WeakestAreasCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Priority Focus Areas',
+                      'Priority Focus Alert',
                       style: TextStyle(
                         color: Color(0xFFEF4444),
                         fontWeight: FontWeight.w800,
-                        fontSize: 15,
+                        fontSize: 14.5,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -75,7 +75,7 @@ class WeakestAreasCard extends StatelessWidget {
                         color: dark
                             ? AppColors.darkGrey
                             : AppColors.textSecondary,
-                        fontSize: 11.5,
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -83,7 +83,7 @@ class WeakestAreasCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           Wrap(
             spacing: 8,
@@ -91,27 +91,18 @@ class WeakestAreasCard extends StatelessWidget {
             children: areas.map((area) {
               return Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                  horizontal: 10,
+                  vertical: 5,
                 ),
                 decoration: BoxDecoration(
                   color: dark ? AppColors.darkCard : Colors.white,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(9),
                   border: Border.all(
                     color: const Color(0xFFEF4444).withValues(
                       alpha: dark ? 0.35 : 0.25,
                     ),
                     width: 1,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: dark ? 0.2 : 0.03,
-                      ),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -119,16 +110,16 @@ class WeakestAreasCard extends StatelessWidget {
                     Text(
                       area.name,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         color: dark ? AppColors.white : const Color(0xFF1E293B),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                        horizontal: 5,
+                        vertical: 1.5,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEF4444).withValues(
@@ -139,7 +130,7 @@ class WeakestAreasCard extends StatelessWidget {
                       child: Text(
                         '${area.avgScore.toStringAsFixed(0)}%',
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFFEF4444),
                         ),
@@ -149,6 +140,35 @@ class WeakestAreasCard extends StatelessWidget {
                 ),
               );
             }).toList(),
+          ),
+          const SizedBox(height: 10),
+
+          // 1-Tap navigation to Weakness tab
+          InkWell(
+            onTap: () => controller.switchTab(AnalyticsTab.weaknesses),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Open Diagnostic & Study Plan',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: dark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 13,
+                    color: dark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

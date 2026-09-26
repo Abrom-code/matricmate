@@ -1,17 +1,19 @@
-import 'package:matricmate/features/personalization/screens/analytics/widgets/challenge_analytics_section.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/analytics_filter_sheet.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/analytics_summary_grid.dart';
+import 'package:matricmate/features/personalization/screens/analytics/widgets/challenge_analytics_section.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/chapter_progress_section.dart';
+import 'package:matricmate/features/personalization/screens/analytics/widgets/notes_progress_section.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/score_trend_chart.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/subject_performance_section.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/test_type_distribution.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/weakest_areas_card.dart';
-import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/features/personalization/screens/analytics/widgets/weakness_action_plan_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -140,7 +142,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             builder: (context, constraints) {
               final isLandscape =
                   MediaQuery.orientationOf(context) == Orientation.landscape;
-              // Center and constrain content width in landscape
+
               final content = SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
@@ -156,12 +158,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     Obx(() {
                       final selected = controller.selectedTimeFilter.value;
                       return Container(
-                        margin: const EdgeInsets.only(bottom: 14),
+                        margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: dark
-                              ? AppColors.darkCard
-                              : Colors.white,
+                          color: dark ? AppColors.darkCard : Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: dark
@@ -216,39 +216,131 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       const SizedBox(height: 12),
                     ],
 
-                    // 1. Hero Readiness & Summary Stats
-                    AnalyticsSummaryGrid(controller: controller),
-                    const SizedBox(height: 14),
+                    // ── Section Tabs Bar ────────────────────────────────────
+                    Obx(() {
+                      final currentTab = controller.selectedTab.value;
+                      final weakCount = controller.weakestAreas.length;
 
-                    // 2. Challenge Arena Analytics (Weekly & Monthly activity)
-                    ChallengeAnalyticsSection(controller: controller),
-                    const SizedBox(height: 14),
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: dark ? AppColors.darkCard : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: dark
+                                ? AppColors.darkBorder
+                                : const Color(0xFFE2E8F0),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                alpha: dark ? 0.2 : 0.03,
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            _SectionTab(
+                              icon: Icons.dashboard_outlined,
+                              title: 'Overview',
+                              isSelected: currentTab == AnalyticsTab.overview,
+                              onTap: () =>
+                                  controller.switchTab(AnalyticsTab.overview),
+                              dark: dark,
+                            ),
+                            _SectionTab(
+                              icon: Icons.track_changes_rounded,
+                              title: 'Weaknesses',
+                              isSelected: currentTab == AnalyticsTab.weaknesses,
+                              badgeCount: weakCount,
+                              onTap: () =>
+                                  controller.switchTab(AnalyticsTab.weaknesses),
+                              dark: dark,
+                            ),
+                            _SectionTab(
+                              icon: Icons.menu_book_outlined,
+                              title: 'Notes',
+                              isSelected: currentTab == AnalyticsTab.notes,
+                              onTap: () =>
+                                  controller.switchTab(AnalyticsTab.notes),
+                              dark: dark,
+                            ),
+                            _SectionTab(
+                              icon: Icons.bar_chart_rounded,
+                              title: 'Tests',
+                              isSelected: currentTab == AnalyticsTab.tests,
+                              onTap: () =>
+                                  controller.switchTab(AnalyticsTab.tests),
+                              dark: dark,
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
 
-                    // 2. Score Trajectory Trend Chart
-                    ScoreTrendChart(controller: controller),
-                    const SizedBox(height: 14),
+                    // ── Tab Content Views ───────────────────────────────────
+                    Obx(() {
+                      switch (controller.selectedTab.value) {
+                        case AnalyticsTab.overview:
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 1. Hero Readiness & 4 KPI Stats
+                              AnalyticsSummaryGrid(controller: controller),
+                              const SizedBox(height: 14),
 
-                    // 3. Priority Focus & Recommendations
-                    WeakestAreasCard(controller: controller),
-                    const SizedBox(height: 14),
+                              // 2. Focus Alert (if weaknesses detected)
+                              WeakestAreasCard(controller: controller),
+                              if (controller.weakestAreas.isNotEmpty)
+                                const SizedBox(height: 14),
 
-                    // 4. Subject Mastery Breakdown
-                    SubjectPerformanceSection(controller: controller),
-                    const SizedBox(height: 14),
+                              // 3. Score Trajectory Trend Chart
+                              ScoreTrendChart(controller: controller),
+                              const SizedBox(height: 14),
 
-                    // 5. Test Type Distribution
-                    TestTypeDistribution(controller: controller),
-                    const SizedBox(height: 14),
+                              // 4. Challenge Arena Analytics
+                              ChallengeAnalyticsSection(controller: controller),
+                            ],
+                          );
 
-                    // 6. Chapter Progress Section
-                    ChapterProgressSection(controller: controller),
+                        case AnalyticsTab.weaknesses:
+                          return WeaknessActionPlanSection(
+                            controller: controller,
+                          );
+
+                        case AnalyticsTab.notes:
+                          return NotesProgressSection(controller: controller);
+
+                        case AnalyticsTab.tests:
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 1. Subject Mastery Breakdown
+                              SubjectPerformanceSection(controller: controller),
+                              const SizedBox(height: 14),
+
+                              // 2. Test Type Distribution
+                              TestTypeDistribution(controller: controller),
+                              const SizedBox(height: 14),
+
+                              // 3. Chapter Progress Section
+                              ChapterProgressSection(controller: controller),
+                            ],
+                          );
+                      }
+                    }),
                   ],
                 ),
               );
 
               if (!isLandscape) return content;
 
-              // Landscape: center and cap width so content stays readable.
+              // Landscape: center and cap width
               return Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 720),
@@ -259,6 +351,89 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
         );
       }),
+    );
+  }
+}
+
+class _SectionTab extends StatelessWidget {
+  const _SectionTab({
+    required this.icon,
+    required this.title,
+    required this.isSelected,
+    required this.onTap,
+    required this.dark,
+    this.badgeCount = 0,
+  });
+
+  final IconData icon;
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool dark;
+  final int badgeCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 14.5,
+                color: isSelected
+                    ? Colors.white
+                    : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+              ),
+              const SizedBox(width: 3),
+              Flexible(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected
+                        ? Colors.white
+                        : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (badgeCount > 0 && !isSelected) ...[
+                const SizedBox(width: 3),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$badgeCount',
+                    style: const TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFEF4444),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -286,9 +461,7 @@ class _PeriodTab extends StatelessWidget {
           curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary
-                : Colors.transparent,
+            color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(

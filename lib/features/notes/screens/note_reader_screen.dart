@@ -31,6 +31,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
   bool _isLandscape = false;
   bool _isOnLastPage = false;
   bool _showCompletionPanel = false;
+  bool _showAppBar = true;
 
   PDFViewController? _pdfViewController;
 
@@ -115,7 +116,18 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+    // Restore system UI in case it was hidden
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
+  }
+
+  void _toggleAppBar() {
+    setState(() => _showAppBar = !_showAppBar);
+    if (_showAppBar) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
   }
 
   void _toggleOrientation() {
@@ -388,124 +400,127 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
         ? const Color(0xFF121212)
         : (dark ? AppColors.black : const Color(0xFFE2E8F0));
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: IconButton(
-            onPressed: Get.back,
-            icon: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 16,
-                  color: AppColors.white,
-                ),
+    final appBar = AppBar(
+      backgroundColor: AppColors.primary,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: IconButton(
+          onPressed: Get.back,
+          icon: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.white.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 16,
+                color: AppColors.white,
               ),
             ),
           ),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              note.title,
-              style: const TextStyle(
-                color: AppColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            note.title,
+            style: const TextStyle(
+              color: AppColors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
             ),
-            Text(
-              _totalPages > 0
-                  ? 'Page ${_pageNotifier.value + 1} of $_totalPages'
-                  : 'Reading note...',
-              style: const TextStyle(
-                color: Color(0xFFD1FAE5),
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // Night mode toggle
-          SizedBox(
-            width: 36,
-            child: IconButton(
-              tooltip: _nightMode ? 'Light Mode' : 'Night Mode',
-              onPressed: () => setState(() => _nightMode = !_nightMode),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              icon: Icon(
-                _nightMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                color: AppColors.white,
-                size: 20,
-              ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            _totalPages > 0
+                ? 'Page ${_pageNotifier.value + 1} of $_totalPages'
+                : 'Reading note...',
+            style: const TextStyle(
+              color: Color(0xFFD1FAE5),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          // Orientation toggle
-          SizedBox(
-            width: 36,
-            child: IconButton(
-              tooltip: _isLandscape ? 'Portrait Mode' : 'Landscape Mode',
-              onPressed: _toggleOrientation,
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              icon: Icon(
-                _isLandscape
-                    ? Icons.crop_portrait_rounded
-                    : Icons.screen_rotation_rounded,
-                color: AppColors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          // Practice quick button
-          if (note.chapterId != null)
-            SizedBox(
-              width: 36,
-              child: IconButton(
-                tooltip: 'Practice chapter tests',
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  Get.toNamed(
-                    Routes.testLists,
-                    arguments: {
-                      'subject_id': note.subjectId,
-                      'grade': note.grade,
-                      'subject': subjectTitle,
-                      'chapter': note.title,
-                      'chapter_id': note.chapterId,
-                      'chapter_number': note.chapterNumber,
-                    },
-                  );
-                },
-                icon: const Icon(
-                  Icons.quiz_rounded,
-                  color: AppColors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-          const SizedBox(width: 4),
         ],
       ),
+      actions: [
+        // Night mode toggle
+        SizedBox(
+          width: 36,
+          child: IconButton(
+            tooltip: _nightMode ? 'Light Mode' : 'Night Mode',
+            onPressed: () => setState(() => _nightMode = !_nightMode),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            icon: Icon(
+              _nightMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+              color: AppColors.white,
+              size: 20,
+            ),
+          ),
+        ),
+        // Orientation toggle
+        SizedBox(
+          width: 36,
+          child: IconButton(
+            tooltip: _isLandscape ? 'Portrait Mode' : 'Landscape Mode',
+            onPressed: _toggleOrientation,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            icon: Icon(
+              _isLandscape
+                  ? Icons.crop_portrait_rounded
+                  : Icons.screen_rotation_rounded,
+              color: AppColors.white,
+              size: 20,
+            ),
+          ),
+        ),
+        // Practice quick button
+        if (note.chapterId != null)
+          SizedBox(
+            width: 36,
+            child: IconButton(
+              tooltip: 'Practice chapter tests',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                Get.toNamed(
+                  Routes.testLists,
+                  arguments: {
+                    'subject_id': note.subjectId,
+                    'grade': note.grade,
+                    'subject': subjectTitle,
+                    'chapter': note.title,
+                    'chapter_id': note.chapterId,
+                    'chapter_number': note.chapterNumber,
+                  },
+                );
+              },
+              icon: const Icon(
+                Icons.quiz_rounded,
+                color: AppColors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        const SizedBox(width: 4),
+      ],
+    );
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      extendBodyBehindAppBar: !_showAppBar,
+      appBar: _showAppBar ? appBar : null,
       body: _isLoadingFile
           ? Center(
               child: Column(
@@ -572,7 +587,10 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                 style: TextStyle(fontSize: 14),
               ),
             )
-          : LayoutBuilder(
+          : GestureDetector(
+              onTap: _toggleAppBar,
+              behavior: HitTestBehavior.translucent,
+              child: LayoutBuilder(
               builder: (context, constraints) {
                 return Stack(
                   children: [
@@ -676,6 +694,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                 );
               },
             ),
+          ),
     );
   }
 }

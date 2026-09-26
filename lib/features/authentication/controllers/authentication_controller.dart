@@ -31,6 +31,9 @@ const _kLastSessionCheckKey = 'last_session_check_ms';
 /// Minimum gap between periodic session checks (5 minutes).
 const _kSessionCheckInterval = Duration(minutes: 5);
 
+/// Persisted flag so returning users see Login instead of Signup.
+const _kHasLoggedInKey = 'has_logged_in';
+
 class AuthenticationController extends GetxController
     with WidgetsBindingObserver {
   static AuthenticationController get instance => Get.find();
@@ -94,7 +97,9 @@ class AuthenticationController extends GetxController
     final user = authRepo.currentUser;
 
     if (user == null) {
-      Get.offAllNamed(Routes.signIn);
+      // New users see Signup; returning users (who logged in before) see Login.
+      final hasLoggedIn = deviceStorage.read<bool>(_kHasLoggedInKey) ?? false;
+      Get.offAllNamed(hasLoggedIn ? Routes.signIn : Routes.signup);
       return;
     }
 
@@ -175,6 +180,9 @@ class AuthenticationController extends GetxController
     } finally {
       isInitializing.value = false;
     }
+
+    // Mark that this device has completed at least one successful login.
+    deviceStorage.write(_kHasLoggedInKey, true);
 
     // Navigate to home — all subject/user data is ready at this point.
     Get.offAllNamed(Routes.navigationMenu);

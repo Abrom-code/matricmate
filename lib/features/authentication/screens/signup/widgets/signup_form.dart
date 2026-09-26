@@ -284,7 +284,9 @@ class SignupForm extends GetView<SignupController> {
                   () => TextFormField(
                     controller: controller.confirmPassword,
                     validator: (val) => AppValidator.validateConfirmPassword(
-                        val, controller.password.text),
+                      val,
+                      controller.password.text,
+                    ),
                     onTapOutside: (_) => FocusScope.of(context).unfocus(),
                     obscureText: controller.hideConfirmPassword.value,
                     style: TextStyle(
@@ -405,22 +407,12 @@ class SignupForm extends GetView<SignupController> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
-                        color: dark
-                            ? AppColors.white
-                            : const Color(0xFF0F172A),
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Select your field of study for customized exam preparation:',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 8),
                 Obx(
                   () => Row(
                     children: [
@@ -450,59 +442,59 @@ class SignupForm extends GetView<SignupController> {
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // ── Privacy Policy Acceptance Checkbox Row ───────────────
-          Obx(
-            () => Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: controller.acceptPrivacyPolicy.value,
-                    onChanged: (val) =>
-                        controller.acceptPrivacyPolicy.value = val ?? false,
-                    activeColor: AppColors.primary,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                const SizedBox(height: 12),
+                Obx(
+                  () => Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      GestureDetector(
-                        onTap: () => controller.acceptPrivacyPolicy.toggle(),
-                        child: Text(
-                          'I agree to the ',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: dark
-                                ? AppColors.darkGrey
-                                : AppColors.textSecondary,
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: controller.acceptPrivacyPolicy.value,
+                          onChanged: (val) =>
+                              controller.acceptPrivacyPolicy.value =
+                                  val ?? false,
+                          activeColor: AppColors.primary,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
                           ),
                         ),
                       ),
-                      GestureDetector(
-                        onTap: ProfileActionsHelper.openPrivacyPolicy,
-                        child: const Text(
-                          'Privacy Policy',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                            decoration: TextDecoration.underline,
-                            decorationColor: AppColors.primary,
-                          ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () =>
+                                  controller.acceptPrivacyPolicy.toggle(),
+                              child: Text(
+                                'I agree to the ',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: dark
+                                      ? AppColors.darkGrey
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: ProfileActionsHelper.openPrivacyPolicy,
+                              child: const Text(
+                                'Privacy Policy',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -623,7 +615,9 @@ class _SignupStreamChip extends StatelessWidget {
             border: Border.all(
               color: isSelected
                   ? AppColors.primary
-                  : (dark ? AppColors.darkInputBorder : AppColors.lightInputBorder),
+                  : (dark
+                        ? AppColors.darkInputBorder
+                        : AppColors.lightInputBorder),
               width: isSelected ? 1.8 : 1.2,
             ),
           ),
@@ -635,7 +629,9 @@ class _SignupStreamChip extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.primary
-                      : (dark ? AppColors.darkSurface : const Color(0xFFE2E8F0)),
+                      : (dark
+                            ? AppColors.darkSurface
+                            : const Color(0xFFE2E8F0)),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -643,7 +639,9 @@ class _SignupStreamChip extends StatelessWidget {
                   size: 17,
                   color: isSelected
                       ? Colors.white
-                      : (dark ? AppColors.darkInputLabel : AppColors.lightInputLabel),
+                      : (dark
+                            ? AppColors.darkInputLabel
+                            : AppColors.lightInputLabel),
                 ),
               ),
               const SizedBox(width: 10),
@@ -660,8 +658,8 @@ class _SignupStreamChip extends StatelessWidget {
                         color: isSelected
                             ? AppColors.primary
                             : (dark
-                                ? AppColors.white
-                                : const Color(0xFF0F172A)),
+                                  ? AppColors.white
+                                  : const Color(0xFF0F172A)),
                       ),
                     ),
                     Text(
@@ -674,8 +672,8 @@ class _SignupStreamChip extends StatelessWidget {
                         color: isSelected
                             ? AppColors.primary.withValues(alpha: 0.85)
                             : (dark
-                                ? AppColors.darkGrey
-                                : AppColors.textSecondary),
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary),
                       ),
                     ),
                   ],

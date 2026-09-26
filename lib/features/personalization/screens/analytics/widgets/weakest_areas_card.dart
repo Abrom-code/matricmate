@@ -143,9 +143,9 @@ class WeakestAreasCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // 1-Tap navigation to Weakness tab
+          // 1-Tap navigation to Tests tab
           InkWell(
-            onTap: () => controller.switchTab(AnalyticsTab.weaknesses),
+            onTap: () => controller.switchTab(AnalyticsTab.tests),
             borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -153,7 +153,7 @@ class WeakestAreasCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Open Diagnostic & Study Plan',
+                    'Practice Subject Tests',
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,

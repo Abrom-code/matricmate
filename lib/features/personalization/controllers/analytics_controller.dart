@@ -162,7 +162,7 @@ class _ChapterScoreAgg {
 
 // ── Filter & Navigation enums ─────────────────────────────────────────────────
 
-enum AnalyticsTab { overview, weaknesses, notes, tests }
+enum AnalyticsTab { overview, notes, tests }
 
 enum TimeFilter { all, lastWeek, lastMonth, last3Months }
 

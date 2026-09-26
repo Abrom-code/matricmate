@@ -14,7 +14,6 @@ import 'package:matricmate/features/personalization/screens/analytics/widgets/sc
 import 'package:matricmate/features/personalization/screens/analytics/widgets/subject_performance_section.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/test_type_distribution.dart';
 import 'package:matricmate/features/personalization/screens/analytics/widgets/weakest_areas_card.dart';
-import 'package:matricmate/features/personalization/screens/analytics/widgets/weakness_action_plan_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -237,7 +236,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     // ── Section Tabs Bar ────────────────────────────────────
                     Obx(() {
                       final currentTab = controller.selectedTab.value;
-                      final weakCount = controller.weakestAreas.length;
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 14),
@@ -269,15 +267,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               isSelected: currentTab == AnalyticsTab.overview,
                               onTap: () =>
                                   controller.switchTab(AnalyticsTab.overview),
-                              dark: dark,
-                            ),
-                            _SectionTab(
-                              icon: Icons.track_changes_rounded,
-                              title: 'Weaknesses',
-                              isSelected: currentTab == AnalyticsTab.weaknesses,
-                              badgeCount: weakCount,
-                              onTap: () =>
-                                  controller.switchTab(AnalyticsTab.weaknesses),
                               dark: dark,
                             ),
                             _SectionTab(
@@ -324,11 +313,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               // 4. Challenge Arena Analytics
                               ChallengeAnalyticsSection(controller: controller),
                             ],
-                          );
-
-                        case AnalyticsTab.weaknesses:
-                          return WeaknessActionPlanSection(
-                            controller: controller,
                           );
 
                         case AnalyticsTab.notes:
@@ -380,7 +364,6 @@ class _SectionTab extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.dark,
-    this.badgeCount = 0,
   });
 
   final IconData icon;
@@ -388,7 +371,6 @@ class _SectionTab extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final bool dark;
-  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -399,7 +381,7 @@ class _SectionTab extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
@@ -409,18 +391,18 @@ class _SectionTab extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                size: 14.5,
+                size: 15,
                 color: isSelected
                     ? Colors.white
                     : (dark ? AppColors.darkGrey : AppColors.textSecondary),
               ),
-              const SizedBox(width: 3),
+              const SizedBox(width: 5),
               Flexible(
                 child: Text(
                   title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     color: isSelected
                         ? Colors.white
@@ -430,24 +412,6 @@ class _SectionTab extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (badgeCount > 0 && !isSelected) ...[
-                const SizedBox(width: 3),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$badgeCount',
-                    style: const TextStyle(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFEF4444),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),

@@ -299,18 +299,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             children: [
                               // 1. Hero Readiness & 4 KPI Stats
                               AnalyticsSummaryGrid(controller: controller),
-                              const SizedBox(height: 14),
 
-                              // 2. Focus Alert (if weaknesses detected)
-                              WeakestAreasCard(controller: controller),
-                              if (controller.weakestAreas.isNotEmpty)
-                                const SizedBox(height: 14),
+                              // 2. Focus Alert & Target Gap (if weaknesses detected)
+                              if (controller.weakestAreas.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                WeakestAreasCard(controller: controller),
+                              ],
 
                               // 3. Score Trajectory Trend Chart
+                              const SizedBox(height: 16),
                               ScoreTrendChart(controller: controller),
-                              const SizedBox(height: 14),
 
                               // 4. Challenge Arena Analytics
+                              const SizedBox(height: 16),
                               ChallengeAnalyticsSection(controller: controller),
                             ],
                           );
@@ -324,11 +325,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             children: [
                               // 1. Subject Mastery Breakdown
                               SubjectPerformanceSection(controller: controller),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 16),
 
                               // 2. Test Type Distribution
                               TestTypeDistribution(controller: controller),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 16),
 
                               // 3. Chapter Progress Section
                               ChapterProgressSection(controller: controller),

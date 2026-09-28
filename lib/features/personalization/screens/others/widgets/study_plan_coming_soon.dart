@@ -44,35 +44,11 @@ class StudyPlanComingSoon extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
-
-            // Soon Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2563EB).withValues(alpha: dark ? 0.22 : 0.12),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.35),
-                  width: 1,
-                ),
-              ),
-              child: const Text(
-                'Soon',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF2563EB),
-                  letterSpacing: 0.6,
-                ),
-              ),
-            ),
-
             const SizedBox(height: 14),
 
             // Title
             Text(
-              'Smart Study Plan',
+              'Coming Soon...',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 22,
@@ -87,4 +63,3 @@ class StudyPlanComingSoon extends StatelessWidget {
     );
   }
 }
-

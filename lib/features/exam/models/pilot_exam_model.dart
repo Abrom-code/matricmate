@@ -10,7 +10,7 @@ class PilotExamModel {
     required this.id,
     required this.title,
     this.description = '',
-    this.edition = '2017 E.C.',
+    this.edition = '2019 E.C.',
     this.isActive = true,
     this.createdAt,
   });
@@ -31,7 +31,7 @@ class PilotExamModel {
       id: (map['id'] as num?)?.toInt() ?? 0,
       title: map['title'] as String? ?? 'Pilot Exam',
       description: map['description'] as String? ?? '',
-      edition: map['edition'] as String? ?? '2017 E.C.',
+      edition: map['edition'] as String? ?? '2019 E.C.',
       isActive: map['is_active'] == 1 || map['is_active'] == true,
       createdAt: map['created_at'] as String?,
     );

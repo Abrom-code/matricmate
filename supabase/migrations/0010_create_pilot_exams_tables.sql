@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.pilot_exams (
     id          BIGSERIAL PRIMARY KEY,
     title       VARCHAR(255) NOT NULL,                           -- e.g. "1st Semester Model Exam"
     description TEXT,                                            -- e.g. "Full-length nationwide pre-matric trial covering all 6 curriculum subjects."
-    edition     VARCHAR(50) NOT NULL DEFAULT '2017 E.C.',        -- Academic year / edition
+    edition     VARCHAR(50) NOT NULL DEFAULT '2019 E.C.',        -- Academic year / edition
     is_active   BOOLEAN NOT NULL DEFAULT true,                   -- Set to false to archive or hide from students
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()

@@ -26,7 +26,7 @@ BEGIN
     VALUES (
         '1st Semester Model Exam',
         'Nationwide entrance trial simulation covering all 6 curriculum subjects. Scaled to 100 per subject with an aggregate score out of 600.',
-        '2017 E.C.',
+        '2019 E.C.',
         true
     )
     ON CONFLICT DO NOTHING

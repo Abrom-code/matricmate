@@ -370,7 +370,7 @@ class DatabaseService extends GetxController {
                 id INTEGER PRIMARY KEY,
                 title TEXT NOT NULL,
                 description TEXT,
-                edition TEXT DEFAULT '2017 E.C.',
+                edition TEXT DEFAULT '2019 E.C.',
                 is_active INTEGER DEFAULT 1,
                 created_at TEXT
               )

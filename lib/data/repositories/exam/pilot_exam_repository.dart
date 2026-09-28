@@ -104,7 +104,7 @@ class PilotExamRepository {
             'id': exam['id'],
             'title': exam['title'],
             'description': exam['description'] ?? '',
-            'edition': exam['edition'] ?? '2017 E.C.',
+            'edition': exam['edition'] ?? '2019 E.C.',
             'is_active': (exam['is_active'] == true || exam['is_active'] == 1) ? 1 : 0,
             'created_at': exam['created_at'],
           },
@@ -155,7 +155,7 @@ class PilotExamRepository {
           'title': '1st Semester Model Exam',
           'description':
               'Full-length nationwide pre-matric trial covering all 6 curriculum subjects.',
-          'edition': '2017 E.C.',
+          'edition': '2019 E.C.',
           'is_active': 1,
           'created_at': DateTime.now().toIso8601String(),
         },
@@ -169,7 +169,7 @@ class PilotExamRepository {
           'title': 'National Pre-Matric Simulation',
           'description':
               'Authentic NEAEA standard simulation with timed test protocols.',
-          'edition': '2017 E.C.',
+          'edition': '2019 E.C.',
           'is_active': 1,
           'created_at': DateTime.now().toIso8601String(),
         },

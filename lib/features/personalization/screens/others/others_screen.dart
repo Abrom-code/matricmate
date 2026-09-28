@@ -111,25 +111,14 @@ class _OthersScreenState extends State<OthersScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── 1. Analytics & Progress Card ─────────────────────────────
-              Obx(() {
-                final readiness = controller.holisticReadiness;
-                final tests = controller.testsCompleted.value;
-                final badge = (tests > 0 || controller.completedNotesCount.value > 0)
-                    ? '${readiness.toStringAsFixed(0)}% Ready'
-                    : 'View Insights';
-
-                return OthersMenuCard(
-                  title: 'Analytics & Progress',
-                  description:
-                      'Track exam readiness, subject mastery & score trends.',
-                  icon: Iconsax.chart_2_copy,
-                  iconColor: const Color(0xFF10B981),
-                  badgeText: badge,
-                  badgeColor: const Color(0xFF10B981).withValues(alpha: dark ? 0.22 : 0.12),
-                  badgeTextColor: const Color(0xFF10B981),
-                  onTap: () => Get.toNamed(Routes.progressDetail),
-                );
-              }),
+              OthersMenuCard(
+                title: 'Analytics & Progress',
+                description:
+                    'Track exam readiness, subject mastery & score trends.',
+                icon: Iconsax.chart_2_copy,
+                iconColor: const Color(0xFF10B981),
+                onTap: () => Get.toNamed(Routes.progressDetail),
+              ),
 
               const SizedBox(height: 12),
 
@@ -140,8 +129,6 @@ class _OthersScreenState extends State<OthersScreen> {
                     'Simulate real national exams under timed conditions.',
                 icon: Iconsax.timer_1_copy,
                 iconColor: const Color(0xFF0284C7),
-                badgeText: 'COMING SOON',
-                isBadgeComingSoon: true,
                 onTap: () => Get.toNamed(Routes.pilotExam),
               ),
 
@@ -154,8 +141,6 @@ class _OthersScreenState extends State<OthersScreen> {
                     'Personalized daily study roadmap for your target score.',
                 icon: Iconsax.calendar_tick_copy,
                 iconColor: const Color(0xFF8B5CF6),
-                badgeText: 'COMING SOON',
-                isBadgeComingSoon: true,
                 onTap: () => Get.toNamed(Routes.studyPlan),
               ),
 

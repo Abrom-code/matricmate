@@ -89,6 +89,7 @@ class _BookmarkScreenState extends State<BookmarkScreen>
     return Scaffold(
       appBar: ModernAppbarWithBuilder(
         title: 'Bookmarks',
+        showBackArrow: true,
         subtitleBuilder: (_) => Obx(() {
           final count = ctrl.bookmarkedQuestions.length;
           return Text(

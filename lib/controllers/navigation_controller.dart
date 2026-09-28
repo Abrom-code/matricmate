@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/features/challenges/screens/challenge_home_screen.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
-import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
@@ -38,7 +37,6 @@ class NavigationController extends GetxController {
     pages = [
       const _KeepAlivePage(child: SubjectsScreen()),
       const _KeepAlivePage(child: ChallengeHomeScreen()),
-      _KeepAlivePage(child: BookmarkScreen()),
       const _KeepAlivePage(child: OthersScreen()),
       const _KeepAlivePage(child: ProfileScreen()),
     ];
@@ -79,7 +77,7 @@ class NavigationController extends GetxController {
         NotificationsController.instance.loadNotifications(syncRemote: true),
       );
     }
-    if (index == 3 && Get.isRegistered<AnalyticsController>()) {
+    if (index == 2 && Get.isRegistered<AnalyticsController>()) {
       unawaited(AnalyticsController.instance.loadAll());
     }
   }
@@ -92,7 +90,7 @@ class NavigationController extends GetxController {
         NotificationsController.instance.loadNotifications(syncRemote: true),
       );
     }
-    if (index == 3 && Get.isRegistered<AnalyticsController>()) {
+    if (index == 2 && Get.isRegistered<AnalyticsController>()) {
       unawaited(AnalyticsController.instance.loadAll());
     }
   }

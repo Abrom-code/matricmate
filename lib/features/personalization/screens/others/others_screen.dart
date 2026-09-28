@@ -137,74 +137,29 @@ class _OthersScreenState extends State<OthersScreen> {
 
               const SizedBox(height: 12),
 
-              // ── 3. Smart Study Plan Card ─────────────────────────────────
+              // ── 3. Saved Bookmarks Card ──────────────────────────────────
+              OthersMenuCard(
+                title: 'Bookmarks',
+                description:
+                    'Review your saved challenging questions and notes.',
+                icon: Iconsax.archive_tick_copy,
+                iconColor: const Color(0xFFF59E0B),
+                onTap: () => Get.toNamed(Routes.bookmark),
+              ),
+
+              const SizedBox(height: 12),
+
+              // ── 4. Smart Study Plan Card ─────────────────────────────────
               OthersMenuCard(
                 title: 'Smart Study Plan',
                 description:
                     'Personalized daily study roadmap for your target score.',
                 icon: Iconsax.calendar_tick_copy,
                 iconColor: const Color(0xFF8B5CF6),
+                badgeText: 'SOON',
+                badgeColor: const Color(0xFF8B5CF6).withValues(alpha: dark ? 0.22 : 0.12),
+                badgeTextColor: const Color(0xFF8B5CF6),
                 onTap: () => Get.toNamed(Routes.studyPlan),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── Quick Info Tip ───────────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: dark ? AppColors.darkCard : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.lightbulb_outline_rounded,
-                          color: AppColors.primary,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Daily Exam Preparation Tip',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: dark ? Colors.white : AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Regular practice with short test sessions combined with reading notes produces the highest score gains.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),

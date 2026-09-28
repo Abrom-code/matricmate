@@ -121,7 +121,7 @@ class _OthersScreenState extends State<OthersScreen> {
                 return OthersMenuCard(
                   title: 'Analytics & Progress',
                   description:
-                      'Track your matric exam readiness, accuracy percentage, subject mastery, and score trajectory.',
+                      'Track exam readiness, subject mastery & score trends.',
                   icon: Iconsax.chart_2_copy,
                   iconColor: const Color(0xFF10B981),
                   badgeText: badge,
@@ -137,7 +137,7 @@ class _OthersScreenState extends State<OthersScreen> {
               OthersMenuCard(
                 title: 'Pilot Exam Simulator',
                 description:
-                    'Simulate real national matric entrance exam conditions under authentic timed rules and rankings.',
+                    'Simulate real national exams under timed conditions.',
                 icon: Iconsax.timer_1_copy,
                 iconColor: const Color(0xFF0284C7),
                 badgeText: 'COMING SOON',
@@ -151,7 +151,7 @@ class _OthersScreenState extends State<OthersScreen> {
               OthersMenuCard(
                 title: 'Smart Study Plan',
                 description:
-                    'AI-driven daily revision roadmap and spaced repetition built for your target exam date.',
+                    'Personalized daily study roadmap for your target score.',
                 icon: Iconsax.calendar_tick_copy,
                 iconColor: const Color(0xFF8B5CF6),
                 badgeText: 'COMING SOON',

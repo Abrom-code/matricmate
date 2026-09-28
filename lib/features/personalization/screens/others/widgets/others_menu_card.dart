@@ -57,9 +57,9 @@ class OthersMenuCard extends StatelessWidget {
             onTap();
           },
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Icon Avatar
                 Container(
@@ -153,23 +153,20 @@ class OthersMenuCard extends StatelessWidget {
                 const SizedBox(width: 10),
 
                 // Trailing Chevron
-                Padding(
-                  padding: const EdgeInsets.only(top: 14),
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: dark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : const Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 13,
-                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                      ),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: dark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : const Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 13,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                     ),
                   ),
                 ),

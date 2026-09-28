@@ -14,7 +14,8 @@ class PilotExamSubjectsScreen extends StatefulWidget {
   const PilotExamSubjectsScreen({super.key});
 
   @override
-  State<PilotExamSubjectsScreen> createState() => _PilotExamSubjectsScreenState();
+  State<PilotExamSubjectsScreen> createState() =>
+      _PilotExamSubjectsScreenState();
 }
 
 class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
@@ -107,26 +108,6 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                         letterSpacing: -0.3,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(
-                          alpha: dark ? 0.22 : 0.1,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '$completedCount/${subjects.length} Completed',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -139,8 +120,12 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final subject = subjects[index];
-                    final isCompleted = controller.isSubjectCompleted(subject.testId);
-                    final isInProgress = controller.isSubjectInProgress(subject.testId);
+                    final isCompleted = controller.isSubjectCompleted(
+                      subject.testId,
+                    );
+                    final isInProgress = controller.isSubjectInProgress(
+                      subject.testId,
+                    );
                     final score100 = controller.getSubjectScoreOutOf100(
                       subject.testId,
                       subject.questionCount,
@@ -226,11 +211,15 @@ class _CompositeScorecardCard extends StatelessWidget {
                 width: 70,
                 height: 70,
                 child: CircularProgressIndicator(
-                  value: completedCount > 0 ? (compositePct / 100.0).clamp(0.0, 1.0) : 0.0,
+                  value: completedCount > 0
+                      ? (compositePct / 100.0).clamp(0.0, 1.0)
+                      : 0.0,
                   strokeWidth: 6.5,
                   strokeCap: StrokeCap.round,
                   backgroundColor: Colors.white.withValues(alpha: 0.15),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34D399)),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Color(0xFF34D399),
+                  ),
                 ),
               ),
               Text(
@@ -389,9 +378,7 @@ class _SubjectExamTile extends StatelessWidget {
                     color: color.withValues(alpha: dark ? 0.22 : 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Center(
-                    child: Icon(icon, color: color, size: 22),
-                  ),
+                  child: Center(child: Icon(icon, color: color, size: 22)),
                 ),
                 const SizedBox(width: 14),
 
@@ -415,7 +402,9 @@ class _SubjectExamTile extends StatelessWidget {
                         '${subject.timeMinutes} mins • ${subject.questionCount} questions',
                         style: TextStyle(
                           fontSize: 12,
-                          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                          color: dark
+                              ? AppColors.darkGrey
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -427,9 +416,14 @@ class _SubjectExamTile extends StatelessWidget {
                 // Score / Status Pill
                 if (isCompleted) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: dark ? 0.22 : 0.12),
+                      color: const Color(
+                        0xFF10B981,
+                      ).withValues(alpha: dark ? 0.22 : 0.12),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: const Color(0xFF10B981).withValues(alpha: 0.35),
@@ -460,9 +454,14 @@ class _SubjectExamTile extends StatelessWidget {
                   ),
                 ] else if (isInProgress) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.22 : 0.12),
+                      color: const Color(
+                        0xFFF59E0B,
+                      ).withValues(alpha: dark ? 0.22 : 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Text(
@@ -476,7 +475,10 @@ class _SubjectExamTile extends StatelessWidget {
                   ),
                 ] else ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(10),

@@ -37,6 +37,9 @@ import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/notifications/screens/notifications_screen.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/others/others_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/pilot_exam_detail_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/progress_detail_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/study_plan_detail_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
 import 'package:matricmate/bindings/notes/notes_binding.dart';
@@ -133,6 +136,18 @@ class AppRoutes {
     // others & analytics
     GetPage(name: Routes.others, page: () => const OthersScreen()),
     GetPage(name: Routes.analytics, page: () => const OthersScreen()),
+    GetPage(
+      name: Routes.progressDetail,
+      page: () => const ProgressDetailScreen(),
+    ),
+    GetPage(
+      name: Routes.pilotExam,
+      page: () => const PilotExamDetailScreen(),
+    ),
+    GetPage(
+      name: Routes.studyPlan,
+      page: () => const StudyPlanDetailScreen(),
+    ),
 
     // profile
     GetPage(name: Routes.userProfile, page: () => const ProfileScreen()),

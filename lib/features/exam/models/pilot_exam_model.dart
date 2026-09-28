@@ -106,4 +106,15 @@ class PilotExamSubjectModel {
       timeMinutes: (map['time_minutes'] as num?)?.toInt() ?? 90,
     );
   }
+
+  bool get isCommon => stream.toLowerCase() == 'common' || stream.toLowerCase() == 'both';
+  bool get isNatural => stream.toLowerCase() == 'natural';
+  bool get isSocial => stream.toLowerCase() == 'social';
+
+  String get typeLabel {
+    if (isCommon) return 'Common Subject';
+    if (isNatural) return 'Natural Subject';
+    if (isSocial) return 'Social Subject';
+    return 'Exam Subject';
+  }
 }

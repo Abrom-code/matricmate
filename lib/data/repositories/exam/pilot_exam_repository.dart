@@ -193,24 +193,22 @@ class PilotExamRepository {
         }
       }
 
-      // Natural Stream 6 Subjects
+      // 4 Natural Subjects + 2 Common Subjects = 6
       final naturalList = [
-        {'name': 'English', 'stream': 'common'},
-        {'name': 'Mathematics', 'stream': 'natural'},
-        {'name': 'Physics', 'stream': 'natural'},
-        {'name': 'Chemistry', 'stream': 'natural'},
-        {'name': 'Biology', 'stream': 'natural'},
-        {'name': 'Aptitude', 'stream': 'common'},
+        {'name': 'Mathematics', 'stream': 'natural', 'order': 1},
+        {'name': 'Physics', 'stream': 'natural', 'order': 2},
+        {'name': 'Chemistry', 'stream': 'natural', 'order': 3},
+        {'name': 'Biology', 'stream': 'natural', 'order': 4},
+        {'name': 'English', 'stream': 'common', 'order': 5},
+        {'name': 'Aptitude', 'stream': 'common', 'order': 6},
       ];
 
-      // Social Stream 6 Subjects
+      // 4 Social Subjects (English & Aptitude shared as common)
       final socialList = [
-        {'name': 'English', 'stream': 'common'},
-        {'name': 'Mathematics', 'stream': 'social'},
-        {'name': 'History', 'stream': 'social'},
-        {'name': 'Geography', 'stream': 'social'},
-        {'name': 'Economics', 'stream': 'social'},
-        {'name': 'Aptitude', 'stream': 'common'},
+        {'name': 'Mathematics', 'stream': 'social', 'order': 1},
+        {'name': 'History', 'stream': 'social', 'order': 2},
+        {'name': 'Geography', 'stream': 'social', 'order': 3},
+        {'name': 'Economics', 'stream': 'social', 'order': 4},
       ];
 
       int subjectIndex = 1;
@@ -220,7 +218,7 @@ class PilotExamRepository {
       for (final examId in [1, 2]) {
         for (var i = 0; i < naturalList.length; i++) {
           final item = naturalList[i];
-          final name = item['name']!;
+          final name = item['name'] as String;
           final subId = subjectMap[name.toLowerCase()] ?? (i + 1);
           final testId = testBySubject[subId] ?? subId;
 
@@ -233,7 +231,7 @@ class PilotExamRepository {
               'subject_name': name,
               'stream': item['stream'] as String,
               'test_id': testId,
-              'order_index': i + 1,
+              'order_index': item['order'] as int,
               'question_count': 60,
               'time_minutes': 90,
             },
@@ -243,10 +241,7 @@ class PilotExamRepository {
 
         for (var i = 0; i < socialList.length; i++) {
           final item = socialList[i];
-          final name = item['name']!;
-          // Skip English and Aptitude if already inserted as common
-          if (name == 'English' || name == 'Aptitude') continue;
-
+          final name = item['name'] as String;
           final subId = subjectMap[name.toLowerCase()] ?? (i + 10);
           final testId = testBySubject[subId] ?? subId;
 
@@ -259,7 +254,7 @@ class PilotExamRepository {
               'subject_name': name,
               'stream': 'social',
               'test_id': testId,
-              'order_index': i + 1,
+              'order_index': item['order'] as int,
               'question_count': 60,
               'time_minutes': 90,
             },

@@ -100,14 +100,30 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Exam Subjects',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: dark ? Colors.white : AppColors.textPrimary,
-                        letterSpacing: -0.3,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Exam Subjects',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: dark ? Colors.white : AppColors.textPrimary,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          user.stream.toLowerCase().contains('soc')
+                              ? '4 Social Subjects + 2 Common'
+                              : '4 Natural Subjects + 2 Common',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -461,17 +477,54 @@ class _SubjectExamTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        subject.subjectName,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: dark ? Colors.white : AppColors.textPrimary,
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              subject.subjectName,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: dark ? Colors.white : AppColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: subject.isCommon
+                                  ? (dark
+                                      ? const Color(0xFF0284C7).withValues(alpha: 0.22)
+                                      : const Color(0xFFE0F2FE))
+                                  : (dark
+                                      ? const Color(0xFF0D9488).withValues(alpha: 0.22)
+                                      : const Color(0xFFCCFBF1)),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              subject.isCommon
+                                  ? 'Common'
+                                  : (subject.isNatural ? 'Natural' : 'Social'),
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: subject.isCommon
+                                    ? (dark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1))
+                                    : (dark ? const Color(0xFF2DD4BF) : const Color(0xFF0F766E)),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '${subject.timeMinutes} mins • ${subject.questionCount} questions',
+                        '${subject.typeLabel} • ${subject.timeMinutes} mins • ${subject.questionCount} questions',
                         style: TextStyle(
                           fontSize: 12,
                           color: dark ? AppColors.darkGrey : AppColors.textSecondary,

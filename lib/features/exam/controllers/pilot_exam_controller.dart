@@ -28,11 +28,16 @@ class PilotExamController extends GetxController {
 
   final RxBool isLoading = false.obs;
   final RxBool isLoadingSubjects = false.obs;
+  final RxMap<int, PilotExamProgress> examProgressMap = <int, PilotExamProgress>{}.obs;
 
   @override
   void onInit() {
     super.onInit();
     loadPilotExams();
+  }
+
+  PilotExamProgress getProgressForExam(int examId) {
+    return examProgressMap[examId] ?? const PilotExamProgress();
   }
 
   /// Loads all available pilot exams (offline SQLite first, then Supabase if online).
@@ -43,6 +48,7 @@ class PilotExamController extends GetxController {
       // 1. Paint immediately from local SQLite
       final local = await _repo.getLocalPilotExams();
       pilotExams.assignAll(local);
+      await loadAllExamProgresses();
 
       // 2. Refresh from remote Supabase if connected
       final isConnected = await NetworkManager.instance.isConnected();
@@ -52,6 +58,7 @@ class PilotExamController extends GetxController {
           await _repo.savePilotExamsBatch(remote);
           final updated = await _repo.getLocalPilotExams();
           pilotExams.assignAll(updated);
+          await loadAllExamProgresses();
         }
       }
     } catch (e) {
@@ -60,6 +67,39 @@ class PilotExamController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  /// Computes progress (completed count and score) for all pilot exams.
+  Future<void> loadAllExamProgresses() async {
+    try {
+      final userStream = UserController.instance.user.value.stream.toLowerCase().trim();
+      final stream = userStream.isEmpty ? 'natural' : userStream;
+
+      for (final exam in pilotExams) {
+        final subjects = await _repo.getLocalPilotExamSubjects(exam.id, stream);
+        int completed = 0;
+        double totalScore = 0.0;
+
+        for (final s in subjects) {
+          final res = await _testRepo.loadSavedResults(s.testId);
+          if (res != null && res.isCompleted) {
+            completed++;
+            final total = res.testQuestions.isNotEmpty ? res.testQuestions.length : s.questionCount;
+            if (total > 0) {
+              final score = ((res.correctAnswers / total) * 100.0).clamp(0.0, 100.0);
+              totalScore += score;
+            }
+          }
+        }
+
+        examProgressMap[exam.id] = PilotExamProgress(
+          completedSubjects: completed,
+          totalSubjects: subjects.isNotEmpty ? subjects.length : 6,
+          totalScore: totalScore,
+        );
+      }
+    } catch (_) {}
+  }
+
 
   /// Selects a pilot exam and loads its 6 subjects based on user stream.
   Future<void> selectExam(PilotExamModel exam) async {
@@ -99,12 +139,19 @@ class PilotExamController extends GetxController {
 
       // 3. Load test results and question counts for each subject test
       await _loadSubjectTestMetadata(examSubjects);
+
+      examProgressMap[exam.id] = PilotExamProgress(
+        completedSubjects: completedSubjectsCount,
+        totalSubjects: examSubjects.length,
+        totalScore: grandTotalScore,
+      );
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoadingSubjects.value = false;
     }
   }
+
 
   Future<void> _loadSubjectTestMetadata(List<PilotExamSubjectModel> subjects) async {
     for (final s in subjects) {

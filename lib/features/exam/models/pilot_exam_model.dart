@@ -118,3 +118,21 @@ class PilotExamSubjectModel {
     return 'Exam Subject';
   }
 }
+
+class PilotExamProgress {
+  final int completedSubjects;
+  final int totalSubjects;
+  final double totalScore;
+
+  const PilotExamProgress({
+    this.completedSubjects = 0,
+    this.totalSubjects = 6,
+    this.totalScore = 0.0,
+  });
+
+  bool get isCompleted => completedSubjects >= totalSubjects && totalSubjects > 0;
+  bool get isStarted => completedSubjects > 0;
+  double get progressFraction =>
+      totalSubjects > 0 ? (completedSubjects / totalSubjects).clamp(0.0, 1.0) : 0.0;
+}
+

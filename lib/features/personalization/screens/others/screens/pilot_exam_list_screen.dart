@@ -5,6 +5,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/pilot_exam_controller.dart';
+import 'package:matricmate/features/exam/models/pilot_exam_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/features/personalization/screens/others/screens/pilot_exam_subjects_screen.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -46,7 +47,7 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
               ? '${stream[0].toUpperCase()}${stream.substring(1)} Stream'
               : 'National Mock Standard';
           return Text(
-            streamLabel,
+              streamLabel,
             style: const TextStyle(
               color: Color(0xFFD1FAE5),
               fontSize: 11.5,
@@ -135,15 +136,19 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
             separatorBuilder: (_, __) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
               final exam = controller.pilotExams[index];
-              return _PilotExamCard(
-                exam: exam,
-                dark: dark,
-                onTap: () async {
-                  HapticFeedback.lightImpact();
-                  await controller.selectExam(exam);
-                  Get.to(() => const PilotExamSubjectsScreen());
-                },
-              );
+              return Obx(() {
+                final progress = controller.getProgressForExam(exam.id);
+                return _PilotExamCard(
+                  exam: exam,
+                  progress: progress,
+                  dark: dark,
+                  onTap: () async {
+                    HapticFeedback.lightImpact();
+                    await controller.selectExam(exam);
+                    Get.to(() => const PilotExamSubjectsScreen());
+                  },
+                );
+              });
             },
           ),
         );
@@ -155,11 +160,13 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
 class _PilotExamCard extends StatelessWidget {
   const _PilotExamCard({
     required this.exam,
+    required this.progress,
     required this.dark,
     required this.onTap,
   });
 
-  final dynamic exam;
+  final PilotExamModel exam;
+  final PilotExamProgress progress;
   final bool dark;
   final VoidCallback onTap;
 
@@ -170,7 +177,11 @@ class _PilotExamCard extends StatelessWidget {
         color: dark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          color: progress.isCompleted
+              ? const Color(0xFF10B981).withValues(alpha: dark ? 0.4 : 0.6)
+              : dark
+                  ? AppColors.darkBorder
+                  : const Color(0xFFE2E8F0),
           width: 1.2,
         ),
         boxShadow: [
@@ -212,24 +223,63 @@ class _PilotExamCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: dark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        '6 SUBJECTS • 600 PTS',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0D9488),
-                          letterSpacing: 0.4,
+
+                    // Progress / Status Badge
+                    if (progress.isCompleted) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: dark ? 0.2 : 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'COMPLETED • ${progress.totalScore.toInt()}/600 PTS',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF10B981),
+                            letterSpacing: 0.3,
+                          ),
                         ),
                       ),
-                    ),
+                    ] else if (progress.isStarted) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${progress.completedSubjects}/6 DONE • ${progress.totalScore.toInt()}/600',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0284C7),
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: dark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          '6 SUBJECTS • 600 PTS',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0D9488),
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ),
+                    ],
+
                     const Spacer(),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
@@ -263,6 +313,43 @@ class _PilotExamCard extends StatelessWidget {
                   ),
                 ),
 
+                // Mini Progress Bar if started
+                if (progress.isStarted) ...[
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: progress.progressFraction,
+                            minHeight: 6,
+                            backgroundColor: dark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : const Color(0xFFE2E8F0),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              progress.isCompleted
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFF0284C7),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '${(progress.progressFraction * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: progress.isCompleted
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF0284C7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
                 const SizedBox(height: 16),
 
                 // Bottom Action Pill Bar
@@ -270,30 +357,54 @@ class _PilotExamCard extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                   decoration: BoxDecoration(
-                    color: dark
-                        ? const Color(0xFF0F766E).withValues(alpha: 0.2)
-                        : const Color(0xFFF0FDFA),
+                    color: progress.isCompleted
+                        ? const Color(0xFF10B981).withValues(alpha: dark ? 0.2 : 0.1)
+                        : progress.isStarted
+                            ? const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.1)
+                            : dark
+                                ? const Color(0xFF0F766E).withValues(alpha: 0.2)
+                                : const Color(0xFFF0FDFA),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: const Color(0xFF0D9488).withValues(alpha: 0.3),
+                      color: progress.isCompleted
+                          ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                          : progress.isStarted
+                              ? const Color(0xFF0284C7).withValues(alpha: 0.3)
+                              : const Color(0xFF0D9488).withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Iconsax.timer_1_copy,
+                        progress.isCompleted
+                            ? Iconsax.tick_circle_copy
+                            : progress.isStarted
+                                ? Iconsax.play_copy
+                                : Iconsax.timer_1_copy,
                         size: 16,
-                        color: Color(0xFF0D9488),
+                        color: progress.isCompleted
+                            ? const Color(0xFF10B981)
+                            : progress.isStarted
+                                ? const Color(0xFF0284C7)
+                                : const Color(0xFF0D9488),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
-                        'Open 6 Subjects & Scorecard',
+                        progress.isCompleted
+                            ? 'Review Scorecard & Results'
+                            : progress.isStarted
+                                ? 'Resume Simulation (${progress.completedSubjects}/6 Done)'
+                                : 'Start 6-Subject Simulation',
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0D9488),
+                          color: progress.isCompleted
+                              ? const Color(0xFF10B981)
+                              : progress.isStarted
+                                  ? const Color(0xFF0284C7)
+                                  : const Color(0xFF0D9488),
                         ),
                       ),
                     ],
@@ -307,3 +418,4 @@ class _PilotExamCard extends StatelessWidget {
     );
   }
 }
+

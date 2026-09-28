@@ -203,85 +203,22 @@ class _PilotExamCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Tag Row
+                // Title & Navigation Arrow Row
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: dark ? 0.22 : 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    Expanded(
                       child: Text(
-                        exam.edition,
-                        style: const TextStyle(
-                          fontSize: 10.5,
+                        exam.title,
+                        style: TextStyle(
+                          fontSize: 17.5,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          letterSpacing: 0.3,
+                          color: dark ? Colors.white : AppColors.textPrimary,
+                          letterSpacing: -0.3,
                         ),
                       ),
                     ),
-                    if (progress.isCompleted || progress.isStarted)
-                      const SizedBox(width: 8),
-
-                    // Progress / Status Badge
-                    if (progress.isCompleted) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withValues(alpha: dark ? 0.2 : 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'COMPLETED • ${progress.totalScore.toInt()}/600 PTS',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF10B981),
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                    ] else if (progress.isStarted) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${progress.completedSubjects}/6 DONE • ${progress.totalScore.toInt()}/600',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0284C7),
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                    ] else ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: dark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          '6 SUBJECTS • 600 PTS',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0D9488),
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    const Spacer(),
+                    const SizedBox(width: 10),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 14,
@@ -290,28 +227,55 @@ class _PilotExamCard extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 6),
 
-                // Title & Description
-                Text(
-                  exam.title,
-                  style: TextStyle(
-                    fontSize: 17.5,
-                    fontWeight: FontWeight.w800,
-                    color: dark ? Colors.white : AppColors.textPrimary,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  exam.description.isNotEmpty
-                      ? exam.description
-                      : 'Authentic 6-subject simulation matching national matric exam criteria.',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                    height: 1.35,
-                  ),
+                // Description with Edition, Subjects & Points details
+                Builder(
+                  builder: (context) {
+                    final metaParts = <String>[];
+                    if (exam.edition.isNotEmpty) {
+                      metaParts.add(exam.edition);
+                    }
+                    metaParts.add('6 Subjects (600 Pts)');
+                    if (progress.isCompleted) {
+                      metaParts.add('Completed • ${progress.totalScore.toInt()}/600 Pts');
+                    } else if (progress.isStarted) {
+                      metaParts.add('${progress.completedSubjects}/6 Done');
+                    }
+
+                    final metaText = metaParts.join(' • ');
+                    final baseDesc = exam.description.isNotEmpty
+                        ? exam.description
+                        : 'Authentic 6-subject simulation matching national matric exam criteria.';
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          metaText,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: progress.isCompleted
+                                ? const Color(0xFF10B981)
+                                : progress.isStarted
+                                    ? const Color(0xFF0284C7)
+                                    : AppColors.primary,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          baseDesc,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
 
                 // Mini Progress Bar if started

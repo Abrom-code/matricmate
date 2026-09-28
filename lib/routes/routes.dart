@@ -36,6 +36,7 @@ import 'package:matricmate/features/exam/screens/subject/subject_detail_screen.d
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/notifications/screens/notifications_screen.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/others_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
 import 'package:matricmate/bindings/notes/notes_binding.dart';
@@ -129,8 +130,9 @@ class AppRoutes {
       binding: ReviewBinding(),
     ),
 
-    // analytics
-    GetPage(name: Routes.analytics, page: () => const AnalyticsScreen()),
+    // others & analytics
+    GetPage(name: Routes.others, page: () => const OthersScreen()),
+    GetPage(name: Routes.analytics, page: () => const OthersScreen()),
 
     // profile
     GetPage(name: Routes.userProfile, page: () => const ProfileScreen()),

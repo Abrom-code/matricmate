@@ -8,7 +8,7 @@ import 'package:matricmate/features/exam/screens/bookmark/bookmark.dart';
 import 'package:matricmate/features/exam/screens/subject/subjects.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
-import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/others_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/routes/app_routes.dart';
 
@@ -39,7 +39,7 @@ class NavigationController extends GetxController {
       const _KeepAlivePage(child: SubjectsScreen()),
       const _KeepAlivePage(child: ChallengeHomeScreen()),
       _KeepAlivePage(child: BookmarkScreen()),
-      const _KeepAlivePage(child: AnalyticsScreen()),
+      const _KeepAlivePage(child: OthersScreen()),
       const _KeepAlivePage(child: ProfileScreen()),
     ];
   }

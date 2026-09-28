@@ -242,6 +242,7 @@ class DBschema {
         title TEXT NOT NULL,
         description TEXT,
         edition TEXT DEFAULT '2019 E.C.',
+        is_premium INTEGER DEFAULT 1,
         is_active INTEGER DEFAULT 1,
         created_at TEXT
       );

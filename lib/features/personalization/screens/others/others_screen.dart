@@ -129,6 +129,9 @@ class _OthersScreenState extends State<OthersScreen> {
                     'Simulate real national exams under timed conditions.',
                 icon: Iconsax.timer_1_copy,
                 iconColor: const Color(0xFF0284C7),
+                badgeText: 'PRO',
+                badgeColor: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.22 : 0.15),
+                badgeTextColor: const Color(0xFFD97706),
                 onTap: () => Get.toNamed(Routes.pilotExam),
               ),
 

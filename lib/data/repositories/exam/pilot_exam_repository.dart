@@ -105,6 +105,12 @@ class PilotExamRepository {
             'title': exam['title'],
             'description': exam['description'] ?? '',
             'edition': exam['edition'] ?? '2019 E.C.',
+            'is_premium': (exam['is_premium'] == null ||
+                    exam['is_premium'] == true ||
+                    exam['is_premium'] == 1 ||
+                    exam['is_premium'] == '1')
+                ? 1
+                : 0,
             'is_active': (exam['is_active'] == true || exam['is_active'] == 1) ? 1 : 0,
             'created_at': exam['created_at'],
           },
@@ -156,6 +162,7 @@ class PilotExamRepository {
           'description':
               'Full-length nationwide pre-matric trial covering all 6 curriculum subjects.',
           'edition': '2019 E.C.',
+          'is_premium': 1,
           'is_active': 1,
           'created_at': DateTime.now().toIso8601String(),
         },
@@ -170,6 +177,7 @@ class PilotExamRepository {
           'description':
               'Authentic NEAEA standard simulation with timed test protocols.',
           'edition': '2019 E.C.',
+          'is_premium': 1,
           'is_active': 1,
           'created_at': DateTime.now().toIso8601String(),
         },

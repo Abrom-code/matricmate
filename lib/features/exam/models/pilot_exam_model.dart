@@ -3,6 +3,7 @@ class PilotExamModel {
   final String title;
   final String description;
   final String edition;
+  final bool isPremium;
   final bool isActive;
   final String? createdAt;
 
@@ -11,6 +12,7 @@ class PilotExamModel {
     required this.title,
     this.description = '',
     this.edition = '2019 E.C.',
+    this.isPremium = true,
     this.isActive = true,
     this.createdAt,
   });
@@ -21,17 +23,25 @@ class PilotExamModel {
       'title': title,
       'description': description,
       'edition': edition,
+      'is_premium': isPremium ? 1 : 0,
       'is_active': isActive ? 1 : 0,
       'created_at': createdAt,
     };
   }
 
   factory PilotExamModel.fromMap(Map<String, dynamic> map) {
+    final rawPremium = map['is_premium'];
+    final isPrem = rawPremium == null ||
+        rawPremium == true ||
+        rawPremium == 1 ||
+        rawPremium == '1';
+
     return PilotExamModel(
       id: (map['id'] as num?)?.toInt() ?? 0,
       title: map['title'] as String? ?? 'Pilot Exam',
       description: map['description'] as String? ?? '',
       edition: map['edition'] as String? ?? '2019 E.C.',
+      isPremium: isPrem,
       isActive: map['is_active'] == 1 || map['is_active'] == true,
       createdAt: map['created_at'] as String?,
     );
@@ -42,6 +52,7 @@ class PilotExamModel {
     String? title,
     String? description,
     String? edition,
+    bool? isPremium,
     bool? isActive,
     String? createdAt,
   }) {
@@ -50,6 +61,7 @@ class PilotExamModel {
       title: title ?? this.title,
       description: description ?? this.description,
       edition: edition ?? this.edition,
+      isPremium: isPremium ?? this.isPremium,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
     );

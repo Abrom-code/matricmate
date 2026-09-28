@@ -22,11 +22,12 @@ DECLARE
     v_apt_id      INT;
 BEGIN
     -- 1. Insert Master Pilot Exam
-    INSERT INTO public.pilot_exams (title, description, edition, is_active)
+    INSERT INTO public.pilot_exams (title, description, edition, is_premium, is_active)
     VALUES (
         '1st Semester Model Exam',
         'Nationwide entrance trial simulation covering all 6 curriculum subjects. Scaled to 100 per subject with an aggregate score out of 600.',
         '2019 E.C.',
+        true,
         true
     )
     ON CONFLICT DO NOTHING

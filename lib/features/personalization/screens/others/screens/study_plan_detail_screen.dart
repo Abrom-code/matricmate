@@ -15,7 +15,6 @@ class StudyPlanDetailScreen extends StatelessWidget {
       backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: const ModernAppbar(
         title: 'Smart Study Plan',
-        subtitle: 'AI Adaptive Revision Roadmap',
         showBackArrow: true,
       ),
       body: const StudyPlanComingSoon(),

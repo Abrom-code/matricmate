@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -210,7 +212,9 @@ class WeakestAreasCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         onTap: () {
                           controller.applyFilters(subject: area.name);
-                          controller.switchTab(AnalyticsTab.tests);
+                          if (Get.isRegistered<NavigationController>()) {
+                            NavigationController.instance.changePage(0);
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -292,7 +296,11 @@ class WeakestAreasCard extends StatelessWidget {
 
           // ── Bottom Link ───────────────────────────────────────────────────
           InkWell(
-            onTap: () => controller.switchTab(AnalyticsTab.tests),
+            onTap: () {
+              if (Get.isRegistered<NavigationController>()) {
+                NavigationController.instance.changePage(0);
+              }
+            },
             borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -300,7 +308,7 @@ class WeakestAreasCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'View all subject tests & breakdown',
+                    'Practice subjects & take tests',
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,

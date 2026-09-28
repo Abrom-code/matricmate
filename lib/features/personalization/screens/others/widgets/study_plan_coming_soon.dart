@@ -252,7 +252,7 @@ class _StudyPlanComingSoonState extends State<StudyPlanComingSoon> {
           const SizedBox(height: 10),
           _PlanHighlightCard(
             dark: dark,
-            icon: Iconsax.refresh_2_copy,
+            icon: Iconsax.refresh_copy,
             iconColor: const Color(0xFF0D9488),
             title: 'Smart Spaced Repetition',
             description:

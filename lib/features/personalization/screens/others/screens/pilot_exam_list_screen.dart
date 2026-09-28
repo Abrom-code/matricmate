@@ -222,41 +222,8 @@ class _PilotExamCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (exam.isPremium) ...[
+                    if (progress.isCompleted || progress.isStarted)
                       const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.22 : 0.14),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Iconsax.crown_1_copy,
-                              size: 11,
-                              color: Color(0xFFD97706),
-                            ),
-                            SizedBox(width: 3),
-                            Text(
-                              'PRO',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFD97706),
-                                letterSpacing: 0.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(width: 8),
 
                     // Progress / Status Badge
                     if (progress.isCompleted) ...[

@@ -9,7 +9,6 @@ import 'package:matricmate/features/exam/models/pilot_exam_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/test_access_helper.dart';
 
 class PilotExamSubjectsScreen extends StatefulWidget {
   const PilotExamSubjectsScreen({super.key});
@@ -85,81 +84,6 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── PRO Upgrade Banner (if user is not active) ─────────────
-                if (!user.isActive) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.18 : 0.1),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Iconsax.crown_1_copy,
-                              size: 19,
-                              color: Color(0xFFD97706),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Pilot Exam Simulator is a PRO Feature',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFFD97706),
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'Upgrade to unlock all 6 model exams & ranking.',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFFB45309),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFD97706),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: 0,
-                          ),
-                          onPressed: () => TestAccessHelper.openPremiumSheet(user: user),
-                          child: const Text(
-                            'Unlock',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
-
                 // ── Composite Scorecard Hero ───────────────────────────────
                 _CompositeScorecardCard(
                   dark: dark,
@@ -246,7 +170,6 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                       isCompleted: isCompleted,
                       isInProgress: isInProgress,
                       scoreOutOf100: score100,
-                      isUserActive: user.isActive,
                       onTap: () {
                         HapticFeedback.lightImpact();
                         controller.startSubjectExam(subject, user);
@@ -466,7 +389,6 @@ class _SubjectExamTile extends StatelessWidget {
     required this.isCompleted,
     required this.isInProgress,
     required this.scoreOutOf100,
-    required this.isUserActive,
     required this.onTap,
   });
 
@@ -475,7 +397,6 @@ class _SubjectExamTile extends StatelessWidget {
   final bool isCompleted;
   final bool isInProgress;
   final double scoreOutOf100;
-  final bool isUserActive;
   final VoidCallback onTap;
 
   IconData _getSubjectIcon(String name) {
@@ -663,37 +584,6 @@ class _SubjectExamTile extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         color: Color(0xFFF59E0B),
                       ),
-                    ),
-                  ),
-                ] else if (!isUserActive) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: dark ? 0.22 : 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.45),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Iconsax.lock_copy,
-                          size: 13,
-                          color: Color(0xFFD97706),
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'PRO',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFFD97706),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ] else ...[

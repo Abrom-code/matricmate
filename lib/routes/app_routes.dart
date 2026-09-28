@@ -32,7 +32,8 @@ class Routes {
   static const paymentVerification = '/payment-verification';
   static const contactAdmin = '/contact-admin';
 
-  // analytics
+  // others / analytics
+  static const others = '/others';
   static const analytics = '/analytics';
 
   // nav

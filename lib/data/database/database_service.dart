@@ -362,6 +362,37 @@ class DatabaseService extends GetxController {
               'ALTER TABLE notes ADD COLUMN completed_at TEXT',
             );
           } catch (_) {}
+
+          // ── Pilot Exams tables ──────────────────────────────────────────
+          try {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS pilot_exams (
+                id INTEGER PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                edition TEXT DEFAULT '2017 E.C.',
+                is_active INTEGER DEFAULT 1,
+                created_at TEXT
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS pilot_exam_subjects (
+                id INTEGER PRIMARY KEY,
+                pilot_exam_id INTEGER NOT NULL,
+                subject_id INTEGER NOT NULL,
+                subject_name TEXT NOT NULL,
+                stream TEXT NOT NULL,
+                test_id INTEGER NOT NULL,
+                order_index INTEGER DEFAULT 1,
+                question_count INTEGER DEFAULT 60,
+                time_minutes INTEGER DEFAULT 90,
+                FOREIGN KEY(pilot_exam_id) REFERENCES pilot_exams(id) ON DELETE CASCADE
+              )
+            ''');
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_pilot_subjects ON pilot_exam_subjects(pilot_exam_id, stream)',
+            );
+          } catch (_) {}
         } catch (_) {}
       },
     );

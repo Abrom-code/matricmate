@@ -37,7 +37,8 @@ import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/notifications/screens/notifications_screen.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
 import 'package:matricmate/features/personalization/screens/others/others_screen.dart';
-import 'package:matricmate/features/personalization/screens/others/screens/pilot_exam_detail_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/pilot_exam_list_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/pilot_exam_subjects_screen.dart';
 import 'package:matricmate/features/personalization/screens/others/screens/progress_detail_screen.dart';
 import 'package:matricmate/features/personalization/screens/others/screens/study_plan_detail_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
@@ -142,7 +143,11 @@ class AppRoutes {
     ),
     GetPage(
       name: Routes.pilotExam,
-      page: () => const PilotExamDetailScreen(),
+      page: () => const PilotExamListScreen(),
+    ),
+    GetPage(
+      name: Routes.pilotExamSubjects,
+      page: () => const PilotExamSubjectsScreen(),
     ),
     GetPage(
       name: Routes.studyPlan,

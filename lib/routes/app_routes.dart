@@ -37,6 +37,7 @@ class Routes {
   static const analytics = '/analytics';
   static const progressDetail = '/progress-detail';
   static const pilotExam = '/pilot-exam';
+  static const pilotExamSubjects = '/pilot-exam-subjects';
   static const studyPlan = '/study-plan';
 
   // nav

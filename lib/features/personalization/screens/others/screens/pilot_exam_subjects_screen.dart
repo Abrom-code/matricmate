@@ -68,7 +68,6 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
         final completedCount = controller.completedSubjectsCount;
         final grandTotal = controller.grandTotalScore;
         final compositePct = controller.compositePercentage;
-        final tier = controller.performanceTier;
 
         return RefreshIndicator(
           color: AppColors.primary,
@@ -91,7 +90,6 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                   totalSubjects: subjects.length,
                   grandTotal: grandTotal,
                   compositePct: compositePct,
-                  tier: tier,
                 ),
 
                 const SizedBox(height: 22),
@@ -195,7 +193,6 @@ class _CompositeScorecardCard extends StatelessWidget {
     required this.totalSubjects,
     required this.grandTotal,
     required this.compositePct,
-    required this.tier,
   });
 
   final bool dark;
@@ -203,7 +200,6 @@ class _CompositeScorecardCard extends StatelessWidget {
   final int totalSubjects;
   final double grandTotal;
   final double compositePct;
-  final String tier;
 
   @override
   Widget build(BuildContext context) {
@@ -235,144 +231,87 @@ class _CompositeScorecardCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Top Label Row
-          Row(
+          // Circular percentage indicator
+          Stack(
+            alignment: Alignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.28),
-                    width: 1,
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.military_tech_rounded, size: 14, color: Color(0xFFFDE047)),
-                    SizedBox(width: 4),
-                    Text(
-                      'COMPOSITE SCORECARD',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                  ],
+              SizedBox(
+                width: 70,
+                height: 70,
+                child: CircularProgressIndicator(
+                  value: completedCount > 0 ? (compositePct / 100.0).clamp(0.0, 1.0) : 0.0,
+                  strokeWidth: 6.5,
+                  strokeCap: StrokeCap.round,
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34D399)),
                 ),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  tier,
-                  style: const TextStyle(
-                    color: Color(0xFFFEF08A),
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                  ),
+              Text(
+                completedCount > 0
+                    ? '${compositePct.toStringAsFixed(0)}%'
+                    : '0%',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
                 ),
               ),
             ],
           ),
+          const SizedBox(width: 18),
 
-          const SizedBox(height: 18),
-
-          // Total Score Display Row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Circular percentage indicator
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 70,
-                    height: 70,
-                    child: CircularProgressIndicator(
-                      value: completedCount > 0 ? (compositePct / 100.0).clamp(0.0, 1.0) : 0.0,
-                      strokeWidth: 6.5,
-                      strokeCap: StrokeCap.round,
-                      backgroundColor: Colors.white.withValues(alpha: 0.15),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34D399)),
-                    ),
+          // Score details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Grand Total Score',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFCCFBF1),
+                    fontWeight: FontWeight.w600,
                   ),
-                  Text(
-                    completedCount > 0
-                        ? '${compositePct.toStringAsFixed(0)}%'
-                        : '0%',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 18),
-
-              // Score details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Grand Total Score',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFFCCFBF1),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: grandTotal.toStringAsFixed(0),
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: -1,
-                            ),
-                          ),
-                          const TextSpan(
-                            text: ' / 600',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF99F6E4),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '$completedCount of $totalSubjects subjects completed',
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: Color(0xFFE6FFFA),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: grandTotal.toStringAsFixed(0),
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: ' / 600',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF99F6E4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$completedCount of $totalSubjects subjects completed',
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: Color(0xFFE6FFFA),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -41,7 +41,7 @@ class _StudyPlanComingSoonState extends State<StudyPlanComingSoon> {
             ),
           ],
         ),
-        backgroundColor: _isNotified ? const Color(0xFF8B5CF6) : AppColors.darkSurface,
+        backgroundColor: _isNotified ? const Color(0xFF2563EB) : AppColors.darkSurface,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
@@ -65,14 +65,14 @@ class _StudyPlanComingSoonState extends State<StudyPlanComingSoon> {
               height: 90,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                  colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -93,10 +93,10 @@ class _StudyPlanComingSoonState extends State<StudyPlanComingSoon> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFF8B5CF6).withValues(alpha: dark ? 0.22 : 0.12),
+                color: const Color(0xFF2563EB).withValues(alpha: dark ? 0.22 : 0.12),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
+                  color: const Color(0xFF2563EB).withValues(alpha: 0.35),
                   width: 1,
                 ),
               ),
@@ -106,7 +106,7 @@ class _StudyPlanComingSoonState extends State<StudyPlanComingSoon> {
                   Icon(
                     Icons.auto_awesome_rounded,
                     size: 13,
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFF2563EB),
                   ),
                   SizedBox(width: 5),
                   Text(
@@ -114,7 +114,7 @@ class _StudyPlanComingSoonState extends State<StudyPlanComingSoon> {
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF8B5CF6),
+                      color: Color(0xFF2563EB),
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -162,16 +162,16 @@ class _StudyPlanComingSoonState extends State<StudyPlanComingSoon> {
                 onPressed: _toggleNotification,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _isNotified
-                      ? (dark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFEDE9FE))
-                      : const Color(0xFF8B5CF6),
+                      ? (dark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFEFF6FF))
+                      : const Color(0xFF2563EB),
                   foregroundColor: _isNotified
-                      ? const Color(0xFF8B5CF6)
+                      ? const Color(0xFF2563EB)
                       : Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                     side: _isNotified
-                        ? const BorderSide(color: Color(0xFF8B5CF6), width: 1.2)
+                        ? const BorderSide(color: Color(0xFF2563EB), width: 1.2)
                         : BorderSide.none,
                   ),
                 ),

@@ -155,10 +155,10 @@ class _OthersScreenState extends State<OthersScreen> {
                 description:
                     'Personalized daily study roadmap for your target score.',
                 icon: Iconsax.calendar_tick_copy,
-                iconColor: const Color(0xFF8B5CF6),
+                iconColor: const Color(0xFF2563EB),
                 badgeText: 'SOON',
-                badgeColor: const Color(0xFF8B5CF6).withValues(alpha: dark ? 0.22 : 0.12),
-                badgeTextColor: const Color(0xFF8B5CF6),
+                badgeColor: const Color(0xFF2563EB).withValues(alpha: dark ? 0.22 : 0.12),
+                badgeTextColor: const Color(0xFF2563EB),
                 onTap: () => Get.toNamed(Routes.studyPlan),
               ),
             ],

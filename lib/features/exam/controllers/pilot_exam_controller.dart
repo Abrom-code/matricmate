@@ -589,6 +589,11 @@ class PilotExamController extends GetxController {
       createdAt: DateTime.now(),
     );
 
+    final existingDraft =
+        testResults[testId] != null && !testResults[testId]!.isCompleted
+            ? testResults[testId]
+            : null;
+
     TestAccessHelper.handleTestTap(
       test: dummyTest,
       user: user,
@@ -599,13 +604,14 @@ class PilotExamController extends GetxController {
             time: subject.timeMinutes,
             testId: testId,
             id: 3, // pilot exam controller id
+            draft: existingDraft,
             examTitle:
                 '${selectedExam.value?.title ?? "Pilot Exam"} — ${subject.subjectName}',
             description:
                 'Subject ${subject.orderIndex} of 6 • ${subject.stream.toUpperCase()} STREAM',
             subjectName: subject.subjectName,
             forceExamMode: true,
-            canPause: false,
+            canPause: true,
           ),
         )?.then((_) {
           // Auto reload subject results when student returns from the exam

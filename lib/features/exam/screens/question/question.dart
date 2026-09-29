@@ -48,7 +48,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
       AppHelperFunctions.showAppDialog(
         context,
         'Exit Exam?',
-        'Pausing is not allowed for this pilot exam. If you exit now, your attempt will not be saved and progress will be lost.',
+        'Pausing is not allowed for this exam. If you exit now, your attempt will not be saved and progress will be lost.',
         () {
           controller.resumeTimer();
           Get.back(); // Dismiss dialog
@@ -66,13 +66,18 @@ class _QuestionScreenState extends State<QuestionScreen> {
     AppHelperFunctions.showAppDialog(
       context,
       controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
-      'Your progress will be saved. You can resume later.',
-      () {
-        controller.resumeTimer();
+      'Your progress and remaining time will be saved. You can resume anytime.',
+      () async {
+        controller.cancelTimer();
+        await controller.saveDraftAsync();
         Get.back(); // Dismiss dialog
         Get.back(); // Return to previous screen
       },
       onCancel: () => controller.resumeTimer(),
+      okText: controller.isExamMode ? 'Pause & Exit' : 'Exit',
+      cancelText: 'Resume Test',
+      icon: Icons.pause_circle_outline_rounded,
+      iconColor: const Color(0xFFF59E0B),
     );
   }
 

@@ -510,10 +510,12 @@ class _ReadyScreenState extends State<ReadyScreen> {
                           height: 50,
                           child: ElevatedButton(
                             onPressed: () {
-                              final wasExam =
-                                  widget.draft!.checkedQuestions.isEmpty;
-                              final wasTimed =
-                                  widget.draft!.remainingSeconds > 0;
+                              final wasExam = widget.forceExamMode
+                                  ? true
+                                  : widget.draft!.checkedQuestions.isEmpty;
+                              final wasTimed = widget.forceExamMode
+                                  ? true
+                                  : widget.draft!.remainingSeconds > 0;
                               _launch(
                                 examMode: wasExam,
                                 isTimed: wasTimed,

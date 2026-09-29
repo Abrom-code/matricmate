@@ -287,8 +287,11 @@ class QuestionController extends GetxController {
   void _saveDraft() {
     if (!canPause) return; // Pausing is disabled for strict exam mode
     if (_isSubmitted) return; // already submitted — never overwrite
+    final userId = Get.isRegistered<UserController>()
+        ? UserController.instance.user.value.id
+        : '';
     final draft = ResultModel(
-      userId: UserController.instance.user.value.id,
+      userId: userId,
       testId: testId,
       selectedAnswers: Map.from(selectedAnswers),
       testQuestions: testQuestions.toList(),
@@ -307,6 +310,31 @@ class QuestionController extends GetxController {
         .catchError((e) {
           ToastHelper.error('Draft save failed: $e');
         });
+  }
+
+  /// Explicit async draft save, used during pause and exit to guarantee SQLite write before popping.
+  Future<void> saveDraftAsync() async {
+    if (!canPause || _isSubmitted || testQuestions.isEmpty) return;
+    final userId = Get.isRegistered<UserController>()
+        ? UserController.instance.user.value.id
+        : '';
+    final draft = ResultModel(
+      userId: userId,
+      testId: testId,
+      selectedAnswers: Map.from(selectedAnswers),
+      testQuestions: testQuestions.toList(),
+      correctAnswers: correctAnswers,
+      isCompleted: false,
+      checkedQuestions: Set<int>.from(
+        isChecked.entries.where((e) => e.value).map((e) => e.key),
+      ),
+      remainingSeconds: isTimed ? remainingSeconds.value : 0,
+    );
+    try {
+      await _repo.saveResult(draft);
+    } catch (e) {
+      debugPrint('Error saving draft on pause: $e');
+    }
   }
 
   bool isBookmarked(int questionId) =>
@@ -358,9 +386,7 @@ class QuestionController extends GetxController {
       ticksSinceLastSave++;
 
       // Save draft every 30 seconds so remaining time stays current
-      if (ticksSinceLastSave >= 30 &&
-          testQuestions.isNotEmpty &&
-          selectedAnswers.isNotEmpty) {
+      if (ticksSinceLastSave >= 30 && testQuestions.isNotEmpty) {
         ticksSinceLastSave = 0;
         _saveDraft();
       }
@@ -378,6 +404,14 @@ class QuestionController extends GetxController {
 
   /// Resumes the timer (dialog dismissed without exiting).
   void resumeTimer() {
+    _timerPaused = false;
+    _exitDialogOpen = false;
+  }
+
+  /// Cancels the timer completely (used when exiting after confirmation).
+  void cancelTimer() {
+    _timer?.cancel();
+    _timer = null;
     _timerPaused = false;
     _exitDialogOpen = false;
   }
@@ -470,10 +504,7 @@ class QuestionController extends GetxController {
   void onClose() {
     _timer?.cancel();
     // Save draft on exit if active, allowed to pause, and not yet submitted
-    if (canPause &&
-        testQuestions.isNotEmpty &&
-        !_isSubmitted &&
-        selectedAnswers.isNotEmpty) {
+    if (canPause && testQuestions.isNotEmpty && !_isSubmitted) {
       _saveDraft();
     }
     super.onClose();

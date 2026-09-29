@@ -6,8 +6,10 @@ import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/pilot_exam_controller.dart';
 import 'package:matricmate/features/exam/models/pilot_exam_model.dart';
+import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class PilotExamSubjectsScreen extends StatefulWidget {
@@ -197,6 +199,10 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                     final isCompleted = controller.isSubjectCompleted(
                       subject.testId,
                     );
+                    final isInProgress = controller.isSubjectInProgress(
+                      subject.testId,
+                    );
+                    final draft = controller.testResults[subject.testId];
                     final isDownloaded = controller.isSubjectDownloaded(
                       subject.testId,
                     );
@@ -221,6 +227,8 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                       dark: dark,
                       subject: subject,
                       isCompleted: isCompleted,
+                      isInProgress: isInProgress,
+                      draft: draft,
                       isDownloaded: isDownloaded,
                       isDownloading: isDownloading,
                       downloadProgress: downloadProgress,
@@ -538,6 +546,8 @@ class _SubjectExamTile extends StatelessWidget {
     required this.dark,
     required this.subject,
     required this.isCompleted,
+    this.isInProgress = false,
+    this.draft,
     required this.isDownloaded,
     required this.isDownloading,
     this.downloadProgress,
@@ -551,6 +561,8 @@ class _SubjectExamTile extends StatelessWidget {
   final bool dark;
   final PilotExamSubjectModel subject;
   final bool isCompleted;
+  final bool isInProgress;
+  final ResultModel? draft;
   final bool isDownloaded;
   final bool isDownloading;
   final double? downloadProgress;
@@ -598,8 +610,10 @@ class _SubjectExamTile extends StatelessWidget {
         border: Border.all(
           color: isCompleted
               ? const Color(0xFF10B981).withValues(alpha: dark ? 0.35 : 0.25)
-              : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
-          width: 1.2,
+              : isInProgress
+                  ? const Color(0xFFF59E0B).withValues(alpha: dark ? 0.5 : 0.35)
+                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
+          width: isInProgress ? 1.4 : 1.2,
         ),
         boxShadow: [
           BoxShadow(
@@ -668,6 +682,54 @@ class _SubjectExamTile extends StatelessWidget {
                                   color: dark
                                       ? AppColors.darkGrey
                                       : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ] else if (isInProgress && draft != null) ...[
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              const TextSpan(
+                                text: 'Paused • ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFFF59E0B),
+                                ),
+                              ),
+                              TextSpan(
+                                text:
+                                    '${draft!.selectedAnswers.length}/$totalQuestions answered',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: dark
+                                      ? Colors.white70
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              if (draft!.remainingSeconds > 0)
+                                TextSpan(
+                                  text:
+                                      ' • ${AppFormatter.formattedTime(draft!.remainingSeconds)} left',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: dark
+                                        ? AppColors.darkGrey
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              const TextSpan(
+                                text: ' • Tap to resume',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFF59E0B),
                                 ),
                               ),
                             ],
@@ -757,6 +819,42 @@ class _SubjectExamTile extends StatelessWidget {
                           color: AppColors.primary,
                         ),
                       ),
+                    ),
+                  ),
+                ] else if (isInProgress) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(
+                        alpha: dark ? 0.22 : 0.12,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.play_arrow_rounded,
+                          size: 16,
+                          color: Color(0xFFF59E0B),
+                        ),
+                        SizedBox(width: 3),
+                        Text(
+                          'Resume',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFF59E0B),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ] else ...[

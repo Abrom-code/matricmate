@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/appbar/reactive_refresh_button.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -74,23 +75,12 @@ class _OthersScreenState extends State<OthersScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              tooltip: 'Refresh',
-              onPressed: () => controller.loadAll(),
-              icon: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(
-                    Iconsax.refresh_copy,
-                    size: 17,
-                    color: AppColors.white,
-                  ),
-                ),
+            child: Obx(
+              () => ReactiveRefreshButton(
+                isRefreshing: controller.isRefreshing.value,
+                onRefresh: () => controller.loadAll(isManualRefresh: true),
+                tooltip: 'Refresh',
+                onSuccessMessage: 'Overview updated',
               ),
             ),
           ),
@@ -98,7 +88,7 @@ class _OthersScreenState extends State<OthersScreen> {
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: controller.loadAll,
+        onRefresh: () => controller.loadAll(isManualRefresh: true),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
@@ -110,21 +100,9 @@ class _OthersScreenState extends State<OthersScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── 1. Analytics & Progress Card ─────────────────────────────
+              // ── 1. Pilot Exam Simulator Card ─────────────────────────────
               OthersMenuCard(
-                title: 'Analytics & Progress',
-                description:
-                    'Track exam readiness, subject mastery & score trends.',
-                icon: Iconsax.chart_2_copy,
-                iconColor: const Color(0xFF10B981),
-                onTap: () => Get.toNamed(Routes.progressDetail),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ── 2. Pilot Exam Simulator Card ─────────────────────────────
-              OthersMenuCard(
-                title: 'Pilot Exam Simulator',
+                title: 'Pilot Exams',
                 description:
                     'Simulate real national exams under timed conditions.',
                 icon: Iconsax.timer_1_copy,
@@ -134,7 +112,7 @@ class _OthersScreenState extends State<OthersScreen> {
 
               const SizedBox(height: 12),
 
-              // ── 3. Saved Bookmarks Card ──────────────────────────────────
+              // ── 2. Saved Bookmarks Card ──────────────────────────────────
               OthersMenuCard(
                 title: 'Bookmarks',
                 description:
@@ -146,17 +124,14 @@ class _OthersScreenState extends State<OthersScreen> {
 
               const SizedBox(height: 12),
 
-              // ── 4. Smart Study Plan Card ─────────────────────────────────
+              // ── 3. Analytics & Progress Card ─────────────────────────────
               OthersMenuCard(
-                title: 'Smart Study Plan',
+                title: 'Analytics & Progress',
                 description:
-                    'Personalized daily study roadmap for your target score.',
-                icon: Iconsax.calendar_tick_copy,
-                iconColor: const Color(0xFF2563EB),
-                badgeText: 'SOON',
-                badgeColor: const Color(0xFF2563EB).withValues(alpha: dark ? 0.22 : 0.12),
-                badgeTextColor: const Color(0xFF2563EB),
-                onTap: () => Get.toNamed(Routes.studyPlan),
+                    'Track exam readiness, subject mastery & score trends.',
+                icon: Iconsax.chart_2_copy,
+                iconColor: const Color(0xFF10B981),
+                onTap: () => Get.toNamed(Routes.progressDetail),
               ),
             ],
           ),

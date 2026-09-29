@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -71,27 +72,90 @@ class ChallengeEmptyState extends StatelessWidget {
   }
 }
 
-class ChallengeOfflineState extends StatelessWidget {
+class ChallengeOfflineState extends StatefulWidget {
   const ChallengeOfflineState({
     super.key,
     required this.dark,
-    required this.isRefreshing,
     required this.onRefresh,
+    this.isRefreshing,
     this.icon = Icons.wifi_off_rounded,
     this.description,
+    this.timeout = const Duration(seconds: 4),
   });
 
   final bool dark;
-  final bool isRefreshing;
-  final VoidCallback onRefresh;
+  final FutureOr<void> Function() onRefresh;
+  final bool? isRefreshing;
   final IconData icon;
   final String? description;
+  final Duration timeout;
+
+  @override
+  State<ChallengeOfflineState> createState() => _ChallengeOfflineStateState();
+}
+
+class _ChallengeOfflineStateState extends State<ChallengeOfflineState> {
+  bool _isLocalRefreshing = false;
+  Timer? _timeoutTimer;
+
+  bool get _isSpinning => (widget.isRefreshing ?? false) || _isLocalRefreshing;
+
+  @override
+  void didUpdateWidget(ChallengeOfflineState oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isRefreshing != null &&
+        widget.isRefreshing != oldWidget.isRefreshing &&
+        !widget.isRefreshing!) {
+      // Parent stopped refreshing -> immediately clear local spinner
+      if (_isLocalRefreshing) {
+        _timeoutTimer?.cancel();
+        setState(() {
+          _isLocalRefreshing = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _timeoutTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _handleRefresh() async {
+    if (_isSpinning) return;
+    setState(() {
+      _isLocalRefreshing = true;
+    });
+
+    // Hard safety timeout: Guaranteed to stop spinner after widget.timeout
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer(widget.timeout, () {
+      if (mounted && _isLocalRefreshing) {
+        setState(() {
+          _isLocalRefreshing = false;
+        });
+      }
+    });
+
+    try {
+      await Future.sync(widget.onRefresh).timeout(widget.timeout);
+    } catch (_) {
+    } finally {
+      _timeoutTimer?.cancel();
+      if (mounted) {
+        setState(() {
+          _isLocalRefreshing = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final offlineIconColor =
-        dark ? AppColors.darkGrey : AppColors.textSecondary;
-    final refreshColor = dark ? Colors.white : Colors.black;
+        widget.dark ? AppColors.darkGrey : AppColors.textSecondary;
+    final refreshColor = widget.dark ? Colors.white : Colors.black;
 
     return Center(
       child: Padding(
@@ -102,7 +166,7 @@ class ChallengeOfflineState extends StatelessWidget {
           children: [
             // 1. No internet icon
             Icon(
-              icon,
+              widget.icon,
               size: 46,
               color: offlineIconColor,
             ),
@@ -110,12 +174,13 @@ class ChallengeOfflineState extends StatelessWidget {
 
             // 2. Short description
             Text(
-              description ?? "You're offline. Check your connection.",
+              widget.description ?? "You're offline. Check your connection.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                color:
+                    widget.dark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 14),
@@ -125,17 +190,18 @@ class ChallengeOfflineState extends StatelessWidget {
               width: 40,
               height: 40,
               child: Center(
-                child: isRefreshing
+                child: _isSpinning
                     ? SizedBox(
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.2,
-                          valueColor: AlwaysStoppedAnimation<Color>(refreshColor),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(refreshColor),
                         ),
                       )
                     : IconButton(
-                        onPressed: onRefresh,
+                        onPressed: _handleRefresh,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(
                           minWidth: 40,

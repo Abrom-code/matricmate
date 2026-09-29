@@ -369,7 +369,7 @@ class ChallengeHomeController extends GetxController {
   bool _isLoadingAllChallenges = false;
 
   Future<void> loadAllChallenges({bool showLoading = true, bool isManual = false}) async {
-    if (_isLoadingAllChallenges) return;
+    if (_isLoadingAllChallenges && !isManual) return;
     _isLoadingAllChallenges = true;
 
     if (showLoading && !isManual) {

@@ -1,8 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/question_repository.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
+import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
+import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
+import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
+import 'package:matricmate/features/exam/controllers/pilot_exam_controller.dart';
+import 'package:matricmate/features/exam/controllers/result_controller.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -47,9 +53,11 @@ class QuestionController extends GetxController {
   late bool isExamMode;
   late int time;
   late int ctrlId;
+  bool canPause = true;
 
   /// Flag indicating submission is complete to prevent draft overwrites.
   bool _isSubmitted = false;
+  final RxBool isSubmitting = false.obs;
 
   /// Pauses the timer without cancelling it (used when the exit dialog is open).
   bool _timerPaused = false;
@@ -61,6 +69,7 @@ class QuestionController extends GetxController {
     isExamMode = Get.arguments['is_exam_mode'] ?? false;
     time = Get.arguments['time'];
     ctrlId = Get.arguments['id'];
+    canPause = Get.arguments['can_pause'] ?? true;
 
     // Restore in-progress draft if the user is resuming
     final draft = Get.arguments['draft'] as ResultModel?;
@@ -276,6 +285,7 @@ class QuestionController extends GetxController {
 
   /// Saves in-progress state as draft if not already submitted.
   void _saveDraft() {
+    if (!canPause) return; // Pausing is disabled for strict exam mode
     if (_isSubmitted) return; // already submitted — never overwrite
     final draft = ResultModel(
       userId: UserController.instance.user.value.id,
@@ -340,7 +350,7 @@ class QuestionController extends GetxController {
       if (remainingSeconds.value <= 1) {
         remainingSeconds.value = 0;
         timer.cancel();
-        _onTimeUp();
+        submitExam(isAutoSubmit: true);
         return;
       }
 
@@ -374,20 +384,84 @@ class QuestionController extends GetxController {
 
   bool get exitDialogOpen => _exitDialogOpen;
 
-  void _onTimeUp() {
-    _isSubmitted = true;
-    final result = ResultModel(
-      userId: UserController.instance.user.value.id,
-      testId: testId,
-      selectedAnswers: selectedAnswers,
-      testQuestions: testQuestions.toList(),
-      correctAnswers: correctAnswers,
-      isCompleted: true,
-    );
+  /// Submits the exam and navigates to the result screen.
+  /// Handles both manual "Finish" and automatic time-up submission.
+  Future<void> submitExam({bool isAutoSubmit = false}) async {
+    if (_isSubmitted || isSubmitting.value) return;
 
-    saveResult(result);
+    try {
+      isSubmitting.value = true;
+      markSubmitted();
+      _timer?.cancel();
 
-    Get.offNamed(Routes.result, arguments: {'result': result});
+      // Close any active dialogs or bottom sheets (navigator sheet, report sheet, exit dialog)
+      while (Get.isDialogOpen == true || Get.isBottomSheetOpen == true) {
+        Get.back();
+      }
+
+      // In exam mode, mark all questions as checked for complete evaluation
+      if (isExamMode) {
+        for (final tq in testQuestions) {
+          checkAnswer(tq.id);
+        }
+      }
+
+      if (isAutoSubmit) {
+        ToastHelper.info("Time's up! Exam submitted automatically.");
+      }
+
+      final userId = Get.isRegistered<UserController>()
+          ? UserController.instance.user.value.id
+          : '';
+
+      final result = ResultModel(
+        userId: userId,
+        testId: testId,
+        selectedAnswers: Map<int, int>.from(selectedAnswers),
+        testQuestions: testQuestions.toList(),
+        correctAnswers: correctAnswers,
+        isCompleted: true,
+      );
+
+      await saveResult(result);
+
+      // Refresh respective controller safely
+      try {
+        switch (ctrlId) {
+          case 0:
+            if (Get.isRegistered<GradeTestController>()) {
+              final c = Get.find<GradeTestController>();
+              await c.loadTestResults(c.chapterTests);
+            }
+          case 1:
+            if (Get.isRegistered<ChapterTestController>()) {
+              final c = Get.find<ChapterTestController>();
+              await c.loadTestResults(c.chapterTest);
+            }
+          case 2:
+            if (Get.isRegistered<EntranceExamsController>()) {
+              final c = Get.find<EntranceExamsController>();
+              await c.loadTestResults(c.entranceTests);
+            }
+          case 3:
+          default:
+            if (Get.isRegistered<PilotExamController>()) {
+              await Get.find<PilotExamController>()
+                  .loadSubjectsForSelectedExam();
+            }
+            break;
+        }
+      } catch (e) {
+        debugPrint('Error refreshing parent controller results: $e');
+      }
+
+      Get.delete<ResultController>(force: true);
+      Get.offNamed(Routes.result, arguments: {'result': result});
+    } catch (e) {
+      debugPrint('Error submitting exam: $e');
+      ToastHelper.error('Error submitting exam. Please try again.');
+      isSubmitting.value = false;
+    }
   }
 
   String formattedTime(int second) => AppFormatter.formattedTime(second);
@@ -395,8 +469,9 @@ class QuestionController extends GetxController {
   @override
   void onClose() {
     _timer?.cancel();
-    // Save draft on exit if active and not yet submitted
-    if (testQuestions.isNotEmpty &&
+    // Save draft on exit if active, allowed to pause, and not yet submitted
+    if (canPause &&
+        testQuestions.isNotEmpty &&
         !_isSubmitted &&
         selectedAnswers.isNotEmpty) {
       _saveDraft();

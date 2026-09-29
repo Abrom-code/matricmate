@@ -136,12 +136,17 @@ class AppHelperFunctions {
     String message,
     VoidCallback onOkPressed, {
     VoidCallback? onCancel,
+    String okText = 'OK',
+    String cancelText = 'Cancel',
+    IconData icon = Icons.pause_rounded,
+    Color? iconColor,
   }) {
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
         final dark = isDark(dialogContext);
+        final effectiveIconColor = iconColor ?? AppColors.secondary;
         return PopScope(
           canPop: true,
           onPopInvokedWithResult: (didPop, _) {
@@ -174,15 +179,15 @@ class AppHelperFunctions {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
-                        color: AppColors.secondary.withValues(
+                        color: effectiveIconColor.withValues(
                           alpha: dark ? 0.20 : 0.12,
                         ),
                         shape: BoxShape.circle,
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
-                          Icons.pause_rounded,
-                          color: AppColors.secondary,
+                          icon,
+                          color: effectiveIconColor,
                           size: 26,
                         ),
                       ),
@@ -241,7 +246,7 @@ class AppHelperFunctions {
                                 ),
                               ),
                               child: Text(
-                                'Cancel',
+                                cancelText,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -273,9 +278,9 @@ class AppHelperFunctions {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text(
-                                'OK',
-                                style: TextStyle(
+                              child: Text(
+                                okText,
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   height: 1.0,

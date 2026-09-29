@@ -1,7 +1,9 @@
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/pilot_exam_model.dart';
+import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -148,6 +150,131 @@ class PilotExamRepository {
       }
       await batch.commit(noResult: true);
     } catch (_) {}
+  }
+
+  /// Downloads questions, reading passages, and diagrams for a given subject test from Supabase
+  /// and saves them into local SQLite.
+  Future<int> downloadSubjectQuestions(
+    int testId,
+    int subjectId, {
+    void Function(String step, double progress)? onStep,
+  }) async {
+    try {
+      final db = await _dbService.database;
+
+      // 1. Check if questions already exist in SQLite
+      final countResult = await db.rawQuery(
+        'SELECT COUNT(*) as cnt FROM questions WHERE test_id = ?',
+        [testId],
+      );
+      final existingCount = countResult.first['cnt'] as int? ?? 0;
+      if (existingCount > 0) {
+        onStep?.call('Ready', 1.0);
+        return existingCount;
+      }
+
+      // 2. Fetch questions from Supabase
+      onStep?.call('Fetching questions…', 0.2);
+      final response = await _supabase
+          .from('questions')
+          .select('*, question_sections(title)')
+          .eq('test_id', testId)
+          .timeout(AppTimeouts.download);
+
+      final questionsData = List<Map<String, dynamic>>.from(response);
+
+      if (questionsData.isEmpty) {
+        // Fallback: check if any questions exist locally for this test or subject
+        final fallbackLocal = await db.rawQuery(
+          'SELECT COUNT(*) as cnt FROM questions WHERE test_id = ? OR subject_id = ?',
+          [testId, subjectId],
+        );
+        return fallbackLocal.first['cnt'] as int? ?? 0;
+      }
+
+      final Set<int> passageIds = {};
+      final Set<String> imgUrls = {};
+      final List<QuestionModel> questions = [];
+
+      for (final q in questionsData) {
+        final map = Map<String, dynamic>.from(q);
+        if (map['subject_id'] == null || map['subject_id'] == 0) {
+          map['subject_id'] = subjectId;
+        }
+        final question = QuestionModel.fromMap(map);
+        questions.add(question);
+        if (question.passageId != null) passageIds.add(question.passageId!);
+        if (question.imageUrl != null && question.imageUrl!.isNotEmpty) {
+          imgUrls.add(question.imageUrl!);
+        }
+        if (question.explanationImageUrl != null &&
+            question.explanationImageUrl!.isNotEmpty) {
+          imgUrls.add(question.explanationImageUrl!);
+        }
+      }
+
+      // 3. Fetch passages if needed
+      List<dynamic> passageData = [];
+      if (passageIds.isNotEmpty) {
+        onStep?.call('Fetching passages…', 0.5);
+        final pResponse = await _supabase
+            .from('passages')
+            .select()
+            .inFilter('id', passageIds.toList())
+            .timeout(AppTimeouts.download);
+        passageData = List<dynamic>.from(pResponse);
+      }
+
+      // 4. Write to SQLite in a single transaction
+      onStep?.call('Saving to device…', 0.7);
+      final batch = db.batch();
+      for (final q in questions) {
+        batch.insert(
+          'questions',
+          q.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      for (final p in passageData) {
+        batch.insert(
+          'passages',
+          Map<String, dynamic>.from(p as Map),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
+
+      // 5. Download diagrams / images
+      if (imgUrls.isNotEmpty) {
+        onStep?.call('Downloading diagrams…', 0.85);
+        await AppHelperFunctions.downloadImages(
+          imgUrls,
+          onProgress:
+              (p) => onStep?.call('Downloading diagrams…', 0.85 + (p * 0.15)),
+        );
+      }
+
+      onStep?.call('Done', 1.0);
+      return questions.length;
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  /// Deletes downloaded questions for the given test IDs from local SQLite.
+  Future<void> deleteExamQuestions(List<int> testIds) async {
+    if (testIds.isEmpty) return;
+    try {
+      final db = await _dbService.database;
+      final placeholders = List.filled(testIds.length, '?').join(',');
+      await db.delete(
+        'questions',
+        where: 'test_id IN ($placeholders)',
+        whereArgs: testIds,
+      );
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
   }
 
   /// Seeds default pilot exams and subjects so the user can test the feature immediately.

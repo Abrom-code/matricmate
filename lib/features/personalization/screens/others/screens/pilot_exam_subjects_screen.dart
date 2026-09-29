@@ -95,7 +95,7 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
 
                 const SizedBox(height: 22),
 
-                // ── Section Title ──────────────────────────────────────────
+                // ── Section Title Row with Download Action Icon ───────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -106,6 +106,80 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                         fontWeight: FontWeight.w800,
                         color: dark ? Colors.white : AppColors.textPrimary,
                         letterSpacing: -0.3,
+                      ),
+                    ),
+                    Tooltip(
+                      message: controller.isBulkDownloading.value
+                          ? 'Downloading exam (${(controller.bulkDownloadProgress.value * 100).toInt()}%)\nTap to view progress'
+                          : (controller.isAllSubjectsDownloaded
+                              ? 'Delete downloaded exam'
+                              : 'Download all subjects for offline use'),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: controller.isDeletingDownloads.value
+                            ? null
+                            : (controller.isBulkDownloading.value
+                                ? () => controller
+                                    .showActiveDownloadProgressDialog()
+                                : (controller.isAllSubjectsDownloaded
+                                    ? () => _confirmDeleteExamDownloads(
+                                          context,
+                                          controller,
+                                          dark,
+                                        )
+                                    : controller.downloadAllSubjects)),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: controller.isAllSubjectsDownloaded
+                                ? const Color(
+                                    0xFFEF4444,
+                                  ).withValues(alpha: dark ? 0.2 : 0.1)
+                                : AppColors.primary.withValues(
+                                    alpha: dark ? 0.22 : 0.1,
+                                  ),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: controller.isAllSubjectsDownloaded
+                                  ? const Color(
+                                      0xFFEF4444,
+                                    ).withValues(alpha: 0.35)
+                                  : AppColors.primary.withValues(alpha: 0.35),
+                              width: 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: controller.isBulkDownloading.value ||
+                                    controller.isDeletingDownloads.value
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      value: controller.isBulkDownloading.value &&
+                                              controller.bulkDownloadProgress.value > 0
+                                          ? controller.bulkDownloadProgress.value
+                                          : null,
+                                      strokeWidth: 2.2,
+                                      valueColor:
+                                          AlwaysStoppedAnimation<Color>(
+                                        controller.isDeletingDownloads.value
+                                            ? const Color(0xFFEF4444)
+                                            : AppColors.primary,
+                                      ),
+                                    ),
+                                  )
+                                : Icon(
+                                    controller.isAllSubjectsDownloaded
+                                        ? Icons.delete_outline_rounded
+                                        : Icons.download_rounded,
+                                    size: 20,
+                                    color: controller.isAllSubjectsDownloaded
+                                        ? const Color(0xFFEF4444)
+                                        : AppColors.primary,
+                                  ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -123,23 +197,49 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                     final isCompleted = controller.isSubjectCompleted(
                       subject.testId,
                     );
-                    final isInProgress = controller.isSubjectInProgress(
+                    final isDownloaded = controller.isSubjectDownloaded(
                       subject.testId,
                     );
+                    final isDownloading =
+                        controller.isSubjectDownloading[subject.testId] == true;
                     final score100 = controller.getSubjectScoreOutOf100(
                       subject.testId,
                       subject.questionCount,
                     );
+                    final correctAnswers = controller.getSubjectCorrectAnswers(
+                      subject.testId,
+                    );
+                    final totalQuestions = controller.getSubjectTotalQuestions(
+                      subject.testId,
+                      subject.questionCount,
+                    );
+
+                    final downloadProgress = controller
+                        .subjectDownloadProgress[subject.testId];
 
                     return _SubjectExamTile(
                       dark: dark,
                       subject: subject,
                       isCompleted: isCompleted,
-                      isInProgress: isInProgress,
+                      isDownloaded: isDownloaded,
+                      isDownloading: isDownloading,
+                      downloadProgress: downloadProgress,
                       scoreOutOf100: score100,
+                      correctAnswers: correctAnswers,
+                      totalQuestions: totalQuestions,
+                      onDownload: () {
+                        HapticFeedback.lightImpact();
+                        controller.downloadSubject(subject);
+                      },
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        controller.startSubjectExam(subject, user);
+                        if (isCompleted) {
+                          controller.openSubjectReview(subject);
+                        } else if (!isDownloaded) {
+                          controller.downloadSubject(subject);
+                        } else {
+                          controller.startSubjectExam(subject, user);
+                        }
                       },
                     );
                   },
@@ -149,6 +249,145 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
           ),
         );
       }),
+    );
+  }
+
+  void _confirmDeleteExamDownloads(
+    BuildContext context,
+    PilotExamController controller,
+    bool dark,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: dark ? AppColors.darkCard : AppColors.white,
+          elevation: 16,
+          shadowColor: Colors.black.withValues(alpha: dark ? 0.5 : 0.15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+              width: 1.2,
+            ),
+          ),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 380),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withValues(
+                        alpha: dark ? 0.15 : 0.1,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444).withValues(
+                            alpha: dark ? 0.25 : 0.16,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.delete_outline_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Delete Downloaded Exam?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: dark ? AppColors.textWhite : AppColors.textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'This will remove all downloaded questions and offline data for this pilot exam from your device. You can download them again anytime.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.45,
+                      color:
+                          dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor:
+                                dark ? AppColors.white : AppColors.textPrimary,
+                            side: BorderSide(
+                              color: dark
+                                  ? AppColors.darkBorder
+                                  : const Color(0xFFCBD5E1),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            controller.deleteAllExamDownloads();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF4444),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text(
+                            'Delete All',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -299,16 +538,26 @@ class _SubjectExamTile extends StatelessWidget {
     required this.dark,
     required this.subject,
     required this.isCompleted,
-    required this.isInProgress,
+    required this.isDownloaded,
+    required this.isDownloading,
+    this.downloadProgress,
     required this.scoreOutOf100,
+    required this.correctAnswers,
+    required this.totalQuestions,
+    required this.onDownload,
     required this.onTap,
   });
 
   final bool dark;
   final PilotExamSubjectModel subject;
   final bool isCompleted;
-  final bool isInProgress;
+  final bool isDownloaded;
+  final bool isDownloading;
+  final double? downloadProgress;
   final double scoreOutOf100;
+  final int correctAnswers;
+  final int totalQuestions;
+  final VoidCallback onDownload;
   final VoidCallback onTap;
 
   IconData _getSubjectIcon(String name) {
@@ -398,99 +647,125 @@ class _SubjectExamTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
-                      Text(
-                        '${subject.timeMinutes} mins • ${subject.questionCount} questions',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: dark
-                              ? AppColors.darkGrey
-                              : AppColors.textSecondary,
+                      if (isCompleted) ...[
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'Score: $correctAnswers/$totalQuestions',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF10B981),
+                                ),
+                              ),
+                              TextSpan(
+                                text:
+                                    ' (${scoreOutOf100.toStringAsFixed(0)}%) • Tap to review',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: dark
+                                      ? AppColors.darkGrey
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
+                      ] else ...[
+                        Text(
+                          isDownloading
+                              ? (downloadProgress != null &&
+                                      downloadProgress! > 0
+                                  ? 'Downloading questions (${(downloadProgress! * 100).toInt()}%)...'
+                                  : 'Downloading questions…')
+                              : (!isDownloaded
+                                  ? '${subject.timeMinutes} mins • Tap to download'
+                                  : '${subject.timeMinutes} mins • ${subject.questionCount} questions • Ready'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDownloading
+                                ? AppColors.primary
+                                : (dark
+                                    ? AppColors.darkGrey
+                                    : AppColors.textSecondary),
+                            fontWeight: isDownloading
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
 
                 const SizedBox(width: 10),
 
-                // Score / Status Pill
-                if (isCompleted) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(
-                        0xFF10B981,
-                      ).withValues(alpha: dark ? 0.22 : 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.35),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                // Right Action / Status (Note-style circular download)
+                if (isDownloading) ...[
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        Text(
-                          '${scoreOutOf100.toStringAsFixed(0)} / 100',
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF10B981),
-                          ),
+                        CircularProgressIndicator(
+                          value: downloadProgress,
+                          strokeWidth: 2.5,
+                          color: AppColors.primary,
+                          backgroundColor:
+                              AppColors.primary.withValues(alpha: 0.15),
                         ),
-                        const Text(
-                          'Completed ✓',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF10B981),
+                        if (downloadProgress != null && downloadProgress! > 0)
+                          Text(
+                            '${(downloadProgress! * 100).toInt()}',
+                            style: const TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
+                              height: 1.0,
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.arrow_downward_rounded,
+                            size: 12,
+                            color: AppColors.primary,
                           ),
-                        ),
                       ],
                     ),
                   ),
-                ] else if (isInProgress) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(
-                        0xFFF59E0B,
-                      ).withValues(alpha: dark ? 0.22 : 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      'Resume',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFFF59E0B),
+                ] else if (!isDownloaded && !isCompleted) ...[
+                  GestureDetector(
+                    onTap: onDownload,
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(
+                          alpha: dark ? 0.2 : 0.08,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.arrow_downward_rounded,
+                          size: 17,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
                 ] else ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      'Start',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: isCompleted
+                        ? const Color(0xFF10B981)
+                        : (dark ? AppColors.darkGrey : AppColors.textSecondary),
                   ),
                 ],
               ],

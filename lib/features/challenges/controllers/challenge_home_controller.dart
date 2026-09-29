@@ -376,10 +376,18 @@ class ChallengeHomeController extends GetxController {
       isLoading.value = true;
     }
     isRefreshing.value = true;
+    final stopwatch = Stopwatch()..start();
     try {
-      // 1. Fast Internet Reachability Check
-      final hasNet = await NetworkManager.instance.isConnected(force: isManual);
+      // 1. Fast Internet Reachability Check with 3-second timeout
+      final hasNet = await NetworkManager.instance
+          .isConnected(force: isManual)
+          .timeout(const Duration(seconds: 3), onTimeout: () => false);
       if (!hasNet) {
+        if (isManual && stopwatch.elapsedMilliseconds < 500) {
+          await Future.delayed(
+            Duration(milliseconds: 500 - stopwatch.elapsedMilliseconds),
+          );
+        }
         isOffline.value = true;
         availableChallenges.clear();
         final local = await _loadLocalChallenges();
@@ -402,8 +410,10 @@ class ChallengeHomeController extends GetxController {
       final deleted = await _db.getDeletedChallengeIds();
       deletedChallengeIds.assignAll(deleted);
 
-      // Fetch all published challenges from Supabase in one roundtrip
-      final allPublished = await _repo.fetchAllChallenges(stream: userStream);
+      // Fetch all published challenges from Supabase in one roundtrip with timeout
+      final allPublished = await _repo
+          .fetchAllChallenges(stream: userStream)
+          .timeout(const Duration(seconds: 4));
 
       final validFiltered = allPublished.where((c) {
         if (deleted.contains(c.id) || (c.setId.isNotEmpty && deleted.contains(c.setId))) {
@@ -451,7 +461,9 @@ class ChallengeHomeController extends GetxController {
       // Fetch real participant counts for all visible challenges
       try {
         final challengeIds = validFiltered.map((c) => c.id).toList();
-        final counts = await _repo.fetchParticipantCounts(challengeIds: challengeIds);
+        final counts = await _repo
+            .fetchParticipantCounts(challengeIds: challengeIds)
+            .timeout(const Duration(seconds: 3));
         participantCounts.assignAll(counts);
       } catch (_) {}
 
@@ -463,6 +475,11 @@ class ChallengeHomeController extends GetxController {
         ToastHelper.success('Challenges refreshed!');
       }
     } catch (e) {
+      if (isManual && stopwatch.elapsedMilliseconds < 500) {
+        await Future.delayed(
+          Duration(milliseconds: 500 - stopwatch.elapsedMilliseconds),
+        );
+      }
       isOffline.value = true;
       availableChallenges.clear();
       final local = await _loadLocalChallenges();
@@ -471,7 +488,11 @@ class ChallengeHomeController extends GetxController {
       await refreshAttemptStates(checkOnline: false);
 
       if (isManual) {
-        ToastHelper.warning('No internet connection. Showing offline data.');
+        if (e is TimeoutException) {
+          ToastHelper.warning('Refresh timed out. Please check your connection.');
+        } else {
+          ToastHelper.warning('No internet connection. Showing offline data.');
+        }
       }
     } finally {
       isLoading.value = false;

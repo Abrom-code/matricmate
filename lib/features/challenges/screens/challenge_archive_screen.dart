@@ -110,9 +110,6 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                                       isRefreshing:
                                           _ctrl.isManualRefreshing.value,
                                       onRefresh: () => _ctrl.manualRefresh(),
-                                      title: 'No Offline Challenges',
-                                      subtitle:
-                                          'You are offline and have no downloaded challenges for this subject.\nConnect to the internet and tap refresh.',
                                     )
                                   : ChallengeEmptyState(
                                       title:

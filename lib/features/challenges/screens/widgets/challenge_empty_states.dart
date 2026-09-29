@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
@@ -78,95 +77,77 @@ class ChallengeOfflineState extends StatelessWidget {
     required this.dark,
     required this.isRefreshing,
     required this.onRefresh,
-    this.title = 'Connect to Internet & Refresh',
-    this.subtitle =
-        'Active and upcoming live challenges require an internet connection.\nPlease connect to the internet and tap refresh.',
+    this.icon = Icons.wifi_off_rounded,
+    this.description,
   });
 
   final bool dark;
   final bool isRefreshing;
   final VoidCallback onRefresh;
-  final String title;
-  final String subtitle;
+  final IconData icon;
+  final String? description;
 
   @override
   Widget build(BuildContext context) {
+    final offlineIconColor =
+        dark ? AppColors.darkGrey : AppColors.textSecondary;
+    final refreshColor = dark ? Colors.white : Colors.black;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.xl),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 76,
-              height: 76,
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: dark ? 0.18 : 0.10),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.amber.withValues(alpha: dark ? 0.40 : 0.25),
-                  width: 1.5,
-                ),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.wifi_off_rounded,
-                  size: 36,
-                  color: Colors.amber,
-                ),
-              ),
+            // 1. No internet icon
+            Icon(
+              icon,
+              size: 46,
+              color: offlineIconColor,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 12),
+
+            // 2. Short description
             Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 16.5,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
+              description ?? "You're offline. Check your connection.",
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12.5,
-                height: 1.45,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
                 color: dark ? AppColors.darkGrey : AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: 14),
+
+            // 3. Refresh icon / circular loading in place
             SizedBox(
-              height: 44,
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      AppColors.primary.withValues(alpha: 0.75),
-                  disabledForegroundColor: Colors.white,
-                  side: BorderSide.none,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: isRefreshing ? null : onRefresh,
-                icon: isRefreshing
-                    ? const AppCircularButtonLoading(color: Colors.white)
-                    : const Icon(Icons.refresh_rounded, size: 18),
-                label: Text(
-                  isRefreshing ? 'Refreshing...' : 'Connect & Refresh',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.5,
-                  ),
-                ),
+              width: 40,
+              height: 40,
+              child: Center(
+                child: isRefreshing
+                    ? SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          valueColor: AlwaysStoppedAnimation<Color>(refreshColor),
+                        ),
+                      )
+                    : IconButton(
+                        onPressed: onRefresh,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                        icon: Icon(
+                          Icons.refresh_rounded,
+                          size: 26,
+                          color: refreshColor,
+                        ),
+                        tooltip: 'Refresh',
+                      ),
               ),
             ),
           ],

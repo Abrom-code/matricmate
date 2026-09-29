@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
+
 class NoteModel {
   final int id;
   final int subjectId;
@@ -18,6 +21,7 @@ class NoteModel {
   final String? downloadedAt;
   final bool isCompleted;
   final String? completedAt;
+  final DateTime? createdAt;
 
   const NoteModel({
     required this.id,
@@ -39,17 +43,45 @@ class NoteModel {
     this.downloadedAt,
     this.isCompleted = false,
     this.completedAt,
+    this.createdAt,
   });
 
-  /// Human-readable file size (e.g., "2.4 MB", "420 KB")
-  String get formattedSize {
-    if (fileSizeBytes <= 0) return '';
-    if (fileSizeBytes < 1024 * 1024) {
-      final kb = (fileSizeBytes / 1024).toStringAsFixed(1);
-      return '$kb KB';
+  /// Returns true if this note was created within the last 1 week (7 days) and has not yet been clicked/opened.
+  bool get isNew => NewTagHelper.isNoteNew(
+        noteId: id,
+        createdAt: createdAt,
+        downloadedAt: downloadedAt,
+        isCompleted: isCompleted,
+      );
+
+  /// Human-readable file size in MB (e.g., "2.4 MB", "0.8 MB")
+  String get formattedSize => sizeInMB;
+
+  /// File size specifically in MB (e.g. "2.4 MB", "0.8 MB", "0.5 MB")
+  String get sizeInMB {
+    int bytes = fileSizeBytes;
+    if (bytes <= 0 && localFilePath != null) {
+      try {
+        final f = File(localFilePath!);
+        if (f.existsSync()) {
+          bytes = f.lengthSync();
+        }
+      } catch (_) {}
     }
-    final mb = (fileSizeBytes / (1024 * 1024)).toStringAsFixed(1);
-    return '$mb MB';
+    if (bytes <= 0) {
+      if (pageCount > 0) {
+        final estimatedMb = (pageCount * 120 * 1024) / (1024 * 1024);
+        final val = estimatedMb.clamp(0.2, 50.0);
+        return '${val.toStringAsFixed(1)} MB';
+      }
+      return '0.5 MB';
+    }
+    final mb = bytes / (1024 * 1024);
+    if (mb < 1.0) {
+      final val = mb < 0.1 ? 0.1 : mb;
+      return '${val.toStringAsFixed(1)} MB';
+    }
+    return '${mb.toStringAsFixed(1)} MB';
   }
 
   /// Human-readable page count (e.g., "12 pages")
@@ -64,6 +96,12 @@ class NoteModel {
     final key = (rawKey != null && rawKey.trim().isNotEmpty)
         ? rawKey.trim()
         : (rawUrl?.trim() ?? '');
+
+    DateTime? parsedCreatedAt;
+    final rawCreatedAt = map['created_at']?.toString();
+    if (rawCreatedAt != null && rawCreatedAt.trim().isNotEmpty) {
+      parsedCreatedAt = DateTime.tryParse(rawCreatedAt.trim());
+    }
 
     return NoteModel(
       id: (map['id'] as num?)?.toInt() ?? 0,
@@ -95,6 +133,7 @@ class NoteModel {
           map['is_completed'] == true ||
           map['is_completed'] == '1',
       completedAt: map['completed_at']?.toString(),
+      createdAt: parsedCreatedAt,
     );
   }
 
@@ -119,6 +158,7 @@ class NoteModel {
       'downloaded_at': downloadedAt,
       'is_completed': isCompleted ? 1 : 0,
       'completed_at': completedAt,
+      'created_at': createdAt?.toIso8601String(),
     };
   }
 
@@ -142,6 +182,7 @@ class NoteModel {
     String? downloadedAt,
     bool? isCompleted,
     String? completedAt,
+    DateTime? createdAt,
   }) {
     return NoteModel(
       id: id ?? this.id,
@@ -163,6 +204,7 @@ class NoteModel {
       downloadedAt: downloadedAt ?? this.downloadedAt,
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

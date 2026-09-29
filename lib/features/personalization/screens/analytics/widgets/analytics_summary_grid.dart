@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -14,41 +15,42 @@ class AnalyticsSummaryGrid extends StatelessWidget {
     final isLandscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
 
-    final readiness = controller.holisticReadiness;
-    final avgScore = controller.avgScorePct.value;
-    final tests = controller.testsCompleted.value;
-    final notesCompleted = controller.completedNotesCount.value;
-    final notesTotal = controller.totalNotesCount.value;
+    return Obx(() {
+      final readiness = controller.holisticReadiness;
+      final avgScore = controller.avgScorePct.value;
+      final tests = controller.testsCompleted.value;
+      final notesCompleted = controller.completedNotesCount.value;
+      final notesTotal = controller.totalNotesCount.value;
 
-    String readinessTitle;
-    Color readinessColor;
-    String readinessSubtitle;
+      String readinessTitle;
+      Color readinessColor;
+      String readinessSubtitle;
 
-    if (tests == 0 && notesCompleted == 0) {
-      readinessTitle = 'Ready to Begin';
-      readinessColor = AppColors.primary;
-      readinessSubtitle =
-          'Start practicing tests and reading notes to calculate exam readiness';
-    } else if (readiness >= 75) {
-      readinessTitle = 'Exam Ready';
-      readinessColor = const Color(0xFF10B981);
-      readinessSubtitle =
-          'Outstanding balance across tests and syllabus reading completion';
-    } else if (readiness >= 50) {
-      readinessTitle = 'On Track';
-      readinessColor = const Color(0xFFF59E0B);
-      readinessSubtitle =
-          'Solid momentum! Review weaker chapters and read unread notes';
-    } else {
-      readinessTitle = 'Needs Practice';
-      readinessColor = const Color(0xFFEF4444);
-      readinessSubtitle =
-          'Focus on core subject notes and retake low-scoring tests';
-    }
+      if (tests == 0 && notesCompleted == 0) {
+        readinessTitle = 'Ready to Begin';
+        readinessColor = AppColors.primary;
+        readinessSubtitle =
+            'Start practicing tests and reading notes to calculate exam readiness';
+      } else if (readiness >= 75) {
+        readinessTitle = 'Exam Ready';
+        readinessColor = const Color(0xFF10B981);
+        readinessSubtitle =
+            'Outstanding balance across tests and syllabus reading completion';
+      } else if (readiness >= 50) {
+        readinessTitle = 'On Track';
+        readinessColor = const Color(0xFFF59E0B);
+        readinessSubtitle =
+            'Solid momentum! Review weaker chapters and read unread notes';
+      } else {
+        readinessTitle = 'Needs Practice';
+        readinessColor = const Color(0xFFEF4444);
+        readinessSubtitle =
+            'Focus on core subject notes and retake low-scoring tests';
+      }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
         // ── Top Hero: Exam Readiness Banner ──────────────────────────────────
         Container(
           padding: const EdgeInsets.all(16),
@@ -213,6 +215,7 @@ class AnalyticsSummaryGrid extends StatelessWidget {
         ),
       ],
     );
+    });
   }
 }
 

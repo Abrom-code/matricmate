@@ -10,6 +10,7 @@ import 'package:matricmate/features/notes/services/note_download_service.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 
 class NoteReaderScreen extends StatefulWidget {
   const NoteReaderScreen({super.key});
@@ -57,6 +58,8 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     final args = Get.arguments ?? {};
     note = args['note'] as NoteModel;
     subjectTitle = args['subject_title'] ?? 'Subject';
+
+    NewTagHelper.markNoteOpened(note.id);
 
     _resolveFile();
   }
@@ -121,7 +124,72 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     super.dispose();
   }
 
+  // ── Tap detection for toggling AppBar ──────────────────────────────
+  Offset? _pointerDownPosition;
+  DateTime? _pointerDownTime;
+  bool _pointerMoved = false;
+  int _activePointers = 0;
+  bool _isMultiTouch = false;
+  DateTime _lastAppBarToggleTime = DateTime.fromMillisecondsSinceEpoch(0);
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _activePointers++;
+    if (_activePointers == 1) {
+      _pointerDownPosition = event.position;
+      _pointerDownTime = DateTime.now();
+      _pointerMoved = false;
+      _isMultiTouch = false;
+    } else {
+      _isMultiTouch = true;
+    }
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (_pointerDownPosition != null && !_pointerMoved) {
+      final distance = (event.position - _pointerDownPosition!).distance;
+      if (distance > 20.0) {
+        _pointerMoved = true;
+      }
+    }
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    _activePointers = (_activePointers - 1).clamp(0, 10);
+    if (!_isMultiTouch &&
+        !_pointerMoved &&
+        _pointerDownPosition != null &&
+        _pointerDownTime != null) {
+      final elapsed = DateTime.now().difference(_pointerDownTime!);
+      final distance = (event.position - _pointerDownPosition!).distance;
+      if (distance <= 20.0 && elapsed.inMilliseconds <= 400) {
+        _toggleAppBar();
+      }
+    }
+    if (_activePointers == 0) {
+      _pointerDownPosition = null;
+      _pointerDownTime = null;
+      _pointerMoved = false;
+      _isMultiTouch = false;
+    }
+  }
+
+  void _handlePointerCancel(PointerCancelEvent event) {
+    _activePointers = (_activePointers - 1).clamp(0, 10);
+    if (_activePointers == 0) {
+      _pointerDownPosition = null;
+      _pointerDownTime = null;
+      _pointerMoved = false;
+      _isMultiTouch = false;
+    }
+  }
+
   void _toggleAppBar() {
+    if (!mounted) return;
+    final now = DateTime.now();
+    if (now.difference(_lastAppBarToggleTime).inMilliseconds < 250) {
+      return;
+    }
+    _lastAppBarToggleTime = now;
     setState(() => _showAppBar = !_showAppBar);
     if (_showAppBar) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -440,15 +508,20 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            _totalPages > 0
-                ? 'Page ${_pageNotifier.value + 1} of $_totalPages'
-                : 'Reading note...',
-            style: const TextStyle(
-              color: Color(0xFFD1FAE5),
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
+          ValueListenableBuilder<int>(
+            valueListenable: _pageNotifier,
+            builder: (context, currentPage, _) {
+              return Text(
+                _totalPages > 0
+                    ? 'Page ${currentPage + 1} of $_totalPages'
+                    : 'Reading note...',
+                style: const TextStyle(
+                  color: Color(0xFFD1FAE5),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -587,93 +660,98 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                 style: TextStyle(fontSize: 14),
               ),
             )
-          : GestureDetector(
-              onTap: _toggleAppBar,
-              behavior: HitTestBehavior.translucent,
-              child: LayoutBuilder(
+          : LayoutBuilder(
               builder: (context, constraints) {
                 return Stack(
                   children: [
-                    PDFView(
-                      filePath: _resolvedFilePath,
-                      enableSwipe: true,
-                      swipeHorizontal: false,
-                      autoSpacing: false,
-                      pageFling: false,
-                      pageSnap: false,
-                      fitPolicy: FitPolicy.WIDTH,
-                      nightMode: _nightMode,
-                      backgroundColor: bgColor,
-                      onRender: (pages) {
-                        final total = pages ?? 0;
-                        final initialPage = _pageNotifier.value;
-                        final inLast3 =
-                            total > 0 &&
-                            initialPage >= (total - 3).clamp(0, total - 1);
-                        setState(() {
-                          _totalPages = total;
-                          _isReady = true;
-                          if (inLast3) {
-                            _showCompletionPanel = true;
-                          }
-                        });
-                      },
-                      onViewCreated: (controller) {
-                        _pdfViewController = controller;
-                      },
-                      onPageChanged: (page, total) {
-                        if (_isDraggingSlider) return;
-                        final newPage = page ?? 0;
-                        final newTotal = total ?? _totalPages;
-
-                        // Update total if changed (rare, only on render)
-                        if (_totalPages != newTotal) {
-                          _totalPages = newTotal;
-                        }
-
-                        // Update page via ValueNotifier (no setState → no PDFView rebuild)
-                        if (_pageNotifier.value != newPage) {
-                          _pageNotifier.value = newPage;
-                        }
-
-                        // Show slider bubble briefly
-                        if (!_showSliderBubble) {
+                    Listener(
+                      behavior: HitTestBehavior.translucent,
+                      onPointerDown: _handlePointerDown,
+                      onPointerMove: _handlePointerMove,
+                      onPointerUp: _handlePointerUp,
+                      onPointerCancel: _handlePointerCancel,
+                      child: PDFView(
+                        filePath: _resolvedFilePath,
+                        defaultPage: _pageNotifier.value,
+                        enableSwipe: true,
+                        swipeHorizontal: false,
+                        autoSpacing: false,
+                        pageFling: false,
+                        pageSnap: false,
+                        fitPolicy: FitPolicy.WIDTH,
+                        nightMode: _nightMode,
+                        backgroundColor: bgColor,
+                        onRender: (pages) {
+                          final total = pages ?? 0;
+                          final initialPage = _pageNotifier.value;
+                          final inLast3 =
+                              total > 0 &&
+                              initialPage >= (total - 3).clamp(0, total - 1);
                           setState(() {
-                            _showSliderBubble = true;
-                          });
-                        }
-
-                        _bubbleHideTimer?.cancel();
-                        _bubbleHideTimer = Timer(
-                          const Duration(milliseconds: 1500),
-                          () {
-                            if (mounted && !_isDraggingSlider) {
-                              setState(() {
-                                _showSliderBubble = false;
-                              });
+                            _totalPages = total;
+                            _isReady = true;
+                            if (inLast3) {
+                              _showCompletionPanel = true;
                             }
-                          },
-                        );
-
-                        // Display practice button when in the last 3 pages
-                        final isInLast3Pages =
-                            newTotal > 0 &&
-                            newPage >= (newTotal - 3).clamp(0, newTotal - 1);
-                        if (isInLast3Pages != _showCompletionPanel) {
-                          setState(() {
-                            _showCompletionPanel = isInLast3Pages;
                           });
-                        }
+                        },
+                        onViewCreated: (controller) {
+                          _pdfViewController = controller;
+                        },
+                        onPageChanged: (page, total) {
+                          if (_isDraggingSlider) return;
+                          final newPage = page ?? 0;
+                          final newTotal = total ?? _totalPages;
 
-                        // Track last-page state & mark note as completed
-                        final onLast = newTotal > 0 && newPage >= newTotal - 1;
-                        if (onLast != _isOnLastPage) {
-                          _isOnLastPage = onLast;
-                        }
-                        if (onLast && !_hasPromptedCompletion) {
-                          _triggerCompletion();
-                        }
-                      },
+                          // Update total if changed (rare, only on render)
+                          if (_totalPages != newTotal) {
+                            _totalPages = newTotal;
+                          }
+
+                          // Update page via ValueNotifier (no setState → no PDFView rebuild)
+                          if (_pageNotifier.value != newPage) {
+                            _pageNotifier.value = newPage;
+                          }
+
+                          // Show slider bubble briefly
+                          if (!_showSliderBubble) {
+                            setState(() {
+                              _showSliderBubble = true;
+                            });
+                          }
+
+                          _bubbleHideTimer?.cancel();
+                          _bubbleHideTimer = Timer(
+                            const Duration(milliseconds: 1500),
+                            () {
+                              if (mounted && !_isDraggingSlider) {
+                                setState(() {
+                                  _showSliderBubble = false;
+                                });
+                              }
+                            },
+                          );
+
+                          // Display practice button when in the last 3 pages
+                          final isInLast3Pages =
+                              newTotal > 0 &&
+                              newPage >= (newTotal - 3).clamp(0, newTotal - 1);
+                          if (isInLast3Pages != _showCompletionPanel) {
+                            setState(() {
+                              _showCompletionPanel = isInLast3Pages;
+                            });
+                          }
+
+                          // Track last-page state & mark note as completed
+                          final onLast = newTotal > 0 && newPage >= newTotal - 1;
+                          if (onLast != _isOnLastPage) {
+                            _isOnLastPage = onLast;
+                          }
+                          if (onLast && !_hasPromptedCompletion) {
+                            _triggerCompletion();
+                          }
+                        },
+                      ),
                     ),
                     if (!_isReady)
                       const Center(
@@ -694,7 +772,6 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                 );
               },
             ),
-          ),
     );
   }
 }

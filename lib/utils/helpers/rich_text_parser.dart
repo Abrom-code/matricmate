@@ -11,8 +11,40 @@ class RichTextParser {
     caseSensitive: false,
   );
 
+  static final Map<String, String> _preprocessCache = {};
+  static final Map<int, TextSpan> _spanCache = {};
+
+  /// Fast non-regex check to see if text contains any characters that might trigger markup.
+  static bool _hasMarkupTriggers(String s) {
+    for (int i = 0; i < s.length; i++) {
+      final code = s.codeUnitAt(i);
+      // Check for: [ (91), < (60), & (38), * (42), _ (95), ~ (126), \ (92), # (35), \r (13)
+      if (code == 91 ||
+          code == 60 ||
+          code == 38 ||
+          code == 42 ||
+          code == 95 ||
+          code == 126 ||
+          code == 92 ||
+          code == 35 ||
+          code == 13) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Preprocesses HTML tags, entities, and Markdown syntax into normalized BBCode.
   static String _preprocessText(String raw) {
+    final cached = _preprocessCache[raw];
+    if (cached != null) return cached;
+
+    if (!_hasMarkupTriggers(raw)) {
+      if (_preprocessCache.length > 500) _preprocessCache.clear();
+      _preprocessCache[raw] = raw;
+      return raw;
+    }
+
     var text = raw;
 
     // 0. Normalize BBCode tags to lowercase & trim spaces inside tags (e.g. [B], [/B], [ b ], [ /b ])
@@ -173,15 +205,54 @@ class RichTextParser {
     // 6. Normalize multiple blank lines to at most 2
     text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
 
+    if (_preprocessCache.length > 500) {
+      _preprocessCache.clear();
+    }
+    _preprocessCache[raw] = text;
     return text;
   }
 
   /// Parses [text] into styled [TextSpan] with [baseStyle] fallback.
   static TextSpan parse(String text, TextStyle baseStyle) {
+    if (text.isEmpty) return const TextSpan();
+
+    final cacheKey = Object.hash(
+      text,
+      baseStyle.fontSize,
+      baseStyle.fontWeight,
+      baseStyle.fontStyle,
+      baseStyle.color?.toARGB32(),
+      baseStyle.letterSpacing,
+      baseStyle.height,
+    );
+
+    final cached = _spanCache[cacheKey];
+    if (cached != null) return cached;
+
+    if (!_hasMarkupTriggers(text)) {
+      final span = TextSpan(text: text, style: baseStyle);
+      if (_spanCache.length > 1000) _spanCache.clear();
+      _spanCache[cacheKey] = span;
+      return span;
+    }
+
     final normalized = _preprocessText(text);
+
+    // If normalized text still doesn't contain any BBCode tags, avoid running _tagRe
+    if (!normalized.contains('[')) {
+      final span = TextSpan(text: normalized, style: baseStyle);
+      if (_spanCache.length > 1000) _spanCache.clear();
+      _spanCache[cacheKey] = span;
+      return span;
+    }
+
     final spans = <InlineSpan>[];
     _parse(normalized, 0, normalized.length, baseStyle, spans);
-    return TextSpan(children: spans);
+    final result = TextSpan(children: spans);
+
+    if (_spanCache.length > 1000) _spanCache.clear();
+    _spanCache[cacheKey] = result;
+    return result;
   }
 
   /// Convenience: wraps [parse] in a [Text.rich].

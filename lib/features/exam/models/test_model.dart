@@ -1,3 +1,5 @@
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
+
 class TestModel {
   int id, subjectId, questionCount;
   int? grade, chapterId;
@@ -48,11 +50,11 @@ class TestModel {
   factory TestModel.fromMap(Map<String, dynamic> map) =>
       TestModel.fromJson(map);
 
-  /// Returns true if this test was created within the last 2 days for NEW badge.
-  bool get isNew {
-    final cutoff = DateTime.now().subtract(const Duration(days: 2));
-    return createdAt.isAfter(cutoff);
-  }
+  /// Returns true if this test was created within the last 1 week (7 days) and has not yet been clicked/opened.
+  bool get isNew => NewTagHelper.isTestNew(
+        testId: id,
+        createdAt: createdAt,
+      );
 
   TestModel copyWith({
     int? id,

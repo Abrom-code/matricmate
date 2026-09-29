@@ -90,8 +90,7 @@ class NotesRepository {
           .timeout(AppTimeouts.query);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      // If table doesn't exist yet on remote Supabase, return empty gracefully
-      return [];
+      throw AppExceptionHandler.handle(e);
     }
   }
 
@@ -156,35 +155,35 @@ class NotesRepository {
     bool pruneDeleted = false,
   }) async {
     try {
+      // CRITICAL: Never wipe or delete local notes if remote data is empty!
+      // An empty list means network failed or remote returned nothing.
+      if (notesData.isEmpty) return;
+
       final db = await _dbService.database;
 
-      // Clean up notes deleted from remote
+      // Clean up notes deleted from remote ONLY when remote provided a non-empty list of IDs
       if (pruneDeleted) {
         final remoteIds = notesData
             .map((e) => (e['id'] as num?)?.toInt() ?? 0)
             .where((id) => id > 0)
             .toSet();
 
-        final List<NoteModel> localNotes = subjectId != null
-            ? await getLocalNotes(subjectId)
-            : await getAllLocalNotes();
+        if (remoteIds.isNotEmpty) {
+          final List<NoteModel> localNotes = subjectId != null
+              ? await getLocalNotes(subjectId)
+              : await getAllLocalNotes();
 
-        for (final local in localNotes) {
-          if (!remoteIds.contains(local.id)) {
-            if (local.localFilePath != null) {
-              final f = File(local.localFilePath!);
-              if (f.existsSync()) {
-                try {
-                  f.deleteSync();
-                } catch (_) {}
-              }
+          for (final local in localNotes) {
+            // NEVER prune a note that the user has already downloaded to their device!
+            if (local.isDownloaded && local.localFilePath != null) {
+              continue;
             }
-            await db.delete('notes', where: 'id = ?', whereArgs: [local.id]);
+            if (!remoteIds.contains(local.id)) {
+              await db.delete('notes', where: 'id = ?', whereArgs: [local.id]);
+            }
           }
         }
       }
-
-      if (notesData.isEmpty) return;
 
       final batch = db.batch();
 
@@ -204,7 +203,7 @@ class NotesRepository {
             ? rawKey.trim()
             : (rawUrl?.trim() ?? '');
 
-        // Check if existing record has download and completion status
+        // Check if existing record has download, completion and creation status
         final existing = await db.query(
           'notes',
           columns: [
@@ -214,6 +213,7 @@ class NotesRepository {
             'file_key',
             'is_completed',
             'completed_at',
+            'created_at',
           ],
           where: 'id = ?',
           whereArgs: [id],
@@ -248,12 +248,16 @@ class NotesRepository {
           }
           map['is_completed'] = existing.first['is_completed'] ?? 0;
           map['completed_at'] = existing.first['completed_at'];
+          map['created_at'] =
+              map['created_at'] ?? existing.first['created_at'];
         } else {
           map['is_downloaded'] = 0;
           map['local_file_path'] = null;
           map['downloaded_at'] = null;
           map['is_completed'] = 0;
           map['completed_at'] = null;
+          map['created_at'] =
+              map['created_at'] ?? DateTime.now().toIso8601String();
         }
 
         batch.insert(
@@ -284,6 +288,7 @@ class NotesRepository {
             'downloaded_at': map['downloaded_at'],
             'is_completed': map['is_completed'] ?? 0,
             'completed_at': map['completed_at'],
+            'created_at': map['created_at'],
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -317,12 +322,15 @@ class NotesRepository {
   Future<void> markNoteDownloaded(int noteId, String localPath) async {
     try {
       final db = await _dbService.database;
+      final file = File(localPath);
+      final size = file.existsSync() ? file.lengthSync() : 0;
       await db.update(
         'notes',
         {
           'is_downloaded': 1,
           'local_file_path': localPath,
           'downloaded_at': DateTime.now().toIso8601String(),
+          if (size > 0) 'file_size_bytes': size,
         },
         where: 'id = ?',
         whereArgs: [noteId],
@@ -342,12 +350,15 @@ class NotesRepository {
       final now = DateTime.now().toIso8601String();
       await db.transaction((txn) async {
         for (final e in entries) {
+          final file = File(e.localPath);
+          final size = file.existsSync() ? file.lengthSync() : 0;
           await txn.update(
             'notes',
             {
               'is_downloaded': 1,
               'local_file_path': e.localPath,
               'downloaded_at': now,
+              if (size > 0) 'file_size_bytes': size,
             },
             where: 'id = ?',
             whereArgs: [e.noteId],

@@ -7,23 +7,37 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/correct_check_button.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-class ReviewContainer extends GetView<ReviewController> {
+class ReviewContainer extends StatefulWidget {
   const ReviewContainer({super.key, required this.qn, required this.result});
   final QuestionModel qn;
   final ResultModel result;
 
   @override
+  State<ReviewContainer> createState() => _ReviewContainerState();
+}
+
+class _ReviewContainerState extends State<ReviewContainer>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+    final controller = ReviewController.instance;
+
     return Obx(() {
-      final passageExpanded = controller.isPassageExpanded[qn.id] ?? false;
-      final passage = qn.passageId != null
-          ? controller.passages[qn.passageId]
+      final passageExpanded =
+          controller.isPassageExpanded[widget.qn.id] ?? false;
+      final passage = widget.qn.passageId != null
+          ? controller.passages[widget.qn.passageId]
           : null;
-      final explanationExpanded = controller.isExpanded[qn.id] ?? false;
-      final selectedAnswer = result.selectedAnswers[qn.id] ?? -1;
+      final explanationExpanded = controller.isExpanded[widget.qn.id] ?? false;
+      final selectedAnswer =
+          widget.result.selectedAnswers[widget.qn.id] ?? -1;
 
       return QuestionDetailBox(
-        question: qn,
+        question: widget.qn,
         selectedAnswerIndex: selectedAnswer,
         // ── Header ───────────────────────────────────────────────────
         headerLeft: Container(
@@ -33,7 +47,7 @@ class ReviewContainer extends GetView<ReviewController> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'Q${qn.questionOrder} of ${result.testQuestions.length}',
+            'Q${widget.qn.questionOrder} of ${widget.result.testQuestions.length}',
             style: const TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.w700,
@@ -41,13 +55,14 @@ class ReviewContainer extends GetView<ReviewController> {
             ),
           ),
         ),
-        headerRight: result.selectedAnswers[qn.id] == null
+        headerRight: widget.result.selectedAnswers[widget.qn.id] == null
             ? const CorrectCheckButton(
                 color: Color(0xFFF59E0B),
                 icon: Icons.timer_outlined,
                 text: 'Skipped',
               )
-            : result.selectedAnswers[qn.id] == qn.correctOptionIndex
+            : widget.result.selectedAnswers[widget.qn.id] ==
+                    widget.qn.correctOptionIndex
             ? const CorrectCheckButton(
                 color: Color(0xFF10B981),
                 icon: Icons.check_circle_rounded,
@@ -62,10 +77,10 @@ class ReviewContainer extends GetView<ReviewController> {
         passageTitle: passage?.title,
         passageContent: passage?.content,
         passageExpanded: passageExpanded,
-        onPassageToggle: () => controller.togglePassage(qn.id),
+        onPassageToggle: () => controller.togglePassage(widget.qn.id),
         // ── Explanation ───────────────────────────────────────────────
         explanationExpanded: explanationExpanded,
-        onExplanationToggle: () => controller.toggle(qn.id),
+        onExplanationToggle: () => controller.toggle(widget.qn.id),
         languageSelected: controller.languageSelected,
         onLanguageChange: (v) => controller.languageSelected.value = v,
       );

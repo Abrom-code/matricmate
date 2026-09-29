@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
+import 'package:matricmate/common/widgets/appbar/reactive_refresh_button.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/features/personalization/screens/others/widgets/progress_view.dart';
@@ -43,23 +43,12 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              tooltip: 'Refresh',
-              onPressed: () => controller.loadAll(),
-              icon: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(
-                    Iconsax.refresh_copy,
-                    size: 17,
-                    color: AppColors.white,
-                  ),
-                ),
+            child: Obx(
+              () => ReactiveRefreshButton(
+                isRefreshing: controller.isRefreshing.value,
+                onRefresh: () => controller.loadAll(isManualRefresh: true),
+                tooltip: 'Refresh analytics',
+                onSuccessMessage: 'Analytics & progress updated',
               ),
             ),
           ),
@@ -72,7 +61,7 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
 
         return RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: controller.loadAll,
+          onRefresh: () => controller.loadAll(isManualRefresh: true),
           child: ProgressView(controller: controller),
         );
       }),

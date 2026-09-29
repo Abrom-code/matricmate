@@ -6,6 +6,7 @@ import 'package:matricmate/features/notes/models/note_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class NoteTile extends StatelessWidget {
@@ -63,13 +64,18 @@ class NoteTile extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(18),
-            onTap: isLocked
-                ? onTap
-                : liveNote.isDownloaded
-                    ? onTap
-                    : (isDownloading
-                        ? null
-                        : () => ToastHelper.info('Please download this note first')),
+            onTap: () {
+              NewTagHelper.markNoteOpened(liveNote.id);
+              if (isLocked) {
+                onTap();
+              } else if (liveNote.isDownloaded) {
+                onTap();
+              } else if (isDownloading) {
+                // Currently downloading
+              } else {
+                ToastHelper.info('Please download this note first');
+              }
+            },
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Row(
@@ -243,38 +249,69 @@ class NoteTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                liveNote.title,
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
+                                  color: dark
+                                      ? AppColors.textWhite
+                                      : AppColors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (liveNote.isNew) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: const Text(
+                                  'NEW',
+                                  style: TextStyle(
+                                    color: Color(0xFF10B981),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 9,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 3),
                         Text(
-                          liveNote.title,
+                          (liveNote.description != null &&
+                                  liveNote.description!.trim().isNotEmpty)
+                              ? liveNote.description!.trim()
+                              : (liveNote.grade == 0
+                                  ? 'Subject guide and reference notes'
+                                  : 'Chapter summary and key concepts'),
                           style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
+                            fontSize: 11.5,
+                            height: 1.35,
                             color: dark
-                                ? AppColors.textWhite
-                                : AppColors.textPrimary,
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
                           ),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (liveNote.description != null &&
-                            liveNote.description!.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Text(
-                            liveNote.description!,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              height: 1.35,
-                              color: dark
-                                  ? AppColors.darkGrey
-                                  : AppColors.textSecondary,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
 
-                        // Chips: Pages, File Size
+                        // ── Third Line: Pages, File Size in MB ─────────────────
                         Wrap(
                           spacing: 6,
                           runSpacing: 4,
@@ -285,12 +322,11 @@ class NoteTile extends StatelessWidget {
                                 text: liveNote.formattedPages,
                                 icon: Icons.menu_book_rounded,
                               ),
-                            if (liveNote.formattedSize.isNotEmpty)
-                              _buildMetadataChip(
-                                dark: dark,
-                                text: liveNote.formattedSize,
-                                icon: Icons.attach_file_rounded,
-                              ),
+                            _buildMetadataChip(
+                              dark: dark,
+                              text: liveNote.sizeInMB,
+                              icon: Icons.attach_file_rounded,
+                            ),
                           ],
                         ),
                       ],

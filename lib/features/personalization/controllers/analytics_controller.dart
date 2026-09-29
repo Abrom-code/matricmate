@@ -185,6 +185,7 @@ class AnalyticsController extends GetxController {
   final DatabaseService _db;
 
   final isLoading = true.obs;
+  final isRefreshing = false.obs;
 
   // ── Tab selection ────────────────────────────────────────────────────────
   final selectedTab = AnalyticsTab.overview.obs;
@@ -446,12 +447,20 @@ class AnalyticsController extends GetxController {
 
   // ── Load all data ────────────────────────────────────────────────────────
 
-  Future<void> loadAll() async {
+  Future<void> loadAll({bool isManualRefresh = false}) async {
+    if (isRefreshing.value) return;
+    isRefreshing.value = true;
+
     // Only show full blocking loader if we have zero data loaded yet
     if (testsCompleted.value == 0 && totalNotesCount.value == 0) {
       isLoading.value = true;
     }
+
+    final startTime = DateTime.now();
+
     try {
+      await _initFilterOptions();
+
       var userId = UserController.instance.user.value.id;
       if (userId.isEmpty) {
         final local = await UserRepository().getLocalUser();
@@ -476,25 +485,35 @@ class AnalyticsController extends GetxController {
           userId = resRows.first['user_id']?.toString() ?? '';
         }
       }
-      if (userId.isEmpty) {
-        isLoading.value = false;
-        return;
-      }
+
       await Future.wait([
-        _loadSummary(userId),
-        _loadTrend(userId),
-        _loadSubjectPerformance(userId),
-        _loadTypeDistribution(userId),
-        _loadChapterProgress(userId),
-        _loadBookmarkCount(userId),
+        if (userId.isNotEmpty) ...[
+          _loadSummary(userId),
+          _loadTrend(userId),
+          _loadSubjectPerformance(userId),
+          _loadTypeDistribution(userId),
+          _loadChapterProgress(userId),
+          _loadBookmarkCount(userId),
+        ],
         _loadChallengeAnalytics(userId),
         _loadNotesAnalytics(userId),
       ]);
-      await _loadWeaknessAndRecommendations(userId);
+
+      if (userId.isNotEmpty) {
+        await _loadWeaknessAndRecommendations(userId);
+      }
+
+      if (isManualRefresh) {
+        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        if (elapsed < 500) {
+          await Future.delayed(Duration(milliseconds: 500 - elapsed));
+        }
+      }
     } catch (_) {
       // Ignore background errors
     } finally {
       isLoading.value = false;
+      isRefreshing.value = false;
     }
   }
 
@@ -651,83 +670,87 @@ class AnalyticsController extends GetxController {
   }
 
   Future<void> _loadChapterProgress(String userId) async {
-    final db = await _db.database;
+    try {
+      final db = await _db.database;
 
-    final parts = <String>['r.user_id = ?'];
+      final parts = <String>['r.user_id = ?'];
 
-    if (selectedSubject.value != 'All Subjects') {
-      parts.add("s.name = '${selectedSubject.value}'");
-    }
-    switch (selectedGrade.value) {
-      case GradeFilter.grade9:
-        parts.add('t.grade = 9');
-        break;
-      case GradeFilter.grade10:
-        parts.add('t.grade = 10');
-        break;
-      case GradeFilter.grade11:
-        parts.add('t.grade = 11');
-        break;
-      case GradeFilter.grade12:
-        parts.add('t.grade = 12');
-        break;
-      case GradeFilter.all:
-        break;
-    }
-    switch (selectedStream.value) {
-      case StreamFilter.natural:
-        parts.add('s.is_natural = 1 AND s.is_common = 0');
-        break;
-      case StreamFilter.social:
-        parts.add('s.is_natural = 0 AND s.is_common = 0');
-        break;
-      case StreamFilter.common:
-        parts.add('s.is_common = 1');
-        break;
-      case StreamFilter.all:
-        break;
-    }
-
-    final chapterWhere = parts.join(' AND ');
-
-    final rows = await db.rawQuery(
-      '''
-      SELECT c.id as chapter_id, c.title, c.grade, s.id as subject_id, s.name as subject_name,
-             r.correctAnswers, r.testQuestions
-      FROM chapters c
-      LEFT JOIN tests t ON t.chapter_id = c.id
-      LEFT JOIN subjects s ON t.subject_id = s.id
-      LEFT JOIN results r ON r.test_id = t.id AND r.user_id = ?
-      WHERE c.id IN (SELECT DISTINCT chapter_id FROM tests WHERE chapter_id IS NOT NULL)
-        AND ($chapterWhere)
-      GROUP BY c.id
-      ORDER BY r.correctAnswers DESC NULLS LAST
-      LIMIT 15
-    ''',
-      [userId, userId],
-    );
-
-    chapterStats.value = rows.map((row) {
-      final title = row['title'] as String? ?? '';
-      final correct = row['correctAnswers'] as int?;
-      double? score;
-      if (correct != null) {
-        int total = 1;
-        try {
-          final list = jsonDecode(row['testQuestions'] as String) as List;
-          total = list.isNotEmpty ? list.length : 1;
-        } catch (_) {}
-        score = correct / total * 100;
+      if (selectedSubject.value != 'All Subjects') {
+        parts.add("s.name = '${selectedSubject.value}'");
       }
-      return ChapterStat(
-        title: title,
-        score: score,
-        chapterId: (row['chapter_id'] as num?)?.toInt(),
-        subjectId: (row['subject_id'] as num?)?.toInt(),
-        subjectName: row['subject_name']?.toString(),
-        grade: (row['grade'] as num?)?.toInt(),
+      switch (selectedGrade.value) {
+        case GradeFilter.grade9:
+          parts.add('t.grade = 9');
+          break;
+        case GradeFilter.grade10:
+          parts.add('t.grade = 10');
+          break;
+        case GradeFilter.grade11:
+          parts.add('t.grade = 11');
+          break;
+        case GradeFilter.grade12:
+          parts.add('t.grade = 12');
+          break;
+        case GradeFilter.all:
+          break;
+      }
+      switch (selectedStream.value) {
+        case StreamFilter.natural:
+          parts.add('s.is_natural = 1 AND s.is_common = 0');
+          break;
+        case StreamFilter.social:
+          parts.add('s.is_natural = 0 AND s.is_common = 0');
+          break;
+        case StreamFilter.common:
+          parts.add('s.is_common = 1');
+          break;
+        case StreamFilter.all:
+          break;
+      }
+
+      final chapterWhere = parts.join(' AND ');
+
+      final rows = await db.rawQuery(
+        '''
+        SELECT c.id as chapter_id, c.title, c.grade, s.id as subject_id, s.name as subject_name,
+               r.correctAnswers, r.testQuestions
+        FROM chapters c
+        LEFT JOIN tests t ON t.chapter_id = c.id
+        LEFT JOIN subjects s ON t.subject_id = s.id
+        LEFT JOIN results r ON r.test_id = t.id AND r.user_id = ?
+        WHERE c.id IN (SELECT DISTINCT chapter_id FROM tests WHERE chapter_id IS NOT NULL)
+          AND ($chapterWhere)
+        GROUP BY c.id
+        ORDER BY r.correctAnswers DESC
+        LIMIT 15
+      ''',
+        [userId, userId],
       );
-    }).toList();
+
+      chapterStats.value = rows.map((row) {
+        final title = row['title'] as String? ?? '';
+        final correct = row['correctAnswers'] as int?;
+        double? score;
+        if (correct != null) {
+          int total = 1;
+          try {
+            final list = jsonDecode(row['testQuestions'] as String) as List;
+            total = list.isNotEmpty ? list.length : 1;
+          } catch (_) {}
+          score = correct / total * 100;
+        }
+        return ChapterStat(
+          title: title,
+          score: score,
+          chapterId: (row['chapter_id'] as num?)?.toInt(),
+          subjectId: (row['subject_id'] as num?)?.toInt(),
+          subjectName: row['subject_name']?.toString(),
+          grade: (row['grade'] as num?)?.toInt(),
+        );
+      }).toList();
+    } catch (_) {
+      chapterStats.clear();
+    }
   }
 
   Future<void> _loadNotesAnalytics(String userId) async {
@@ -1067,11 +1090,15 @@ class AnalyticsController extends GetxController {
   }
 
   Future<void> _loadBookmarkCount(String userId) async {
-    final db = await _db.database;
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as cnt FROM bookmarks WHERE user_id = ?',
-      [userId],
-    );
-    bookmarkCount.value = result.first['cnt'] as int? ?? 0;
+    try {
+      final db = await _db.database;
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as cnt FROM bookmarks WHERE user_id = ?',
+        [userId],
+      );
+      bookmarkCount.value = result.first['cnt'] as int? ?? 0;
+    } catch (_) {
+      bookmarkCount.value = 0;
+    }
   }
 }

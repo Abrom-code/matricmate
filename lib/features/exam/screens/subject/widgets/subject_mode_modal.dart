@@ -57,6 +57,10 @@ class SubjectModeModal extends StatelessWidget {
       examSubtitle = 'Practice with $modelCount model exam papers';
     }
 
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
       elevation: 16,
@@ -68,11 +72,18 @@ class SubjectModeModal extends StatelessWidget {
           width: 1.2,
         ),
       ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: isLandscape ? 10 : 24,
+      ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+        constraints: BoxConstraints(
+          maxWidth: 440,
+          maxHeight: isLandscape ? screenHeight * 0.94 : screenHeight * 0.85,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.all(isLandscape ? 16 : 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +274,11 @@ class SubjectModeModal extends StatelessWidget {
     SubjectModel subject, {
     bool closeModal = false,
   }) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
     final dark = AppHelperFunctions.isDark(context);
+
     showDialog(
       context: context,
       builder: (ctx) {
@@ -278,14 +293,18 @@ class SubjectModeModal extends StatelessWidget {
               width: 1.2,
             ),
           ),
-          insetPadding: const EdgeInsets.symmetric(
+          insetPadding: EdgeInsets.symmetric(
             horizontal: 24,
-            vertical: 24,
+            vertical: isLandscape ? 12 : 24,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+            constraints: BoxConstraints(
+              maxWidth: 380,
+              maxHeight: isLandscape ? screenHeight * 0.94 : screenHeight * 0.85,
+            ),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(22, isLandscape ? 16 : 28, 22, 22),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

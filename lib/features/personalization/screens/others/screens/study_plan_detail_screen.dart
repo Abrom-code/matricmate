@@ -14,7 +14,7 @@ class StudyPlanDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: const ModernAppbar(
-        title: 'Smart Study Plan',
+        title: 'Study Plan',
         showBackArrow: true,
       ),
       body: const StudyPlanComingSoon(),

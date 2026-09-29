@@ -174,11 +174,10 @@ class SyncingController extends GetxController {
     try {
       final notesRepo = NotesRepository();
       final remoteNotes = await notesRepo.fetchAllRemoteNotes(since: since);
-      if (remoteNotes.isNotEmpty || since == null) {
-        // If since == null (first full sync), pruneDeleted ensures local is exact mirror
+      if (remoteNotes.isNotEmpty) {
         await notesRepo.saveNotesBatch(
           remoteNotes,
-          pruneDeleted: since == null,
+          pruneDeleted: false,
         );
       }
     } catch (_) {

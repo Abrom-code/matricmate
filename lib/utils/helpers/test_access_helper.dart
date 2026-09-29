@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 
 /// Central access gatekeeper for tests across all 4 test types
 /// (chapter, grade, entrance, model).
@@ -30,6 +31,7 @@ class TestAccessHelper {
     required UserModel user,
     required VoidCallback onStart,
   }) {
+    NewTagHelper.markTestOpened(test.id);
     if (canAccess(test: test, user: user)) {
       onStart();
       return;

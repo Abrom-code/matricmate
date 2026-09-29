@@ -223,6 +223,7 @@ class DBschema {
         downloaded_at TEXT,
         is_completed INTEGER DEFAULT 0,
         completed_at TEXT,
+        created_at TEXT,
         FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
         FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE SET NULL
       );

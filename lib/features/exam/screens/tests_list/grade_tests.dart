@@ -215,6 +215,7 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
                 final _ = ctrl.testResults[test.id];
 
                 return TestTile(
+                  testId: test.id,
                   testName: test.title,
                   description: test.description,
                   icon: canAccess
@@ -227,6 +228,7 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
                   isInProgress: ctrl.isInProgress(test.id),
                   questionCount: qnCount,
                   timeMinutes: time,
+                  isNew: test.isNew,
                   onTap: () {
                     TestAccessHelper.handleTestTap(
                       test: test,

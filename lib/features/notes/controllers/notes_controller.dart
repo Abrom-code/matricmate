@@ -7,6 +7,7 @@ import 'package:matricmate/features/notes/services/note_download_service.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 import 'package:matricmate/utils/helpers/test_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -54,34 +55,50 @@ class NotesController extends GetxController {
     loadSubjectNotes();
   }
 
-  /// Loads notes from local SQLite first, then refreshes from remote if connected.
+  /// Loads notes from local SQLite first (offline-first).
+  /// Remote sync is only performed on user pull-to-refresh ([forceRemote] = true)
+  /// or when local cache is empty on first open.
   Future<void> loadSubjectNotes({bool forceRemote = false}) async {
     try {
-      if (subjectNotes.isEmpty) {
-        isLoading.value = true;
-      }
-
       // 1. Paint immediately from local SQLite (zero-delay offline first)
       final local = await _repo.getLocalNotes(subjectId);
       final validated = _validateLocalFiles(local);
       subjectNotes.assignAll(validated);
 
-      // 2. Fetch metadata from Supabase if online
+      // If we already have saved local notes and user didn't pull-to-refresh,
+      // respect offline-first and do not automatically hit network ("refresh only, not by itself").
+      if (!forceRemote && validated.isNotEmpty) {
+        return;
+      }
+
+      // Check internet connectivity before attempting any remote fetch
       final isConnected = await NetworkManager.instance.isConnected();
-      if (isConnected) {
-        final remote = await _repo.fetchRemoteNotes(subjectId);
+      if (!isConnected) {
+        if (forceRemote) {
+          ToastHelper.warning("You're offline. Showing saved notes.");
+        }
+        return;
+      }
+
+      if (subjectNotes.isEmpty) {
+        isLoading.value = true;
+      }
+
+      // 2. Fetch metadata from Supabase
+      final remote = await _repo.fetchRemoteNotes(subjectId);
+      if (remote.isNotEmpty) {
         await _repo.saveNotesBatch(
           remote,
           subjectId: subjectId,
-          pruneDeleted: true,
+          pruneDeleted: forceRemote,
         );
         final updated = await _repo.getLocalNotes(subjectId);
         subjectNotes.assignAll(_validateLocalFiles(updated));
-      } else if (forceRemote) {
-        ToastHelper.warning("You're offline. Showing saved notes.");
       }
     } catch (e) {
-      AppExceptionHandler.handleResponse(e);
+      if (forceRemote) {
+        AppExceptionHandler.handleResponse(e);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -369,6 +386,7 @@ class NotesController extends GetxController {
 
   /// Open note directly into reader
   void openNote(NoteModel note) {
+    NewTagHelper.markNoteOpened(note.id);
     // Always use the live note from subjectNotes to reflect latest state
     final liveNote = subjectNotes.firstWhereOrNull((n) => n.id == note.id) ?? note;
 

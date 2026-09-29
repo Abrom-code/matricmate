@@ -6,6 +6,7 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 
 /// Full-screen Test Overview & Mode Selection Page.
 class ReadyScreen extends StatefulWidget {
@@ -71,6 +72,7 @@ class _ReadyScreenState extends State<ReadyScreen> {
   @override
   void initState() {
     super.initState();
+    NewTagHelper.markTestOpened(widget.testId);
     if (widget.forceExamMode) {
       _isExamMode = true;
     } else if (widget.draft != null) {

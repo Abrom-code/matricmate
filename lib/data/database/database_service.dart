@@ -362,6 +362,11 @@ class DatabaseService extends GetxController {
               'ALTER TABLE notes ADD COLUMN completed_at TEXT',
             );
           } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE notes ADD COLUMN created_at TEXT',
+            );
+          } catch (_) {}
 
           // ── Pilot Exams tables ──────────────────────────────────────────
           try {

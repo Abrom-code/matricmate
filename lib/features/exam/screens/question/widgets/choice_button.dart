@@ -81,6 +81,9 @@ class ChoiceButton extends StatelessWidget {
       color: dark ? AppColors.textWhite : AppColors.textPrimary,
     );
 
+    final animDuration =
+        onTap == null ? Duration.zero : const Duration(milliseconds: 160);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 9),
       child: Material(
@@ -91,7 +94,7 @@ class ChoiceButton extends StatelessWidget {
           splashColor: AppColors.primary.withValues(alpha: 0.08),
           highlightColor: AppColors.primary.withValues(alpha: 0.04),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
+            duration: animDuration,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 13),
             decoration: BoxDecoration(
               color: bgColor,
@@ -119,7 +122,7 @@ class ChoiceButton extends StatelessWidget {
               children: [
                 // Circular Option Badge
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
+                  duration: animDuration,
                   width: 26,
                   height: 26,
                   decoration: BoxDecoration(

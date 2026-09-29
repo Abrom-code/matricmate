@@ -154,16 +154,19 @@ class _EntranceExamsScreenState extends State<EntranceExamsScreen>
           return const AppCircularLoading(title: 'Loading exams...');
         }
 
+        final entranceTests = ctrl.entranceTests.toList();
+        final modelTests = ctrl.modelTests.toList();
+
         return TabBarView(
           controller: tabCtrl.tabController,
           children: [
             _ExamList(
-              tests: ctrl.entranceTests,
+              tests: entranceTests,
               controller: ctrl,
               label: 'Entrance',
             ),
             _ExamList(
-              tests: ctrl.modelTests,
+              tests: modelTests,
               controller: ctrl,
               label: 'Model',
             ),
@@ -302,6 +305,7 @@ class _ExamList extends StatelessWidget {
             final _ = controller.testResults[test.id];
 
             return TestTile(
+              testId: test.id,
               icon: canAccess ? Iconsax.message_question_copy : Icons.lock,
               iconColor: canAccess ? AppColors.primary : Colors.amber,
               currentStep: controller.getCurrentStep(test.id),

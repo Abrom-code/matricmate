@@ -79,22 +79,30 @@ class PilotExamController extends GetxController {
     return examProgressMap[examId] ?? const PilotExamProgress();
   }
 
+  bool _isLoadingPilotExams = false;
+  bool _isLoadingSubjectsInternal = false;
+
   /// Loads all available pilot exams (offline SQLite first, then Supabase if online).
   Future<void> loadPilotExams() async {
+    if (_isLoadingPilotExams) return;
+    _isLoadingPilotExams = true;
     try {
       isLoading.value = true;
 
-      // 1. Paint immediately from local SQLite
+      // 1. Purge legacy dummy seeded records if any
+      await _repo.clearLegacyDummySeed();
+
+      // 2. Paint immediately from local SQLite
       final local = await _repo.getLocalPilotExams();
       pilotExams.assignAll(local);
       await loadAllExamProgresses();
 
-      // 2. Refresh from remote Supabase if connected
+      // 3. Refresh from remote Supabase if connected
       final isConnected = await NetworkManager.instance.isConnected();
       if (isConnected) {
         final remote = await _repo.fetchRemotePilotExams();
-        if (remote.isNotEmpty) {
-          await _repo.savePilotExamsBatch(remote);
+        if (remote != null) {
+          await _repo.syncPilotExams(remote);
           final updated = await _repo.getLocalPilotExams();
           pilotExams.assignAll(updated);
           await loadAllExamProgresses();
@@ -104,6 +112,7 @@ class PilotExamController extends GetxController {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoading.value = false;
+      _isLoadingPilotExams = false;
     }
   }
 
@@ -141,15 +150,17 @@ class PilotExamController extends GetxController {
 
 
   /// Selects a pilot exam and loads its 6 subjects based on user stream.
-  Future<void> selectExam(PilotExamModel exam) async {
+  void selectExam(PilotExamModel exam) {
     selectedExam.value = exam;
-    await loadSubjectsForSelectedExam();
+    loadSubjectsForSelectedExam();
   }
 
   /// Loads the 6 subjects and checks local completion results.
   Future<void> loadSubjectsForSelectedExam() async {
     final exam = selectedExam.value;
     if (exam == null) return;
+    if (_isLoadingSubjectsInternal) return;
+    _isLoadingSubjectsInternal = true;
 
     try {
       isLoadingSubjects.value = true;
@@ -161,23 +172,27 @@ class PilotExamController extends GetxController {
       final userStream = UserController.instance.user.value.stream.toLowerCase().trim();
       final stream = userStream.isEmpty ? 'natural' : userStream;
 
-      // 1. Load subjects from SQLite
+      // 1. Load subjects from SQLite immediately
       final subjects = await _repo.getLocalPilotExamSubjects(exam.id, stream);
       examSubjects.assignAll(subjects);
+      await _loadSubjectTestMetadata(examSubjects);
+
+      // If cached subjects exist locally, unblock UI immediately
+      if (examSubjects.isNotEmpty) {
+        isLoadingSubjects.value = false;
+      }
 
       // 2. Fetch remote subjects if online and save
       final isConnected = await NetworkManager.instance.isConnected();
       if (isConnected) {
         final remote = await _repo.fetchRemotePilotExamSubjects(exam.id);
-        if (remote.isNotEmpty) {
-          await _repo.savePilotExamSubjectsBatch(remote);
+        if (remote != null) {
+          await _repo.syncPilotExamSubjects(exam.id, remote);
           final updated = await _repo.getLocalPilotExamSubjects(exam.id, stream);
           examSubjects.assignAll(updated);
+          await _loadSubjectTestMetadata(examSubjects);
         }
       }
-
-      // 3. Load test results and question counts for each subject test
-      await _loadSubjectTestMetadata(examSubjects);
 
       examProgressMap[exam.id] = PilotExamProgress(
         completedSubjects: completedSubjectsCount,
@@ -188,6 +203,7 @@ class PilotExamController extends GetxController {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoadingSubjects.value = false;
+      _isLoadingSubjectsInternal = false;
     }
   }
 
@@ -324,6 +340,14 @@ class PilotExamController extends GetxController {
     bool silent = false,
   }) async {
     final testId = subject.testId;
+    final user = UserController.instance.user.value;
+    if (!user.isActive) {
+      if (!silent) {
+        TestAccessHelper.openPremiumSheet(user: user);
+      }
+      return false;
+    }
+
     if (isSubjectDownloaded(testId)) return true;
     if (isSubjectDownloading[testId] == true) return false;
 
@@ -377,6 +401,12 @@ class PilotExamController extends GetxController {
 
   /// Downloads all subjects in the current pilot exam for complete offline readiness
   Future<void> downloadAllSubjects() async {
+    final user = UserController.instance.user.value;
+    if (!user.isActive) {
+      TestAccessHelper.openPremiumSheet(user: user);
+      return;
+    }
+
     if (isBulkDownloading.value) {
       showActiveDownloadProgressDialog();
       return;
@@ -511,6 +541,11 @@ class PilotExamController extends GetxController {
     PilotExamSubjectModel subject,
     UserModel user,
   ) async {
+    if (!user.isActive) {
+      TestAccessHelper.openPremiumSheet(user: user);
+      return;
+    }
+
     final testId = subject.testId;
     final downloaded = isSubjectDownloaded(testId);
 
@@ -532,8 +567,9 @@ class PilotExamController extends GetxController {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

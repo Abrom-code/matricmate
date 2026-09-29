@@ -20,6 +20,7 @@ class PilotExamListScreen extends StatefulWidget {
 
 class _PilotExamListScreenState extends State<PilotExamListScreen> {
   late final PilotExamController controller;
+  DateTime _lastTapTime = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
   void initState() {
@@ -29,7 +30,9 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
         : Get.put(PilotExamController());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadPilotExams();
+      if (controller.pilotExams.isEmpty) {
+        controller.loadPilotExams();
+      }
     });
   }
 
@@ -40,14 +43,14 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
     return Scaffold(
       backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
       appBar: ModernAppbarWithBuilder(
-        title: 'Pilot Exam Simulator',
+        title: 'Pilot Exams',
         subtitleBuilder: (_) => Obx(() {
           final stream = UserController.instance.user.value.stream;
           final streamLabel = stream.isNotEmpty
               ? '${stream[0].toUpperCase()}${stream.substring(1)} Stream'
               : 'National Mock Standard';
           return Text(
-              streamLabel,
+            streamLabel,
             style: const TextStyle(
               color: Color(0xFFD1FAE5),
               fontSize: 11.5,
@@ -113,7 +116,9 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      color: dark
+                          ? AppColors.darkGrey
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -137,14 +142,22 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
             itemBuilder: (context, index) {
               final exam = controller.pilotExams[index];
               return Obx(() {
+                final user = UserController.instance.user.value;
+                final isFreeUser = !user.isActive;
                 final progress = controller.getProgressForExam(exam.id);
                 return _PilotExamCard(
                   exam: exam,
                   progress: progress,
                   dark: dark,
-                  onTap: () async {
+                  isFreeUser: isFreeUser,
+                  onTap: () {
+                    final now = DateTime.now();
+                    if (now.difference(_lastTapTime).inMilliseconds < 600) {
+                      return;
+                    }
+                    _lastTapTime = now;
                     HapticFeedback.lightImpact();
-                    await controller.selectExam(exam);
+                    controller.selectExam(exam);
                     Get.to(() => const PilotExamSubjectsScreen());
                   },
                 );
@@ -162,12 +175,14 @@ class _PilotExamCard extends StatelessWidget {
     required this.exam,
     required this.progress,
     required this.dark,
+    this.isFreeUser = false,
     required this.onTap,
   });
 
   final PilotExamModel exam;
   final PilotExamProgress progress;
   final bool dark;
+  final bool isFreeUser;
   final VoidCallback onTap;
 
   @override
@@ -180,8 +195,8 @@ class _PilotExamCard extends StatelessWidget {
           color: progress.isCompleted
               ? const Color(0xFF10B981).withValues(alpha: dark ? 0.4 : 0.6)
               : dark
-                  ? AppColors.darkBorder
-                  : const Color(0xFFE2E8F0),
+              ? AppColors.darkBorder
+              : const Color(0xFFE2E8F0),
           width: 1.2,
         ),
         boxShadow: [
@@ -213,7 +228,9 @@ class _PilotExamCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 17.5,
                           fontWeight: FontWeight.w800,
-                          color: dark ? Colors.white : AppColors.textPrimary,
+                          color: dark
+                              ? Colors.white
+                              : AppColors.textPrimary,
                           letterSpacing: -0.3,
                         ),
                       ),
@@ -222,120 +239,100 @@ class _PilotExamCard extends StatelessWidget {
                     Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 14,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      color: dark
+                          ? AppColors.darkGrey
+                          : AppColors.textSecondary,
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 6),
 
-                // Description with Edition, Subjects & Points details
-                Builder(
-                  builder: (context) {
-                    final metaParts = <String>[];
-                    if (exam.edition.isNotEmpty) {
-                      metaParts.add(exam.edition);
-                    }
-                    metaParts.add('6 Subjects (600 Pts)');
-                    if (progress.isCompleted) {
-                      metaParts.add('Completed • ${progress.totalScore.toInt()}/600 Pts');
-                    } else if (progress.isStarted) {
-                      metaParts.add('${progress.completedSubjects}/6 Done');
-                    }
-
-                    final metaText = metaParts.join(' • ');
-                    final baseDesc = exam.description.isNotEmpty
-                        ? exam.description
-                        : 'Authentic 6-subject simulation matching national matric exam criteria.';
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          metaText,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: progress.isCompleted
-                                ? const Color(0xFF10B981)
-                                : progress.isStarted
-                                    ? const Color(0xFF0284C7)
-                                    : AppColors.primary,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          baseDesc,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                // Description
+                Text(
+                  exam.description.isNotEmpty
+                      ? exam.description
+                      : 'Authentic 6-subject simulation matching national matric exam criteria.',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    height: 1.35,
+                  ),
                 ),
 
-                // Mini Progress Bar if started
-                if (progress.isStarted) ...[
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: progress.progressFraction,
-                            minHeight: 6,
-                            backgroundColor: dark
-                                ? Colors.white.withValues(alpha: 0.08)
-                                : const Color(0xFFE2E8F0),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              progress.isCompleted
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFF0284C7),
-                            ),
+                // Progress Bar & Percentage
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: progress.progressFraction,
+                          minHeight: 6,
+                          backgroundColor: dark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : const Color(0xFFE2E8F0),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            progress.isCompleted
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF0284C7),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        '${(progress.progressFraction * 100).toInt()}%',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: progress.isCompleted
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFF0284C7),
-                        ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${(progress.progressFraction * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: progress.isCompleted
+                            ? const Color(0xFF10B981)
+                            : progress.isStarted
+                            ? const Color(0xFF0284C7)
+                            : dark
+                            ? AppColors.darkGrey
+                            : AppColors.textSecondary,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: 16),
 
-                // Bottom Action Pill Bar
+                // Bottom Action Pill Bar with short text
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 14,
+                  ),
                   decoration: BoxDecoration(
-                    color: progress.isCompleted
-                        ? const Color(0xFF10B981).withValues(alpha: dark ? 0.2 : 0.1)
+                    color: isFreeUser
+                        ? Colors.amber.withValues(
+                            alpha: dark ? 0.22 : 0.12,
+                          )
+                        : progress.isCompleted
+                        ? const Color(
+                            0xFF10B981,
+                          ).withValues(alpha: dark ? 0.2 : 0.1)
                         : progress.isStarted
-                            ? const Color(0xFF0284C7).withValues(alpha: dark ? 0.2 : 0.1)
-                            : dark
-                                ? const Color(0xFF0F766E).withValues(alpha: 0.2)
-                                : const Color(0xFFF0FDFA),
+                        ? const Color(
+                            0xFF0284C7,
+                          ).withValues(alpha: dark ? 0.2 : 0.1)
+                        : dark
+                        ? const Color(0xFF0F766E).withValues(alpha: 0.2)
+                        : const Color(0xFFF0FDFA),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: progress.isCompleted
+                      color: isFreeUser
+                          ? Colors.amber.withValues(alpha: 0.4)
+                          : progress.isCompleted
                           ? const Color(0xFF10B981).withValues(alpha: 0.3)
                           : progress.isStarted
-                              ? const Color(0xFF0284C7).withValues(alpha: 0.3)
-                              : const Color(0xFF0D9488).withValues(alpha: 0.3),
+                          ? const Color(0xFF0284C7).withValues(alpha: 0.3)
+                          : const Color(0xFF0D9488).withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -343,33 +340,41 @@ class _PilotExamCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        progress.isCompleted
+                        isFreeUser
+                            ? Icons.lock_rounded
+                            : progress.isCompleted
                             ? Iconsax.tick_circle_copy
                             : progress.isStarted
-                                ? Iconsax.play_copy
-                                : Iconsax.timer_1_copy,
+                            ? Iconsax.play_copy
+                            : Iconsax.timer_1_copy,
                         size: 16,
-                        color: progress.isCompleted
+                        color: isFreeUser
+                            ? Colors.amber
+                            : progress.isCompleted
                             ? const Color(0xFF10B981)
                             : progress.isStarted
-                                ? const Color(0xFF0284C7)
-                                : const Color(0xFF0D9488),
+                            ? const Color(0xFF0284C7)
+                            : const Color(0xFF0D9488),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        progress.isCompleted
-                            ? 'Review Scorecard & Results'
+                        isFreeUser
+                            ? 'Start Exam'
+                            : progress.isCompleted
+                            ? 'Review Answers'
                             : progress.isStarted
-                                ? 'Resume Simulation (${progress.completedSubjects}/6 Done)'
-                                : 'Start 6-Subject Simulation',
+                            ? 'Resume Exam'
+                            : 'Start Exam',
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
-                          color: progress.isCompleted
+                          color: isFreeUser
+                              ? Colors.amber
+                              : progress.isCompleted
                               ? const Color(0xFF10B981)
                               : progress.isStarted
-                                  ? const Color(0xFF0284C7)
-                                  : const Color(0xFF0D9488),
+                              ? const Color(0xFF0284C7)
+                              : const Color(0xFF0D9488),
                         ),
                       ),
                     ],
@@ -383,4 +388,3 @@ class _PilotExamCard extends StatelessWidget {
     );
   }
 }
-

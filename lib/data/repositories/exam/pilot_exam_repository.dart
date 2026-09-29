@@ -21,21 +21,29 @@ class PilotExamRepository {
         orderBy: 'id ASC',
       );
 
-      if (rows.isEmpty) {
-        // Seed default local sets if empty so user can test right away
-        await _seedDefaults(db);
-        final seeded = await db.query(
-          'pilot_exams',
-          where: 'is_active = 1',
-          orderBy: 'id ASC',
-        );
-        return seeded.map((r) => PilotExamModel.fromMap(r)).toList();
-      }
-
       return rows.map((r) => PilotExamModel.fromMap(r)).toList();
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
+  }
+
+  /// Cleans legacy dummy seeded pilot exams from local SQLite.
+  Future<void> clearLegacyDummySeed() async {
+    try {
+      final db = await _dbService.database;
+      await db.delete(
+        'pilot_exams',
+        where: 'title IN (?, ?)',
+        whereArgs: [
+          '1st Semester Model Exam',
+          'National Pre-Matric Simulation',
+        ],
+      );
+      await db.rawDelete('''
+        DELETE FROM pilot_exam_subjects 
+        WHERE pilot_exam_id NOT IN (SELECT id FROM pilot_exams)
+      ''');
+    } catch (_) {}
   }
 
   /// Fetches the 6 subjects for a pilot exam matching the student's stream.
@@ -62,7 +70,8 @@ class PilotExamRepository {
   }
 
   /// Fetches remote pilot exams from Supabase if table exists.
-  Future<List<Map<String, dynamic>>> fetchRemotePilotExams() async {
+  /// Returns null if query failed (offline or table missing), or List on success.
+  Future<List<Map<String, dynamic>>?> fetchRemotePilotExams() async {
     try {
       final response = await _supabase
           .from('pilot_exams')
@@ -72,12 +81,13 @@ class PilotExamRepository {
           .timeout(AppTimeouts.query);
       return List<Map<String, dynamic>>.from(response);
     } catch (_) {
-      return [];
+      return null;
     }
   }
 
   /// Fetches remote subjects for a pilot exam from Supabase.
-  Future<List<Map<String, dynamic>>> fetchRemotePilotExamSubjects(
+  /// Returns null if query failed, or List on success.
+  Future<List<Map<String, dynamic>>?> fetchRemotePilotExamSubjects(
     int pilotExamId,
   ) async {
     try {
@@ -89,15 +99,29 @@ class PilotExamRepository {
           .timeout(AppTimeouts.query);
       return List<Map<String, dynamic>>.from(response);
     } catch (_) {
-      return [];
+      return null;
     }
   }
 
-  /// Saves remote pilot exams batch into SQLite.
-  Future<void> savePilotExamsBatch(List<Map<String, dynamic>> exams) async {
-    if (exams.isEmpty) return;
+  /// Synchronizes remote pilot exams into local SQLite.
+  /// If remote is empty, removes all local pilot exams to reflect Supabase state.
+  Future<void> syncPilotExams(List<Map<String, dynamic>> exams) async {
     try {
       final db = await _dbService.database;
+      if (exams.isEmpty) {
+        await db.delete('pilot_exams');
+        await db.delete('pilot_exam_subjects');
+        return;
+      }
+
+      final remoteIds = exams.map((e) => e['id']).toList();
+      final placeholders = List.filled(remoteIds.length, '?').join(',');
+      await db.delete(
+        'pilot_exams',
+        where: 'id NOT IN ($placeholders)',
+        whereArgs: remoteIds,
+      );
+
       final batch = db.batch();
       for (final exam in exams) {
         batch.insert(
@@ -123,13 +147,34 @@ class PilotExamRepository {
     } catch (_) {}
   }
 
-  /// Saves remote pilot exam subjects batch into SQLite.
-  Future<void> savePilotExamSubjectsBatch(
+  /// Saves remote pilot exams batch into SQLite (alias for syncPilotExams).
+  Future<void> savePilotExamsBatch(List<Map<String, dynamic>> exams) =>
+      syncPilotExams(exams);
+
+  /// Synchronizes remote subjects for an exam into local SQLite.
+  Future<void> syncPilotExamSubjects(
+    int examId,
     List<Map<String, dynamic>> subjects,
   ) async {
-    if (subjects.isEmpty) return;
     try {
       final db = await _dbService.database;
+      if (subjects.isEmpty) {
+        await db.delete(
+          'pilot_exam_subjects',
+          where: 'pilot_exam_id = ?',
+          whereArgs: [examId],
+        );
+        return;
+      }
+
+      final remoteIds = subjects.map((s) => s['id']).toList();
+      final placeholders = List.filled(remoteIds.length, '?').join(',');
+      await db.delete(
+        'pilot_exam_subjects',
+        where: 'pilot_exam_id = ? AND id NOT IN ($placeholders)',
+        whereArgs: [examId, ...remoteIds],
+      );
+
       final batch = db.batch();
       for (final s in subjects) {
         batch.insert(
@@ -150,6 +195,17 @@ class PilotExamRepository {
       }
       await batch.commit(noResult: true);
     } catch (_) {}
+  }
+
+  /// Saves remote pilot exam subjects batch into SQLite (alias for syncPilotExamSubjects).
+  Future<void> savePilotExamSubjectsBatch(
+    List<Map<String, dynamic>> subjects,
+  ) async {
+    if (subjects.isEmpty) return;
+    final examId = subjects.first['pilot_exam_id'] as int? ?? 0;
+    if (examId > 0) {
+      await syncPilotExamSubjects(examId, subjects);
+    }
   }
 
   /// Downloads questions, reading passages, and diagrams for a given subject test from Supabase
@@ -275,130 +331,5 @@ class PilotExamRepository {
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
-  }
-
-  /// Seeds default pilot exams and subjects so the user can test the feature immediately.
-  Future<void> _seedDefaults(Database db) async {
-    try {
-      // 1. Seed pilot exam
-      await db.insert(
-        'pilot_exams',
-        {
-          'id': 1,
-          'title': '1st Semester Model Exam',
-          'description':
-              'Full-length nationwide pre-matric trial covering all 6 curriculum subjects.',
-          'edition': '2019 E.C.',
-          'is_premium': 1,
-          'is_active': 1,
-          'created_at': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-
-      await db.insert(
-        'pilot_exams',
-        {
-          'id': 2,
-          'title': 'National Pre-Matric Simulation',
-          'description':
-              'Authentic NEAEA standard simulation with timed test protocols.',
-          'edition': '2019 E.C.',
-          'is_premium': 1,
-          'is_active': 1,
-          'created_at': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-
-      // Check existing subjects to link realistic subject IDs
-      final existingSubjects = await db.query('subjects');
-      final subjectMap = {
-        for (final s in existingSubjects)
-          (s['name'] as String).toLowerCase(): s['id'] as int,
-      };
-
-      // Check existing entrance/model tests to link test IDs
-      final existingTests = await db.query('tests');
-      final testBySubject = <int, int>{};
-      for (final t in existingTests) {
-        final subId = t['subject_id'] as int;
-        if (!testBySubject.containsKey(subId)) {
-          testBySubject[subId] = t['id'] as int;
-        }
-      }
-
-      // 4 Natural Subjects + 2 Common Subjects = 6
-      final naturalList = [
-        {'name': 'Mathematics', 'stream': 'natural', 'order': 1},
-        {'name': 'Physics', 'stream': 'natural', 'order': 2},
-        {'name': 'Chemistry', 'stream': 'natural', 'order': 3},
-        {'name': 'Biology', 'stream': 'natural', 'order': 4},
-        {'name': 'English', 'stream': 'common', 'order': 5},
-        {'name': 'Aptitude', 'stream': 'common', 'order': 6},
-      ];
-
-      // 4 Social Subjects (English & Aptitude shared as common)
-      final socialList = [
-        {'name': 'Mathematics', 'stream': 'social', 'order': 1},
-        {'name': 'History', 'stream': 'social', 'order': 2},
-        {'name': 'Geography', 'stream': 'social', 'order': 3},
-        {'name': 'Economics', 'stream': 'social', 'order': 4},
-      ];
-
-      int subjectIndex = 1;
-      final batch = db.batch();
-
-      // Seed for Exam 1 & 2
-      for (final examId in [1, 2]) {
-        for (var i = 0; i < naturalList.length; i++) {
-          final item = naturalList[i];
-          final name = item['name'] as String;
-          final subId = subjectMap[name.toLowerCase()] ?? (i + 1);
-          final testId = testBySubject[subId] ?? subId;
-
-          batch.insert(
-            'pilot_exam_subjects',
-            {
-              'id': subjectIndex++,
-              'pilot_exam_id': examId,
-              'subject_id': subId,
-              'subject_name': name,
-              'stream': item['stream'] as String,
-              'test_id': testId,
-              'order_index': item['order'] as int,
-              'question_count': 60,
-              'time_minutes': 90,
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
-        }
-
-        for (var i = 0; i < socialList.length; i++) {
-          final item = socialList[i];
-          final name = item['name'] as String;
-          final subId = subjectMap[name.toLowerCase()] ?? (i + 10);
-          final testId = testBySubject[subId] ?? subId;
-
-          batch.insert(
-            'pilot_exam_subjects',
-            {
-              'id': subjectIndex++,
-              'pilot_exam_id': examId,
-              'subject_id': subId,
-              'subject_name': name,
-              'stream': 'social',
-              'test_id': testId,
-              'order_index': item['order'] as int,
-              'question_count': 60,
-              'time_minutes': 90,
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
-        }
-      }
-
-      await batch.commit(noResult: true);
-    } catch (_) {}
   }
 }

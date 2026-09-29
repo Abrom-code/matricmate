@@ -11,6 +11,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 
 class PilotExamSubjectsScreen extends StatefulWidget {
   const PilotExamSubjectsScreen({super.key});
@@ -67,10 +68,65 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
           return const AppCircularLoading(title: 'Loading exam subjects...');
         }
 
+        final user = UserController.instance.user.value;
+        final isLocked = !user.isActive;
+
         final subjects = controller.examSubjects;
         final completedCount = controller.completedSubjectsCount;
         final grandTotal = controller.grandTotalScore;
         final compositePct = controller.compositePercentage;
+
+        if (subjects.isEmpty) {
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: controller.loadSubjectsForSelectedExam,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.5,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Iconsax.book_1_copy,
+                            size: 48,
+                            color: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No Subjects Available',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: dark ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'The subjects for this pilot exam will appear here once configured.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: dark
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
 
         return RefreshIndicator(
           color: AppColors.primary,
@@ -111,11 +167,13 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                       ),
                     ),
                     Tooltip(
-                      message: controller.isBulkDownloading.value
-                          ? 'Downloading exam (${(controller.bulkDownloadProgress.value * 100).toInt()}%)\nTap to view progress'
-                          : (controller.isAllSubjectsDownloaded
-                              ? 'Delete downloaded exam'
-                              : 'Download all subjects for offline use'),
+                      message: isLocked
+                          ? 'Premium feature • Tap to unlock'
+                          : controller.isBulkDownloading.value
+                              ? 'Downloading exam (${(controller.bulkDownloadProgress.value * 100).toInt()}%)\nTap to view progress'
+                              : (controller.isAllSubjectsDownloaded
+                                  ? 'Delete downloaded exam'
+                                  : 'Download all subjects for offline use'),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(10),
                         onTap: controller.isDeletingDownloads.value
@@ -123,63 +181,90 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                             : (controller.isBulkDownloading.value
                                 ? () => controller
                                     .showActiveDownloadProgressDialog()
-                                : (controller.isAllSubjectsDownloaded
-                                    ? () => _confirmDeleteExamDownloads(
-                                          context,
-                                          controller,
-                                          dark,
-                                        )
-                                    : controller.downloadAllSubjects)),
+                                : (isLocked
+                                    ? () {
+                                        HapticFeedback.lightImpact();
+                                        TestAccessHelper.openPremiumSheet(
+                                          user: user,
+                                        );
+                                      }
+                                    : (controller.isAllSubjectsDownloaded
+                                        ? () => _confirmDeleteExamDownloads(
+                                              context,
+                                              controller,
+                                              dark,
+                                            )
+                                        : controller.downloadAllSubjects))),
                         child: Container(
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: controller.isAllSubjectsDownloaded
-                                ? const Color(
-                                    0xFFEF4444,
-                                  ).withValues(alpha: dark ? 0.2 : 0.1)
-                                : AppColors.primary.withValues(
-                                    alpha: dark ? 0.22 : 0.1,
-                                  ),
+                            color: isLocked
+                                ? Colors.amber.withValues(
+                                    alpha: dark ? 0.2 : 0.1,
+                                  )
+                                : controller.isAllSubjectsDownloaded
+                                    ? const Color(
+                                        0xFFEF4444,
+                                      ).withValues(alpha: dark ? 0.2 : 0.1)
+                                    : AppColors.primary.withValues(
+                                        alpha: dark ? 0.22 : 0.1,
+                                      ),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: controller.isAllSubjectsDownloaded
-                                  ? const Color(
-                                      0xFFEF4444,
-                                    ).withValues(alpha: 0.35)
-                                  : AppColors.primary.withValues(alpha: 0.35),
+                              color: isLocked
+                                  ? Colors.amber.withValues(alpha: 0.35)
+                                  : controller.isAllSubjectsDownloaded
+                                      ? const Color(
+                                          0xFFEF4444,
+                                        ).withValues(alpha: 0.35)
+                                      : AppColors.primary
+                                          .withValues(alpha: 0.35),
                               width: 1,
                             ),
                           ),
                           child: Center(
-                            child: controller.isBulkDownloading.value ||
-                                    controller.isDeletingDownloads.value
-                                ? SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      value: controller.isBulkDownloading.value &&
-                                              controller.bulkDownloadProgress.value > 0
-                                          ? controller.bulkDownloadProgress.value
-                                          : null,
-                                      strokeWidth: 2.2,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
+                            child: isLocked
+                                ? const Icon(
+                                    Icons.lock_rounded,
+                                    size: 18,
+                                    color: Colors.amber,
+                                  )
+                                : controller.isBulkDownloading.value ||
                                         controller.isDeletingDownloads.value
+                                    ? SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          value: controller
+                                                      .isBulkDownloading
+                                                      .value &&
+                                                  controller
+                                                          .bulkDownloadProgress
+                                                          .value >
+                                                      0
+                                              ? controller
+                                                  .bulkDownloadProgress.value
+                                              : null,
+                                          strokeWidth: 2.2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            controller.isDeletingDownloads.value
+                                                ? const Color(0xFFEF4444)
+                                                : AppColors.primary,
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        controller.isAllSubjectsDownloaded
+                                            ? Icons.delete_outline_rounded
+                                            : Icons.download_rounded,
+                                        size: 20,
+                                        color: controller
+                                                .isAllSubjectsDownloaded
                                             ? const Color(0xFFEF4444)
                                             : AppColors.primary,
                                       ),
-                                    ),
-                                  )
-                                : Icon(
-                                    controller.isAllSubjectsDownloaded
-                                        ? Icons.delete_outline_rounded
-                                        : Icons.download_rounded,
-                                    size: 20,
-                                    color: controller.isAllSubjectsDownloaded
-                                        ? const Color(0xFFEF4444)
-                                        : AppColors.primary,
-                                  ),
                           ),
                         ),
                       ),
@@ -226,6 +311,7 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                     return _SubjectExamTile(
                       dark: dark,
                       subject: subject,
+                      isLocked: isLocked,
                       isCompleted: isCompleted,
                       isInProgress: isInProgress,
                       draft: draft,
@@ -237,11 +323,17 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                       totalQuestions: totalQuestions,
                       onDownload: () {
                         HapticFeedback.lightImpact();
-                        controller.downloadSubject(subject);
+                        if (isLocked) {
+                          TestAccessHelper.openPremiumSheet(user: user);
+                        } else {
+                          controller.downloadSubject(subject);
+                        }
                       },
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        if (isCompleted) {
+                        if (isLocked) {
+                          TestAccessHelper.openPremiumSheet(user: user);
+                        } else if (isCompleted) {
                           controller.openSubjectReview(subject);
                         } else if (!isDownloaded) {
                           controller.downloadSubject(subject);
@@ -265,6 +357,10 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
     PilotExamController controller,
     bool dark,
   ) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
     showDialog(
       context: context,
       builder: (ctx) {
@@ -279,14 +375,18 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
               width: 1.2,
             ),
           ),
-          insetPadding: const EdgeInsets.symmetric(
+          insetPadding: EdgeInsets.symmetric(
             horizontal: 24,
-            vertical: 24,
+            vertical: isLandscape ? 12 : 24,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+            constraints: BoxConstraints(
+              maxWidth: 380,
+              maxHeight: isLandscape ? screenHeight * 0.94 : screenHeight * 0.85,
+            ),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(22, isLandscape ? 16 : 28, 22, 22),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -545,6 +645,7 @@ class _SubjectExamTile extends StatelessWidget {
   const _SubjectExamTile({
     required this.dark,
     required this.subject,
+    this.isLocked = false,
     required this.isCompleted,
     this.isInProgress = false,
     this.draft,
@@ -560,6 +661,7 @@ class _SubjectExamTile extends StatelessWidget {
 
   final bool dark;
   final PilotExamSubjectModel subject;
+  final bool isLocked;
   final bool isCompleted;
   final bool isInProgress;
   final ResultModel? draft;
@@ -608,12 +710,14 @@ class _SubjectExamTile extends StatelessWidget {
         color: dark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isCompleted
-              ? const Color(0xFF10B981).withValues(alpha: dark ? 0.35 : 0.25)
-              : isInProgress
-                  ? const Color(0xFFF59E0B).withValues(alpha: dark ? 0.5 : 0.35)
-                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
-          width: isInProgress ? 1.4 : 1.2,
+          color: isLocked
+              ? Colors.amber.withValues(alpha: dark ? 0.40 : 0.28)
+              : isCompleted
+                  ? const Color(0xFF10B981).withValues(alpha: dark ? 0.35 : 0.25)
+                  : isInProgress
+                      ? const Color(0xFFF59E0B).withValues(alpha: dark ? 0.5 : 0.35)
+                      : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
+          width: isLocked ? 1.3 : (isInProgress ? 1.4 : 1.2),
         ),
         boxShadow: [
           BoxShadow(
@@ -638,10 +742,26 @@ class _SubjectExamTile extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: dark ? 0.22 : 0.12),
+                    color: isLocked
+                        ? Colors.amber.withValues(alpha: dark ? 0.20 : 0.12)
+                        : color.withValues(alpha: dark ? 0.22 : 0.12),
                     borderRadius: BorderRadius.circular(14),
+                    border: isLocked
+                        ? Border.all(
+                            color: Colors.amber.withValues(alpha: 0.35),
+                            width: 1,
+                          )
+                        : null,
                   ),
-                  child: Center(child: Icon(icon, color: color, size: 22)),
+                  child: Center(
+                    child: isLocked
+                        ? const Icon(
+                            Icons.lock_rounded,
+                            color: Colors.amber,
+                            size: 22,
+                          )
+                        : Icon(icon, color: color, size: 22),
+                  ),
                 ),
                 const SizedBox(width: 14),
 
@@ -661,7 +781,17 @@ class _SubjectExamTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
-                      if (isCompleted) ...[
+                      if (isLocked) ...[
+                        Text(
+                          '${subject.timeMinutes} mins • ${subject.questionCount} questions',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ] else if (isCompleted) ...[
                         Text.rich(
                           TextSpan(
                             children: [
@@ -766,8 +896,26 @@ class _SubjectExamTile extends StatelessWidget {
 
                 const SizedBox(width: 10),
 
-                // Right Action / Status (Note-style circular download)
-                if (isDownloading) ...[
+                // Right Action / Status (Note-style circular download or lock)
+                if (isLocked) ...[
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(
+                        alpha: dark ? 0.18 : 0.10,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.lock_rounded,
+                        size: 16,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ),
+                ] else if (isDownloading) ...[
                   SizedBox(
                     width: 32,
                     height: 32,

@@ -48,14 +48,13 @@ void main() {
       expect(find.text(ProfileActionsHelper.appName), findsWidgets);
       expect(find.text('v1.0.3'), findsOneWidget);
 
-      // Feature cards
-      expect(find.text('National Entrance Exam Simulator'), findsOneWidget);
-      expect(find.text('Curriculum-Aligned Chapter Tests'), findsOneWidget);
-      expect(find.text('Curated Notes & Textbooks'), findsOneWidget);
-      expect(find.text('Crystal-Clear Math & Science Rendering'), findsOneWidget);
-      expect(find.text('Daily Challenges & Practice Arena'), findsOneWidget);
-      expect(find.text('Smart Bookmarks & Performance Insights'), findsOneWidget);
-      expect(find.text('100% Offline Capability'), findsOneWidget);
+      // Bento Feature cards
+      expect(find.text('Matric Simulator'), findsOneWidget);
+      expect(find.text('Chapter Tests'), findsOneWidget);
+      expect(find.text('Study Notes'), findsOneWidget);
+      expect(find.text('LaTeX Math'), findsOneWidget);
+      expect(find.text('Daily Streaks'), findsOneWidget);
+      expect(find.text('100% Offline'), findsOneWidget);
 
       // Educational streams
       expect(find.text('Natural Science'), findsOneWidget);
@@ -64,7 +63,7 @@ void main() {
       // Legal & disclosures at the bottom
       expect(find.text('LEGAL & DISCLOSURES'), findsOneWidget);
       expect(find.text('Privacy Policy'), findsOneWidget);
-      expect(find.text('Open Source Licenses'), findsOneWidget);
+      expect(find.text('Open Source'), findsOneWidget);
     });
   });
 }

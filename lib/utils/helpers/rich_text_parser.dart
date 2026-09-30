@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 
-/// Parses lightweight markup tags ([b], [i], [u], [c=...], markdown, and HTML) into a [TextSpan] tree.
+/// Parses lightweight markup tags ([b], [i], [u], [c=...], markdown, and HTML) and LaTeX into a [TextSpan] tree.
 class RichTextParser {
   RichTextParser._();
 
@@ -18,7 +19,7 @@ class RichTextParser {
   static bool _hasMarkupTriggers(String s) {
     for (int i = 0; i < s.length; i++) {
       final code = s.codeUnitAt(i);
-      // Check for: [ (91), < (60), & (38), * (42), _ (95), ~ (126), \ (92), # (35), \r (13)
+      // Check for: [ (91), < (60), & (38), * (42), _ (95), ~ (126), \ (92), # (35), \r (13), $ (36)
       if (code == 91 ||
           code == 60 ||
           code == 38 ||
@@ -27,7 +28,8 @@ class RichTextParser {
           code == 126 ||
           code == 92 ||
           code == 35 ||
-          code == 13) {
+          code == 13 ||
+          code == 36) {
         return true;
       }
     }
@@ -236,18 +238,28 @@ class RichTextParser {
       return span;
     }
 
-    final normalized = _preprocessText(text);
+    // 1. Extract LaTeX formulas into sentinels before preprocessing
+    final (textWithSentinels, mathTokens) = _extractMathTokens(text);
+    final normalized = _preprocessText(textWithSentinels);
 
     // If normalized text still doesn't contain any BBCode tags, avoid running _tagRe
     if (!normalized.contains('[')) {
-      final span = TextSpan(text: normalized, style: baseStyle);
+      if (mathTokens.isEmpty) {
+        final span = TextSpan(text: normalized, style: baseStyle);
+        if (_spanCache.length > 1000) _spanCache.clear();
+        _spanCache[cacheKey] = span;
+        return span;
+      }
+      final spans = <InlineSpan>[];
+      _appendSpanWithMath(normalized, baseStyle, mathTokens, spans);
+      final span = TextSpan(children: spans);
       if (_spanCache.length > 1000) _spanCache.clear();
       _spanCache[cacheKey] = span;
       return span;
     }
 
     final spans = <InlineSpan>[];
-    _parse(normalized, 0, normalized.length, baseStyle, spans);
+    _parse(normalized, 0, normalized.length, baseStyle, spans, mathTokens);
     final result = TextSpan(children: spans);
 
     if (_spanCache.length > 1000) _spanCache.clear();
@@ -262,6 +274,101 @@ class RichTextParser {
     TextAlign textAlign = TextAlign.start,
   }) {
     return Text.rich(parse(text, baseStyle), textAlign: textAlign);
+  }
+
+  // ── Math Token extraction & Span building ──────────────────────────────────
+
+  static (String, List<_MathToken>) _extractMathTokens(String input) {
+    if (!input.contains(r'\') && !input.contains(r'$')) {
+      return (input, const []);
+    }
+
+    final tokens = <_MathToken>[];
+    var text = input;
+
+    String registerToken(String tex, String raw, bool isBlock) {
+      final idx = tokens.length;
+      tokens.add(_MathToken(
+        index: idx,
+        tex: tex,
+        raw: raw,
+        isBlock: isBlock,
+      ));
+      return '\uE000M$idx\uE001';
+    }
+
+    // 1. Block: \[ ... \] or \\[ ... \\]
+    text = text.replaceAllMapped(
+      RegExp(r'\\{1,2}\[([\s\S]*?)\\{1,2}\]'),
+      (m) => registerToken(m.group(1)?.trim() ?? '', m.group(0) ?? '', true),
+    );
+
+    // 2. Block: $$ ... $$
+    text = text.replaceAllMapped(
+      RegExp(r'\$\$([\s\S]*?)\$\$'),
+      (m) => registerToken(m.group(1)?.trim() ?? '', m.group(0) ?? '', true),
+    );
+
+    // 3. Inline: \( ... \) or \\( ... \\)
+    text = text.replaceAllMapped(
+      RegExp(r'\\{1,2}\(([\s\S]*?)\\{1,2}\)'),
+      (m) => registerToken(m.group(1)?.trim() ?? '', m.group(0) ?? '', false),
+    );
+
+    // 4. Inline: $ ... $
+    text = text.replaceAllMapped(
+      RegExp(r'(?<!\\)\$(?!\s)([^\$\n]+?)(?<!\s|\$)\$'),
+      (m) => registerToken(m.group(1)?.trim() ?? '', m.group(0) ?? '', false),
+    );
+
+    return (text, tokens);
+  }
+
+  static void _appendSpanWithMath(
+    String chunk,
+    TextStyle style,
+    List<_MathToken> mathTokens,
+    List<InlineSpan> out,
+  ) {
+    if (mathTokens.isEmpty || !chunk.contains('\uE000M')) {
+      out.add(TextSpan(text: chunk, style: style));
+      return;
+    }
+
+    final sentinelRe = RegExp(r'\uE000M(\d+)\uE001');
+    int cursor = 0;
+
+    for (final match in sentinelRe.allMatches(chunk)) {
+      if (match.start > cursor) {
+        out.add(TextSpan(
+          text: chunk.substring(cursor, match.start),
+          style: style,
+        ));
+      }
+
+      final idx = int.tryParse(match.group(1) ?? '');
+      if (idx != null && idx >= 0 && idx < mathTokens.length) {
+        final token = mathTokens[idx];
+        out.add(WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          baseline: TextBaseline.alphabetic,
+          child: MathWidget(
+            tex: token.tex,
+            raw: token.raw,
+            style: style,
+            isBlock: token.isBlock,
+          ),
+        ));
+      } else {
+        out.add(TextSpan(text: match.group(0), style: style));
+      }
+
+      cursor = match.end;
+    }
+
+    if (cursor < chunk.length) {
+      out.add(TextSpan(text: chunk.substring(cursor), style: style));
+    }
   }
 
   // ── Nesting-aware close-tag finder ──────────────────────────────────────────
@@ -304,6 +411,7 @@ class RichTextParser {
     int end,
     TextStyle style,
     List<InlineSpan> out,
+    List<_MathToken> mathTokens,
   ) {
     int cursor = start;
 
@@ -315,8 +423,11 @@ class RichTextParser {
 
       // plain text before this tag
       if (match.start > cursor) {
-        out.add(
-          TextSpan(text: text.substring(cursor, match.start), style: style),
+        _appendSpanWithMath(
+          text.substring(cursor, match.start),
+          style,
+          mathTokens,
+          out,
         );
       }
 
@@ -332,7 +443,12 @@ class RichTextParser {
 
         if (closeIdx == -1) {
           // No close tag — treat as plain text
-          out.add(TextSpan(text: match.group(0), style: style));
+          _appendSpanWithMath(
+            match.group(0)!,
+            style,
+            mathTokens,
+            out,
+          );
           cursor = match.end;
           continue;
         }
@@ -344,7 +460,7 @@ class RichTextParser {
         if (tagName == 'sup' || tagName == 'sub') {
           // Superscript / subscript via WidgetSpan
           final List<InlineSpan> innerSpans = [];
-          _parse(text, match.end, closeIdx, newStyle, innerSpans);
+          _parse(text, match.end, closeIdx, newStyle, innerSpans, mathTokens);
           out.add(
             WidgetSpan(
               alignment: tagName == 'sup'
@@ -359,7 +475,7 @@ class RichTextParser {
         } else {
           // Regular inline span — recurse for nesting
           final List<InlineSpan> innerSpans = [];
-          _parse(text, match.end, closeIdx, newStyle, innerSpans);
+          _parse(text, match.end, closeIdx, newStyle, innerSpans, mathTokens);
           out.addAll(innerSpans);
         }
 
@@ -372,7 +488,12 @@ class RichTextParser {
 
     // Remaining plain text after all tags
     if (cursor < end) {
-      out.add(TextSpan(text: text.substring(cursor, end), style: style));
+      _appendSpanWithMath(
+        text.substring(cursor, end),
+        style,
+        mathTokens,
+        out,
+      );
     }
   }
 
@@ -457,4 +578,76 @@ class RichTextParser {
     return null;
   }
 }
+
+class _MathToken {
+  final int index;
+  final String tex;
+  final String raw;
+  final bool isBlock;
+
+  const _MathToken({
+    required this.index,
+    required this.tex,
+    required this.raw,
+    required this.isBlock,
+  });
+}
+
+/// A responsive widget that renders LaTeX using [Math.tex] with graceful fallback.
+class MathWidget extends StatelessWidget {
+  const MathWidget({
+    super.key,
+    required this.tex,
+    required this.raw,
+    required this.style,
+    required this.isBlock,
+  });
+
+  final String tex;
+  final String raw;
+  final TextStyle style;
+  final bool isBlock;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final fallbackColor = dark ? Colors.white : const Color(0xFF0F172A);
+    final effectiveColor = style.color ?? fallbackColor;
+    final effectiveStyle = style.copyWith(
+      color: effectiveColor,
+      fontSize: isBlock ? (style.fontSize ?? 16.0) * 1.08 : style.fontSize,
+    );
+
+    Widget mathWidget;
+    try {
+      mathWidget = Math.tex(
+        tex,
+        mathStyle: isBlock ? MathStyle.display : MathStyle.text,
+        textStyle: effectiveStyle,
+        onErrorFallback: (err) => Text(
+          raw,
+          style: effectiveStyle,
+        ),
+      );
+    } catch (_) {
+      mathWidget = Text(raw, style: effectiveStyle);
+    }
+
+    if (isBlock) {
+      return Center(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: mathWidget,
+          ),
+        ),
+      );
+    }
+
+    return mathWidget;
+  }
+}
+
 

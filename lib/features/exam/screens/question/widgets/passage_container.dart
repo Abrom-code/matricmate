@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -149,8 +150,8 @@ class PassageContainer extends StatelessWidget {
                             ),
                             const SizedBox(height: 14),
                           ],
-                          RichTextParser.widget(
-                            passage?.content ?? 'Loading...',
+                          QuestionContentRenderer(
+                            text: passage?.content ?? 'Loading...',
                             baseStyle: TextStyle(
                               fontSize: 15 * controller.textScale.value,
                               fontWeight: FontWeight.w400,

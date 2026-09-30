@@ -9,6 +9,7 @@ import 'package:matricmate/features/exam/controllers/entrance_exams_controller.d
 import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/pilot_exam_controller.dart';
 import 'package:matricmate/features/exam/controllers/result_controller.dart';
+import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/exam/models/question_block.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -487,6 +488,15 @@ class QuestionController extends GetxController {
         }
       } catch (e) {
         debugPrint('Error refreshing parent controller results: $e');
+      }
+
+      // Also refresh paused tests in SubjectsController if registered
+      try {
+        if (Get.isRegistered<SubjectsController>()) {
+          await SubjectsController.instance.loadPausedTests();
+        }
+      } catch (e) {
+        debugPrint('Error refreshing paused tests in SubjectsController: $e');
       }
 
       Get.delete<ResultController>(force: true);

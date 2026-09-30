@@ -6,6 +6,7 @@ import 'package:matricmate/common/widgets/appbar/appbar.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/paused_test_info.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 
@@ -28,7 +29,7 @@ class PausedTestsScreen extends StatefulWidget {
   State<PausedTestsScreen> createState() => _PausedTestsScreenState();
 }
 
-class _PausedTestsScreenState extends State<PausedTestsScreen> {
+class _PausedTestsScreenState extends State<PausedTestsScreen> with RouteAware {
   SubjectsController get ctrl => SubjectsController.instance;
 
   List<String>? get _filterTypes {
@@ -53,6 +54,25 @@ class _PausedTestsScreenState extends State<PausedTestsScreen> {
     super.initState();
     ctrl.loadPausedTests();
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != null) {
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  // Refresh list whenever the user navigates back to this screen.
+  @override
+  void didPopNext() => ctrl.loadPausedTests();
 
   @override
   Widget build(BuildContext context) {
@@ -138,17 +158,22 @@ class _PausedTestCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => Get.to(
-          () => ReadyScreen(
-            qnCount: total,
-            time: info.testTime,
-            testId: draft.testId,
-            id: -1,
-            draft: draft,
-            examTitle: info.testTitle.isNotEmpty ? info.testTitle : null,
-            description: info.testDescription,
-          ),
-        ),
+        onTap: () async {
+          await Get.to(
+            () => ReadyScreen(
+              qnCount: total,
+              time: info.testTime,
+              testId: draft.testId,
+              id: -1,
+              draft: draft,
+              examTitle: info.testTitle.isNotEmpty ? info.testTitle : null,
+              description: info.testDescription,
+            ),
+          );
+          if (Get.isRegistered<SubjectsController>()) {
+            await SubjectsController.instance.loadPausedTests();
+          }
+        },
         child: Container(
           decoration: BoxDecoration(
             color: Colors.transparent,

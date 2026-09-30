@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/exam/explanation_box.dart';
+import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
@@ -341,8 +342,8 @@ class _InlinePassageSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                   ],
-                  RichTextParser.widget(
-                    content?.isNotEmpty == true
+                  QuestionContentRenderer(
+                    text: content?.isNotEmpty == true
                         ? content!
                         : 'No passage content.',
                     baseStyle: TextStyle(

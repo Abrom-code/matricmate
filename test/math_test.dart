@@ -278,6 +278,38 @@ x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
       expect(find.byType(Math), findsNWidgets(2));
       expect(find.textContaining('Evaluate'), findsOneWidget);
     });
+
+    testWidgets('21. Wide inline equation in narrow container renders without overflow', (tester) async {
+      const text = r'Given \(a_1 x_1 + a_2 x_2 + a_3 x_3 + a_4 x_4 + a_5 x_5 + a_6 x_6 + a_7 x_7 = 100\), solve for x.';
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 200,
+              child: QuestionContentRenderer(text: text),
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(Math), findsOneWidget);
+      expect(find.textContaining('solve for x'), findsOneWidget);
+    });
+
+    testWidgets('22. Block math with wide formula is horizontally scrollable', (tester) async {
+      const text = r'\[ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} + \frac{c_1 + c_2 + c_3 + c_4 + c_5}{d_1 + d_2 + d_3} \]';
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 200,
+              child: QuestionContentRenderer(text: text),
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(Math), findsOneWidget);
+      expect(find.byType(SingleChildScrollView), findsWidgets);
+    });
   });
 }
 

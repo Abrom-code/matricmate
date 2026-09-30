@@ -101,9 +101,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const ConnectSupportSection(),
                 const SizedBox(height: 20),
 
-                // Legal & about
+                // About
                 Text(
-                  'LEGAL & ABOUT',
+                  'ABOUT MATRICET',
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w800,

@@ -322,11 +322,12 @@ class NoteTile extends StatelessWidget {
                                 text: liveNote.formattedPages,
                                 icon: Icons.menu_book_rounded,
                               ),
-                            _buildMetadataChip(
-                              dark: dark,
-                              text: liveNote.sizeInMB,
-                              icon: Icons.attach_file_rounded,
-                            ),
+                            if (liveNote.sizeInMB.isNotEmpty)
+                              _buildMetadataChip(
+                                dark: dark,
+                                text: liveNote.sizeInMB,
+                                icon: Icons.attach_file_rounded,
+                              ),
                           ],
                         ),
                       ],

@@ -74,7 +74,7 @@ class NoteModel {
         final val = estimatedMb.clamp(0.2, 50.0);
         return '${val.toStringAsFixed(1)} MB';
       }
-      return '0.5 MB';
+      return '';
     }
     final mb = bytes / (1024 * 1024);
     if (mb < 1.0) {

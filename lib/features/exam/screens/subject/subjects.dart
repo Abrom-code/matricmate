@@ -7,7 +7,6 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
-import 'package:matricmate/features/exam/screens/premium/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/paused_test_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
@@ -81,7 +80,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
         ],
       ),
       body: Obx(() {
-        final needsUpgrade = UserController.instance.user.value.needsUpgrade;
         final isPending = UserController.instance.user.value.isPending;
         final filteredSubjects = ctrl.filteredSubjects;
         final syncing = syncController.refreshing.value;
@@ -116,15 +114,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       const SizedBox(height: 16),
                     ],
 
-                    // ── 2. Upgrade to Premium / Renew Banner ─────────
-                    if (needsUpgrade) ...[
-                      PremiumBanner(
-                        onTap: () => Get.toNamed(Routes.premium),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // ── 3. Paused / In-Progress Tests Banner ─────────
+                    // ── 2. Paused / In-Progress Tests Banner ─────────
                     const PausedTestBanner(),
 
                     // ── 4. Subject Grid ──────────────────────────────

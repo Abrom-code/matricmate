@@ -30,7 +30,7 @@ class ArchiveChallengeCard extends StatelessWidget {
     return Obx(() {
       final isLive = challenge.isLive;
       final isScheduled = challenge.isScheduled;
-      final isPremium = ctrl.isPremium;
+      final canAccess = ctrl.canAccess(challenge);
       final isDone = ctrl.isAttemptedOrPracticed(challenge.id, setId: challenge.setId);
       final isPending = UserController.instance.user.value.isPending;
 
@@ -95,6 +95,51 @@ class ArchiveChallengeCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: AppColors.teal,
                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Free vs Pro Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: challenge.isPremium
+                        ? Colors.amber.withValues(alpha: 0.16)
+                        : const Color(0xFF10B981).withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: challenge.isPremium
+                          ? Colors.amber.withValues(alpha: 0.4)
+                          : const Color(0xFF10B981).withValues(alpha: 0.4),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        challenge.isPremium ? Icons.star_rounded : Icons.lock_open_rounded,
+                        size: 11,
+                        color: challenge.isPremium
+                            ? Colors.amber.shade800
+                            : const Color(0xFF10B981),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        challenge.isPremium ? 'PRO' : 'FREE',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                          color: challenge.isPremium
+                              ? Colors.amber.shade800
+                              : const Color(0xFF10B981),
                         ),
                       ),
                     ],
@@ -273,7 +318,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                   final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
 
                   // 1. Pro Locked
-                  if (!isPremium) {
+                  if (!canAccess) {
                     return SizedBox(
                       width: 150,
                       height: 44,

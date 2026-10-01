@@ -25,7 +25,7 @@ class AvailableChallengeCard extends StatelessWidget {
       // Subscribe to real-time timer ticker
       final _ = ctrl.now.value;
       final isLive = challenge.isLive;
-      final isPremium = ctrl.isPremium;
+      final canAccess = ctrl.canAccess(challenge);
       final isPending = UserController.instance.user.value.isPending;
 
       // Countdown calculations
@@ -101,6 +101,51 @@ class AvailableChallengeCard extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: AppColors.teal,
                     ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Free vs Pro Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: challenge.isPremium
+                        ? Colors.amber.withValues(alpha: 0.16)
+                        : const Color(0xFF10B981).withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: challenge.isPremium
+                          ? Colors.amber.withValues(alpha: 0.4)
+                          : const Color(0xFF10B981).withValues(alpha: 0.4),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        challenge.isPremium ? Icons.star_rounded : Icons.lock_open_rounded,
+                        size: 11,
+                        color: challenge.isPremium
+                            ? Colors.amber.shade800
+                            : const Color(0xFF10B981),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        challenge.isPremium ? 'PRO' : 'FREE',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                          color: challenge.isPremium
+                              ? Colors.amber.shade800
+                              : const Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -246,8 +291,8 @@ class AvailableChallengeCard extends StatelessWidget {
             const SizedBox(height: 16),
 
             // ── 5. Action Button ────────────────────────────────────────
-            // If Free User: Show amber lock icon button (consistent with other tests)
-            if (!isPremium) ...[
+            // If Free User and challenge is Premium: Show amber lock icon button
+            if (!canAccess) ...[
               SizedBox(
                 width: double.infinity,
                 height: 46,

@@ -177,6 +177,7 @@ class DBschema {
         subject_id INTEGER NOT NULL,
         title TEXT NOT NULL,
         audience TEXT DEFAULT 'both',
+        is_premium INTEGER DEFAULT 1,
         downloaded_at TEXT NOT NULL
       );
     ''');

@@ -6,6 +6,7 @@ class ChallengeQuestionSetModel {
   final String? createdBy;
   final DateTime createdAt;
   final int questionCount;
+  final bool isPremium;
 
   ChallengeQuestionSetModel({
     required this.id,
@@ -15,9 +16,18 @@ class ChallengeQuestionSetModel {
     this.createdBy,
     required this.createdAt,
     this.questionCount = 0,
+    this.isPremium = true,
   });
 
   factory ChallengeQuestionSetModel.fromJson(Map<String, dynamic> json) {
+    final rawPremium = json['is_premium'];
+    final bool isPrem = rawPremium == null
+        ? true
+        : (rawPremium == true ||
+            rawPremium == 1 ||
+            rawPremium == 'true' ||
+            rawPremium == '1');
+
     return ChallengeQuestionSetModel(
       id: json['id']?.toString() ?? '',
       subjectId: (json['subject_id'] as num?)?.toInt() ?? 0,
@@ -31,6 +41,7 @@ class ChallengeQuestionSetModel {
           : DateTime.now(),
       questionCount: (json['question_count'] as num?)?.toInt() ??
           ((json['challenge_questions'] as List?)?.length ?? 0),
+      isPremium: isPrem,
     );
   }
 
@@ -39,6 +50,7 @@ class ChallengeQuestionSetModel {
       if (id.isNotEmpty) 'id': id,
       'subject_id': subjectId,
       'title': title,
+      'is_premium': isPremium ? 1 : 0,
       if (createdBy != null) 'created_by': createdBy,
     };
   }
@@ -60,6 +72,7 @@ class LeaderboardChallengeModel {
   final DateTime createdAt;
   final int questionCount;
   final int attemptCount;
+  final bool isPremium;
 
   LeaderboardChallengeModel({
     required this.id,
@@ -77,6 +90,7 @@ class LeaderboardChallengeModel {
     required this.createdAt,
     this.questionCount = 0,
     this.attemptCount = 0,
+    this.isPremium = true,
   });
 
   bool get isDraft => status == 'draft';
@@ -161,6 +175,18 @@ class LeaderboardChallengeModel {
       }
     }
 
+    final rawPremium = json['is_premium'] ??
+        (json['challenge_question_sets'] != null &&
+                json['challenge_question_sets'] is Map
+            ? json['challenge_question_sets']['is_premium']
+            : null);
+    final bool isPrem = rawPremium == null
+        ? true
+        : (rawPremium == true ||
+            rawPremium == 1 ||
+            rawPremium == 'true' ||
+            rawPremium == '1');
+
     return LeaderboardChallengeModel(
       id: finalId,
       setId: rawSetId,
@@ -183,6 +209,7 @@ class LeaderboardChallengeModel {
           : DateTime.now(),
       questionCount: (json['question_count'] as num?)?.toInt() ?? 0,
       attemptCount: attempts,
+      isPremium: isPrem,
     );
   }
 
@@ -202,6 +229,7 @@ class LeaderboardChallengeModel {
     DateTime? createdAt,
     int? questionCount,
     int? attemptCount,
+    bool? isPremium,
   }) {
     return LeaderboardChallengeModel(
       id: id ?? this.id,
@@ -219,6 +247,7 @@ class LeaderboardChallengeModel {
       createdAt: createdAt ?? this.createdAt,
       questionCount: questionCount ?? this.questionCount,
       attemptCount: attemptCount ?? this.attemptCount,
+      isPremium: isPremium ?? this.isPremium,
     );
   }
 
@@ -237,6 +266,7 @@ class LeaderboardChallengeModel {
       'status': status,
       'question_count': questionCount,
       'attempt_count': attemptCount,
+      'is_premium': isPremium ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       if (createdBy != null) 'created_by': createdBy,
     };

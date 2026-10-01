@@ -19,6 +19,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -104,6 +105,12 @@ class ChallengeHomeController extends GetxController {
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream;
+
+  bool canAccess(LeaderboardChallengeModel challenge) =>
+      ChallengeAccessHelper.canAccess(
+        challenge: challenge,
+        user: UserController.instance.user.value,
+      );
 
   @override
   void onInit() {
@@ -347,6 +354,11 @@ class ChallengeHomeController extends GetxController {
           subjName = subj?.name;
         }
 
+        final rawPrem = r['is_premium'];
+        final isPrem = rawPrem == null
+            ? (challengeMap[cId]?.isPremium ?? true)
+            : (rawPrem == 1 || rawPrem == true || rawPrem == '1');
+
         challengeMap[cId] = LeaderboardChallengeModel(
           id: cId,
           setId: cId,
@@ -357,6 +369,7 @@ class ChallengeHomeController extends GetxController {
           questionCount: qRows.isNotEmpty ? qRows.length : (challengeMap[cId]?.questionCount ?? 0),
           status: 'closed',
           createdAt: challengeMap[cId]?.createdAt ?? DateTime.now(),
+          isPremium: isPrem,
         );
       }
 
@@ -523,7 +536,7 @@ class ChallengeHomeController extends GetxController {
   }
 
   Future<void> downloadChallenge(LeaderboardChallengeModel challenge) async {
-    if (!isPremium) {
+    if (!canAccess(challenge)) {
       if (UserController.instance.user.value.isPending) {
         Get.toNamed(Routes.paymentVerification);
         return;
@@ -715,7 +728,7 @@ class ChallengeHomeController extends GetxController {
   }
 
   void onChallengeTapped(LeaderboardChallengeModel challenge) {
-    if (!isPremium) {
+    if (!canAccess(challenge)) {
       if (UserController.instance.user.value.isPending) {
         Get.toNamed(Routes.paymentVerification);
         return;

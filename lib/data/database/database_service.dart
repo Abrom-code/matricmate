@@ -24,7 +24,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 18,
+      version: 19,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -264,6 +264,13 @@ class DatabaseService extends GetxController {
             await db.execute('ALTER TABLE notes ADD COLUMN file_key TEXT');
           } catch (_) {}
         }
+        if (oldVersion < 19) {
+          try {
+            await db.execute(
+              'ALTER TABLE local_challenge_sets ADD COLUMN is_premium INTEGER DEFAULT 1',
+            );
+          } catch (_) {}
+        }
       },
       onOpen: (db) async {
         try {
@@ -274,6 +281,7 @@ class DatabaseService extends GetxController {
               subject_id INTEGER NOT NULL,
               title TEXT NOT NULL,
               audience TEXT DEFAULT 'both',
+              is_premium INTEGER DEFAULT 1,
               downloaded_at TEXT NOT NULL
             )
           ''');
@@ -397,6 +405,11 @@ class DatabaseService extends GetxController {
             ''');
             await db.execute(
               'CREATE INDEX IF NOT EXISTS idx_pilot_subjects ON pilot_exam_subjects(pilot_exam_id, stream)',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE local_challenge_sets ADD COLUMN is_premium INTEGER DEFAULT 1',
             );
           } catch (_) {}
         } catch (_) {}
@@ -849,6 +862,11 @@ class DatabaseService extends GetxController {
       final title = bundle['title']?.toString() ?? 'Challenge Set';
       final audience = bundle['audience']?.toString() ?? 'both';
 
+      final rawPremium = bundle['is_premium'];
+      final isPremium = rawPremium == null
+          ? 1
+          : ((rawPremium == 0 || rawPremium == false || rawPremium == '0' || rawPremium == 'false') ? 0 : 1);
+
       await txn.insert(
         'local_challenge_sets',
         {
@@ -857,6 +875,7 @@ class DatabaseService extends GetxController {
           'subject_id': subjectId,
           'title': title,
           'audience': audience,
+          'is_premium': isPremium,
           'downloaded_at': DateTime.now().toIso8601String(),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,

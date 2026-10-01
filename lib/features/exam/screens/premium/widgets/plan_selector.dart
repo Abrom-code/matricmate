@@ -178,17 +178,32 @@ class _PlanSelectorState extends State<PlanSelector> {
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  "What's included in 1 Year Access",
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark
-                                        ? AppColors.textWhite
-                                        : AppColors.textPrimary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'በ1 ዓመት ሙሉ ጥቅል ውስጥ ምን ተካትቷል?',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark
+                                            ? AppColors.textWhite
+                                            : AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1.5),
+                                    Text(
+                                      "What's included in 1 Year Access",
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark
+                                            ? AppColors.darkGrey
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -221,30 +236,41 @@ class _PlanSelectorState extends State<PlanSelector> {
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 12),
-                            _featureItem(
-                              'Over 20,000+ chapter practice questions',
-                              isDark,
-                            ),
                             const SizedBox(height: 8),
                             _featureItem(
-                              'Grade 9–12 summary notes & formula sheets',
-                              isDark,
+                              amharic: 'ከ20,000+ በላይ Chapter Based ጥያቄዎች',
+                              english:
+                                  'Over 20,000+ chapter practice questions',
+                              isDark: isDark,
                             ),
-                            const SizedBox(height: 8),
                             _featureItem(
-                              'Past national entrance & model exams',
-                              isDark,
+                              amharic: 'ከ9–12ኛ ክፍል አጫጭር Notes እና የፎርሙላ ማጠቃለያዎች',
+                              english:
+                                  'Grade 9–12 summary notes & formula sheets',
+                              isDark: isDark,
                             ),
-                            const SizedBox(height: 8),
                             _featureItem(
-                              'Step-by-step Amharic (በአማርኛ) explanations',
-                              isDark,
+                              amharic: 'ያለፉት ዓመታት Entrance እና የሞዴል ፈተናዎች',
+                              english: 'Past national entrance & model exams',
+                              isDark: isDark,
                             ),
-                            const SizedBox(height: 8),
                             _featureItem(
-                              '100% offline access & live challenges',
-                              isDark,
+                              amharic:
+                                  'ለእያንዳንዱ ጥያቄ ግልጽ አማርኛ እና English ማብራሪያዎች',
+                              english:
+                                  'Step-by-step clear explanations for every question',
+                              isDark: isDark,
+                            ),
+                            _featureItem(
+                              amharic: 'በእኛ የተዘጋጁ የPilot Exams ፈተናዎች',
+                              english:
+                                  'Practice exams prepared by us, designed similar to the Entrance Exam',
+                              isDark: isDark,
+                            ),
+                            _featureItem(
+                              amharic: 'ያለ ኢንተርኔት (100% Offline) የመጠቀም የሚያስችል',
+                              english: '100% offline access & live challenges',
+                              isDark: isDark,
                             ),
                           ],
                         )
@@ -258,38 +284,65 @@ class _PlanSelectorState extends State<PlanSelector> {
     );
   }
 
-  static Widget _featureItem(String text, bool isDark) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.check_rounded,
-              size: 12,
-              color: AppColors.primary,
+  static Widget _featureItem({
+    required String amharic,
+    required String english,
+    required bool isDark,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.check_rounded,
+                  size: 12,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w500,
-              color: isDark ? AppColors.textWhite : AppColors.textPrimary,
-              height: 1.3,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  amharic,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.textWhite : AppColors.textPrimary,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  english,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w400,
+                    color: isDark
+                        ? AppColors.darkGrey
+                        : AppColors.textSecondary,
+                    height: 1.25,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

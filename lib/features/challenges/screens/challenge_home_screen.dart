@@ -143,6 +143,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
         ],
       ),
       body: Obx(() {
+        _ctrl.isRefreshing.value; // Track refresh state in Obx
         if (_ctrl.isLoading.value &&
             !_ctrl.isOffline.value &&
             _ctrl.availableChallenges.isEmpty &&
@@ -254,7 +255,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                 child: Center(
                                   child: ChallengeOfflineState(
                                     dark: dark,
-                                    isRefreshing: _ctrl.isRefreshing.value,
+                                    rxRefreshing: _ctrl.isRefreshing,
                                     onRefresh: () => _ctrl.loadAllChallenges(
                                       showLoading: false,
                                       isManual: true,
@@ -324,7 +325,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                   child: _ctrl.isOffline.value
                                       ? ChallengeOfflineState(
                                           dark: dark,
-                                          isRefreshing: _ctrl.isRefreshing.value,
+                                          rxRefreshing: _ctrl.isRefreshing,
                                           onRefresh: () => _ctrl.loadAllChallenges(
                                             showLoading: false,
                                             isManual: true,

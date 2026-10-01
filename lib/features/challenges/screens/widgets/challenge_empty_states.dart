@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
@@ -78,6 +79,7 @@ class ChallengeOfflineState extends StatefulWidget {
     required this.dark,
     required this.onRefresh,
     this.isRefreshing,
+    this.rxRefreshing,
     this.icon = Icons.wifi_off_rounded,
     this.description,
     this.timeout = const Duration(seconds: 4),
@@ -86,6 +88,7 @@ class ChallengeOfflineState extends StatefulWidget {
   final bool dark;
   final FutureOr<void> Function() onRefresh;
   final bool? isRefreshing;
+  final RxBool? rxRefreshing;
   final IconData icon;
   final String? description;
   final Duration timeout;
@@ -98,21 +101,23 @@ class _ChallengeOfflineStateState extends State<ChallengeOfflineState> {
   bool _isLocalRefreshing = false;
   Timer? _timeoutTimer;
 
-  bool get _isSpinning => (widget.isRefreshing ?? false) || _isLocalRefreshing;
+  bool get _isSpinning {
+    final parentRefreshing =
+        widget.rxRefreshing?.value ?? widget.isRefreshing ?? false;
+    return parentRefreshing || _isLocalRefreshing;
+  }
 
   @override
   void didUpdateWidget(ChallengeOfflineState oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isRefreshing != null &&
-        widget.isRefreshing != oldWidget.isRefreshing &&
-        !widget.isRefreshing!) {
-      // Parent stopped refreshing -> immediately clear local spinner
-      if (_isLocalRefreshing) {
-        _timeoutTimer?.cancel();
-        setState(() {
-          _isLocalRefreshing = false;
-        });
-      }
+    final parentStopped =
+        (widget.isRefreshing != null && !widget.isRefreshing!) ||
+        (widget.rxRefreshing != null && !widget.rxRefreshing!.value);
+    if (parentStopped && _isLocalRefreshing) {
+      _timeoutTimer?.cancel();
+      setState(() {
+        _isLocalRefreshing = false;
+      });
     }
   }
 
@@ -131,7 +136,7 @@ class _ChallengeOfflineStateState extends State<ChallengeOfflineState> {
     // Hard safety timeout: Guaranteed to stop spinner after widget.timeout
     _timeoutTimer?.cancel();
     _timeoutTimer = Timer(widget.timeout, () {
-      if (mounted && _isLocalRefreshing) {
+      if (mounted) {
         setState(() {
           _isLocalRefreshing = false;
         });
@@ -149,6 +154,43 @@ class _ChallengeOfflineStateState extends State<ChallengeOfflineState> {
         });
       }
     }
+  }
+
+  Widget _buildSpinnerOrButton(Color refreshColor) {
+    Widget buildContent(bool spinning) {
+      return spinning
+          ? SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                valueColor: AlwaysStoppedAnimation<Color>(refreshColor),
+              ),
+            )
+          : IconButton(
+              onPressed: _handleRefresh,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(
+                minWidth: 40,
+                minHeight: 40,
+              ),
+              icon: Icon(
+                Icons.refresh_rounded,
+                size: 26,
+                color: refreshColor,
+              ),
+              tooltip: 'Refresh',
+            );
+    }
+
+    if (widget.rxRefreshing != null) {
+      return Obx(() {
+        final spinning = widget.rxRefreshing!.value || _isLocalRefreshing;
+        return buildContent(spinning);
+      });
+    }
+
+    return buildContent(_isSpinning);
   }
 
   @override
@@ -190,30 +232,7 @@ class _ChallengeOfflineStateState extends State<ChallengeOfflineState> {
               width: 40,
               height: 40,
               child: Center(
-                child: _isSpinning
-                    ? SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(refreshColor),
-                        ),
-                      )
-                    : IconButton(
-                        onPressed: _handleRefresh,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 40,
-                          minHeight: 40,
-                        ),
-                        icon: Icon(
-                          Icons.refresh_rounded,
-                          size: 26,
-                          color: refreshColor,
-                        ),
-                        tooltip: 'Refresh',
-                      ),
+                child: _buildSpinnerOrButton(refreshColor),
               ),
             ),
           ],

@@ -2,17 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/exam/explanation_box.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
-import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
-import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
-import 'package:matricmate/features/exam/controllers/grade_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/question_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
-import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/choice_button.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/question_section.dart';
-import 'package:matricmate/features/personalization/controllers/user_controller.dart';
-import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -20,48 +14,6 @@ import 'package:matricmate/utils/helpers/helper_functions.dart';
 class ExamQuestionSection extends GetView<QuestionController> {
   const ExamQuestionSection({super.key, required this.question});
   final QuestionModel question;
-
-  // ── shared submit helper ────────────────────────────────────────────────────
-  Future<void> _submitResult(BuildContext context, QuestionModel q) async {
-    // In exam mode, mark unanswered questions as checked for score calculation
-    if (controller.isExamMode) {
-      for (final tq in controller.testQuestions) {
-        controller.checkAnswer(tq.id);
-      }
-    }
-
-    // Mark submitted BEFORE saving so onClose doesn't overwrite with a draft.
-    controller.markSubmitted();
-
-    final result = ResultModel(
-      userId: UserController.instance.user.value.id,
-      testId: q.testId,
-      selectedAnswers: controller.selectedAnswers,
-      testQuestions: controller.testQuestions.toList(),
-      correctAnswers: controller.correctAnswers,
-      isCompleted: true,
-    );
-
-    await controller.saveResult(result);
-
-    switch (controller.ctrlId) {
-      case 0:
-        final c = Get.find<GradeTestController>();
-        await c.loadTestResults(c.chapterTests);
-      case 1:
-        final c = Get.find<ChapterTestController>();
-        await c.loadTestResults(c.chapterTest);
-      case 2:
-        final c = Get.find<EntranceExamsController>();
-        await c.loadTestResults(c.entranceTests);
-      default:
-        break;
-    }
-
-    Get.offNamed(Routes.result, arguments: {'result': result});
-  }
-
-  // ───────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -186,23 +138,35 @@ class ExamQuestionSection extends GetView<QuestionController> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          onPressed: examMode
+                          onPressed: controller.isSubmitting.value
+                              ? null
+                              : examMode
                               ? () async {
                                   if (isLast) {
-                                    await _submitResult(context, q);
+                                    await controller.submitExam();
                                   } else {
                                     controller.skipQuestion();
                                   }
                                 }
                               : controller.skipQuestion,
-                          icon: Icon(
-                            examMode && isLast
-                                ? Icons.flag_rounded
-                                : Icons.skip_next_rounded,
-                            size: 16,
-                          ),
+                          icon: controller.isSubmitting.value && isLast
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  examMode && isLast
+                                      ? Icons.flag_rounded
+                                      : Icons.skip_next_rounded,
+                                  size: 16,
+                                ),
                           label: Text(
-                            examMode && isLast ? 'Finish' : 'Skip',
+                            examMode && isLast
+                                ? (controller.isSubmitting.value ? 'Submitting…' : 'Finish')
+                                : 'Skip',
                             style: const TextStyle(fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -218,10 +182,12 @@ class ExamQuestionSection extends GetView<QuestionController> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          onPressed: examMode
+                          onPressed: controller.isSubmitting.value
+                              ? null
+                              : examMode
                               ? () async {
                                   if (isLast) {
-                                    await _submitResult(context, q);
+                                    await controller.submitExam();
                                   } else {
                                     controller.nextQuestion();
                                   }
@@ -230,19 +196,30 @@ class ExamQuestionSection extends GetView<QuestionController> {
                               ? null
                               : () async {
                                   if (isLast) {
-                                    await _submitResult(context, q);
+                                    await controller.submitExam();
                                   } else {
                                     controller.nextQuestion();
                                   }
                                 },
-                          icon: Icon(
-                            isLast
-                                ? Icons.flag_rounded
-                                : Icons.arrow_forward_ios_rounded,
-                            size: 15,
-                          ),
+                          icon: controller.isSubmitting.value && isLast
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.white,
+                                  ),
+                                )
+                              : Icon(
+                                  isLast
+                                      ? Icons.flag_rounded
+                                      : Icons.arrow_forward_ios_rounded,
+                                  size: 15,
+                                ),
                           label: Text(
-                            isLast ? 'Finish' : 'Next',
+                            isLast
+                                ? (controller.isSubmitting.value ? 'Submitting…' : 'Finish')
+                                : 'Next',
                             style: const TextStyle(fontWeight: FontWeight.w700),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

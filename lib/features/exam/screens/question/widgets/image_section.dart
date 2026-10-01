@@ -16,12 +16,19 @@ class ImageSection extends StatefulWidget {
 }
 
 class _ImageSectionState extends State<ImageSection> {
+  static final Map<String, File> _memoryCache = {};
   late Future<File?> _imageFuture;
 
   @override
   void initState() {
     super.initState();
-    _imageFuture = _loadImage();
+    final url = widget.imgUrl;
+    final cached = url != null ? _memoryCache[url] : null;
+    if (cached != null && cached.existsSync()) {
+      _imageFuture = Future.value(cached);
+    } else {
+      _imageFuture = _loadImage();
+    }
   }
 
   @override
@@ -29,15 +36,28 @@ class _ImageSectionState extends State<ImageSection> {
     super.didUpdateWidget(oldWidget);
     // Reload image when the URL changes (e.g. swiping between questions)
     if (oldWidget.imgUrl != widget.imgUrl) {
-      _imageFuture = _loadImage();
+      final url = widget.imgUrl;
+      final cached = url != null ? _memoryCache[url] : null;
+      if (cached != null && cached.existsSync()) {
+        _imageFuture = Future.value(cached);
+      } else {
+        _imageFuture = _loadImage();
+      }
     }
   }
 
   Future<File?> _loadImage() async {
-    if (widget.imgUrl == null || widget.imgUrl!.isEmpty) return null;
+    final url = widget.imgUrl;
+    if (url == null || url.isEmpty) return null;
+
+    final cached = _memoryCache[url];
+    if (cached != null && cached.existsSync()) {
+      return cached;
+    }
 
     try {
-      final file = await DefaultCacheManager().getSingleFile(widget.imgUrl!);
+      final file = await DefaultCacheManager().getSingleFile(url);
+      _memoryCache[url] = file;
       return file;
     } catch (e) {
       return null;

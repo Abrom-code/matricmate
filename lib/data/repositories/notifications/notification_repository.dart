@@ -139,13 +139,26 @@ class NotificationRepository {
       );
       final dismissedIds = <int>{
         for (final r in localDismissedRows)
-          if (r['notification_id'] != null) r['notification_id'] as int,
+          if (r['notification_id'] != null)
+            (r['notification_id'] is int
+                ? r['notification_id'] as int
+                : int.tryParse(r['notification_id'].toString()) ?? -1),
         for (final r in remoteDismissals)
           if (r['notification_id'] != null)
             (r['notification_id'] is int
                 ? r['notification_id'] as int
                 : int.tryParse(r['notification_id'].toString()) ?? -1),
       }..remove(-1);
+
+      // Clean up any stale dismissed notifications lingering in local DB
+      if (dismissedIds.isNotEmpty) {
+        final placeholders = List.filled(dismissedIds.length, '?').join(',');
+        await db.delete(
+          'notifications',
+          where: 'id IN ($placeholders) AND user_id = ?',
+          whereArgs: [...dismissedIds, userId],
+        );
+      }
 
       // Build read-id set
       final readIds = <int>{
@@ -277,40 +290,67 @@ class NotificationRepository {
     );
   }
 
-  /// Deletes a notification (personal: from server, broadcast: records dismissal).
-  Future<void> deleteNotification(AppNotification n) async {
-    final uid = _currentUid;
+  /// Atomic bulk delete and dismissal recording for [items].
+  ///
+  /// Guarantees that local SQLite deletes rows and records dismissals immediately
+  /// (<5ms) before initiating background server sync.
+  Future<void> deleteNotifications(
+    String userId,
+    List<AppNotification> items,
+  ) async {
+    final effectiveUid = userId.isNotEmpty ? userId : (_currentUid ?? '');
     final db = await _db.database;
+    if (items.isEmpty || effectiveUid.isEmpty) return;
 
-    // 1. Update local SQLite first for immediate UI response.
+    final ids = items.map((e) => e.id).toList();
+
+    // 1. Immediate local SQLite update in a single atomic transaction
     await db.transaction((txn) async {
-      await txn.delete('notifications', where: 'id = ?', whereArgs: [n.id]);
-      if (uid != null) {
-        await txn.insert('notification_dismissals', {
-          'notification_id': n.id,
-          'user_id': uid,
-          'dismissed_at': DateTime.now().toIso8601String(),
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      final placeholders = List.filled(ids.length, '?').join(',');
+      await txn.delete(
+        'notifications',
+        where: 'id IN ($placeholders) AND user_id = ?',
+        whereArgs: [...ids, effectiveUid],
+      );
+      final now = DateTime.now().toIso8601String();
+      for (final id in ids) {
+        await txn.insert(
+          'notification_dismissals',
+          {
+            'notification_id': id,
+            'user_id': effectiveUid,
+            'dismissed_at': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
     });
 
-    if (uid == null) return;
-
-    // 2. Sync to Supabase.
+    // 2. Server update (best-effort batch call)
     try {
-      if (n.userId == uid) {
-        // Personal notification: delete permanently from server.
-        await _supabase.from('notifications').delete().eq('id', n.id).timeout(AppTimeouts.bestEffort);
-      } else {
-        // Broadcast notification: track dismissal on server.
-        await _supabase.from('notification_dismissals').upsert({
-          'notification_id': n.id,
-          'user_id': uid,
-        }, onConflict: 'notification_id,user_id').timeout(AppTimeouts.bestEffort);
-      }
+      final dismissalRows = ids
+          .map((id) => {'notification_id': id, 'user_id': effectiveUid})
+          .toList();
+      await _supabase
+          .from('notification_dismissals')
+          .upsert(dismissalRows, onConflict: 'notification_id,user_id')
+          .timeout(AppTimeouts.bestEffort);
+
+      // Best effort: also delete personal notifications owned by this user
+      await _supabase
+          .from('notifications')
+          .delete()
+          .inFilter('id', ids)
+          .eq('user_id', effectiveUid)
+          .timeout(AppTimeouts.bestEffort);
     } catch (_) {
-      // Best-effort. Local DB is updated so UI is correct.
+      // Best-effort remote sync. Local DB is updated so UI is correct and resilient.
     }
+  }
+
+  /// Deletes a single notification for [userId].
+  Future<void> deleteNotification(String userId, AppNotification n) async {
+    await deleteNotifications(userId, [n]);
   }
 
   /// Deletes/dismisses all notifications for [userId].
@@ -318,53 +358,47 @@ class NotificationRepository {
     String userId,
     List<AppNotification> notifications,
   ) async {
-    final db = await _db.database;
-    if (notifications.isEmpty) return;
+    await deleteNotifications(userId, notifications);
+  }
 
-    // 1. Local update
+  /// Restores previously deleted notifications on undo.
+  Future<void> restoreNotifications(
+    String userId,
+    List<AppNotification> items,
+  ) async {
+    final effectiveUid = userId.isNotEmpty ? userId : (_currentUid ?? '');
+    final db = await _db.database;
+    if (items.isEmpty || effectiveUid.isEmpty) return;
+
+    final ids = items.map((e) => e.id).toList();
+
+    // 1. Remove from local notification_dismissals & re-insert to notifications
     await db.transaction((txn) async {
+      final placeholders = List.filled(ids.length, '?').join(',');
       await txn.delete(
-        'notifications',
-        where: 'user_id = ?',
-        whereArgs: [userId],
+        'notification_dismissals',
+        where: 'notification_id IN ($placeholders) AND user_id = ?',
+        whereArgs: [...ids, effectiveUid],
       );
-      final now = DateTime.now().toIso8601String();
-      for (final n in notifications) {
-        await txn.insert('notification_dismissals', {
-          'notification_id': n.id,
-          'user_id': userId,
-          'dismissed_at': now,
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      for (final item in items) {
+        final map = item.toMap();
+        map['user_id'] = effectiveUid;
+        await txn.insert(
+          'notifications',
+          map,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
     });
 
-    // 2. Server update
+    // 2. Remove dismissals from server
     try {
-      final personalIds = notifications
-          .where((n) => n.userId == userId)
-          .map((n) => n.id)
-          .toList();
-      final broadcastIds = notifications
-          .where((n) => n.userId != userId)
-          .map((n) => n.id)
-          .toList();
-
-      if (personalIds.isNotEmpty) {
-        await _supabase
-            .from('notifications')
-            .delete()
-            .inFilter('id', personalIds)
-            .timeout(AppTimeouts.bestEffort);
-      }
-      if (broadcastIds.isNotEmpty) {
-        final rows = broadcastIds
-            .map((id) => {'notification_id': id, 'user_id': userId})
-            .toList();
-        await _supabase
-            .from('notification_dismissals')
-            .upsert(rows, onConflict: 'notification_id,user_id')
-            .timeout(AppTimeouts.bestEffort);
-      }
+      await _supabase
+          .from('notification_dismissals')
+          .delete()
+          .inFilter('notification_id', ids)
+          .eq('user_id', effectiveUid)
+          .timeout(AppTimeouts.bestEffort);
     } catch (_) {}
   }
 

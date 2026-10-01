@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:matricmate/common/widgets/exam/bb_table_widget.dart';
+import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/helpers/bb_table_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 /// A reusable collapsible explanation box used on both the question screen
 class AppExplanationBox extends StatelessWidget {
@@ -148,13 +146,11 @@ class AppExplanationBox extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // ── Table-aware rendering ──────────────────────────
-                                if (BBTableParser.containsTable(text))
-                                  ..._buildSegments(text, baseStyle)
-                                else
-                                  Text.rich(
-                                    RichTextParser.parse(text, baseStyle),
-                                  ),
+                                // ── Unified content rendering (LaTeX + Tables + Markup) ────
+                                QuestionContentRenderer(
+                                  text: text,
+                                  baseStyle: baseStyle,
+                                ),
                                 // ── Optional explanation image ─────────────────────
                                 if (explanationImageUrl != null &&
                                     explanationImageUrl!.isNotEmpty) ...[
@@ -190,26 +186,6 @@ class AppExplanationBox extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Segment renderer helper ───────────────────────────────────────────────────
-
-/// Converts BBTableParser segments into a flat list of widgets for use inside
-List<Widget> _buildSegments(String text, TextStyle baseStyle) {
-  final segments = BBTableParser.splitSegments(text);
-  final widgets = <Widget>[];
-
-  for (final seg in segments) {
-    if (seg.isTable) {
-      widgets.add(const SizedBox(height: 8));
-      widgets.add(BBTableWidget(rows: seg.tableRows!, baseStyle: baseStyle));
-      widgets.add(const SizedBox(height: 8));
-    } else {
-      widgets.add(Text.rich(RichTextParser.parse(seg.text!, baseStyle)));
-    }
-  }
-
-  return widgets;
 }
 
 // ── Language toggle pill ─────────────────────────────────────────────────────

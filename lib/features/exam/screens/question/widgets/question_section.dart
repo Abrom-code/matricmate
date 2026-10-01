@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:matricmate/common/widgets/exam/bb_table_widget.dart';
+import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/helpers/bb_table_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 class QuestionSection extends StatelessWidget {
   const QuestionSection({super.key, required this.examQn, this.qnNumber});
@@ -29,56 +27,12 @@ class QuestionSection extends StatelessWidget {
       color: dark ? AppColors.white : AppColors.primary,
     );
 
-    // ── No table: original single Text.rich with prepended number ─────
-    if (!BBTableParser.containsTable(examQn)) {
-      return Text.rich(
-        TextSpan(
-          children: [
-            if (qnNumber != null)
-              TextSpan(text: '$qnNumber. ', style: numberStyle),
-            RichTextParser.parse(examQn, baseStyle),
-          ],
-        ),
-        textAlign: TextAlign.left,
-      );
-    }
-
-    // ── Has table: Column of segments, number prepended to first text ──
-    final segments = BBTableParser.splitSegments(examQn);
-    final widgets = <Widget>[];
-    bool numberPrepended = false;
-
-    for (final seg in segments) {
-      if (seg.isTable) {
-        widgets.add(const SizedBox(height: 8));
-        widgets.add(BBTableWidget(rows: seg.tableRows!, baseStyle: baseStyle));
-        widgets.add(const SizedBox(height: 8));
-      } else {
-        // Prepend "N. " to the very first text segment only
-        final textSpan = numberPrepended || qnNumber == null
-            ? RichTextParser.parse(seg.text!, baseStyle)
-            : TextSpan(
-                children: [
-                  TextSpan(text: '$qnNumber. ', style: numberStyle),
-                  RichTextParser.parse(seg.text!, baseStyle),
-                ],
-              );
-        numberPrepended = true;
-        widgets.add(Text.rich(textSpan, textAlign: TextAlign.left));
-      }
-    }
-
-    // Edge case: text was only a table (no text segments) — number floats above
-    if (!numberPrepended && qnNumber != null) {
-      widgets.insert(
-        0,
-        Text('$qnNumber.', style: numberStyle, textAlign: TextAlign.left),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
+    return QuestionContentRenderer(
+      text: examQn,
+      qnNumber: qnNumber,
+      baseStyle: baseStyle,
+      numberStyle: numberStyle,
     );
   }
 }
+

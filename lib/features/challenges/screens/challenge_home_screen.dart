@@ -143,7 +143,10 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
         ],
       ),
       body: Obx(() {
-        if (_ctrl.isLoading.value) {
+        if (_ctrl.isLoading.value &&
+            !_ctrl.isOffline.value &&
+            _ctrl.availableChallenges.isEmpty &&
+            _ctrl.completedChallenges.isEmpty) {
           return const AppCircularLoading(title: 'Loading challenges...');
         }
 
@@ -252,8 +255,10 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                   child: ChallengeOfflineState(
                                     dark: dark,
                                     isRefreshing: _ctrl.isRefreshing.value,
-                                    onRefresh: () =>
-                                        _ctrl.loadAllChallenges(isManual: true),
+                                    onRefresh: () => _ctrl.loadAllChallenges(
+                                      showLoading: false,
+                                      isManual: true,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -317,13 +322,13 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                                 ),
                                 child: Center(
                                   child: _ctrl.isOffline.value
-                                      ? ChallengeEmptyState(
-                                          title:
-                                              'No offline challenges downloaded',
-                                          subtitle:
-                                              'You are offline. Challenge sets downloaded while online will appear here for offline practice.',
+                                      ? ChallengeOfflineState(
                                           dark: dark,
-                                          icon: Icons.wifi_off_rounded,
+                                          isRefreshing: _ctrl.isRefreshing.value,
+                                          onRefresh: () => _ctrl.loadAllChallenges(
+                                            showLoading: false,
+                                            isManual: true,
+                                          ),
                                         )
                                       : ChallengeEmptyState(
                                           title: 'No completed challenges yet',
@@ -343,45 +348,6 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                               MediaQuery.paddingOf(context).bottom + 90,
                             ),
                             children: [
-                              if (_ctrl.isOffline.value) ...[
-                                Container(
-                                  margin:
-                                      const EdgeInsets.only(bottom: AppSizes.md),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color:
-                                          Colors.amber.withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.wifi_off_rounded,
-                                        size: 16,
-                                        color: Colors.amber,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          'Offline mode: Showing your downloaded challenges.',
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.amber,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-
                               // ── 1. Top Section: Recent 3 Completed Rounds ──
                               if (_ctrl.recentCompletedChallenges.isNotEmpty) ...[
                                 Row(

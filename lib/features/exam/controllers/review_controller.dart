@@ -16,25 +16,21 @@ class ReviewController extends GetxController {
   final RxString selectedFilter = 'All'.obs;
 
   late ResultModel result;
+  late final List<QuestionModel> allQuestions;
+  late final List<QuestionModel> correctQuestions;
+  late final List<QuestionModel> wrongQuestions;
+  late final List<QuestionModel> skippedQuestions;
 
   List<QuestionModel> get filteredQuestions {
     switch (selectedFilter.value) {
       case 'Correct':
-        return result.testQuestions
-            .where((q) => result.selectedAnswers[q.id] == q.correctOptionIndex)
-            .toList();
+        return correctQuestions;
       case 'Wrong':
-        return result.testQuestions
-            .where((q) =>
-                result.selectedAnswers[q.id] != null &&
-                result.selectedAnswers[q.id] != q.correctOptionIndex)
-            .toList();
+        return wrongQuestions;
       case 'Skipped':
-        return result.testQuestions
-            .where((q) => result.selectedAnswers[q.id] == null)
-            .toList();
+        return skippedQuestions;
       default:
-        return result.testQuestions;
+        return allQuestions;
     }
   }
 
@@ -47,6 +43,20 @@ class ReviewController extends GetxController {
       return;
     }
     result = res;
+
+    allQuestions = result.testQuestions;
+    correctQuestions = result.testQuestions
+        .where((q) => result.selectedAnswers[q.id] == q.correctOptionIndex)
+        .toList(growable: false);
+    wrongQuestions = result.testQuestions
+        .where((q) =>
+            result.selectedAnswers[q.id] != null &&
+            result.selectedAnswers[q.id] != q.correctOptionIndex)
+        .toList(growable: false);
+    skippedQuestions = result.testQuestions
+        .where((q) => result.selectedAnswers[q.id] == null)
+        .toList(growable: false);
+
     initExpansion(res.testQuestions);
     _loadPassages(res.testQuestions);
   }

@@ -200,5 +200,72 @@ class DBschema {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_local_challenge_questions_set ON local_challenge_questions(set_id, order_index)',
     );
+
+    // ── Notes Table (for chapter & grade notes) ──────────────────────────────
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS notes (
+        id INTEGER PRIMARY KEY,
+        subject_id INTEGER NOT NULL,
+        chapter_id INTEGER,
+        grade INTEGER NOT NULL,
+        chapter_number INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        file_key TEXT,
+        file_url TEXT,
+        file_type TEXT NOT NULL DEFAULT 'pdf',
+        file_size_bytes INTEGER DEFAULT 0,
+        page_count INTEGER DEFAULT 0,
+        is_premium INTEGER DEFAULT 1,
+        order_index INTEGER DEFAULT 0,
+        local_file_path TEXT,
+        is_downloaded INTEGER DEFAULT 0,
+        downloaded_at TEXT,
+        is_completed INTEGER DEFAULT 0,
+        completed_at TEXT,
+        created_at TEXT,
+        FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+        FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE SET NULL
+      );
+    ''');
+
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_notes_subject_grade ON notes(subject_id, grade)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_notes_chapter ON notes(chapter_id)',
+    );
+
+    // ── Pilot Exams Tables ──────────────────────────────────────────────────
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS pilot_exams (
+        id INTEGER PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        edition TEXT DEFAULT '2019 E.C.',
+        is_premium INTEGER DEFAULT 1,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS pilot_exam_subjects (
+        id INTEGER PRIMARY KEY,
+        pilot_exam_id INTEGER NOT NULL,
+        subject_id INTEGER NOT NULL,
+        subject_name TEXT NOT NULL,
+        stream TEXT NOT NULL,
+        test_id INTEGER NOT NULL,
+        order_index INTEGER DEFAULT 1,
+        question_count INTEGER DEFAULT 60,
+        time_minutes INTEGER DEFAULT 90,
+        FOREIGN KEY(pilot_exam_id) REFERENCES pilot_exams(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_pilot_subjects ON pilot_exam_subjects(pilot_exam_id, stream)',
+    );
   }
 }

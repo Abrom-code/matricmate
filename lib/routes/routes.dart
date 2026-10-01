@@ -36,8 +36,16 @@ import 'package:matricmate/features/exam/screens/subject/subject_detail_screen.d
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/notifications/screens/notifications_screen.dart';
 import 'package:matricmate/features/personalization/screens/analytics/analytics_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/others_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/pilot_exam_list_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/pilot_exam_subjects_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/progress_detail_screen.dart';
+import 'package:matricmate/features/personalization/screens/others/screens/study_plan_detail_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
+import 'package:matricmate/bindings/notes/notes_binding.dart';
+import 'package:matricmate/features/notes/screens/notes_screen.dart';
+import 'package:matricmate/features/notes/screens/note_reader_screen.dart';
 import 'package:matricmate/features/personalization/screens/update/update_profile.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/navigation_menu.dart';
@@ -88,6 +96,15 @@ class AppRoutes {
       binding: ChapterBinding(),
     ),
     GetPage(
+      name: Routes.notes,
+      page: () => const NotesScreen(),
+      binding: NotesBinding(),
+    ),
+    GetPage(
+      name: Routes.noteReader,
+      page: () => const NoteReaderScreen(),
+    ),
+    GetPage(
       name: Routes.gradeTests,
       page: () => const GradeTestsScreen(),
       binding: GradeTestBinding(),
@@ -117,8 +134,25 @@ class AppRoutes {
       binding: ReviewBinding(),
     ),
 
-    // analytics
-    GetPage(name: Routes.analytics, page: () => const AnalyticsScreen()),
+    // others & analytics
+    GetPage(name: Routes.others, page: () => const OthersScreen()),
+    GetPage(name: Routes.analytics, page: () => const OthersScreen()),
+    GetPage(
+      name: Routes.progressDetail,
+      page: () => const ProgressDetailScreen(),
+    ),
+    GetPage(
+      name: Routes.pilotExam,
+      page: () => const PilotExamListScreen(),
+    ),
+    GetPage(
+      name: Routes.pilotExamSubjects,
+      page: () => const PilotExamSubjectsScreen(),
+    ),
+    GetPage(
+      name: Routes.studyPlan,
+      page: () => const StudyPlanDetailScreen(),
+    ),
 
     // profile
     GetPage(name: Routes.userProfile, page: () => const ProfileScreen()),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 
 const _kResumeColor = AppColors.secondary;
 
@@ -21,8 +22,10 @@ class TestTile extends StatelessWidget {
     this.timeMinutes = -1,
     this.isNew = false,
     this.description,
+    this.testId,
   });
 
+  final int? testId;
   final String testName;
   final IconData icon;
   final VoidCallback onTap;
@@ -134,7 +137,12 @@ class TestTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          if (testId != null) {
+            NewTagHelper.markTestOpened(testId!);
+          }
+          onTap();
+        },
         borderRadius: BorderRadius.circular(14),
         child: Container(
           decoration: BoxDecoration(
@@ -172,40 +180,50 @@ class TestTile extends StatelessWidget {
                   children: [
                     // Title
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
                             testName,
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: tt.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: cs.onSurface,
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              height: 1.25,
+                              color: dark
+                                  ? AppColors.textWhite
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ),
-                        if (isNew) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text(
-                              'NEW',
-                              style: tt.labelSmall?.copyWith(
-                                color: Colors.green,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 9,
-                                letterSpacing: 0.5,
+                        if (isNew &&
+                            (testId == null ||
+                                !NewTagHelper.isTestOpened(testId!)))
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981)
+                                    .withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Text(
+                                'NEW',
+                                style: tt.labelSmall?.copyWith(
+                                  color: const Color(0xFF10B981),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 9,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
                           ),
-                        ],
                       ],
                     ),
                     const SizedBox(height: 5),

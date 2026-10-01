@@ -39,7 +39,7 @@ class SignupScreen extends StatelessWidget {
 
               // Subtitle
               Text(
-                'Sign up to access matric exams, study practice, and tracking.',
+                'Sign up to access matric exams, notes, and tests.',
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.45,

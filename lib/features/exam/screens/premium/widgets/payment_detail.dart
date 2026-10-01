@@ -5,7 +5,6 @@ import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/exam/controllers/premium_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class PaymentDetail extends StatefulWidget {
   const PaymentDetail({super.key, required this.payment});
@@ -29,7 +28,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
     });
 
     await Clipboard.setData(ClipboardData(text: text));
-    ToastHelper.success('Account number copied to clipboard!');
 
     // Show quick micro-loading feedback
     await Future.delayed(const Duration(milliseconds: 280));
@@ -51,8 +49,12 @@ class _PaymentDetailState extends State<PaymentDetail> {
   Widget build(BuildContext context) {
     final isDark = AppHelperFunctions.isDark(context);
     final controller = PremiumController.instance;
-    final number = widget.payment.account;
-    final name = widget.payment.holder;
+    final activePayment = controller.selectedPayment.value ?? widget.payment;
+    final number = activePayment.account.isNotEmpty
+        ? activePayment.account
+        : (PaymentConfigService.hardcodedAccounts[activePayment.key] ??
+            widget.payment.account);
+    final name = activePayment.holder;
 
     return Padding(
       padding: const EdgeInsets.only(top: 14),

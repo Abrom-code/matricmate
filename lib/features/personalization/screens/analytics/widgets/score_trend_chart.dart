@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -10,14 +11,16 @@ class ScoreTrendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final points = controller.trendPoints;
 
-    double maxScore = 0;
-    if (points.isNotEmpty) {
-      maxScore = points.map((p) => p.score).reduce((a, b) => a > b ? a : b);
-    }
+    return Obx(() {
+      final points = controller.trendPoints;
 
-    return Container(
+      double maxScore = 0;
+      if (points.isNotEmpty) {
+        maxScore = points.map((p) => p.score).reduce((a, b) => a > b ? a : b);
+      }
+
+      return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
@@ -190,6 +193,7 @@ class ScoreTrendChart extends StatelessWidget {
         ],
       ),
     );
+    });
   }
 }
 

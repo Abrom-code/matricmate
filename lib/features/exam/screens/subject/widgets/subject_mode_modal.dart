@@ -36,6 +36,31 @@ class SubjectModeModal extends StatelessWidget {
         ? '${stream[0].toUpperCase()}${stream.substring(1)} Stream'
         : 'Secondary Stream';
 
+    final notesSubtitle = subject.isCommon
+        ? 'Section summaries, revision guides & formula sheets'
+        : 'Chapter notes & summaries for Grades 9 – 12';
+
+    final testsSubtitle = subject.isCommon
+        ? 'Section-by-section practice tests and timed quizzes'
+        : 'Chapter and full-grade tests for Grades 9 – 12';
+
+    final String examSubtitle;
+    if (totalMockExams == 0) {
+      examSubtitle = 'National entrance and model exams coming soon';
+    } else if (entranceCount > 0 && modelCount > 0) {
+      examSubtitle =
+          'Past years $entranceCount entrance and $modelCount model exams';
+    } else if (entranceCount > 0) {
+      examSubtitle =
+          'Practice with $entranceCount past national entrance exam papers';
+    } else {
+      examSubtitle = 'Practice with $modelCount model exam papers';
+    }
+
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
     return Dialog(
       backgroundColor: dark ? AppColors.darkCard : AppColors.white,
       elevation: 16,
@@ -47,11 +72,18 @@ class SubjectModeModal extends StatelessWidget {
           width: 1.2,
         ),
       ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: isLandscape ? 10 : 24,
+      ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+        constraints: BoxConstraints(
+          maxWidth: 440,
+          maxHeight: isLandscape ? screenHeight * 0.94 : screenHeight * 0.85,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.all(isLandscape ? 16 : 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +183,7 @@ class SubjectModeModal extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 2, bottom: 12),
                 child: Text(
-                  'Choose Practice Mode',
+                  'Choose Study & Practice Mode',
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
@@ -161,18 +193,35 @@ class SubjectModeModal extends StatelessWidget {
                 ),
               ),
 
-              // ── Option 1: Tests ──────────────────────────────────────
+              // ── Option 1: Notes ──────────────────────────────────────
+              _ModeOptionTile(
+                dark: dark,
+                icon: Iconsax.document_text_copy,
+                iconGradient: const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                title: 'Notes',
+                subtitle: notesSubtitle,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Get.toNamed(
+                    Routes.notes,
+                    arguments: {
+                      'title': subject.name,
+                      'id': subject.id,
+                      'is_common': subject.isCommon,
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              // ── Option 2: Tests ──────────────────────────────────────
               _ModeOptionTile(
                 dark: dark,
                 icon: Iconsax.book_1_copy,
                 iconGradient: const [AppColors.primary, Color(0xFF00796B)],
                 title: 'Tests',
-                subtitle: subject.isCommon
-                    ? 'Section and practice tests'
-                    : 'Chapter and grade based tests',
-                chips: subject.isCommon
-                    ? const ['All Sections', 'Section Tests']
-                    : const ['Grades 9 – 12', 'Chapter Tests'],
+                subtitle: testsSubtitle,
                 onTap: () {
                   Navigator.of(context).pop();
                   Get.toNamed(
@@ -188,19 +237,13 @@ class SubjectModeModal extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // ── Option 2: Exams ──────────────────────────────────────
+              // ── Option 3: Exams ──────────────────────────────────────
               _ModeOptionTile(
                 dark: dark,
                 icon: Icons.military_tech_rounded,
                 iconGradient: const [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
                 title: 'Exams',
-                subtitle: 'Entrance and model exams from multiple years',
-                chips: totalMockExams > 0
-                    ? [
-                        '$entranceCount Entrances',
-                        if (modelCount > 0) '$modelCount Models',
-                      ]
-                    : ['Coming soon'],
+                subtitle: examSubtitle,
                 isDisabled: totalMockExams == 0,
                 onTap: () {
                   if (totalMockExams == 0) {
@@ -231,7 +274,11 @@ class SubjectModeModal extends StatelessWidget {
     SubjectModel subject, {
     bool closeModal = false,
   }) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
     final dark = AppHelperFunctions.isDark(context);
+
     showDialog(
       context: context,
       builder: (ctx) {
@@ -246,14 +293,18 @@ class SubjectModeModal extends StatelessWidget {
               width: 1.2,
             ),
           ),
-          insetPadding: const EdgeInsets.symmetric(
+          insetPadding: EdgeInsets.symmetric(
             horizontal: 24,
-            vertical: 24,
+            vertical: isLandscape ? 12 : 24,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+            constraints: BoxConstraints(
+              maxWidth: 380,
+              maxHeight: isLandscape ? screenHeight * 0.94 : screenHeight * 0.85,
+            ),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(22, isLandscape ? 16 : 28, 22, 22),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -304,7 +355,7 @@ class SubjectModeModal extends StatelessWidget {
 
                   // ── Subtitle ──────────────────────────────────────────
                   Text(
-                    'This will remove all downloaded chapters, tests, and exams for ${subject.name} from your device. You can download it again anytime.',
+                    'This will remove all downloaded chapters, tests, exams, and notes for ${subject.name} from your device. You can download it again anytime.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13.5,
@@ -424,7 +475,6 @@ class _ModeOptionTile extends StatelessWidget {
     required this.iconGradient,
     required this.title,
     required this.subtitle,
-    required this.chips,
     required this.onTap,
     this.isDisabled = false,
   });
@@ -433,7 +483,6 @@ class _ModeOptionTile extends StatelessWidget {
   final IconData icon;
   final List<Color> iconGradient;
   final String title, subtitle;
-  final List<String> chips;
   final VoidCallback onTap;
   final bool isDisabled;
 
@@ -455,17 +504,12 @@ class _ModeOptionTile extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: const Color.fromARGB(
-          255,
-          23,
-          23,
-          23,
-        ).withValues(alpha: dark ? 0.0 : 0.0),
+        color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             child: Row(
               children: [
                 // ── Gradient Icon Squircle ──────────────────────────
@@ -498,7 +542,7 @@ class _ModeOptionTile extends StatelessWidget {
 
                 const SizedBox(width: 14),
 
-                // ── Title & Subtitle & Chips ────────────────────────
+                // ── Title & Subtitle ────────────────────────────────
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,45 +559,17 @@ class _ModeOptionTile extends StatelessWidget {
                               : AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         subtitle,
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w500,
+                          height: 1.35,
                           color: dark
                               ? AppColors.darkGrey
                               : AppColors.textSecondary,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: chips.map((chip) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: dark
-                                  ? AppColors.darkCard
-                                  : AppColors.lightGrey,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              chip,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: dark
-                                    ? AppColors.darkGrey
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          );
-                        }).toList(),
                       ),
                     ],
                   ),

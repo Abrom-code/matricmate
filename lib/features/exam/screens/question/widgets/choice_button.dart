@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:matricmate/common/widgets/exam/bb_table_widget.dart';
+import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/utils/helpers/bb_table_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 class ChoiceButton extends StatelessWidget {
   const ChoiceButton({
@@ -81,6 +79,9 @@ class ChoiceButton extends StatelessWidget {
       color: dark ? AppColors.textWhite : AppColors.textPrimary,
     );
 
+    final animDuration =
+        onTap == null ? Duration.zero : const Duration(milliseconds: 160);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 9),
       child: Material(
@@ -91,7 +92,7 @@ class ChoiceButton extends StatelessWidget {
           splashColor: AppColors.primary.withValues(alpha: 0.08),
           highlightColor: AppColors.primary.withValues(alpha: 0.04),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
+            duration: animDuration,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 13),
             decoration: BoxDecoration(
               color: bgColor,
@@ -119,7 +120,7 @@ class ChoiceButton extends StatelessWidget {
               children: [
                 // Circular Option Badge
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
+                  duration: animDuration,
                   width: 26,
                   height: 26,
                   decoration: BoxDecoration(
@@ -182,40 +183,10 @@ class ChoiceButton extends StatelessWidget {
   }
 
   Widget _buildOptionContent(TextStyle textStyle) {
-    if (!BBTableParser.containsTable(optionTxt)) {
-      return Text.rich(
-        RichTextParser.parse(optionTxt, textStyle),
-      );
-    }
-
-    final segments = BBTableParser.splitSegments(optionTxt);
-    final widgets = <Widget>[];
-
-    for (final seg in segments) {
-      if (seg.isTable) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: BBTableWidget(
-              rows: seg.tableRows!,
-              baseStyle: textStyle.copyWith(fontSize: 13.5),
-              minWidth: 0,
-            ),
-          ),
-        );
-      } else {
-        widgets.add(
-          Text.rich(
-            RichTextParser.parse(seg.text!, textStyle),
-          ),
-        );
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: widgets,
+    return QuestionContentRenderer(
+      text: optionTxt,
+      baseStyle: textStyle,
     );
   }
 }
+

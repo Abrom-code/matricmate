@@ -19,19 +19,42 @@ class AppHelperFunctions {
     }
   }
 
-  static Future<void> downloadImages(Set<String> urls) async {
-    if (urls.isEmpty) return;
+  static Future<void> downloadImages(
+    Set<String> urls, {
+    void Function(double progress)? onProgress,
+  }) async {
+    final validUrls = urls
+        .where((u) => u.trim().isNotEmpty && (u.startsWith('http://') || u.startsWith('https://')))
+        .toSet()
+        .toList();
+
+    if (validUrls.isEmpty) {
+      onProgress?.call(1.0);
+      return;
+    }
+
     final cache = DefaultCacheManager();
-    // Download images concurrently; individual failures are ignored
-    await Future.wait(
-      urls.map((url) async {
+    int completed = 0;
+    const maxConcurrency = 6;
+    int index = 0;
+
+    Future<void> worker() async {
+      while (true) {
+        if (index >= validUrls.length) break;
+        final url = validUrls[index++];
         try {
-          await cache.downloadFile(url);
+          await cache.downloadFile(url).timeout(const Duration(seconds: 12));
         } catch (e) {
           debugPrint('Image download failed for $url: $e');
+        } finally {
+          completed++;
+          onProgress?.call(completed / validUrls.length);
         }
-      }),
-    );
+      }
+    }
+
+    final workerCount = maxConcurrency.clamp(1, validUrls.length);
+    await Future.wait(List.generate(workerCount, (_) => worker()));
   }
 
   static Future<void> removeCachedImages(Set<String> urls) async {
@@ -113,12 +136,17 @@ class AppHelperFunctions {
     String message,
     VoidCallback onOkPressed, {
     VoidCallback? onCancel,
+    String okText = 'OK',
+    String cancelText = 'Cancel',
+    IconData icon = Icons.pause_rounded,
+    Color? iconColor,
   }) {
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
         final dark = isDark(dialogContext);
+        final effectiveIconColor = iconColor ?? AppColors.secondary;
         return PopScope(
           canPop: true,
           onPopInvokedWithResult: (didPop, _) {
@@ -151,15 +179,15 @@ class AppHelperFunctions {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
-                        color: AppColors.secondary.withValues(
+                        color: effectiveIconColor.withValues(
                           alpha: dark ? 0.20 : 0.12,
                         ),
                         shape: BoxShape.circle,
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
-                          Icons.pause_rounded,
-                          color: AppColors.secondary,
+                          icon,
+                          color: effectiveIconColor,
                           size: 26,
                         ),
                       ),
@@ -218,7 +246,7 @@ class AppHelperFunctions {
                                 ),
                               ),
                               child: Text(
-                                'Cancel',
+                                cancelText,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -250,9 +278,9 @@ class AppHelperFunctions {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text(
-                                'OK',
-                                style: TextStyle(
+                              child: Text(
+                                okText,
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   height: 1.0,

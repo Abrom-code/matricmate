@@ -416,6 +416,17 @@ class RealtimeService {
         duration: const Duration(seconds: 4),
         snackPosition: SnackPosition.TOP,
       );
+    } else if (updated.isExpired) {
+      // Expired: status is still 'active' in DB but date has passed.
+      // The expiry enforcement in UserController will flip it to 'inactive'
+      // on next fetchUserRecord. Show a renewal prompt immediately.
+      Get.until((route) => route.isFirst);
+      Get.snackbar(
+        '⏰ Subscription Expired',
+        'Your subscription has expired. Renew to keep full access.',
+        duration: const Duration(seconds: 5),
+        snackPosition: SnackPosition.TOP,
+      );
     } else if (updated.isInactive) {
       // Pop to home so user sees premium banner
       Get.until((route) => route.isFirst);

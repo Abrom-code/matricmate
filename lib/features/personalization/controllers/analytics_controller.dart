@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
+import 'package:matricmate/data/repositories/user/user_repository.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 
 // ── Data classes ──────────────────────────────────────────────────────────────
@@ -8,13 +9,33 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 class SubjectStat {
   final String name;
   final double avgScore;
-  SubjectStat({required this.name, required this.avgScore});
+  final int? subjectId;
+  final int testsCount;
+
+  SubjectStat({
+    required this.name,
+    required this.avgScore,
+    this.subjectId,
+    this.testsCount = 0,
+  });
 }
 
 class ChapterStat {
   final String title;
   final double? score;
-  ChapterStat({required this.title, required this.score});
+  final int? chapterId;
+  final int? subjectId;
+  final String? subjectName;
+  final int? grade;
+
+  ChapterStat({
+    required this.title,
+    required this.score,
+    this.chapterId,
+    this.subjectId,
+    this.subjectName,
+    this.grade,
+  });
 }
 
 class TrendPoint {
@@ -23,7 +44,125 @@ class TrendPoint {
   TrendPoint({required this.index, required this.score});
 }
 
-// ── Filter enums ──────────────────────────────────────────────────────────────
+class SubjectNotesStat {
+  final int subjectId;
+  final String subjectName;
+  final int completedNotes;
+  final int totalNotes;
+  final int downloadedNotes;
+
+  double get progressPct =>
+      totalNotes > 0 ? (completedNotes / totalNotes * 100) : 0.0;
+
+  SubjectNotesStat({
+    required this.subjectId,
+    required this.subjectName,
+    required this.completedNotes,
+    required this.totalNotes,
+    required this.downloadedNotes,
+  });
+}
+
+class GradeNotesStat {
+  final int grade;
+  final int completedNotes;
+  final int totalNotes;
+
+  double get progressPct =>
+      totalNotes > 0 ? (completedNotes / totalNotes * 100) : 0.0;
+
+  GradeNotesStat({
+    required this.grade,
+    required this.completedNotes,
+    required this.totalNotes,
+  });
+}
+
+class WeakChapterStat {
+  final int? chapterId;
+  final String chapterTitle;
+  final int chapterNumber;
+  final int grade;
+  final int? subjectId;
+  final String subjectName;
+  final double avgScore;
+  final int testsTaken;
+  final bool hasNoteCompleted;
+  final int? noteId;
+
+  WeakChapterStat({
+    this.chapterId,
+    required this.chapterTitle,
+    this.chapterNumber = 1,
+    this.grade = 9,
+    this.subjectId,
+    required this.subjectName,
+    required this.avgScore,
+    required this.testsTaken,
+    this.hasNoteCompleted = false,
+    this.noteId,
+  });
+}
+
+enum RecommendationType {
+  readNote,
+  practiceChapter,
+  practiceSubject,
+  explore,
+  exploreNotes,
+}
+
+class StudyRecommendation {
+  final String id;
+  final String title;
+  final String subtitle;
+  final String subjectName;
+  final int? subjectId;
+  final RecommendationType type;
+  final int? targetId;
+  final String badgeText;
+
+  StudyRecommendation({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.subjectName,
+    this.subjectId,
+    required this.type,
+    this.targetId,
+    required this.badgeText,
+  });
+}
+
+class _ChapterScoreAgg {
+  final int chapterId;
+  final String chapterTitle;
+  final int chapterNumber;
+  final int grade;
+  final int? subjectId;
+  final String subjectName;
+  final int correct;
+  final int total;
+  final int? noteId;
+  final bool noteCompleted;
+
+  _ChapterScoreAgg({
+    required this.chapterId,
+    required this.chapterTitle,
+    required this.chapterNumber,
+    required this.grade,
+    this.subjectId,
+    required this.subjectName,
+    required this.correct,
+    required this.total,
+    this.noteId,
+    required this.noteCompleted,
+  });
+}
+
+// ── Filter & Navigation enums ─────────────────────────────────────────────────
+
+enum AnalyticsTab { overview, notes, tests }
 
 enum TimeFilter { all, lastWeek, lastMonth, last3Months }
 
@@ -46,6 +185,14 @@ class AnalyticsController extends GetxController {
   final DatabaseService _db;
 
   final isLoading = true.obs;
+  final isRefreshing = false.obs;
+
+  // ── Tab selection ────────────────────────────────────────────────────────
+  final selectedTab = AnalyticsTab.overview.obs;
+
+  void switchTab(AnalyticsTab tab) {
+    selectedTab.value = tab;
+  }
 
   // ── Filter selections ────────────────────────────────────────────────────
 
@@ -79,13 +226,42 @@ class AnalyticsController extends GetxController {
   final subjectStats = <SubjectStat>[].obs;
   final typeDistribution = <String, double>{}.obs;
   final chapterStats = <ChapterStat>[].obs;
-  final weakestAreas = <SubjectStat>[].obs;
+
   // ── Challenge Analytics Observables ────────────────────────────────────────
   final totalChallengesTaken = 0.obs;
   final challengesThisWeek = 0.obs;
   final challengesThisMonth = 0.obs;
   final challengeAvgScorePct = 0.0.obs;
   final challengeTotalTimeSeconds = 0.obs;
+
+  // ── Notes Analytics Observables ───────────────────────────────────────────
+  final totalNotesCount = 0.obs;
+  final completedNotesCount = 0.obs;
+  final downloadedNotesCount = 0.obs;
+  final subjectNotesStats = <SubjectNotesStat>[].obs;
+  final gradeNotesStats = <GradeNotesStat>[].obs;
+
+  // ── Weakness & Recommendation Observables ─────────────────────────────────
+  final weakestAreas = <SubjectStat>[].obs;
+  final strongestAreas = <SubjectStat>[].obs;
+  final weakestChapters = <WeakChapterStat>[].obs;
+  final recommendations = <StudyRecommendation>[].obs;
+
+  /// Holistic Readiness score combining test mastery, notes syllabus completion, and consistency
+  double get holisticReadiness {
+    final tests = testsCompleted.value;
+    final avg = avgScorePct.value;
+    final notesTot = totalNotesCount.value;
+    final notesComp = completedNotesCount.value;
+
+    if (tests == 0 && notesComp == 0) return 0.0;
+
+    final testScorePart = avg * 0.55;
+    final notesPart = notesTot > 0 ? (notesComp / notesTot * 100) * 0.35 : 0.0;
+    final volumeBonus = ((tests * 1.5) + (notesComp * 1.0)).clamp(0.0, 10.0);
+
+    return (testScorePart + notesPart + volumeBonus).clamp(0.0, 100.0);
+  }
 
   String get formattedChallengeTime {
     final secs = challengeTotalTimeSeconds.value;
@@ -98,7 +274,6 @@ class AnalyticsController extends GetxController {
     }
     return '${mins}m';
   }
-
 
   @override
   void onInit() {
@@ -124,13 +299,11 @@ class AnalyticsController extends GetxController {
       streamCondition = 'WHERE (is_natural = 0 OR is_common = 1)';
     }
 
-    final subjectRows = await db.rawQuery(
-      '''
+    final subjectRows = await db.rawQuery('''
       SELECT DISTINCT name FROM subjects
       $streamCondition
       ORDER BY name
-    ''',
-    );
+    ''');
 
     availableSubjects.value = [
       'All Subjects',
@@ -152,7 +325,7 @@ class AnalyticsController extends GetxController {
   String _buildWhere(String userId) {
     final parts = <String>['r.user_id = ?'];
 
-    // Automatic Profile Stream filtering (no manual stream picker needed)
+    // Automatic Profile Stream filtering
     final userStream = UserController.instance.user.value.stream.toLowerCase();
     if (userStream == 'natural') {
       parts.add('(s.is_natural = 1 OR s.is_common = 1)');
@@ -165,7 +338,7 @@ class AnalyticsController extends GetxController {
       parts.add("s.name = '${selectedSubject.value}'");
     }
 
-    // Test Category (All 4 categories supported)
+    // Test Category
     if (selectedTestType.value != 'All Types' &&
         selectedTestType.value != 'All Categories') {
       final type = _normalizeTestType(selectedTestType.value);
@@ -242,10 +415,6 @@ class AnalyticsController extends GetxController {
     if (score != null) selectedScore.value = score;
     if (timed != null) selectedTimed.value = timed;
     loadAll();
-    ever(UserController.instance.user, (_) {
-      _initFilterOptions();
-      loadAll();
-    });
   }
 
   void resetFilters() {
@@ -257,10 +426,6 @@ class AnalyticsController extends GetxController {
     selectedScore.value = ScoreFilter.all;
     selectedTimed.value = TimedFilter.all;
     loadAll();
-    ever(UserController.instance.user, (_) {
-      _initFilterOptions();
-      loadAll();
-    });
   }
 
   int get activeFilterCount {
@@ -282,23 +447,73 @@ class AnalyticsController extends GetxController {
 
   // ── Load all data ────────────────────────────────────────────────────────
 
-  Future<void> loadAll() async {
-    isLoading.value = true;
+  Future<void> loadAll({bool isManualRefresh = false}) async {
+    if (isRefreshing.value) return;
+    isRefreshing.value = true;
+
+    // Only show full blocking loader if we have zero data loaded yet
+    if (testsCompleted.value == 0 && totalNotesCount.value == 0) {
+      isLoading.value = true;
+    }
+
+    final startTime = DateTime.now();
+
     try {
-      final userId = UserController.instance.user.value.id;
-      if (userId.isEmpty) return;
+      await _initFilterOptions();
+
+      var userId = UserController.instance.user.value.id;
+      if (userId.isEmpty) {
+        final local = await UserRepository().getLocalUser();
+        if (local != null && local.id.isNotEmpty) {
+          userId = local.id;
+          UserController.instance.user.value = local;
+        }
+      }
+      if (userId.isEmpty) {
+        final db = await _db.database;
+        final userRows = await db.query('user', limit: 1);
+        if (userRows.isNotEmpty) {
+          userId = userRows.first['id']?.toString() ?? '';
+        }
+      }
+      if (userId.isEmpty) {
+        final db = await _db.database;
+        final resRows = await db.rawQuery(
+          'SELECT user_id FROM results WHERE user_id IS NOT NULL AND user_id != "" LIMIT 1',
+        );
+        if (resRows.isNotEmpty) {
+          userId = resRows.first['user_id']?.toString() ?? '';
+        }
+      }
+
       await Future.wait([
-        _loadSummary(userId),
-        _loadTrend(userId),
-        _loadSubjectPerformance(userId),
-        _loadTypeDistribution(userId),
-        _loadChapterProgress(userId),
-        _loadBookmarkCount(userId),
+        if (userId.isNotEmpty) ...[
+          _loadSummary(userId),
+          _loadTrend(userId),
+          _loadSubjectPerformance(userId),
+          _loadTypeDistribution(userId),
+          _loadChapterProgress(userId),
+          _loadBookmarkCount(userId),
+        ],
         _loadChallengeAnalytics(userId),
+        _loadNotesAnalytics(userId),
       ]);
-      _computeWeakestAreas();
+
+      if (userId.isNotEmpty) {
+        await _loadWeaknessAndRecommendations(userId);
+      }
+
+      if (isManualRefresh) {
+        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        if (elapsed < 500) {
+          await Future.delayed(Duration(milliseconds: 500 - elapsed));
+        }
+      }
+    } catch (_) {
+      // Ignore background errors
     } finally {
       isLoading.value = false;
+      isRefreshing.value = false;
     }
   }
 
@@ -379,7 +594,7 @@ class AnalyticsController extends GetxController {
 
     final rows = await db.rawQuery(
       '''
-      SELECT s.name, r.correctAnswers, r.testQuestions
+      SELECT s.id as subject_id, s.name, r.correctAnswers, r.testQuestions
       FROM results r
       JOIN tests t ON r.test_id = t.id
       JOIN subjects s ON t.subject_id = s.id
@@ -388,9 +603,10 @@ class AnalyticsController extends GetxController {
       [userId],
     );
 
-    final Map<String, List<int>> bySubject = {};
+    final Map<String, List<num>> bySubject = {}; // [correct, total, count, subjectId]
     for (final row in rows) {
       final name = row['name'] as String;
+      final subId = (row['subject_id'] as num?)?.toInt() ?? 0;
       final correct = row['correctAnswers'] as int? ?? 0;
       int total = 1;
       try {
@@ -398,14 +614,20 @@ class AnalyticsController extends GetxController {
         total = list.isNotEmpty ? list.length : 1;
       } catch (_) {}
       if (!_passesScoreFilter(correct, total)) continue;
-      bySubject.putIfAbsent(name, () => [0, 0]);
+      bySubject.putIfAbsent(name, () => [0, 0, 0, subId]);
       bySubject[name]![0] += correct;
       bySubject[name]![1] += total;
+      bySubject[name]![2] += 1;
     }
 
     final stats = bySubject.entries.map((e) {
-      final pct = e.value[1] > 0 ? e.value[0] / e.value[1] * 100 : 0.0;
-      return SubjectStat(name: e.key, avgScore: pct);
+      final pct = e.value[1] > 0 ? (e.value[0] / e.value[1] * 100).toDouble() : 0.0;
+      return SubjectStat(
+        name: e.key,
+        avgScore: pct,
+        subjectId: e.value[3].toInt(),
+        testsCount: e.value[2].toInt(),
+      );
     }).toList()..sort((a, b) => b.avgScore.compareTo(a.avgScore));
 
     subjectStats.value = stats;
@@ -448,79 +670,371 @@ class AnalyticsController extends GetxController {
   }
 
   Future<void> _loadChapterProgress(String userId) async {
-    final db = await _db.database;
+    try {
+      final db = await _db.database;
 
-    // Chapter progress: apply subject + grade + stream filters only
-    final parts = <String>['r.user_id = ?'];
+      final parts = <String>['r.user_id = ?'];
 
-    if (selectedSubject.value != 'All Subjects') {
-      parts.add("s.name = '${selectedSubject.value}'");
-    }
-    switch (selectedGrade.value) {
-      case GradeFilter.grade9:
-        parts.add('t.grade = 9');
-        break;
-      case GradeFilter.grade10:
-        parts.add('t.grade = 10');
-        break;
-      case GradeFilter.grade11:
-        parts.add('t.grade = 11');
-        break;
-      case GradeFilter.grade12:
-        parts.add('t.grade = 12');
-        break;
-      case GradeFilter.all:
-        break;
-    }
-    switch (selectedStream.value) {
-      case StreamFilter.natural:
-        parts.add('s.is_natural = 1 AND s.is_common = 0');
-        break;
-      case StreamFilter.social:
-        parts.add('s.is_natural = 0 AND s.is_common = 0');
-        break;
-      case StreamFilter.common:
-        parts.add('s.is_common = 1');
-        break;
-      case StreamFilter.all:
-        break;
-    }
-
-    final chapterWhere = parts.join(' AND ');
-
-    final rows = await db.rawQuery(
-      '''
-      SELECT c.title, r.correctAnswers, r.testQuestions
-      FROM chapters c
-      LEFT JOIN tests t ON t.chapter_id = c.id
-      LEFT JOIN subjects s ON t.subject_id = s.id
-      LEFT JOIN results r ON r.test_id = t.id AND r.user_id = ?
-      WHERE c.id IN (SELECT DISTINCT chapter_id FROM tests WHERE chapter_id IS NOT NULL)
-        AND ($chapterWhere)
-      GROUP BY c.id
-      ORDER BY r.correctAnswers DESC NULLS LAST
-      LIMIT 10
-    ''',
-      [userId, userId],
-    );
-
-    chapterStats.value = rows.map((row) {
-      final title = row['title'] as String? ?? '';
-      final correct = row['correctAnswers'] as int?;
-      double? score;
-      if (correct != null) {
-        int total = 1;
-        try {
-          final list = jsonDecode(row['testQuestions'] as String) as List;
-          total = list.isNotEmpty ? list.length : 1;
-        } catch (_) {}
-        score = correct / total * 100;
+      if (selectedSubject.value != 'All Subjects') {
+        parts.add("s.name = '${selectedSubject.value}'");
       }
-      return ChapterStat(title: title, score: score);
-    }).toList();
+      switch (selectedGrade.value) {
+        case GradeFilter.grade9:
+          parts.add('t.grade = 9');
+          break;
+        case GradeFilter.grade10:
+          parts.add('t.grade = 10');
+          break;
+        case GradeFilter.grade11:
+          parts.add('t.grade = 11');
+          break;
+        case GradeFilter.grade12:
+          parts.add('t.grade = 12');
+          break;
+        case GradeFilter.all:
+          break;
+      }
+      switch (selectedStream.value) {
+        case StreamFilter.natural:
+          parts.add('s.is_natural = 1 AND s.is_common = 0');
+          break;
+        case StreamFilter.social:
+          parts.add('s.is_natural = 0 AND s.is_common = 0');
+          break;
+        case StreamFilter.common:
+          parts.add('s.is_common = 1');
+          break;
+        case StreamFilter.all:
+          break;
+      }
+
+      final chapterWhere = parts.join(' AND ');
+
+      final rows = await db.rawQuery(
+        '''
+        SELECT c.id as chapter_id, c.title, c.grade, s.id as subject_id, s.name as subject_name,
+               r.correctAnswers, r.testQuestions
+        FROM chapters c
+        LEFT JOIN tests t ON t.chapter_id = c.id
+        LEFT JOIN subjects s ON t.subject_id = s.id
+        LEFT JOIN results r ON r.test_id = t.id AND r.user_id = ?
+        WHERE c.id IN (SELECT DISTINCT chapter_id FROM tests WHERE chapter_id IS NOT NULL)
+          AND ($chapterWhere)
+        GROUP BY c.id
+        ORDER BY r.correctAnswers DESC
+        LIMIT 15
+      ''',
+        [userId, userId],
+      );
+
+      chapterStats.value = rows.map((row) {
+        final title = row['title'] as String? ?? '';
+        final correct = row['correctAnswers'] as int?;
+        double? score;
+        if (correct != null) {
+          int total = 1;
+          try {
+            final list = jsonDecode(row['testQuestions'] as String) as List;
+            total = list.isNotEmpty ? list.length : 1;
+          } catch (_) {}
+          score = correct / total * 100;
+        }
+        return ChapterStat(
+          title: title,
+          score: score,
+          chapterId: (row['chapter_id'] as num?)?.toInt(),
+          subjectId: (row['subject_id'] as num?)?.toInt(),
+          subjectName: row['subject_name']?.toString(),
+          grade: (row['grade'] as num?)?.toInt(),
+        );
+      }).toList();
+    } catch (_) {
+      chapterStats.clear();
+    }
   }
 
-    Future<void> _loadChallengeAnalytics(String userId) async {
+  Future<void> _loadNotesAnalytics(String userId) async {
+    final db = await _db.database;
+    try {
+      final userStream = UserController.instance.user.value.stream.toLowerCase();
+      final whereParts = <String>[];
+      if (userStream == 'natural') {
+        whereParts.add('(s.is_natural = 1 OR s.is_common = 1)');
+      } else if (userStream == 'social') {
+        whereParts.add('(s.is_natural = 0 OR s.is_common = 1)');
+      }
+
+      if (selectedSubject.value != 'All Subjects') {
+        whereParts.add("s.name = '${selectedSubject.value}'");
+      }
+
+      final whereClause = whereParts.isNotEmpty ? 'WHERE ${whereParts.join(' AND ')}' : '';
+
+      // 1. Overall counts
+      final totalRows = await db.rawQuery('''
+        SELECT 
+          COUNT(n.id) as total_count,
+          SUM(CASE WHEN n.is_completed = 1 THEN 1 ELSE 0 END) as completed_count,
+          SUM(CASE WHEN n.is_downloaded = 1 THEN 1 ELSE 0 END) as downloaded_count
+        FROM notes n
+        JOIN subjects s ON n.subject_id = s.id
+        $whereClause
+      ''');
+
+      if (totalRows.isNotEmpty) {
+        final r = totalRows.first;
+        totalNotesCount.value = (r['total_count'] as num?)?.toInt() ?? 0;
+        completedNotesCount.value = (r['completed_count'] as num?)?.toInt() ?? 0;
+        downloadedNotesCount.value = (r['downloaded_count'] as num?)?.toInt() ?? 0;
+      } else {
+        totalNotesCount.value = 0;
+        completedNotesCount.value = 0;
+        downloadedNotesCount.value = 0;
+      }
+
+      // 2. Subject breakdown
+      final streamWhere = (userStream == 'natural')
+          ? 'WHERE (s.is_natural = 1 OR s.is_common = 1)'
+          : (userStream == 'social')
+              ? 'WHERE (s.is_natural = 0 OR s.is_common = 1)'
+              : '';
+
+      final subjectRows = await db.rawQuery('''
+        SELECT 
+          s.id as subject_id,
+          s.name as subject_name,
+          COUNT(n.id) as total_notes,
+          SUM(CASE WHEN n.is_completed = 1 THEN 1 ELSE 0 END) as completed_notes,
+          SUM(CASE WHEN n.is_downloaded = 1 THEN 1 ELSE 0 END) as downloaded_notes
+        FROM subjects s
+        LEFT JOIN notes n ON n.subject_id = s.id
+        $streamWhere
+        GROUP BY s.id, s.name
+        ORDER BY completed_notes DESC, total_notes DESC, s.name ASC
+      ''');
+
+      subjectNotesStats.value = subjectRows.map((r) {
+        return SubjectNotesStat(
+          subjectId: (r['subject_id'] as num?)?.toInt() ?? 0,
+          subjectName: r['subject_name']?.toString() ?? 'Subject',
+          completedNotes: (r['completed_notes'] as num?)?.toInt() ?? 0,
+          totalNotes: (r['total_notes'] as num?)?.toInt() ?? 0,
+          downloadedNotes: (r['downloaded_notes'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+
+      // 3. Grade breakdown
+      final gradeWhereParts = <String>['n.grade IN (9, 10, 11, 12)'];
+      if (userStream == 'natural') {
+        gradeWhereParts.add('(s.is_natural = 1 OR s.is_common = 1)');
+      } else if (userStream == 'social') {
+        gradeWhereParts.add('(s.is_natural = 0 OR s.is_common = 1)');
+      }
+      if (selectedSubject.value != 'All Subjects') {
+        gradeWhereParts.add("s.name = '${selectedSubject.value}'");
+      }
+
+      final gradeRows = await db.rawQuery('''
+        SELECT 
+          n.grade,
+          COUNT(n.id) as total_notes,
+          SUM(CASE WHEN n.is_completed = 1 THEN 1 ELSE 0 END) as completed_notes
+        FROM notes n
+        JOIN subjects s ON n.subject_id = s.id
+        WHERE ${gradeWhereParts.join(' AND ')}
+        GROUP BY n.grade
+        ORDER BY n.grade ASC
+      ''');
+
+      gradeNotesStats.value = gradeRows.map((r) {
+        return GradeNotesStat(
+          grade: (r['grade'] as num?)?.toInt() ?? 9,
+          completedNotes: (r['completed_notes'] as num?)?.toInt() ?? 0,
+          totalNotes: (r['total_notes'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+    } catch (_) {
+      totalNotesCount.value = 0;
+      completedNotesCount.value = 0;
+      downloadedNotesCount.value = 0;
+      subjectNotesStats.clear();
+      gradeNotesStats.clear();
+    }
+  }
+
+  Future<void> _loadWeaknessAndRecommendations(String userId) async {
+    final db = await _db.database;
+    try {
+      final userStream = UserController.instance.user.value.stream.toLowerCase();
+      String streamCondition = '';
+      if (userStream == 'natural') {
+        streamCondition = '(s.is_natural = 1 OR s.is_common = 1)';
+      } else if (userStream == 'social') {
+        streamCondition = '(s.is_natural = 0 OR s.is_common = 1)';
+      }
+
+      // Query chapters where user took tests
+      final rows = await db.rawQuery('''
+        SELECT 
+          c.id as chapter_id,
+          c.title as chapter_title,
+          c.chapter_number,
+          c.grade,
+          s.id as subject_id,
+          s.name as subject_name,
+          r.correctAnswers,
+          r.testQuestions,
+          n.id as note_id,
+          n.is_completed as note_completed
+        FROM results r
+        JOIN tests t ON r.test_id = t.id
+        JOIN chapters c ON t.chapter_id = c.id
+        JOIN subjects s ON t.subject_id = s.id
+        LEFT JOIN notes n ON n.chapter_id = c.id
+        WHERE r.user_id = ? ${streamCondition.isNotEmpty ? 'AND $streamCondition' : ''}
+      ''', [userId]);
+
+      final Map<int, List<_ChapterScoreAgg>> aggMap = {};
+      for (final r in rows) {
+        final chId = (r['chapter_id'] as num?)?.toInt();
+        if (chId == null) continue;
+        final correct = (r['correctAnswers'] as num?)?.toInt() ?? 0;
+        int total = 1;
+        try {
+          final list = jsonDecode(r['testQuestions'] as String) as List;
+          total = list.isNotEmpty ? list.length : 1;
+        } catch (_) {}
+
+        aggMap.putIfAbsent(chId, () => []);
+        aggMap[chId]!.add(_ChapterScoreAgg(
+          chapterId: chId,
+          chapterTitle: r['chapter_title']?.toString() ?? 'Chapter',
+          chapterNumber: (r['chapter_number'] as num?)?.toInt() ?? 1,
+          grade: (r['grade'] as num?)?.toInt() ?? 9,
+          subjectId: (r['subject_id'] as num?)?.toInt(),
+          subjectName: r['subject_name']?.toString() ?? 'Subject',
+          correct: correct,
+          total: total,
+          noteId: (r['note_id'] as num?)?.toInt(),
+          noteCompleted: (r['note_completed'] as num?)?.toInt() == 1,
+        ));
+      }
+
+      final List<WeakChapterStat> weakList = [];
+      for (final entry in aggMap.entries) {
+        final list = entry.value;
+        if (list.isEmpty) continue;
+        int cTot = 0, qTot = 0;
+        for (final item in list) {
+          cTot += item.correct;
+          qTot += item.total;
+        }
+        final avg = qTot > 0 ? (cTot / qTot * 100) : 0.0;
+        final first = list.first;
+        weakList.add(WeakChapterStat(
+          chapterId: first.chapterId,
+          chapterTitle: first.chapterTitle,
+          chapterNumber: first.chapterNumber,
+          grade: first.grade,
+          subjectId: first.subjectId,
+          subjectName: first.subjectName,
+          avgScore: avg,
+          testsTaken: list.length,
+          hasNoteCompleted: first.noteCompleted,
+          noteId: first.noteId,
+        ));
+      }
+
+      // Sort by avgScore ascending (lowest scores first)
+      weakList.sort((a, b) => a.avgScore.compareTo(b.avgScore));
+      weakestChapters.value = weakList.take(5).toList();
+
+      // Strongest vs Weakest subjects
+      if (subjectStats.isNotEmpty) {
+        final sorted = [...subjectStats]
+          ..sort((a, b) => a.avgScore.compareTo(b.avgScore));
+        weakestAreas.value = sorted.where((s) => s.avgScore < 70).take(3).toList();
+        if (weakestAreas.isEmpty && sorted.isNotEmpty) {
+          weakestAreas.value = [sorted.first];
+        }
+        strongestAreas.value = sorted.reversed.where((s) => s.avgScore >= 60).take(2).toList();
+      } else {
+        weakestAreas.clear();
+        strongestAreas.clear();
+      }
+
+      // Generate smart, actionable study recommendations
+      final List<StudyRecommendation> recs = [];
+
+      // 1. Weakest chapter recommendations
+      for (final wc in weakestChapters) {
+        if (wc.avgScore < 65) {
+          if (!wc.hasNoteCompleted && wc.noteId != null) {
+            recs.add(StudyRecommendation(
+              id: 'note_${wc.chapterId}',
+              title: 'Study Note: ${wc.chapterTitle}',
+              subtitle: 'Score is ${wc.avgScore.toStringAsFixed(0)}% in ${wc.subjectName} • Read summary note to solidify core concepts',
+              subjectName: wc.subjectName,
+              subjectId: wc.subjectId,
+              type: RecommendationType.readNote,
+              targetId: wc.noteId,
+              badgeText: 'Read Note',
+            ));
+          } else {
+            recs.add(StudyRecommendation(
+              id: 'test_${wc.chapterId}',
+              title: 'Re-test: ${wc.chapterTitle}',
+              subtitle: 'Score is ${wc.avgScore.toStringAsFixed(0)}% • Practice chapter questions to build mastery',
+              subjectName: wc.subjectName,
+              subjectId: wc.subjectId,
+              type: RecommendationType.practiceChapter,
+              targetId: wc.chapterId,
+              badgeText: 'Practice Test',
+            ));
+          }
+        }
+      }
+
+      // 2. If subject has low score
+      for (final ws in weakestAreas) {
+        if (recs.length >= 4) break;
+        recs.add(StudyRecommendation(
+          id: 'subject_${ws.name}',
+          title: 'Master ${ws.name}',
+          subtitle: 'Current average: ${ws.avgScore.toStringAsFixed(0)}% • Focus on high-yield entrance & model exams',
+          subjectName: ws.name,
+          subjectId: ws.subjectId,
+          type: RecommendationType.practiceSubject,
+          targetId: ws.subjectId,
+          badgeText: 'Review Subject',
+        ));
+      }
+
+      // 3. Fallback recommendations if user is just starting
+      if (recs.isEmpty) {
+        recs.add(StudyRecommendation(
+          id: 'rec_start_test',
+          title: 'Take an Entrance Exam',
+          subtitle: 'Assess your starting knowledge level with genuine national exam questions',
+          subjectName: 'All Subjects',
+          type: RecommendationType.explore,
+          badgeText: 'Start Test',
+        ));
+        recs.add(StudyRecommendation(
+          id: 'rec_read_notes',
+          title: 'Explore Subject Notes',
+          subtitle: 'Review chapter summaries & downloadable PDFs for Grade 11 & 12',
+          subjectName: 'All Subjects',
+          type: RecommendationType.exploreNotes,
+          badgeText: 'Browse Notes',
+        ));
+      }
+
+      recommendations.value = recs.take(4).toList();
+    } catch (_) {}
+  }
+
+  Future<void> _loadChallengeAnalytics(String userId) async {
     final db = await _db.database;
     try {
       await db.execute('''
@@ -576,21 +1090,15 @@ class AnalyticsController extends GetxController {
   }
 
   Future<void> _loadBookmarkCount(String userId) async {
-    final db = await _db.database;
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as cnt FROM bookmarks WHERE user_id = ?',
-      [userId],
-    );
-    bookmarkCount.value = result.first['cnt'] as int? ?? 0;
-  }
-
-  void _computeWeakestAreas() {
-    if (subjectStats.isEmpty) {
-      weakestAreas.value = [];
-      return;
+    try {
+      final db = await _db.database;
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as cnt FROM bookmarks WHERE user_id = ?',
+        [userId],
+      );
+      bookmarkCount.value = result.first['cnt'] as int? ?? 0;
+    } catch (_) {
+      bookmarkCount.value = 0;
     }
-    final sorted = [...subjectStats]
-      ..sort((a, b) => a.avgScore.compareTo(b.avgScore));
-    weakestAreas.value = sorted.take(2).toList();
   }
 }

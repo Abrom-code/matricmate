@@ -172,7 +172,11 @@ class UserModel {
       subscriptionExpiresAt != null &&
       subscriptionExpiresAt!.isBefore(DateTime.now());
 
-  bool get exceededUploadLimit => receiptUploadCount >= 3;
+  bool get exceededUploadLimit => receiptUploadCount >= 2;
+
+  /// True when the user should see upgrade prompts (inactive OR expired).
+  /// Use this for banners / settings tiles instead of checking `isInactive` alone.
+  bool get needsUpgrade => !isActive && !isPending;
 
   /// Human-readable remaining time (e.g. "184 days left").
   String get remainingDaysText {

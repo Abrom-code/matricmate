@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/utils/constants/colors.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
@@ -271,10 +271,18 @@ class ChallengeArchiveController extends GetxController {
     } else if (showLoading) {
       isLoading.value = true;
     }
+    final stopwatch = Stopwatch()..start();
     try {
-      // 1. Fast Internet Reachability Check
-      final hasNet = await NetworkManager.instance.isConnected(force: isManual);
+      // 1. Fast Internet Reachability Check with 3-second timeout
+      final hasNet = await NetworkManager.instance
+          .isConnected(force: isManual)
+          .timeout(const Duration(seconds: 3), onTimeout: () => false);
       if (!hasNet) {
+        if (isManual && stopwatch.elapsedMilliseconds < 500) {
+          await Future.delayed(
+            Duration(milliseconds: 500 - stopwatch.elapsedMilliseconds),
+          );
+        }
         isOffline.value = true;
         final localChallenges = await _loadLocalArchivedChallenges();
         if (localChallenges.isNotEmpty || challenges.isEmpty) {
@@ -292,8 +300,10 @@ class ChallengeArchiveController extends GetxController {
       final deleted = await _db.getDeletedChallengeIds();
       deletedChallengeIds.assignAll(deleted);
 
-      // Fetch all challenges across subjects for student stream so tabs work seamlessly
-      final list = await _repo.fetchAllSubjectChallenges(stream: userStream);
+      // Fetch all challenges across subjects for student stream so tabs work seamlessly with timeout
+      final list = await _repo
+          .fetchAllSubjectChallenges(stream: userStream)
+          .timeout(const Duration(seconds: 4));
       final isNatural = userStream == 'natural';
 
       final subjectsList = Get.isRegistered<SubjectsController>()
@@ -327,6 +337,11 @@ class ChallengeArchiveController extends GetxController {
         ToastHelper.success('Refreshed successfully');
       }
     } catch (e) {
+      if (isManual && stopwatch.elapsedMilliseconds < 500) {
+        await Future.delayed(
+          Duration(milliseconds: 500 - stopwatch.elapsedMilliseconds),
+        );
+      }
       isOffline.value = true;
       // Fallback to local DB when offline or network fails
       final localChallenges = await _loadLocalArchivedChallenges();
@@ -337,7 +352,11 @@ class ChallengeArchiveController extends GetxController {
       await refreshAttemptStates(checkOnline: false);
 
       if (isManual) {
-        ToastHelper.warning('No internet connection. Showing offline data.');
+        if (e is TimeoutException) {
+          ToastHelper.warning('Refresh timed out. Please check your connection.');
+        } else {
+          ToastHelper.warning('No internet connection. Showing offline data.');
+        }
       }
     } finally {
       isLoading.value = false;
@@ -432,7 +451,7 @@ class ChallengeArchiveController extends GetxController {
         Get.toNamed(Routes.paymentVerification);
         return;
       }
-      Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
+      Get.toNamed(Routes.premium);
       return;
     }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -29,6 +28,13 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
     _score = c.selectedScore.value;
   }
 
+  bool get _isFiltered {
+    return _subject != 'All Subjects' ||
+        (_testType != 'All Types' && _testType != 'All Categories') ||
+        _timed != TimedFilter.all ||
+        _score != ScoreFilter.all;
+  }
+
   void _reset() => setState(() {
     _subject = 'All Subjects';
     _testType = 'All Categories';
@@ -50,6 +56,19 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
+    final subjects = [
+      'All Subjects',
+      ...widget.controller.availableSubjects.where((s) => s != 'All Subjects'),
+    ];
+
+    const categories = [
+      'All Categories',
+      'Entrance Exam',
+      'Model Exam',
+      'Chapter Test',
+      'Grade Exam',
+    ];
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -57,187 +76,178 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
         ),
         child: Container(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.88,
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
           ),
           decoration: BoxDecoration(
             color: dark ? AppColors.darkCard : AppColors.white,
             borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(28),
+              top: Radius.circular(24),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: dark ? 0.35 : 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Handle ──────────────────────────────────────────────
-              const SizedBox(height: 12),
+              // ── Handle ────────────────────────────────────────────
+              const SizedBox(height: 10),
               Center(
                 child: Container(
-                  width: 42,
-                  height: 4.5,
+                  width: 36,
+                  height: 4,
                   decoration: BoxDecoration(
                     color: dark ? AppColors.darkBorder : const Color(0xFFCBD5E1),
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
 
-              // ── Header ──────────────────────────────────────────────
+              // ── Header Row ────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(
-                              alpha: dark ? 0.22 : 0.1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Iconsax.filter_copy,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Filter Insights',
+                    Text(
+                      'Filters',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                    if (_isFiltered)
+                      GestureDetector(
+                        onTap: _reset,
+                        child: const Text(
+                          'Reset',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                            color: dark
-                                ? AppColors.white
-                                : const Color(0xFF0F172A),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
                           ),
                         ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: _reset,
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
                       ),
-                      child: const Text(
-                        'Reset all',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
               Divider(
                 height: 1,
-                color: dark
-                    ? AppColors.darkBorder
-                    : const Color(0xFFF1F5F9),
+                color: dark ? AppColors.darkBorder : const Color(0xFFF1F5F9),
               ),
 
-              // ── Scrollable Body ──────────────────────────────────────
+              // ── Content ───────────────────────────────────────────
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 1 — Test Category (All 4 Categories)
-                      _ModernSectionHeader(
-                        icon: Iconsax.note_21_copy,
-                        title: 'Test Category',
-                        dark: dark,
+                      // 1. Subject
+                      _SectionLabel(title: 'Subject', dark: dark),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: subjects.map((subj) {
+                          return _FilterPill(
+                            label: subj,
+                            isSelected: _subject == subj,
+                            onTap: () => setState(() => _subject = subj),
+                            dark: dark,
+                          );
+                        }).toList(),
                       ),
-                      const SizedBox(height: 10),
-                      _TestTypeGrid(
-                        selected: _testType,
-                        onSelect: (type) => setState(() => _testType = type),
-                        dark: dark,
-                      ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
 
-                      // 2 — Subject
-                      _ModernSectionHeader(
-                        icon: Iconsax.book_1_copy,
-                        title: 'Subject',
-                        dark: dark,
+                      // 2. Category
+                      _SectionLabel(title: 'Category', dark: dark),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: categories.map((cat) {
+                          final isSel = _testType == cat ||
+                              (_testType == 'All Types' &&
+                                  cat == 'All Categories');
+                          return _FilterPill(
+                            label: cat,
+                            isSelected: isSel,
+                            onTap: () => setState(() => _testType = cat),
+                            dark: dark,
+                          );
+                        }).toList(),
                       ),
-                      const SizedBox(height: 10),
-                      _ModernChipGroup<String>(
-                        items: widget.controller.availableSubjects.toList(),
-                        selected: _subject,
-                        labelOf: (s) => s,
-                        onSelect: (s) => setState(() => _subject = s),
-                      ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
 
-                      // 3 — Test Format (Timed vs Practice)
-                      _ModernSectionHeader(
-                        icon: Iconsax.clock_copy,
-                        title: 'Test Mode / Format',
-                        dark: dark,
-                      ),
-                      const SizedBox(height: 10),
-                      _ModernChipGroup<TimedFilter>(
-                        items: TimedFilter.values,
-                        selected: _timed,
-                        labelOf: (t) => {
-                          TimedFilter.all: 'All Formats',
-                          TimedFilter.timedOnly: '⏱️ Timed Only',
-                          TimedFilter.untimeOnly: '✍️ Practice Mode',
-                        }[t]!,
-                        onSelect: (t) => setState(() => _timed = t),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // 4 — Score Benchmark
-                      _ModernSectionHeader(
-                        icon: Iconsax.chart_copy,
-                        title: 'Score Benchmark',
-                        dark: dark,
-                      ),
-                      const SizedBox(height: 10),
-                      _ModernChipGroup<ScoreFilter>(
-                        items: const [
-                          ScoreFilter.all,
-                          ScoreFilter.good,
-                          ScoreFilter.poor,
+                      // 3. Mode
+                      _SectionLabel(title: 'Mode', dark: dark),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _SegmentOption(
+                            label: 'All',
+                            isSelected: _timed == TimedFilter.all,
+                            onTap: () =>
+                                setState(() => _timed = TimedFilter.all),
+                            dark: dark,
+                          ),
+                          const SizedBox(width: 8),
+                          _SegmentOption(
+                            label: 'Timed',
+                            isSelected: _timed == TimedFilter.timedOnly,
+                            onTap: () =>
+                                setState(() => _timed = TimedFilter.timedOnly),
+                            dark: dark,
+                          ),
+                          const SizedBox(width: 8),
+                          _SegmentOption(
+                            label: 'Practice',
+                            isSelected: _timed == TimedFilter.untimeOnly,
+                            onTap: () => setState(
+                                () => _timed = TimedFilter.untimeOnly),
+                            dark: dark,
+                          ),
                         ],
-                        selected: _score,
-                        labelOf: (s) => {
-                          ScoreFilter.all: 'All Scores',
-                          ScoreFilter.good: '🟢 Mastered (≥ 70%)',
-                          ScoreFilter.poor: '🔴 Needs Practice (< 50%)',
-                        }[s]!,
-                        onSelect: (s) => setState(() => _score = s),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // 4. Score
+                      _SectionLabel(title: 'Score', dark: dark),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _SegmentOption(
+                            label: 'All',
+                            isSelected: _score == ScoreFilter.all,
+                            onTap: () =>
+                                setState(() => _score = ScoreFilter.all),
+                            dark: dark,
+                          ),
+                          const SizedBox(width: 8),
+                          _SegmentOption(
+                            label: '≥ 70%',
+                            subtitle: 'Mastered',
+                            isSelected: _score == ScoreFilter.good,
+                            onTap: () =>
+                                setState(() => _score = ScoreFilter.good),
+                            dark: dark,
+                          ),
+                          const SizedBox(width: 8),
+                          _SegmentOption(
+                            label: '< 50%',
+                            subtitle: 'Needs Work',
+                            isSelected: _score == ScoreFilter.poor,
+                            onTap: () =>
+                                setState(() => _score = ScoreFilter.poor),
+                            dark: dark,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // ── Apply Button Footer ──────────────────────────────────
+              // ── Apply Button Footer ───────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
                 child: SizedBox(
@@ -245,11 +255,8 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                   height: 48,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.white,
+                      foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -259,10 +266,8 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
                     child: const Text(
                       'Apply Filters',
                       style: TextStyle(
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                        height: 1.0,
-                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -276,191 +281,150 @@ class _AnalyticsFilterSheetState extends State<AnalyticsFilterSheet> {
   }
 }
 
-// ── Test Type Grid (All 4 Categories + All) ──────────────────────────────────
+// ── Section Label ─────────────────────────────────────────────────────────────
 
-class _TestTypeGrid extends StatelessWidget {
-  const _TestTypeGrid({
-    required this.selected,
-    required this.onSelect,
-    required this.dark,
-  });
-
-  final String selected;
-  final void Function(String) onSelect;
-  final bool dark;
-
-  static const _categories = [
-    {'title': 'All Categories', 'icon': Icons.all_inclusive_rounded},
-    {'title': 'Entrance Exam', 'icon': Icons.school_outlined},
-    {'title': 'Model Exam', 'icon': Icons.star_border_rounded},
-    {'title': 'Chapter Test', 'icon': Icons.menu_book_rounded},
-    {'title': 'Grade Exam', 'icon': Icons.assignment_outlined},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: _categories.map((cat) {
-        final title = cat['title'] as String;
-        final icon = cat['icon'] as IconData;
-        final isSel = selected == title ||
-            (selected == 'All Types' && title == 'All Categories');
-
-        return GestureDetector(
-          onTap: () => onSelect(title),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSel
-                  ? AppColors.primary
-                  : (dark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : const Color(0xFFF8FAFC)),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isSel
-                    ? AppColors.primary
-                    : (dark
-                        ? AppColors.darkBorder
-                        : const Color(0xFFE2E8F0)),
-                width: 1.2,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 16,
-                  color: isSel
-                      ? Colors.white
-                      : (dark ? AppColors.white : const Color(0xFF334155)),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-                    color: isSel
-                        ? Colors.white
-                        : (dark ? AppColors.white : const Color(0xFF1E293B)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-// ── Section Header ────────────────────────────────────────────────────────────
-
-class _ModernSectionHeader extends StatelessWidget {
-  const _ModernSectionHeader({
-    required this.icon,
-    required this.title,
-    required this.dark,
-  });
-
-  final IconData icon;
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.title, required this.dark});
   final String title;
   final bool dark;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 15,
-          color: AppColors.primary,
-        ),
-        const SizedBox(width: 7),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w700,
-            color: dark ? AppColors.white : const Color(0xFF1E293B),
-            letterSpacing: -0.2,
-          ),
-        ),
-      ],
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: dark ? AppColors.white : const Color(0xFF0F172A),
+      ),
     );
   }
 }
 
-// ── Modern Chip Group ─────────────────────────────────────────────────────────
+// ── Filter Pill ───────────────────────────────────────────────────────────────
 
-class _ModernChipGroup<T> extends StatelessWidget {
-  const _ModernChipGroup({
-    required this.items,
-    required this.selected,
-    required this.labelOf,
-    required this.onSelect,
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.dark,
   });
 
-  final List<T> items;
-  final T selected;
-  final String Function(T) labelOf;
-  final void Function(T) onSelect;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppHelperFunctions.isDark(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7.5),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary
+              : (dark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected
+                ? Colors.white
+                : (dark ? AppColors.white : const Color(0xFF334155)),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-    if (items.isEmpty) {
-      return const Text(
-        'No options available',
-        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-      );
-    }
+// ── Segment Option ────────────────────────────────────────────────────────────
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items.map((item) {
-        final isSel = item == selected;
-        return GestureDetector(
-          onTap: () => onSelect(item),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7.5),
-            decoration: BoxDecoration(
-              color: isSel
+class _SegmentOption extends StatelessWidget {
+  const _SegmentOption({
+    required this.label,
+    this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+    required this.dark,
+  });
+
+  final String label;
+  final String? subtitle;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary
+                : (dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : const Color(0xFFF1F5F9)),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected
                   ? AppColors.primary
-                  : (dark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : const Color(0xFFF8FAFC)),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isSel
-                    ? AppColors.primary
-                    : (dark
-                        ? AppColors.darkBorder
-                        : const Color(0xFFE2E8F0)),
-                width: 1.1,
-              ),
-            ),
-            child: Text(
-              labelOf(item),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-                color: isSel
-                    ? AppColors.white
-                    : (dark ? AppColors.white : const Color(0xFF334155)),
-              ),
+                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
+              width: 1,
             ),
           ),
-        );
-      }).toList(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? Colors.white
+                      : (dark ? AppColors.white : const Color(0xFF334155)),
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected
+                        ? Colors.white70
+                        : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -496,8 +460,8 @@ class ActiveFilterRow extends StatelessWidget {
       chips.add(
         _DismissChip(
           label: controller.selectedTimed.value == TimedFilter.timedOnly
-              ? '⏱️ Timed'
-              : '✍️ Practice',
+              ? 'Timed'
+              : 'Practice',
           onRemove: () => controller.applyFilters(timed: TimedFilter.all),
         ),
       );
@@ -506,8 +470,8 @@ class ActiveFilterRow extends StatelessWidget {
       chips.add(
         _DismissChip(
           label: controller.selectedScore.value == ScoreFilter.good
-              ? '🟢 Mastered'
-              : '🔴 Needs Practice',
+              ? '≥ 70%'
+              : '< 50%',
           onRemove: () => controller.applyFilters(score: ScoreFilter.all),
         ),
       );
@@ -533,7 +497,7 @@ class ActiveFilterRow extends StatelessWidget {
                   'Clear all',
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.error,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -548,19 +512,21 @@ class ActiveFilterRow extends StatelessWidget {
 
 class _DismissChip extends StatelessWidget {
   const _DismissChip({required this.label, required this.onRemove});
+
   final String label;
   final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.1),
+        color: AppColors.primary.withValues(alpha: dark ? 0.2 : 0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.35),
+          color: AppColors.primary.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -570,17 +536,17 @@ class _DismissChip extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 11.5,
               color: AppColors.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
             child: const Icon(
               Icons.close_rounded,
-              size: 14,
+              size: 13,
               color: AppColors.primary,
             ),
           ),

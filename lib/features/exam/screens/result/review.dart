@@ -159,10 +159,16 @@ class TestReviewScreen extends GetView<ReviewController> {
 
                   final list = ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    addAutomaticKeepAlives: true,
+                    addRepaintBoundaries: true,
                     itemCount: filtered.length,
                     itemBuilder: (_, i) => Padding(
                       padding: const EdgeInsets.only(bottom: 14),
-                      child: ReviewContainer(qn: filtered[i], result: result),
+                      child: ReviewContainer(
+                        key: ValueKey(filtered[i].id),
+                        qn: filtered[i],
+                        result: result,
+                      ),
                     ),
                   );
 

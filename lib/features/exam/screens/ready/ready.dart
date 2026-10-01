@@ -6,6 +6,7 @@ import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 
 /// Full-screen Test Overview & Mode Selection Page.
 class ReadyScreen extends StatefulWidget {
@@ -19,6 +20,8 @@ class ReadyScreen extends StatefulWidget {
     this.examTitle,
     this.description,
     this.subjectName,
+    this.forceExamMode = false,
+    this.canPause = true,
   });
 
   final int qnCount;
@@ -38,6 +41,12 @@ class ReadyScreen extends StatefulWidget {
   /// Subject name (e.g. Physics, Biology).
   final String? subjectName;
 
+  /// When true, locks the screen strictly to Exam Mode with no Practice Mode option.
+  final bool forceExamMode;
+
+  /// When false, indicates pausing is not permitted for this exam attempt.
+  final bool canPause;
+
   factory ReadyScreen.fromArgs(Map<String, dynamic> args) {
     return ReadyScreen(
       qnCount: args['qnCount'] ?? args['qn_count'] ?? 0,
@@ -48,6 +57,8 @@ class ReadyScreen extends StatefulWidget {
       examTitle: args['examTitle'] ?? args['exam_title'] as String?,
       description: args['description'] as String?,
       subjectName: args['subjectName'] ?? args['subject_name'] as String?,
+      forceExamMode: args['forceExamMode'] ?? args['force_exam_mode'] ?? false,
+      canPause: args['canPause'] ?? args['can_pause'] ?? true,
     );
   }
 
@@ -61,8 +72,10 @@ class _ReadyScreenState extends State<ReadyScreen> {
   @override
   void initState() {
     super.initState();
-    // If draft exists, retain the mode it had; otherwise default to Practice Mode
-    if (widget.draft != null) {
+    NewTagHelper.markTestOpened(widget.testId);
+    if (widget.forceExamMode) {
+      _isExamMode = true;
+    } else if (widget.draft != null) {
       _isExamMode = widget.draft!.checkedQuestions.isEmpty;
     } else {
       _isExamMode = false;
@@ -85,6 +98,7 @@ class _ReadyScreenState extends State<ReadyScreen> {
         'is_exam_mode': examMode,
         'time': widget.time,
         'id': widget.id,
+        'can_pause': widget.canPause,
         if (resume && widget.draft != null) 'draft': widget.draft,
       },
     );
@@ -93,7 +107,7 @@ class _ReadyScreenState extends State<ReadyScreen> {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final hasDraft = widget.draft != null;
+    final hasDraft = widget.canPause && widget.draft != null;
     final answered = widget.draft?.selectedAnswers.length ?? 0;
     final hasDescription =
         widget.description != null && widget.description!.trim().isNotEmpty;
@@ -284,51 +298,123 @@ class _ReadyScreenState extends State<ReadyScreen> {
                     ],
 
                     // ── 4. Mode Selection Cards ───────────────────────
-                    const Text(
-                      'CHOOSE TEST MODE',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: AppColors.textSecondary,
+                    if (widget.forceExamMode) ...[
+                      const Text(
+                        'EXAM MODE',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: dark
+                              ? AppColors.primary.withValues(alpha: 0.15)
+                              : AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Iconsax.timer_1_copy,
+                                size: 20,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Strict Exam Mode Only',
+                                    style: TextStyle(
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    widget.canPause
+                                        ? 'Official timed exam simulation. Answers and explanations are revealed after submission.'
+                                        : 'Official pilot exam simulation. Pausing is disabled — complete in one sitting.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      height: 1.4,
+                                      color: dark
+                                          ? AppColors.white.withValues(alpha: 0.8)
+                                          : AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                    ] else ...[
+                      const Text(
+                        'CHOOSE TEST MODE',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
 
-                    // Practice Mode Card
-                    _ModeCard(
-                      isSelected: !_isExamMode,
-                      title: 'Practice Mode',
-                      subtitle:
-                          'No timer (for study). See the answer and explanation for each question as you go.',
-                      icon: Iconsax.book_1_copy,
-                      accentColor: AppColors.primary,
-                      dark: dark,
-                      onTap: () {
-                        setState(() {
-                          _isExamMode = false;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
+                      // Practice Mode Card
+                      _ModeCard(
+                        isSelected: !_isExamMode,
+                        title: 'Practice Mode',
+                        subtitle:
+                            'No timer (for study). See the answer and explanation for each question as you go.',
+                        icon: Iconsax.book_1_copy,
+                        accentColor: AppColors.primary,
+                        dark: dark,
+                        onTap: () {
+                          setState(() {
+                            _isExamMode = false;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
 
-                    // Real Exam Mode Card
-                    _ModeCard(
-                      isSelected: _isExamMode,
-                      title: 'Real Exam Mode',
-                      subtitle: widget.time > 0
-                          ? 'Includes a ${widget.time}-min timer. You only see the answers, and explanations when you finish.'
-                          : 'Exam simulation. You only see the answers, and explanations when you finish.',
-                      icon: Iconsax.timer_1_copy,
-                      accentColor: Colors.blue,
-                      dark: dark,
-                      onTap: () {
-                        setState(() {
-                          _isExamMode = true;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 22),
+                      // Real Exam Mode Card
+                      _ModeCard(
+                        isSelected: _isExamMode,
+                        title: 'Real Exam Mode',
+                        subtitle: widget.time > 0
+                            ? 'Includes a ${widget.time}-min timer. You only see the answers, and explanations when you finish.'
+                            : 'Exam simulation. You only see the answers, and explanations when you finish.',
+                        icon: Iconsax.timer_1_copy,
+                        accentColor: Colors.blue,
+                        dark: dark,
+                        onTap: () {
+                          setState(() {
+                            _isExamMode = true;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 22),
+                    ],
 
                     // ── 5. Description / About This Test ──────────────
                     const Text(
@@ -385,9 +471,12 @@ class _ReadyScreenState extends State<ReadyScreen> {
                           ),
                           const SizedBox(height: 8),
                           _InstructionBullet(
-                            icon: Icons.pause_circle_outline_rounded,
-                            text:
-                                'Your answers are auto-saved. You can pause anytime and resume later.',
+                            icon: widget.canPause
+                                ? Icons.pause_circle_outline_rounded
+                                : Icons.timer_outlined,
+                            text: widget.canPause
+                                ? 'Your answers are auto-saved. You can pause anytime and resume later.'
+                                : 'Strict Exam: Pausing is disabled. Once started, you must complete before time expires.',
                             dark: dark,
                           ),
                         ],
@@ -423,10 +512,12 @@ class _ReadyScreenState extends State<ReadyScreen> {
                           height: 50,
                           child: ElevatedButton(
                             onPressed: () {
-                              final wasExam =
-                                  widget.draft!.checkedQuestions.isEmpty;
-                              final wasTimed =
-                                  widget.draft!.remainingSeconds > 0;
+                              final wasExam = widget.forceExamMode
+                                  ? true
+                                  : widget.draft!.checkedQuestions.isEmpty;
+                              final wasTimed = widget.forceExamMode
+                                  ? true
+                                  : widget.draft!.remainingSeconds > 0;
                               _launch(
                                 examMode: wasExam,
                                 isTimed: wasTimed,
@@ -539,9 +630,11 @@ class _ReadyScreenState extends State<ReadyScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                _isExamMode
-                                    ? 'Start in Exam Mode'
-                                    : 'Start in Practice Mode',
+                                widget.forceExamMode
+                                    ? 'Start Pilot Exam (${widget.time} Min)'
+                                    : (_isExamMode
+                                        ? 'Start in Exam Mode'
+                                        : 'Start in Practice Mode'),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,

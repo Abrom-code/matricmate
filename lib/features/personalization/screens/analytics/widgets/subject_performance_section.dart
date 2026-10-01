@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -10,9 +11,11 @@ class SubjectPerformanceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final stats = controller.subjectStats;
 
-    return Container(
+    return Obx(() {
+      final stats = controller.subjectStats;
+
+      return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: dark ? AppColors.darkCard : AppColors.white,
@@ -113,6 +116,7 @@ class SubjectPerformanceSection extends StatelessWidget {
         ],
       ),
     );
+    });
   }
 }
 

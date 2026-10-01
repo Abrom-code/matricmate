@@ -28,7 +28,10 @@ class BBTableParser {
   // ── Public API ────────────────────────────────────────────────────────────
 
   /// Returns `true` if [text] contains at least one [table] block.
-  static bool containsTable(String text) => _tableBlockRe.hasMatch(text);
+  static bool containsTable(String text) {
+    if (!text.toLowerCase().contains('[table]')) return false;
+    return _tableBlockRe.hasMatch(text);
+  }
 
   /// Parses all [table] blocks in text into row/cell string lists.
   static List<List<List<String>>> parseTables(String text) {

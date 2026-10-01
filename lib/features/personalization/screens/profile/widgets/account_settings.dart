@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
@@ -17,7 +16,7 @@ class AccountSettings extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final userCtrl = UserController.instance;
-    final isInactive = userCtrl.user.value.isInactive;
+    final needsUpgrade = userCtrl.user.value.needsUpgrade;
     final isPending = userCtrl.user.value.isPending;
 
     return Obx(() {
@@ -60,10 +59,10 @@ class AccountSettings extends StatelessWidget {
               onTap: () => Get.toNamed(Routes.editProfile),
             ),
             divider,
-            if (isInactive) ...[
+            if (needsUpgrade) ...[
               Obx(() {
                 final price = PaymentConfigService.instance
-                    .getPriceForPlan('6_months', 150);
+                    .getPriceForPlan('1_year', 200);
                 return AppListTile(
                   icon: const Icon(
                     Icons.card_membership_rounded,
@@ -71,16 +70,13 @@ class AccountSettings extends StatelessWidget {
                     size: 20,
                   ),
                   title: 'Unlock Full Access',
-                  subtitle: 'Starting from $price ETB',
+                  subtitle: '$price ETB / Year',
                   trailing: const Icon(
                     Icons.chevron_right_rounded,
                     color: AppColors.textSecondary,
                     size: 20,
                   ),
-                  onTap: () => Get.bottomSheet(
-                    const PremiumBottomSheet(),
-                    isScrollControlled: true,
-                  ),
+                  onTap: () => Get.toNamed(Routes.premium),
                 );
               }),
               divider,

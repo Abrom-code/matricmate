@@ -43,16 +43,41 @@ class _QuestionScreenState extends State<QuestionScreen> {
   void _handleExit(QuestionController controller) {
     if (controller.exitDialogOpen) return;
     controller.pauseTimer();
+
+    if (!controller.canPause) {
+      AppHelperFunctions.showAppDialog(
+        context,
+        'Exit Exam?',
+        'Pausing is not allowed for this exam. If you exit now, your attempt will not be saved and progress will be lost.',
+        () {
+          controller.resumeTimer();
+          Get.back(); // Dismiss dialog
+          Get.back(); // Return to previous screen
+        },
+        onCancel: () => controller.resumeTimer(),
+        okText: 'Exit Anyway',
+        cancelText: 'Stay',
+        icon: Icons.warning_amber_rounded,
+        iconColor: const Color(0xFFEF4444),
+      );
+      return;
+    }
+
     AppHelperFunctions.showAppDialog(
       context,
       controller.isExamMode ? 'Pause & Exit?' : 'Exit Practice?',
-      'Your progress will be saved. You can resume later.',
-      () {
-        controller.resumeTimer();
+      'Your progress and remaining time will be saved. You can resume anytime.',
+      () async {
+        controller.cancelTimer();
+        await controller.saveDraftAsync();
         Get.back(); // Dismiss dialog
         Get.back(); // Return to previous screen
       },
       onCancel: () => controller.resumeTimer(),
+      okText: controller.isExamMode ? 'Pause & Exit' : 'Exit',
+      cancelText: 'Resume Test',
+      icon: Icons.pause_circle_outline_rounded,
+      iconColor: const Color(0xFFF59E0B),
     );
   }
 
@@ -91,7 +116,9 @@ class _QuestionScreenState extends State<QuestionScreen> {
               padding: const EdgeInsets.only(left: 6),
               child: IconButton(
                 onPressed: () => _handleExit(controller),
-                tooltip: controller.isExamMode ? 'Pause' : 'Exit',
+                tooltip: !controller.canPause
+                    ? 'Exit'
+                    : (controller.isExamMode ? 'Pause' : 'Exit'),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
                 icon: Container(
@@ -103,9 +130,11 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   ),
                   child: Center(
                     child: Icon(
-                      controller.isExamMode
-                          ? Icons.pause_rounded
-                          : Icons.close_rounded,
+                      !controller.canPause
+                          ? Icons.close_rounded
+                          : (controller.isExamMode
+                              ? Icons.pause_rounded
+                              : Icons.close_rounded),
                       size: 18,
                       color: AppColors.white,
                     ),

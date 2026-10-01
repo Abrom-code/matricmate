@@ -22,14 +22,23 @@ class Routes {
   static const pausedTests = '/paused-tests';
   static const testOverview = '/test-overview';
 
+  // notes
+  static const notes = '/notes';
+  static const noteReader = '/note-reader';
+
   // premium
   static const premium = '/premium';
   static const payment = '/payment';
   static const paymentVerification = '/payment-verification';
   static const contactAdmin = '/contact-admin';
 
-  // analytics
+  // others / analytics
+  static const others = '/others';
   static const analytics = '/analytics';
+  static const progressDetail = '/progress-detail';
+  static const pilotExam = '/pilot-exam';
+  static const pilotExamSubjects = '/pilot-exam-subjects';
+  static const studyPlan = '/study-plan';
 
   // nav
   static const navigationMenu = '/navigation-menu';

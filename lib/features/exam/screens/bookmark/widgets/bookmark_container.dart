@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -9,7 +10,6 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
-import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 class BookmarkContainer extends GetView<BookmarkController> {
   const BookmarkContainer({super.key, required this.qn});
@@ -154,17 +154,15 @@ class BookmarkContainer extends GetView<BookmarkController> {
                           const SizedBox(height: 9),
 
                           // ── Question preview ────────────────────────
-                          Text.rich(
-                            RichTextParser.parse(
-                              preview,
-                              TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w400,
-                                height: 1.6,
-                                color: dark
-                                    ? const Color(0xFFC8C8C8)
-                                    : AppColors.darkerGrey,
-                              ),
+                          QuestionContentRenderer(
+                            text: preview,
+                            baseStyle: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w400,
+                              height: 1.6,
+                              color: dark
+                                  ? const Color(0xFFC8C8C8)
+                                  : AppColors.darkerGrey,
                             ),
                           ),
 

@@ -137,10 +137,14 @@ class UserController extends GetxController {
 
   final RxBool isLoggingOut = false.obs;
 
+  /// Guard so the 'Device Blocked' toast is only shown once per session.
+  bool _blockHandled = false;
+
   Future<void> logOut() async {
     if (isLoggingOut.value) return;
     try {
       isLoggingOut.value = true;
+      _blockHandled = false; // reset so next login can show blocked message
       await AuthenticationController.instance.logout();
     } finally {
       isLoggingOut.value = false;
@@ -168,16 +172,26 @@ class UserController extends GetxController {
       final isWhitelisted = SessionService.isWhitelistedTester(freshUser.email);
 
       if (!isAllowed && !isWhitelisted) {
-        SnackbarHelper.warning(
-          'Device Blocked!',
-          'Another device is using this account!',
-        );
-        await logOut();
+        if (!_blockHandled) {
+          _blockHandled = true;
+          SnackbarHelper.warning(
+            'Device Blocked!',
+            'Another device is using this account!',
+          );
+          await logOut();
+        }
         return false;
       }
 
       user.value = freshUser;
       await _userRepository.updateLocalUser(freshUser);
+
+      // ── Expiry enforcement ─────────────────────────────────────────
+      // If the subscription date has passed but Supabase still says
+      // 'active', flip it to 'inactive' so the server stays in sync.
+      if (freshUser.isExpired) {
+        unawaited(_deactivateExpiredSubscription(freshUser));
+      }
 
       // Save FCM token now that userId is confirmed
       unawaited(FcmService.instance.saveTokenForCurrentUser());
@@ -257,6 +271,27 @@ class UserController extends GetxController {
       await _userRepository.saveUserRecord(newUser);
     } catch (e) {
       SnackbarHelper.warning('Data not saved', 'Something went wrong');
+    }
+  }
+
+  /// Writes `inactive` back to Supabase when the local [isExpired] check
+  /// detects that the subscription date has passed.  Runs in the background
+  /// (fire-and-forget) so it never blocks the UI.
+  Future<void> _deactivateExpiredSubscription(UserModel expired) async {
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.from('users').update({
+        'subscription_status': 'inactive',
+      }).eq('id', expired.id);
+
+      // Mirror the change locally so Obx watchers react immediately
+      final updated = expired.copyWith(status: 'inactive');
+      user.value = updated;
+      await _userRepository.updateLocalUser(updated);
+
+      debugPrint('[UserController] expired subscription → deactivated');
+    } catch (e) {
+      debugPrint('[UserController] failed to deactivate expired sub: $e');
     }
   }
 

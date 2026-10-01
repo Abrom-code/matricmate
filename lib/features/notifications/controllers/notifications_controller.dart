@@ -268,8 +268,8 @@ class NotificationsController extends GetxController
     notifications.removeAt(index);
     _recalcUnread();
 
-    // Persist deletion in the background.
-    await _repo.deleteNotification(_lastDeletedOne!);
+    // Persist deletion and dismissal atomically.
+    await _repo.deleteNotification(_userId, _lastDeletedOne!);
   }
 
   /// Restores the last single-deleted notification (called from "Undo" SnackBar).
@@ -278,8 +278,8 @@ class NotificationsController extends GetxController
     final index = _lastDeletedOneIndex;
     if (item == null || index == null) return;
 
-    // Re-insert locally (repo will handle SQLite + clearing dismissal).
-    await _repo.insertLocal(item);
+    // Re-insert locally and remove from notification_dismissals.
+    await _repo.restoreNotifications(_userId, [item]);
 
     // Restore to in-memory list at the original position.
     final clampedIndex = index.clamp(0, notifications.length);
@@ -303,7 +303,7 @@ class NotificationsController extends GetxController
     notifications.clear();
     _recalcUnread();
 
-    // Persist deletion in the background.
+    // Persist deletion and dismissals in local SQLite atomically + server sync.
     await _repo.deleteAllNotifications(_userId, _lastDeletedAll!);
   }
 
@@ -312,10 +312,7 @@ class NotificationsController extends GetxController
     final items = _lastDeletedAll;
     if (items == null || items.isEmpty) return;
 
-    // Re-insert all locally.
-    for (final item in items) {
-      await _repo.insertLocal(item);
-    }
+    await _repo.restoreNotifications(_userId, items);
 
     notifications.assignAll(items);
     _recalcUnread();
@@ -376,10 +373,8 @@ class NotificationsController extends GetxController
     _recalcUnread();
     clearSelection();
 
-    // Persist deletion in background
-    for (final item in _lastDeletedSelected!) {
-      await _repo.deleteNotification(item);
-    }
+    // Persist deletion and dismissals atomically in local SQLite + server sync
+    await _repo.deleteNotifications(_userId, _lastDeletedSelected!);
   }
 
   /// Restores multi-selected deleted notifications (called from "Undo" SnackBar).
@@ -388,8 +383,9 @@ class NotificationsController extends GetxController
     final indexes = _lastDeletedSelectedIndexes;
     if (items == null || items.isEmpty) return;
 
+    await _repo.restoreNotifications(_userId, items);
+
     for (final item in items) {
-      await _repo.insertLocal(item);
       final originalIndex = indexes?[item.id] ?? notifications.length;
       final clampedIndex = originalIndex.clamp(0, notifications.length);
       notifications.insert(clampedIndex, item);

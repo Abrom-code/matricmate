@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:matricmate/common/widgets/exam/premium_bottom_sheet.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
@@ -370,17 +369,25 @@ class ChallengeHomeController extends GetxController {
   bool _isLoadingAllChallenges = false;
 
   Future<void> loadAllChallenges({bool showLoading = true, bool isManual = false}) async {
-    if (_isLoadingAllChallenges) return;
+    if (_isLoadingAllChallenges && !isManual) return;
     _isLoadingAllChallenges = true;
 
     if (showLoading && !isManual) {
       isLoading.value = true;
     }
     isRefreshing.value = true;
+    final stopwatch = Stopwatch()..start();
     try {
-      // 1. Fast Internet Reachability Check
-      final hasNet = await NetworkManager.instance.isConnected(force: isManual);
+      // 1. Fast Internet Reachability Check with 3-second timeout
+      final hasNet = await NetworkManager.instance
+          .isConnected(force: isManual)
+          .timeout(const Duration(seconds: 3), onTimeout: () => false);
       if (!hasNet) {
+        if (isManual && stopwatch.elapsedMilliseconds < 500) {
+          await Future.delayed(
+            Duration(milliseconds: 500 - stopwatch.elapsedMilliseconds),
+          );
+        }
         isOffline.value = true;
         availableChallenges.clear();
         final local = await _loadLocalChallenges();
@@ -403,8 +410,10 @@ class ChallengeHomeController extends GetxController {
       final deleted = await _db.getDeletedChallengeIds();
       deletedChallengeIds.assignAll(deleted);
 
-      // Fetch all published challenges from Supabase in one roundtrip
-      final allPublished = await _repo.fetchAllChallenges(stream: userStream);
+      // Fetch all published challenges from Supabase in one roundtrip with timeout
+      final allPublished = await _repo
+          .fetchAllChallenges(stream: userStream)
+          .timeout(const Duration(seconds: 4));
 
       final validFiltered = allPublished.where((c) {
         if (deleted.contains(c.id) || (c.setId.isNotEmpty && deleted.contains(c.setId))) {
@@ -452,7 +461,9 @@ class ChallengeHomeController extends GetxController {
       // Fetch real participant counts for all visible challenges
       try {
         final challengeIds = validFiltered.map((c) => c.id).toList();
-        final counts = await _repo.fetchParticipantCounts(challengeIds: challengeIds);
+        final counts = await _repo
+            .fetchParticipantCounts(challengeIds: challengeIds)
+            .timeout(const Duration(seconds: 3));
         participantCounts.assignAll(counts);
       } catch (_) {}
 
@@ -464,6 +475,11 @@ class ChallengeHomeController extends GetxController {
         ToastHelper.success('Challenges refreshed!');
       }
     } catch (e) {
+      if (isManual && stopwatch.elapsedMilliseconds < 500) {
+        await Future.delayed(
+          Duration(milliseconds: 500 - stopwatch.elapsedMilliseconds),
+        );
+      }
       isOffline.value = true;
       availableChallenges.clear();
       final local = await _loadLocalChallenges();
@@ -472,7 +488,11 @@ class ChallengeHomeController extends GetxController {
       await refreshAttemptStates(checkOnline: false);
 
       if (isManual) {
-        ToastHelper.warning('No internet connection. Showing offline data.');
+        if (e is TimeoutException) {
+          ToastHelper.warning('Refresh timed out. Please check your connection.');
+        } else {
+          ToastHelper.warning('No internet connection. Showing offline data.');
+        }
       }
     } finally {
       isLoading.value = false;
@@ -508,7 +528,7 @@ class ChallengeHomeController extends GetxController {
         Get.toNamed(Routes.paymentVerification);
         return;
       }
-      Get.bottomSheet(const PremiumBottomSheet(), isScrollControlled: true);
+      Get.toNamed(Routes.premium);
       return;
     }
 
@@ -700,10 +720,7 @@ class ChallengeHomeController extends GetxController {
         Get.toNamed(Routes.paymentVerification);
         return;
       }
-      Get.bottomSheet(
-        const PremiumBottomSheet(),
-        isScrollControlled: true,
-      );
+      Get.toNamed(Routes.premium);
       return;
     }
 

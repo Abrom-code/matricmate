@@ -121,22 +121,12 @@
       <tr>
         <td><strong>Push Notification Identifiers</strong></td>
         <td>FCM (Firebase Cloud Messaging) Token</td>
-        <td>Used to deliver important exam updates, study reminders, competitive challenge announcements, and payment verification status alerts.</td>
+        <td>Used to deliver important exam updates, study reminders, and competitive challenge announcements.</td>
       </tr>
       <tr>
         <td><strong>Academic &amp; Learning Progress</strong></td>
         <td>Stream preference (Natural / Social), chapter test answers, exam scores, bookmarks, study notes, challenge attempts, and leaderboard scores</td>
         <td>Personalizing learning materials, computing analytics, saving question review history, powering competitive challenges, and offline SQLite synchronization.</td>
-      </tr>
-      <tr>
-        <td><strong>Payment &amp; Financial Information</strong></td>
-        <td>Payment method name (e.g. CBE, Telebirr), transaction receipt screenshot/image</td>
-        <td>Required exclusively when subscribing to the optional 1-Year Premium plan. Users manually upload proof of payment for manual administrative account verification.</td>
-      </tr>
-      <tr>
-        <td><strong>Photos &amp; Storage</strong></td>
-        <td>Selected transaction receipt image or profile avatar</td>
-        <td>Accessed only when the user voluntarily selects an image file from storage/gallery for payment verification or profile customization.</td>
       </tr>
     </tbody>
   </table>
@@ -146,14 +136,13 @@
     <li><strong>Account Management &amp; Security:</strong> Authenticate student accounts, maintain active login sessions, and protect against fraudulent multi-device account sharing.</li>
     <li><strong>Educational Content Delivery:</strong> Track personal learning progress, generate test scorecards, compute accuracy percentages, and sync offline study packs.</li>
     <li><strong>Leaderboards &amp; Challenges:</strong> Display user-submitted scores, ranks, and display names on public period standings and live subject challenges.</li>
-    <li><strong>Subscription Processing:</strong> Manually verify payment receipts submitted by users to grant premium access to all Grade 9–12 subjects, summary notes, and model exams.</li>
-    <li><strong>Notifications:</strong> Send timely push alerts about upcoming challenge rounds and account verification outcomes via Firebase Cloud Messaging.</li>
+    <li><strong>Notifications:</strong> Send timely push alerts about upcoming challenge rounds and educational reminders via Firebase Cloud Messaging.</li>
   </ul>
 
   <h2>3. Third-Party Service Providers &amp; Infrastructure</h2>
   <p>We work with trusted third-party infrastructure providers that process data strictly in accordance with their respective privacy policies:</p>
   <ul>
-    <li><strong>Supabase Inc.:</strong> Cloud database, backend APIs, user authentication, and secure encrypted media storage for payment receipts.</li>
+    <li><strong>Supabase Inc.:</strong> Cloud database, backend APIs, and secure user authentication.</li>
     <li><strong>Google Firebase:</strong> Push notification routing and delivery (Firebase Cloud Messaging).</li>
   </ul>
   <p>We do not sell, rent, or monetize your personal or academic information to any third parties or data brokers.</p>
@@ -163,10 +152,10 @@
     All communication between the MatricET application and our cloud infrastructure is <strong>encrypted in transit</strong> using modern Transport Layer Security (TLS/HTTPS). Database access is safeguarded by strict Row Level Security (RLS) policies, ensuring users can only read and modify their own private records. Downloaded offline question bundles and study notes are stored securely on the user's local device storage via SQLite.
   </p>
 
-  <h2>5. Advertising &amp; Financial Operations</h2>
+  <h2>5. Advertising &amp; Financial Clarification</h2>
   <ul>
     <li><strong>No Third-Party Ads:</strong> MatricET is completely free of third-party advertisements. We do not use Google Mobile Ads (AdMob) or any advertising tracking SDKs, and we do not collect or track Google Advertising IDs (GAID).</li>
-    <li><strong>Financial Services Clarification:</strong> MatricET is an educational application, not a financial institution, bank, or payment processor. Subscription payments are transacted externally through licensed local banking and mobile money channels (such as Telebirr, Commercial Bank of Ethiopia). We never collect, process, or store credit card numbers, debit cards, bank PINs, or banking login credentials.</li>
+    <li><strong>Free Educational Application:</strong> MatricET is distributed as a completely free educational platform. The application does not collect, process, or store any financial information, credit/debit card numbers, bank PINs, or transaction data. There are no paid in-app purchases processed through the application.</li>
   </ul>
 
   <h2>6. Children’s Privacy (COPPA Compliance)</h2>
@@ -176,7 +165,7 @@
 
   <h2 id="deletion">7. User Data Deletion &amp; Account Erasure</h2>
   <p>
-    Users have the absolute right to request permanent deletion of their account, payment records, test history, and all associated personal data at any time. You can choose either of the following deletion options:
+    Users have the absolute right to request permanent deletion of their account, test history, bookmarks, and all associated personal data at any time. You can choose either of the following deletion options:
   </p>
 
   <div class="card">
@@ -200,15 +189,23 @@
     <ol>
       <li>Open the <strong>MatricET</strong> app on your device.</li>
       <li>Navigate to <strong>Profile &rarr; Edit Profile &rarr; Delete Account</strong> (or <strong>Account Settings &rarr; Delete Account</strong>).</li>
-      <li>Confirm your password to initiate an immediate, irreversible wipe of your account, scores, and receipt files from our servers.</li>
+      <li>Confirm your password to initiate an immediate, irreversible wipe of your account, scores, and personal records from our servers.</li>
     </ol>
   </div>
 
+  <h3>What Data is Deleted Upon Account Erasure</h3>
+  <ul>
+    <li><strong>User Profile &amp; Credentials:</strong> Full name, email address, encrypted password, and academic stream preferences.</li>
+    <li><strong>Device &amp; Session Data:</strong> Active login session state and app-generated device UUID links.</li>
+    <li><strong>Academic Progress &amp; History:</strong> Exam attempts, question answers, test scores, saved study notes, bookmarks, and challenge records.</li>
+    <li><strong>Push Notification Records:</strong> Notification history and Firebase Cloud Messaging tokens.</li>
+  </ul>
+
   <h3>Data Retention &amp; Erasure Timeline</h3>
   <ul>
-    <li><strong>Instant In-App Deletion:</strong> The user record, profile metadata, stored receipts, and authentication credentials are deleted from Supabase immediately upon password confirmation.</li>
-    <li><strong>Email Requests:</strong> Deletion requests sent via email are processed and permanently purged across all servers within <strong>7 business days</strong> following identity verification.</li>
-    <li><strong>Aggregated Data:</strong> Fully anonymized question difficulty metrics (e.g. general percentage of students answering a math question correctly) without any user identifiers may be retained to improve exam quality.</li>
+    <li><strong>Instant In-App Deletion:</strong> All personal data and database records are permanently purged from Supabase immediately upon password confirmation.</li>
+    <li><strong>Email Requests:</strong> Requests sent to <code>abopiatech@gmail.com</code> are processed and permanently deleted across all databases within <strong>7 business days</strong>.</li>
+    <li><strong>Aggregated Data:</strong> We do not retain any personal data. Fully anonymized question difficulty metrics (e.g. general percentage of students answering a question correctly) without any user identifiers may be retained to improve exam quality.</li>
   </ul>
 
   <h2>8. Contact Information</h2>

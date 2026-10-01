@@ -130,36 +130,6 @@ class ChallengeManageSheet extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: challenge.isPremium
-                                    ? Colors.amber.withValues(alpha: 0.16)
-                                    : const Color(0xFF10B981).withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: challenge.isPremium
-                                      ? Colors.amber.withValues(alpha: 0.4)
-                                      : const Color(0xFF10B981).withValues(alpha: 0.4),
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Text(
-                                challenge.isPremium ? 'PRO' : 'FREE',
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.4,
-                                  color: challenge.isPremium
-                                      ? Colors.amber.shade800
-                                      : const Color(0xFF10B981),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 8),

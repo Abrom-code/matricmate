@@ -25,9 +25,7 @@ class PremiumBanner extends StatelessWidget {
           );
 
     final titleColor = dark ? Colors.white : const Color(0xFF1C1C1E);
-    final goldAccent = dark
-        ? const Color(0xFFFFD60A)
-        : const Color(0xFFD97706);
+    final goldAccent = dark ? const Color(0xFFFFD60A) : const Color(0xFFD97706);
     final iconBg = dark
         ? const Color(0xFFFFD60A).withValues(alpha: 0.15)
         : const Color(0xFFD97706).withValues(alpha: 0.14);
@@ -102,7 +100,7 @@ class PremiumBanner extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Upgrade Premium',
+                            'Activate All Features',
                             style: TextStyle(
                               color: titleColor,
                               fontSize: 15,

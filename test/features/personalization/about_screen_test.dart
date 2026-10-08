@@ -49,11 +49,11 @@ void main() {
       expect(find.text('v1.0.4'), findsOneWidget);
 
       // Bento Feature cards
-      expect(find.text('Matric Simulator'), findsOneWidget);
-      expect(find.text('Chapter Tests'), findsOneWidget);
       expect(find.text('Study Notes'), findsOneWidget);
-      expect(find.text('LaTeX Math'), findsOneWidget);
-      expect(find.text('Daily Streaks'), findsOneWidget);
+      expect(find.text('Chapter Tests'), findsOneWidget);
+      expect(find.text('Entrance Exams'), findsOneWidget);
+      expect(find.text('Pilot Exams'), findsOneWidget);
+      expect(find.text('Live Challenges'), findsOneWidget);
       expect(find.text('100% Offline'), findsOneWidget);
 
       // Educational streams

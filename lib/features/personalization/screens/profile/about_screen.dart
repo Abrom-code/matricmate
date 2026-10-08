@@ -134,7 +134,7 @@ class AboutScreen extends StatelessWidget {
 
                   // Short & Clear Summary
                   Text(
-                    'An all-in-one prep app for Grade 12 students. Master past matric papers, chapter practice tests, and high-yield study notes with full offline access.',
+                    'An all-in-one exam prep companion for Grade 12 students. Master entrance exams, chapter tests, study notes, live challenges, and pilot exams with full offline access.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12.5,
@@ -169,10 +169,10 @@ class AboutScreen extends StatelessWidget {
               childAspectRatio: 1.35,
               children: [
                 _BentoCard(
-                  icon: Iconsax.timer_1_copy,
-                  iconColor: const Color(0xFF2563EB),
-                  title: 'Matric Simulator',
-                  subtitle: 'Timed past national papers with pause & resume.',
+                  icon: Iconsax.document_copy,
+                  iconColor: const Color(0xFF8B5CF6),
+                  title: 'Study Notes',
+                  subtitle: 'Chapter summaries & reference PDFs.',
                   cardColor: cardColor,
                   borderColor: borderColor,
                   textPrimary: textPrimary,
@@ -183,7 +183,7 @@ class AboutScreen extends StatelessWidget {
                   icon: Iconsax.book_1_copy,
                   iconColor: AppColors.primary,
                   title: 'Chapter Tests',
-                  subtitle: 'Unit-by-unit practice with instant explanations.',
+                  subtitle: 'Unit practice with full explanations.',
                   cardColor: cardColor,
                   borderColor: borderColor,
                   textPrimary: textPrimary,
@@ -191,10 +191,10 @@ class AboutScreen extends StatelessWidget {
                   dark: dark,
                 ),
                 _BentoCard(
-                  icon: Iconsax.document_copy,
-                  iconColor: const Color(0xFF8B5CF6),
-                  title: 'Study Notes',
-                  subtitle: 'Curated high-yield PDF summaries & textbooks.',
+                  icon: Iconsax.timer_1_copy,
+                  iconColor: const Color(0xFF2563EB),
+                  title: 'Entrance Exams',
+                  subtitle: 'Past national papers & exam timers.',
                   cardColor: cardColor,
                   borderColor: borderColor,
                   textPrimary: textPrimary,
@@ -202,10 +202,10 @@ class AboutScreen extends StatelessWidget {
                   dark: dark,
                 ),
                 _BentoCard(
-                  icon: Icons.functions_rounded,
+                  icon: Iconsax.award_copy,
                   iconColor: const Color(0xFFD97706),
-                  title: 'LaTeX Math',
-                  subtitle: 'Crystal-clear equations with swipe protection.',
+                  title: 'Pilot Exams',
+                  subtitle: 'Model papers & university mocks.',
                   cardColor: cardColor,
                   borderColor: borderColor,
                   textPrimary: textPrimary,
@@ -215,8 +215,8 @@ class AboutScreen extends StatelessWidget {
                 _BentoCard(
                   icon: Icons.local_fire_department_rounded,
                   iconColor: const Color(0xFFEF4444),
-                  title: 'Daily Streaks',
-                  subtitle: 'Fresh question drops & student leaderboards.',
+                  title: 'Live Challenges',
+                  subtitle: 'Timed competitions & rank standings.',
                   cardColor: cardColor,
                   borderColor: borderColor,
                   textPrimary: textPrimary,
@@ -227,7 +227,7 @@ class AboutScreen extends StatelessWidget {
                   icon: Icons.wifi_off_rounded,
                   iconColor: const Color(0xFF0D9488),
                   title: '100% Offline',
-                  subtitle: 'Practice tests and notes anywhere without internet.',
+                  subtitle: 'Practice tests & notes without internet.',
                   cardColor: cardColor,
                   borderColor: borderColor,
                   textPrimary: textPrimary,

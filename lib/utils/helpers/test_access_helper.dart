@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
+import 'package:matricmate/features/notes/models/note_model.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 
 /// Central access gatekeeper for tests across all 4 test types
-/// (chapter, grade, entrance, model).
+/// (chapter, grade, entrance, model) and subject notes.
 class TestAccessHelper {
   const TestAccessHelper._();
 
@@ -56,10 +57,9 @@ class TestAccessHelper {
     Get.toNamed(Routes.premium);
   }
 
-
   /// Sorts a list of tests based on user subscription status:
   /// - For inactive or pending users, free tests (`isPremium == false`) appear first on top.
-  /// - For active subscribers (all tests unlocked), original order is preserved.
+  /// - For active subscribers (all tests unlocked), original database order is preserved.
   /// - Within the same tier, original relative order is preserved.
   static List<TestModel> sortForUser(List<TestModel> tests, UserModel user) {
     if (user.isActive || tests.isEmpty) return tests;
@@ -72,6 +72,27 @@ class TestAccessHelper {
         premium.add(test);
       } else {
         free.add(test);
+      }
+    }
+
+    return [...free, ...premium];
+  }
+
+  /// Sorts a list of notes based on user subscription status:
+  /// - For inactive or pending users (free), free notes (`isPremium == false`) appear first on top.
+  /// - For active subscribers (premium), original database order is preserved.
+  /// - Within the same tier, original relative order is preserved.
+  static List<NoteModel> sortNotesForUser(List<NoteModel> notes, UserModel user) {
+    if (user.isActive || notes.isEmpty) return notes;
+
+    final free = <NoteModel>[];
+    final premium = <NoteModel>[];
+
+    for (final note in notes) {
+      if (note.isPremium) {
+        premium.add(note);
+      } else {
+        free.add(note);
       }
     }
 

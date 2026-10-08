@@ -50,13 +50,7 @@ class AvailableChallengeCard extends StatelessWidget {
           ? challenge.durationMinutes
           : (challenge.durationSeconds / 60).round();
 
-      final isDone =
-          ctrl.isAttemptedOrPracticed(challenge.id) ||
-          ctrl.completedChallenges.any(
-            (c) =>
-                c.id == challenge.id ||
-                (challenge.setId.isNotEmpty && c.setId == challenge.setId),
-          );
+      final isDone = ctrl.isChallengeCompleted(challenge);
 
       return Container(
         decoration: BoxDecoration(

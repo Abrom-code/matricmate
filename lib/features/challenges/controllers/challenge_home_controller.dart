@@ -167,6 +167,7 @@ class ChallengeHomeController extends GetxController {
           completedChallenges.insert(0, c);
         }
       }
+      sortAvailableChallenges();
       return;
     }
 
@@ -181,6 +182,7 @@ class ChallengeHomeController extends GetxController {
     }
 
     if (stateChanged) {
+      sortAvailableChallenges();
       availableChallenges.refresh();
     }
   }
@@ -460,6 +462,7 @@ class ChallengeHomeController extends GetxController {
 
       availableChallenges.assignAll(available);
       completedChallenges.assignAll(closed);
+      sortAvailableChallenges();
       isOffline.value = false;
 
       // Cache all valid challenges for offline resilience
@@ -786,6 +789,7 @@ class ChallengeHomeController extends GetxController {
   void markAttemptedOrPracticed(String challengeId) {
     attemptedIds.add(challengeId);
     inProgressIds.remove(challengeId);
+    sortAvailableChallenges();
   }
 
   bool isAttemptedOrPracticed(String challengeId, {String? setId}) {
@@ -794,6 +798,80 @@ class ChallengeHomeController extends GetxController {
       return true;
     }
     return false;
+  }
+
+  /// Determines whether the current user has completed/practiced this challenge
+  /// or if the challenge has been placed into completed challenge history.
+  bool isChallengeCompleted(LeaderboardChallengeModel challenge) {
+    if (isAttemptedOrPracticed(challenge.id, setId: challenge.setId)) return true;
+    if (completedChallenges.any((c) =>
+        c.id == challenge.id ||
+        (challenge.setId.isNotEmpty && c.setId == challenge.setId))) {
+      return true;
+    }
+    return false;
+  }
+
+  int _challengePriority(LeaderboardChallengeModel c) {
+    final completed = isChallengeCompleted(c);
+    if (c.isLive && !completed) {
+      return 0; // Top: Live and not completed
+    } else if (c.isScheduled) {
+      return 1; // Second: Scheduled
+    } else if (c.isLive && completed) {
+      return 2; // Third: Live but already completed by user
+    } else {
+      return 3; // Other available (e.g. draft/verifying)
+    }
+  }
+
+  /// Sorts available challenges:
+  /// 1. Live and not completed challenges at the very top.
+  /// 2. Scheduled challenges next.
+  /// 3. Live challenges already completed by user.
+  /// 4. Other available challenges.
+  void sortAvailableChallenges() {
+    if (availableChallenges.isEmpty) return;
+    final items = List<LeaderboardChallengeModel>.from(availableChallenges);
+    items.sort((a, b) {
+      final pA = _challengePriority(a);
+      final pB = _challengePriority(b);
+      if (pA != pB) return pA.compareTo(pB);
+
+      // Same priority tie-breakers:
+      if (pA == 0) {
+        // Live & uncompleted: closing sooner comes first
+        if (a.endsAt != null && b.endsAt != null) {
+          final cmp = a.endsAt!.compareTo(b.endsAt!);
+          if (cmp != 0) return cmp;
+        } else if (a.endsAt != null) {
+          return -1;
+        } else if (b.endsAt != null) {
+          return 1;
+        }
+        if (a.startsAt != null && b.startsAt != null) {
+          return a.startsAt!.compareTo(b.startsAt!);
+        }
+      } else if (pA == 1) {
+        // Scheduled: starting sooner comes first
+        if (a.startsAt != null && b.startsAt != null) {
+          final cmp = a.startsAt!.compareTo(b.startsAt!);
+          if (cmp != 0) return cmp;
+        } else if (a.startsAt != null) {
+          return -1;
+        } else if (b.startsAt != null) {
+          return 1;
+        }
+      } else if (pA == 2) {
+        // Live & completed: closing sooner comes first
+        if (a.endsAt != null && b.endsAt != null) {
+          final cmp = a.endsAt!.compareTo(b.endsAt!);
+          if (cmp != 0) return cmp;
+        }
+      }
+      return 0;
+    });
+    availableChallenges.assignAll(items);
   }
 
   bool isInProgress(String challengeId) => inProgressIds.contains(challengeId);
@@ -844,6 +922,7 @@ class ChallengeHomeController extends GetxController {
           inProgressIds.removeAll(attemptedIds);
         }
       }
+      sortAvailableChallenges();
     } catch (_) {}
   }
 

@@ -15,6 +15,25 @@ class ChallengeStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (challenge.isDraft) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.amber.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.amber, width: 0.8),
+        ),
+        child: const Text(
+          'UNVERIFIED DRAFT',
+          style: TextStyle(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w800,
+            color: Colors.amber,
+          ),
+        ),
+      );
+    }
+
     if (challenge.isLive) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

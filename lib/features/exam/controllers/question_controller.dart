@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/exam/question_repository.dart';
+import 'package:matricmate/data/repositories/exam/test_repository.dart';
 import 'package:matricmate/features/exam/controllers/bookmark_controller.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
@@ -62,6 +63,37 @@ class QuestionController extends GetxController {
 
   /// Pauses the timer without cancelling it (used when the exit dialog is open).
   bool _timerPaused = false;
+
+  /// Admin inspection mode: automatically reveals correct answer keys and explanations.
+  final RxBool adminInspectorMode = false.obs;
+
+  bool get isAdmin => UserController.instance.isAdmin.value;
+
+  void toggleAdminInspector() {
+    adminInspectorMode.toggle();
+    if (adminInspectorMode.value) {
+      for (final q in testQuestions) {
+        selectedAnswers[q.id] = q.correctOptionIndex;
+        isChecked[q.id] = true;
+      }
+    }
+  }
+
+  /// Verifies and publishes the active test to students nationwide.
+  Future<void> publishCurrentTest() async {
+    try {
+      isSubmitting.value = true;
+      final ok = await TestRepository().verifyAndPublishTest(testId);
+      if (ok) {
+        ToastHelper.success('Test verified & published for all students!');
+        Get.back();
+      }
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
 
   @override
   void onInit() {

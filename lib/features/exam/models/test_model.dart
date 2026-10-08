@@ -8,6 +8,7 @@ class TestModel {
   String? description;
   DateTime createdAt;
   bool isPremium;
+  String status;
 
   TestModel({
     required this.id,
@@ -21,7 +22,11 @@ class TestModel {
     required this.time,
     this.description,
     this.isPremium = true,
+    this.status = 'published',
   });
+
+  bool get isDraft => status == 'draft' || status == 'verification';
+  bool get isPublished => status == 'published';
 
   factory TestModel.fromJson(Map<String, dynamic> json) {
     final rawPremium = json['is_premium'];
@@ -44,6 +49,7 @@ class TestModel {
       time: json['time'] ?? -1,
       description: json['description']?.toString(),
       isPremium: isPrem,
+      status: json['status']?.toString() ?? 'published',
     );
   }
 
@@ -68,6 +74,7 @@ class TestModel {
     String? description,
     DateTime? createdAt,
     bool? isPremium,
+    String? status,
   }) {
     return TestModel(
       id: id ?? this.id,
@@ -81,6 +88,7 @@ class TestModel {
       time: time ?? this.time,
       description: description ?? this.description,
       isPremium: isPremium ?? this.isPremium,
+      status: status ?? this.status,
     );
   }
 
@@ -97,6 +105,7 @@ class TestModel {
       'time': time,
       'description': description,
       'is_premium': isPremium ? 1 : 0,
+      'status': status,
     };
   }
 }

@@ -24,7 +24,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 19,
+      version: 20,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -268,6 +268,18 @@ class DatabaseService extends GetxController {
           try {
             await db.execute(
               'ALTER TABLE local_challenge_sets ADD COLUMN is_premium INTEGER DEFAULT 1',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 20) {
+          try {
+            await db.execute(
+              'ALTER TABLE tests ADD COLUMN status TEXT DEFAULT "published"',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE pilot_exams ADD COLUMN status TEXT DEFAULT "published"',
             );
           } catch (_) {}
         }

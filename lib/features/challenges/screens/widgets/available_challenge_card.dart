@@ -5,6 +5,7 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 /// Redesigned Available Challenge Card for Upcoming and Live rounds.
 class AvailableChallengeCard extends StatelessWidget {
@@ -120,8 +121,19 @@ class AvailableChallengeCard extends StatelessWidget {
                   const SizedBox(width: 8),
                 ],
 
-                // Status Indicator (Live / Upcoming)
-                if (isLive) ...[
+                // Status Indicator (Live / Upcoming / Draft)
+                if (challenge.isDraft) ...[
+                  const Icon(Icons.build_circle_outlined, size: 14, color: Colors.amber),
+                  const SizedBox(width: 5),
+                  const Text(
+                    'Draft Mode',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.amber,
+                    ),
+                  ),
+                ] else if (isLive) ...[
                   const Icon(Icons.circle, size: 8, color: Color(0xFFE24B4A)),
                   const SizedBox(width: 5),
                   const Text(
@@ -409,6 +421,43 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (challenge.isDraft && UserController.instance.isAdmin.value) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      AppHelperFunctions.showAppDialog(
+                        context,
+                        'Publish Challenge?',
+                        'This challenge will be verified and published for students.',
+                        () async {
+                          Get.back();
+                          await ctrl.verifyAndPublishChallenge(challenge.id);
+                        },
+                        okText: 'Publish Now',
+                        cancelText: 'Cancel',
+                        icon: Icons.verified_rounded,
+                        iconColor: AppColors.primary,
+                      );
+                    },
+                    icon: const Icon(Icons.verified_rounded, size: 16),
+                    label: const Text(
+                      'Verify & Publish Challenge',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ],
         ),

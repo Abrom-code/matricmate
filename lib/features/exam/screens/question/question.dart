@@ -347,6 +347,73 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     ),
                   );
                 }),
+                const SizedBox(width: 4),
+                if (controller.isAdmin) ...[
+                  // Admin inspector toggle
+                  Obx(() {
+                    final isInspector = controller.adminInspectorMode.value;
+                    return IconButton(
+                      onPressed: controller.toggleAdminInspector,
+                      tooltip: isInspector ? 'Hide answers' : 'Review mode: show answers',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isInspector
+                              ? Colors.green.withValues(alpha: 0.3)
+                              : AppColors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            isInspector ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                            color: isInspector ? Colors.greenAccent : AppColors.white,
+                            size: 17,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(width: 4),
+                  // Admin publish button
+                  IconButton(
+                    onPressed: () {
+                      AppHelperFunctions.showAppDialog(
+                        context,
+                        'Publish to All Students?',
+                        'This test will be marked as verified and published. It will immediately become visible to all students nationwide.',
+                        () async {
+                          Get.back();
+                          await controller.publishCurrentTest();
+                        },
+                        okText: 'Publish Now',
+                        cancelText: 'Cancel',
+                        icon: Icons.verified_rounded,
+                        iconColor: AppColors.primary,
+                      );
+                    },
+                    tooltip: 'Verify & Publish Test',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                    icon: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.verified_rounded,
+                          color: Colors.amberAccent,
+                          size: 17,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(width: 8),
               ],
             ],

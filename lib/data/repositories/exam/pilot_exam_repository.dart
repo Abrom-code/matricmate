@@ -12,12 +12,12 @@ class PilotExamRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Fetches all active pilot exams from local SQLite.
-  Future<List<PilotExamModel>> getLocalPilotExams() async {
+  Future<List<PilotExamModel>> getLocalPilotExams({bool includeDrafts = false}) async {
     try {
       final db = await _dbService.database;
       final rows = await db.query(
         'pilot_exams',
-        where: 'is_active = 1',
+        where: includeDrafts ? null : 'is_active = 1',
         orderBy: 'id ASC',
       );
 
@@ -70,18 +70,33 @@ class PilotExamRepository {
   }
 
   /// Fetches remote pilot exams from Supabase if table exists.
+  /// If [includeDrafts] is true, queries all exams (for admin verification mode).
   /// Returns null if query failed (offline or table missing), or List on success.
-  Future<List<Map<String, dynamic>>?> fetchRemotePilotExams() async {
+  Future<List<Map<String, dynamic>>?> fetchRemotePilotExams({
+    bool includeDrafts = false,
+  }) async {
     try {
-      final response = await _supabase
-          .from('pilot_exams')
-          .select()
-          .eq('is_active', true)
-          .order('id', ascending: true)
-          .timeout(AppTimeouts.query);
+      var query = _supabase.from('pilot_exams').select();
+      if (!includeDrafts) {
+        query = query.eq('is_active', true).eq('status', 'published');
+      }
+      final response = await query.order('id', ascending: true).timeout(AppTimeouts.query);
       return List<Map<String, dynamic>>.from(response);
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Verifies and publishes a draft pilot exam (Admin only).
+  Future<bool> verifyAndPublishPilotExam(int pilotExamId) async {
+    try {
+      final res = await _supabase.rpc(
+        'verify_and_publish_pilot_exam',
+        params: {'p_pilot_exam_id': pilotExamId},
+      );
+      return res == true;
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
     }
   }
 
@@ -138,6 +153,8 @@ class PilotExamRepository {
                 ? 1
                 : 0,
             'is_active': (exam['is_active'] == true || exam['is_active'] == 1) ? 1 : 0,
+            'status': exam['status']?.toString() ??
+                ((exam['is_active'] == true || exam['is_active'] == 1) ? 'published' : 'draft'),
             'created_at': exam['created_at'],
           },
           conflictAlgorithm: ConflictAlgorithm.replace,

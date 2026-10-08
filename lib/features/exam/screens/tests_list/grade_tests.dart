@@ -229,6 +229,7 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
                   questionCount: qnCount,
                   timeMinutes: time,
                   isNew: test.isNew,
+                  isDraft: test.isDraft,
                   onTap: () {
                     TestAccessHelper.handleTestTap(
                       test: test,

@@ -223,16 +223,44 @@ class _PilotExamCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        exam.title,
-                        style: TextStyle(
-                          fontSize: 17.5,
-                          fontWeight: FontWeight.w800,
-                          color: dark
-                              ? Colors.white
-                              : AppColors.textPrimary,
-                          letterSpacing: -0.3,
-                        ),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              exam.title,
+                              style: TextStyle(
+                                fontSize: 17.5,
+                                fontWeight: FontWeight.w800,
+                                color: dark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          if (exam.isDraft) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: Colors.amber, width: 0.8),
+                              ),
+                              child: const Text(
+                                'UNVERIFIED',
+                                style: TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     const SizedBox(width: 10),

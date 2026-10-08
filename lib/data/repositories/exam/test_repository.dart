@@ -2,12 +2,15 @@ import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TestRepository {
-  TestRepository({DatabaseService? databaseService})
-    : _dbService = databaseService ?? DatabaseService.instance;
+  TestRepository({DatabaseService? databaseService, SupabaseClient? supabase})
+      : _dbService = databaseService ?? DatabaseService.instance,
+        _supabase = supabase ?? Supabase.instance.client;
 
   final DatabaseService _dbService;
+  final SupabaseClient _supabase;
 
   Future<List<Map<String, dynamic>>> getLocalTests({
     required int subjectId,
@@ -60,6 +63,32 @@ class TestRepository {
   Future<ResultModel?> loadSavedResults(int testId) async {
     try {
       return await _dbService.loadSavedTestResult(testId);
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  /// Verifies and publishes a draft test to make it available to all students (Admin only).
+  Future<bool> verifyAndPublishTest(int testId) async {
+    try {
+      final res = await _supabase.rpc(
+        'verify_and_publish_test',
+        params: {'p_test_id': testId},
+      );
+      return res == true;
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  /// Reverts a test back to draft / verification mode (Admin only).
+  Future<bool> unpublishTest(int testId) async {
+    try {
+      final res = await _supabase.rpc(
+        'unpublish_test',
+        params: {'p_test_id': testId},
+      );
+      return res == true;
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

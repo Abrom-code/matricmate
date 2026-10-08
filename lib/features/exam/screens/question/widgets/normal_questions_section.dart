@@ -55,9 +55,16 @@ class ExamQuestionSection extends GetView<QuestionController> {
             ...q.options.asMap().entries.map((entry) {
               final index = entry.key;
               final option = entry.value;
+              final showChecked = controller.adminInspectorMode.value
+                  ? true
+                  : (examMode ? false : isChecked);
+              final activeSelectedIndex = controller.adminInspectorMode.value
+                  ? q.correctOptionIndex
+                  : (selectedIndex ?? -1);
+
               return ChoiceButton(
-                selectedIndex: selectedIndex ?? -1,
-                isChecked: examMode ? false : isChecked,
+                selectedIndex: activeSelectedIndex,
+                isChecked: showChecked,
                 optionTxt: option,
                 index: index,
                 questionId: q.id,
@@ -73,13 +80,13 @@ class ExamQuestionSection extends GetView<QuestionController> {
               );
             }),
 
-            // Explanation — practice mode only
-            if (isChecked && !examMode) ...[
+            // Explanation — practice mode or admin inspector mode
+            if ((isChecked && !examMode) || controller.adminInspectorMode.value) ...[
               AppExplanationBox(
                 explanationEn: q.explanationEn,
                 explanationAm: q.explanationAm,
                 explanationImageUrl: q.explanationImageUrl,
-                expanded: controller.isExplanationExpanded.value,
+                expanded: controller.adminInspectorMode.value || controller.isExplanationExpanded.value,
                 onToggle: () => controller.isExplanationExpanded.value =
                     !controller.isExplanationExpanded.value,
                 languageSelected: controller.languageSelected,

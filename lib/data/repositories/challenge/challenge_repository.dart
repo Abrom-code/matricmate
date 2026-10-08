@@ -8,6 +8,7 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class ChallengeRepository {
@@ -26,24 +27,30 @@ class ChallengeRepository {
   // ── Fetch Visible Challenges for Student ───────────────────────────────────
 
   /// Fetches all published challenges (live, scheduled, closed, archived).
+  /// If [isAdmin] is true, includes 'draft' and 'verification' challenges for testing.
   Future<List<LeaderboardChallengeModel>> fetchAllChallenges({
     String? stream,
+    bool isAdmin = false,
   }) async {
     await _checkConnectivity();
+
+    final allowedStatuses = isAdmin
+        ? ['draft', 'verification', 'live', 'scheduled', 'closed', 'archived']
+        : ['live', 'scheduled', 'closed', 'archived'];
 
     dynamic rows;
     try {
       rows = await _sb
           .from('leaderboard_challenges')
           .select('*, subjects(name), challenge_questions(id), challenge_attempts(count)')
-          .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+          .inFilter('status', allowedStatuses)
           .order('created_at', ascending: false)
           .timeout(const Duration(seconds: 6));
     } on PostgrestException catch (_) {
       rows = await _sb
           .from('leaderboard_challenges')
           .select('*, subjects(name), challenge_questions(id)')
-          .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+          .inFilter('status', allowedStatuses)
           .order('created_at', ascending: false)
           .timeout(const Duration(seconds: 6));
     }
@@ -60,6 +67,19 @@ class ChallengeRepository {
       }).toList();
     }
     return list;
+  }
+
+  /// Verifies and publishes a draft challenge (Admin only).
+  Future<bool> verifyAndPublishChallenge(String challengeId) async {
+    try {
+      final res = await _sb.rpc(
+        'verify_and_publish_challenge',
+        params: {'p_challenge_id': challengeId},
+      );
+      return res == true;
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
   }
 
   /// Fetches real participant counts from challenge_attempts (live standings & attempts).

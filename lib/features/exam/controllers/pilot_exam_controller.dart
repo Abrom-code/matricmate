@@ -92,18 +92,20 @@ class PilotExamController extends GetxController {
       // 1. Purge legacy dummy seeded records if any
       await _repo.clearLegacyDummySeed();
 
+      final isAdmin = UserController.instance.isAdmin.value;
+
       // 2. Paint immediately from local SQLite
-      final local = await _repo.getLocalPilotExams();
+      final local = await _repo.getLocalPilotExams(includeDrafts: isAdmin);
       pilotExams.assignAll(local);
       await loadAllExamProgresses();
 
       // 3. Refresh from remote Supabase if connected
       final isConnected = await NetworkManager.instance.isConnected();
       if (isConnected) {
-        final remote = await _repo.fetchRemotePilotExams();
+        final remote = await _repo.fetchRemotePilotExams(includeDrafts: isAdmin);
         if (remote != null) {
           await _repo.syncPilotExams(remote);
-          final updated = await _repo.getLocalPilotExams();
+          final updated = await _repo.getLocalPilotExams(includeDrafts: isAdmin);
           pilotExams.assignAll(updated);
           await loadAllExamProgresses();
         }
@@ -113,6 +115,22 @@ class PilotExamController extends GetxController {
     } finally {
       isLoading.value = false;
       _isLoadingPilotExams = false;
+    }
+  }
+
+  /// Verifies and publishes a draft pilot exam for all students (Admin only).
+  Future<void> verifyAndPublishPilotExam(int pilotExamId) async {
+    try {
+      isLoading.value = true;
+      final ok = await _repo.verifyAndPublishPilotExam(pilotExamId);
+      if (ok) {
+        ToastHelper.success('Pilot exam verified and published!');
+        await loadPilotExams();
+      }
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isLoading.value = false;
     }
   }
 

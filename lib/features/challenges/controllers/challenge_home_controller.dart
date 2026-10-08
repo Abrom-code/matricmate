@@ -424,8 +424,9 @@ class ChallengeHomeController extends GetxController {
       deletedChallengeIds.assignAll(deleted);
 
       // Fetch all published challenges from Supabase in one roundtrip with timeout
+      final isAdmin = UserController.instance.isAdmin.value;
       final allPublished = await _repo
-          .fetchAllChallenges(stream: userStream)
+          .fetchAllChallenges(stream: userStream, isAdmin: isAdmin)
           .timeout(const Duration(seconds: 4));
 
       final validFiltered = allPublished.where((c) {
@@ -511,6 +512,22 @@ class ChallengeHomeController extends GetxController {
       isLoading.value = false;
       isRefreshing.value = false;
       _isLoadingAllChallenges = false;
+    }
+  }
+
+  /// Verifies and publishes a draft challenge to make it available (Admin only).
+  Future<void> verifyAndPublishChallenge(String challengeId) async {
+    try {
+      isLoading.value = true;
+      final ok = await _repo.verifyAndPublishChallenge(challengeId);
+      if (ok) {
+        ToastHelper.success('Challenge verified and published!');
+        await loadAllChallenges(showLoading: true);
+      }
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isLoading.value = false;
     }
   }
 

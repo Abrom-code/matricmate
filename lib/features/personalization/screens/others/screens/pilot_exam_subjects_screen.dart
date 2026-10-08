@@ -39,6 +39,50 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
         subtitle: '$stream • 6 Subjects Simulation',
         showBackArrow: true,
         actions: [
+          Obx(() {
+            final isAdmin = UserController.instance.isAdmin.value;
+            final isDraft = controller.selectedExam.value?.isDraft == true;
+            if (!isAdmin || !isDraft) return const SizedBox.shrink();
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: IconButton(
+                tooltip: 'Verify & Publish Pilot Exam',
+                onPressed: () {
+                  final exam = controller.selectedExam.value;
+                  if (exam == null) return;
+                  AppHelperFunctions.showAppDialog(
+                    context,
+                    'Publish Pilot Exam?',
+                    'This pilot exam and its subjects will be verified and published nationwide for all students.',
+                    () async {
+                      Get.back();
+                      await controller.verifyAndPublishPilotExam(exam.id);
+                    },
+                    okText: 'Publish Now',
+                    cancelText: 'Cancel',
+                    icon: Icons.verified_rounded,
+                    iconColor: AppColors.primary,
+                  );
+                },
+                icon: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.verified_rounded,
+                      color: Colors.amberAccent,
+                      size: 17,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(

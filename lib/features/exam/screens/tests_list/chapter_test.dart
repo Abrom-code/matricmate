@@ -237,6 +237,7 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                   questionCount: qnCount,
                   timeMinutes: time,
                   isNew: test.isNew,
+                  isDraft: test.isDraft,
                   onTap: () {
                     TestAccessHelper.handleTestTap(
                       test: test,

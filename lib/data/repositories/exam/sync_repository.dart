@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/subject_model.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -100,11 +102,18 @@ class SyncRepository {
       final db = await _dbService.database;
 
       // Step 1 — fetch tests (0.0 → 0.15)
+      var testsQuery = supabase.from('tests').select().eq('subject_id', subjectId).inFilter(
+        'type',
+        ['entrance', 'model'],
+      );
+      final bool isAdminUser = Get.isRegistered<UserController>() &&
+          Get.find<UserController>().isAdmin.value;
+      if (!isAdminUser) {
+        testsQuery = testsQuery.eq('status', 'published');
+      }
+
       final tests = await _withProgress(
-        supabase.from('tests').select().eq('subject_id', subjectId).inFilter(
-          'type',
-          ['entrance', 'model'],
-        ).timeout(AppTimeouts.download),
+        testsQuery.timeout(AppTimeouts.download),
         0.0,
         0.15,
         (p) => onStep('Fetching tests…', p),
@@ -360,6 +369,11 @@ class SyncRepository {
       if (typeFilter != null && typeFilter.isNotEmpty) {
         q = q.inFilter('type', typeFilter);
       }
+      final bool isAdminUser = Get.isRegistered<UserController>() &&
+          Get.find<UserController>().isAdmin.value;
+      if (!isAdminUser) {
+        q = q.eq('status', 'published');
+      }
       if (sinceIso != null) q = q.gt('updated_at', sinceIso);
       return await q.timeout(AppTimeouts.query);
     }
@@ -574,6 +588,7 @@ class SyncRepository {
       'description',
       'created_at',
       'is_premium',
+      'status',
     },
     'passages': {'id', 'content', 'title', 'image_url'},
     'questions': {

@@ -108,6 +108,7 @@ class DBschema {
         isCompleted INTEGER DEFAULT 1,
         checkedQuestions TEXT,
         remainingSeconds INTEGER DEFAULT 0,
+        completed_at TEXT,
         UNIQUE(user_id, test_id)
       );
     ''');

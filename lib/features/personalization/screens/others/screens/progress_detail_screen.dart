@@ -25,6 +25,10 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
         ? Get.find<AnalyticsController>()
         : Get.put(AnalyticsController());
 
+    controller.selectedSubject.value = 'All Subjects';
+    controller.selectedTestType.value = 'All Categories';
+    controller.selectedTimeFilter.value = TimeFilter.all;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.loadAll();
     });

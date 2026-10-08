@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
+import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
+import 'package:matricmate/features/exam/models/subject_model.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -211,9 +214,27 @@ class WeakestAreasCard extends StatelessWidget {
                       InkWell(
                         borderRadius: BorderRadius.circular(8),
                         onTap: () {
-                          controller.applyFilters(subject: area.name);
-                          if (Get.isRegistered<NavigationController>()) {
-                            NavigationController.instance.changePage(0);
+                          SubjectModel? targetSubject;
+                          final subjectsCtrl =
+                              Get.isRegistered<SubjectsController>()
+                                  ? SubjectsController.instance
+                                  : Get.put(SubjectsController());
+                          final subjects = subjectsCtrl.subjects;
+                          targetSubject = subjects.firstWhereOrNull(
+                            (s) =>
+                                (area.subjectId != null &&
+                                    s.id == area.subjectId) ||
+                                s.name.trim().toLowerCase() ==
+                                    area.name.trim().toLowerCase(),
+                          );
+
+                          if (targetSubject != null) {
+                            SubjectModeModal.show(context, targetSubject);
+                          } else {
+                            Get.until((route) => route.isFirst);
+                            if (Get.isRegistered<NavigationController>()) {
+                              NavigationController.instance.changePage(0);
+                            }
                           }
                         },
                         child: Container(
@@ -297,6 +318,7 @@ class WeakestAreasCard extends StatelessWidget {
           // ── Bottom Link ───────────────────────────────────────────────────
           InkWell(
             onTap: () {
+              Get.until((route) => route.isFirst);
               if (Get.isRegistered<NavigationController>()) {
                 NavigationController.instance.changePage(0);
               }

@@ -323,7 +323,10 @@ class AnalyticsController extends GetxController {
   // ── Build SQL WHERE clause from all active filters ───────────────────────
 
   String _buildWhere(String userId) {
-    final parts = <String>['r.user_id = ?'];
+    final parts = <String>[
+      '(r.user_id = ? OR r.user_id = \'\' OR r.user_id IS NULL)',
+      '(r.isCompleted = 1 OR r.isCompleted IS NULL)',
+    ];
 
     // Automatic Profile Stream filtering
     final userStream = UserController.instance.user.value.stream.toLowerCase();
@@ -360,7 +363,9 @@ class AnalyticsController extends GetxController {
     // Time period
     if (selectedTimeFilter.value != TimeFilter.all) {
       final cutoff = _cutoffDate(selectedTimeFilter.value);
-      parts.add("t.created_at >= '${cutoff.toIso8601String()}'");
+      parts.add(
+        "(r.completed_at IS NULL OR r.completed_at = '' OR r.completed_at >= '${cutoff.toIso8601String()}')",
+      );
     }
 
     return parts.join(' AND ');
@@ -451,6 +456,16 @@ class AnalyticsController extends GetxController {
     if (isRefreshing.value) return;
     isRefreshing.value = true;
 
+    // Reset filters on manual refresh so user gets a clean, full overview
+    if (isManualRefresh) {
+      selectedSubject.value = 'All Subjects';
+      selectedTestType.value = 'All Categories';
+      selectedTimed.value = TimedFilter.all;
+      selectedScore.value = ScoreFilter.all;
+      selectedGrade.value = GradeFilter.all;
+      selectedStream.value = StreamFilter.all;
+    }
+
     // Only show full blocking loader if we have zero data loaded yet
     if (testsCompleted.value == 0 && totalNotesCount.value == 0) {
       isLoading.value = true;
@@ -487,21 +502,17 @@ class AnalyticsController extends GetxController {
       }
 
       await Future.wait([
-        if (userId.isNotEmpty) ...[
-          _loadSummary(userId),
-          _loadTrend(userId),
-          _loadSubjectPerformance(userId),
-          _loadTypeDistribution(userId),
-          _loadChapterProgress(userId),
-          _loadBookmarkCount(userId),
-        ],
+        _loadSummary(userId),
+        _loadTrend(userId),
+        _loadSubjectPerformance(userId),
+        _loadTypeDistribution(userId),
+        _loadChapterProgress(userId),
+        _loadBookmarkCount(userId),
         _loadChallengeAnalytics(userId),
         _loadNotesAnalytics(userId),
       ]);
 
-      if (userId.isNotEmpty) {
-        await _loadWeaknessAndRecommendations(userId);
-      }
+      await _loadWeaknessAndRecommendations(userId);
 
       if (isManualRefresh) {
         final elapsed = DateTime.now().difference(startTime).inMilliseconds;
@@ -520,153 +531,187 @@ class AnalyticsController extends GetxController {
   // ── Private loaders ──────────────────────────────────────────────────────
 
   Future<void> _loadSummary(String userId) async {
-    final db = await _db.database;
-    final where = _buildWhere(userId);
+    try {
+      final db = await _db.database;
+      final where = _buildWhere(userId);
 
-    final rows = await db.rawQuery(
-      '''
-      SELECT r.correctAnswers, r.testQuestions
-      FROM results r
-      JOIN tests t ON r.test_id = t.id
-      JOIN subjects s ON t.subject_id = s.id
-      WHERE $where
-    ''',
-      [userId],
-    );
+      final rows = await db.rawQuery(
+        '''
+        SELECT r.correctAnswers, r.testQuestions
+        FROM results r
+        JOIN tests t ON r.test_id = t.id
+        JOIN subjects s ON t.subject_id = s.id
+        WHERE $where
+      ''',
+        [userId],
+      );
 
-    int correct = 0, total = 0;
-    int count = 0;
+      int correct = 0, total = 0;
+      int count = 0;
 
-    for (final row in rows) {
-      final c = row['correctAnswers'] as int? ?? 0;
-      int tot = 1;
-      try {
-        final list = jsonDecode(row['testQuestions'] as String) as List;
-        tot = list.isNotEmpty ? list.length : 1;
-      } catch (_) {}
-      if (!_passesScoreFilter(c, tot)) continue;
-      correct += c;
-      total += tot;
-      count++;
-    }
+      for (final row in rows) {
+        final c = row['correctAnswers'] as int? ?? 0;
+        int tot = 1;
+        try {
+          final list = jsonDecode(row['testQuestions'] as String) as List;
+          tot = list.isNotEmpty ? list.length : 1;
+        } catch (_) {}
+        if (!_passesScoreFilter(c, tot)) continue;
+        correct += c;
+        total += tot;
+        count++;
+      }
 
-    testsCompleted.value = count;
-    totalCorrect.value = correct;
-    avgScorePct.value = total > 0 ? correct / total * 100 : 0.0;
+      testsCompleted.value = count;
+      totalCorrect.value = correct;
+      avgScorePct.value = total > 0 ? correct / total * 100 : 0.0;
+    } catch (_) {}
   }
 
   Future<void> _loadTrend(String userId) async {
-    final db = await _db.database;
-    final where = _buildWhere(userId);
+    try {
+      final db = await _db.database;
+      final where = _buildWhere(userId);
 
-    final rows = await db.rawQuery(
-      '''
-      SELECT r.correctAnswers, r.testQuestions
-      FROM results r
-      JOIN tests t ON r.test_id = t.id
-      JOIN subjects s ON t.subject_id = s.id
-      WHERE $where
-      ORDER BY t.created_at DESC
-      LIMIT 10
-    ''',
-      [userId],
-    );
+      final rows = await db.rawQuery(
+        '''
+        SELECT r.correctAnswers, r.testQuestions
+        FROM results r
+        JOIN tests t ON r.test_id = t.id
+        JOIN subjects s ON t.subject_id = s.id
+        WHERE $where
+        ORDER BY r.id DESC
+        LIMIT 10
+      ''',
+        [userId],
+      );
 
-    final points = <TrendPoint>[];
-    final reversed = rows.reversed.toList();
-    for (int i = 0; i < reversed.length; i++) {
-      final row = reversed[i];
-      final correct = row['correctAnswers'] as int? ?? 0;
-      int total = 1;
-      try {
-        final list = jsonDecode(row['testQuestions'] as String) as List;
-        total = list.isNotEmpty ? list.length : 1;
-      } catch (_) {}
-      if (!_passesScoreFilter(correct, total)) continue;
-      points.add(TrendPoint(index: i, score: correct / total * 100));
+      final points = <TrendPoint>[];
+      final reversed = rows.reversed.toList();
+      for (int i = 0; i < reversed.length; i++) {
+        final row = reversed[i];
+        final correct = row['correctAnswers'] as int? ?? 0;
+        int total = 1;
+        try {
+          final list = jsonDecode(row['testQuestions'] as String) as List;
+          total = list.isNotEmpty ? list.length : 1;
+        } catch (_) {}
+        if (!_passesScoreFilter(correct, total)) continue;
+        points.add(TrendPoint(index: i, score: correct / total * 100));
+      }
+      trendPoints.value = points;
+    } catch (_) {
+      trendPoints.clear();
     }
-    trendPoints.value = points;
   }
 
   Future<void> _loadSubjectPerformance(String userId) async {
-    final db = await _db.database;
-    final where = _buildWhere(userId);
+    try {
+      final db = await _db.database;
+      final where = _buildWhere(userId);
 
-    final rows = await db.rawQuery(
-      '''
-      SELECT s.id as subject_id, s.name, r.correctAnswers, r.testQuestions
-      FROM results r
-      JOIN tests t ON r.test_id = t.id
-      JOIN subjects s ON t.subject_id = s.id
-      WHERE $where
-    ''',
-      [userId],
-    );
-
-    final Map<String, List<num>> bySubject = {}; // [correct, total, count, subjectId]
-    for (final row in rows) {
-      final name = row['name'] as String;
-      final subId = (row['subject_id'] as num?)?.toInt() ?? 0;
-      final correct = row['correctAnswers'] as int? ?? 0;
-      int total = 1;
-      try {
-        final list = jsonDecode(row['testQuestions'] as String) as List;
-        total = list.isNotEmpty ? list.length : 1;
-      } catch (_) {}
-      if (!_passesScoreFilter(correct, total)) continue;
-      bySubject.putIfAbsent(name, () => [0, 0, 0, subId]);
-      bySubject[name]![0] += correct;
-      bySubject[name]![1] += total;
-      bySubject[name]![2] += 1;
-    }
-
-    final stats = bySubject.entries.map((e) {
-      final pct = e.value[1] > 0 ? (e.value[0] / e.value[1] * 100).toDouble() : 0.0;
-      return SubjectStat(
-        name: e.key,
-        avgScore: pct,
-        subjectId: e.value[3].toInt(),
-        testsCount: e.value[2].toInt(),
+      final rows = await db.rawQuery(
+        '''
+        SELECT s.id as subject_id, s.name, r.correctAnswers, r.testQuestions
+        FROM results r
+        JOIN tests t ON r.test_id = t.id
+        JOIN subjects s ON t.subject_id = s.id
+        WHERE $where
+      ''',
+        [userId],
       );
-    }).toList()..sort((a, b) => b.avgScore.compareTo(a.avgScore));
 
-    subjectStats.value = stats;
+      final Map<String, List<num>> bySubject = {}; // [correct, total, count, subjectId]
+      for (final row in rows) {
+        final name = row['name'] as String;
+        final subId = (row['subject_id'] as num?)?.toInt() ?? 0;
+        final correct = row['correctAnswers'] as int? ?? 0;
+        int total = 1;
+        try {
+          final list = jsonDecode(row['testQuestions'] as String) as List;
+          total = list.isNotEmpty ? list.length : 1;
+        } catch (_) {}
+        if (!_passesScoreFilter(correct, total)) continue;
+        bySubject.putIfAbsent(name, () => [0, 0, 0, subId]);
+        bySubject[name]![0] += correct;
+        bySubject[name]![1] += total;
+        bySubject[name]![2] += 1;
+      }
+
+      final stats = bySubject.entries.map((e) {
+        final pct = e.value[1] > 0 ? (e.value[0] / e.value[1] * 100).toDouble() : 0.0;
+        return SubjectStat(
+          name: e.key,
+          avgScore: pct,
+          subjectId: e.value[3].toInt(),
+          testsCount: e.value[2].toInt(),
+        );
+      }).toList()..sort((a, b) => b.avgScore.compareTo(a.avgScore));
+
+      subjectStats.value = stats;
+      _updateSubjectWeakness(stats);
+    } catch (_) {
+      subjectStats.clear();
+      weakestAreas.clear();
+      strongestAreas.clear();
+    }
+  }
+
+  void _updateSubjectWeakness(List<SubjectStat> stats) {
+    if (stats.isNotEmpty) {
+      final sorted = [...stats]
+        ..sort((a, b) => a.avgScore.compareTo(b.avgScore));
+      final weak = sorted.where((s) => s.avgScore < 75).take(3).toList();
+      if (weak.isNotEmpty) {
+        weakestAreas.value = weak;
+      } else {
+        weakestAreas.value = [sorted.first];
+      }
+      strongestAreas.value = sorted.reversed.where((s) => s.avgScore >= 60).take(2).toList();
+    } else {
+      weakestAreas.clear();
+      strongestAreas.clear();
+    }
   }
 
   Future<void> _loadTypeDistribution(String userId) async {
-    final db = await _db.database;
-    final where = _buildWhere(userId);
+    try {
+      final db = await _db.database;
+      final where = _buildWhere(userId);
 
-    final rows = await db.rawQuery(
-      '''
-      SELECT t.type, r.correctAnswers, r.testQuestions
-      FROM results r
-      JOIN tests t ON r.test_id = t.id
-      JOIN subjects s ON t.subject_id = s.id
-      WHERE $where
-    ''',
-      [userId],
-    );
+      final rows = await db.rawQuery(
+        '''
+        SELECT t.type, r.correctAnswers, r.testQuestions
+        FROM results r
+        JOIN tests t ON r.test_id = t.id
+        JOIN subjects s ON t.subject_id = s.id
+        WHERE $where
+      ''',
+        [userId],
+      );
 
-    final Map<String, int> counts = {};
-    for (final row in rows) {
-      final correct = row['correctAnswers'] as int? ?? 0;
-      int total = 1;
-      try {
-        final list = jsonDecode(row['testQuestions'] as String) as List;
-        total = list.isNotEmpty ? list.length : 1;
-      } catch (_) {}
-      if (!_passesScoreFilter(correct, total)) continue;
-      final type = (row['type'] as String?) ?? 'unknown';
-      counts[type] = (counts[type] ?? 0) + 1;
+      final Map<String, int> counts = {};
+      for (final row in rows) {
+        final correct = row['correctAnswers'] as int? ?? 0;
+        int total = 1;
+        try {
+          final list = jsonDecode(row['testQuestions'] as String) as List;
+          total = list.isNotEmpty ? list.length : 1;
+        } catch (_) {}
+        if (!_passesScoreFilter(correct, total)) continue;
+        final type = (row['type'] as String?) ?? 'unknown';
+        counts[type] = (counts[type] ?? 0) + 1;
+      }
+
+      final grand = counts.values.fold(0, (a, b) => a + b);
+      final Map<String, double> dist = {};
+      for (final e in counts.entries) {
+        dist[e.key] = grand > 0 ? e.value / grand * 100 : 0;
+      }
+      typeDistribution.value = dist;
+    } catch (_) {
+      typeDistribution.clear();
     }
-
-    final grand = counts.values.fold(0, (a, b) => a + b);
-    final Map<String, double> dist = {};
-    for (final e in counts.entries) {
-      dist[e.key] = grand > 0 ? e.value / grand * 100 : 0;
-    }
-    typeDistribution.value = dist;
   }
 
   Future<void> _loadChapterProgress(String userId) async {
@@ -891,7 +936,9 @@ class AnalyticsController extends GetxController {
         JOIN chapters c ON t.chapter_id = c.id
         JOIN subjects s ON t.subject_id = s.id
         LEFT JOIN notes n ON n.chapter_id = c.id
-        WHERE r.user_id = ? ${streamCondition.isNotEmpty ? 'AND $streamCondition' : ''}
+        WHERE (r.user_id = ? OR r.user_id = '' OR r.user_id IS NULL)
+          AND (r.isCompleted = 1 OR r.isCompleted IS NULL)
+          ${streamCondition.isNotEmpty ? 'AND $streamCondition' : ''}
       ''', [userId]);
 
       final Map<int, List<_ChapterScoreAgg>> aggMap = {};
@@ -949,19 +996,8 @@ class AnalyticsController extends GetxController {
       weakList.sort((a, b) => a.avgScore.compareTo(b.avgScore));
       weakestChapters.value = weakList.take(5).toList();
 
-      // Strongest vs Weakest subjects
-      if (subjectStats.isNotEmpty) {
-        final sorted = [...subjectStats]
-          ..sort((a, b) => a.avgScore.compareTo(b.avgScore));
-        weakestAreas.value = sorted.where((s) => s.avgScore < 70).take(3).toList();
-        if (weakestAreas.isEmpty && sorted.isNotEmpty) {
-          weakestAreas.value = [sorted.first];
-        }
-        strongestAreas.value = sorted.reversed.where((s) => s.avgScore >= 60).take(2).toList();
-      } else {
-        weakestAreas.clear();
-        strongestAreas.clear();
-      }
+      // Strongest vs Weakest subjects - reliably sync from subjectStats
+      _updateSubjectWeakness(subjectStats);
 
       // Generate smart, actionable study recommendations
       final List<StudyRecommendation> recs = [];

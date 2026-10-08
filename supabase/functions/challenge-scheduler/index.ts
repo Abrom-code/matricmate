@@ -117,10 +117,13 @@ async function sendFcmToStream(
       query = query.ilike("stream", stream);
     }
 
-    const { data: users } = await query;
-    const tokens: string[] = (users ?? [])
-      .map((u: { fcm_token?: string | null }) => u.fcm_token?.trim() ?? "")
-      .filter((t) => t.length > 0);
+    const tokens: string[] = Array.from(
+      new Set(
+        (users ?? [])
+          .map((u: { fcm_token?: string | null }) => u.fcm_token?.trim() ?? "")
+          .filter((t) => t.length > 0)
+      )
+    );
 
     if (tokens.length === 0) return;
 

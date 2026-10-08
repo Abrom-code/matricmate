@@ -52,12 +52,22 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     ),
   );
 
+  final type = message.data['type']?.toString() ?? '';
+  if (type == 'challenge_closed') {
+    return;
+  }
+
   final title = message.data['title']?.toString();
   final body = message.data['body']?.toString();
 
+  final notifIdStr = message.data['notification_id']?.toString();
+  final int notifId = (notifIdStr != null && int.tryParse(notifIdStr) != null)
+      ? int.parse(notifIdStr)
+      : ('${title}_$body'.hashCode & 0x7FFFFFFF);
+
   if (title != null && body != null) {
     await plugin.show(
-      id: message.hashCode & 0x7FFFFFFF,
+      id: notifId & 0x7FFFFFFF,
       title: title,
       body: body,
       notificationDetails: NotificationDetails(
@@ -400,7 +410,7 @@ class FcmService {
     if (title != null && body != null) {
       final notifId = notifIdStr != null && int.tryParse(notifIdStr) != null
           ? int.parse(notifIdStr)
-          : (message.hashCode & 0x7FFFFFFF);
+          : ('${title}_$body'.hashCode & 0x7FFFFFFF);
 
       await _localNotifications.show(
         id: notifId & 0x7FFFFFFF,
@@ -421,13 +431,8 @@ class FcmService {
         ),
         payload: jsonEncode(message.data),
       );
-    }
 
-    // Insert into local SQLite immediately so it appears offline & instantaneously
-    if (title != null && body != null) {
-      final notifId = notifIdStr != null && int.tryParse(notifIdStr) != null
-          ? int.parse(notifIdStr)
-          : (message.hashCode & 0x7FFFFFFF);
+      // Insert into local SQLite immediately so it appears offline & instantaneously
       final currentUserId = UserController.instance.user.value.id;
       if (currentUserId.isNotEmpty) {
         final newNotif = AppNotification.fromMap({

@@ -27,7 +27,7 @@ void main() {
 
       // Verify "About MatricET" is shown
       expect(find.text('About ${ProfileActionsHelper.appName}'), findsOneWidget);
-      expect(find.textContaining('Version 1.0.3'), findsOneWidget);
+      expect(find.textContaining('Version 1.0.4'), findsOneWidget);
 
       // Verify "Privacy Policy" and "Open Source Licenses" are NOT directly on profile section
       expect(find.text('Privacy Policy'), findsNothing);
@@ -46,7 +46,7 @@ void main() {
 
       // App title and version
       expect(find.text(ProfileActionsHelper.appName), findsWidgets);
-      expect(find.text('v1.0.3'), findsOneWidget);
+      expect(find.text('v1.0.4'), findsOneWidget);
 
       // Bento Feature cards
       expect(find.text('Matric Simulator'), findsOneWidget);

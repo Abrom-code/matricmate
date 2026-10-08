@@ -53,9 +53,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     required String message,
     required VoidCallback onUndo,
   }) {
+    if (!mounted) return;
     _undoSnackBarTimer?.cancel();
 
-    final messenger = ScaffoldMessenger.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
     messenger.hideCurrentSnackBar();
 
     messenger.showSnackBar(
@@ -88,10 +90,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   void _onTileDismissed(AppNotification notification) {
     ctrl.deleteOne(notification.id);
-    _showUndoSnackBar(
-      message: 'Notification deleted',
-      onUndo: () => ctrl.undoDeleteOne(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _showUndoSnackBar(
+          message: 'Notification deleted',
+          onUndo: () => ctrl.undoDeleteOne(),
+        );
+      }
+    });
   }
 
   void _confirmClearAll(BuildContext context) {
@@ -104,13 +110,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       icon: Icons.delete_outline_rounded,
       isDestructive: true,
       onPressed: () {
-        Navigator.pop(context);
         final count = ctrl.notifications.length;
         ctrl.deleteAll();
-        _showUndoSnackBar(
-          message: '$count notification${count == 1 ? '' : 's'} cleared',
-          onUndo: () => ctrl.undoDeleteAll(),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _showUndoSnackBar(
+              message: '$count notification${count == 1 ? '' : 's'} cleared',
+              onUndo: () => ctrl.undoDeleteAll(),
+            );
+          }
+        });
       },
     );
   }
@@ -147,10 +156,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (count == 0) return;
 
     ctrl.deleteSelected();
-    _showUndoSnackBar(
-      message: '$count notification${count == 1 ? '' : 's'} deleted',
-      onUndo: () => ctrl.undoDeleteSelected(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _showUndoSnackBar(
+          message: '$count notification${count == 1 ? '' : 's'} deleted',
+          onUndo: () => ctrl.undoDeleteSelected(),
+        );
+      }
+    });
   }
 
   Widget _buildFilteredEmptyState(bool dark, NotificationFilter filter) {

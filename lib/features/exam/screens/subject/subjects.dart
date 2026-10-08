@@ -8,6 +8,7 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/paused_test_banner.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -80,7 +81,9 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
         ],
       ),
       body: Obx(() {
-        final isPending = UserController.instance.user.value.isPending;
+        final user = UserController.instance.user.value;
+        final isPending = user.isPending;
+        final isInactiveOrPending = !user.isActive;
         final filteredSubjects = ctrl.filteredSubjects;
         final syncing = syncController.refreshing.value;
         final isOffline = ctrl.isOffline.value;
@@ -114,7 +117,22 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       const SizedBox(height: 16),
                     ],
 
-                    // ── 2. Paused / In-Progress Tests Banner ─────────
+                    // ── 2. Premium Upgrade Banner ─────────────────────
+                    // Shown if pending or inactive, removed when active.
+                    if (isInactiveOrPending) ...[
+                      PremiumBanner(
+                        onTap: () {
+                          if (user.isPending) {
+                            Get.toNamed(Routes.paymentVerification);
+                          } else {
+                            Get.toNamed(Routes.premium);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // ── 3. Paused / In-Progress Tests Banner ─────────
                     const PausedTestBanner(),
 
                     // ── 4. Subject Grid ──────────────────────────────

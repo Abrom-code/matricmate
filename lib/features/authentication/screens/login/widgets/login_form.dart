@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
+import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -371,7 +372,56 @@ class LoginForm extends GetView<LoginController> {
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
+          // ── Support Bot Footer ─────────────────────────────────────
+          Center(
+            child: InkWell(
+              onTap: ProfileActionsHelper.openTelegramSupport,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.30),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.send_rounded, size: 12, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Need help?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
         ],
       ),
     );

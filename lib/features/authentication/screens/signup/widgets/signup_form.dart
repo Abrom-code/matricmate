@@ -573,6 +573,55 @@ class SignupForm extends GetView<SignupController> {
             ),
           ),
 
+          const SizedBox(height: 14),
+
+          // ── Support Bot Footer ─────────────────────────────────────
+          Center(
+            child: InkWell(
+              onTap: ProfileActionsHelper.openTelegramSupport,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.30),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.send_rounded, size: 12, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Need help?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           const SizedBox(height: 24),
         ],
       ),

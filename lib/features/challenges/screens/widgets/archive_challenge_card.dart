@@ -30,7 +30,7 @@ class ArchiveChallengeCard extends StatelessWidget {
     return Obx(() {
       final isLive = challenge.isLive;
       final isScheduled = challenge.isScheduled;
-      final isPremium = ctrl.isPremium;
+      final canAccess = ctrl.canAccess(challenge);
       final isDone = ctrl.isAttemptedOrPracticed(challenge.id, setId: challenge.setId);
       final isPending = UserController.instance.user.value.isPending;
 
@@ -100,6 +100,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                     ],
                   ),
                 ),
+
 
                 const Spacer(),
 
@@ -273,7 +274,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                   final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
 
                   // 1. Pro Locked
-                  if (!isPremium) {
+                  if (!canAccess) {
                     return SizedBox(
                       width: 150,
                       height: 44,

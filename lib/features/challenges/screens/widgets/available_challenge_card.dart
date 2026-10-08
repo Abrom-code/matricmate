@@ -25,7 +25,7 @@ class AvailableChallengeCard extends StatelessWidget {
       // Subscribe to real-time timer ticker
       final _ = ctrl.now.value;
       final isLive = challenge.isLive;
-      final isPremium = ctrl.isPremium;
+      final canAccess = ctrl.canAccess(challenge);
       final isPending = UserController.instance.user.value.isPending;
 
       // Countdown calculations
@@ -103,6 +103,7 @@ class AvailableChallengeCard extends StatelessWidget {
                     ),
                   ),
                 ),
+
 
                 const Spacer(),
 
@@ -246,8 +247,8 @@ class AvailableChallengeCard extends StatelessWidget {
             const SizedBox(height: 16),
 
             // ── 5. Action Button ────────────────────────────────────────
-            // If Free User: Show amber lock icon button (consistent with other tests)
-            if (!isPremium) ...[
+            // If Free User and challenge is Premium: Show amber lock icon button
+            if (!canAccess) ...[
               SizedBox(
                 width: double.infinity,
                 height: 46,

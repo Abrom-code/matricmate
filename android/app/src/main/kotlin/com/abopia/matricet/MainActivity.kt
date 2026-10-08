@@ -16,8 +16,8 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Temporarily disabled screenshot blocking so you can capture screenshots for ads.
-        // window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        // Block screenshots and screen recordings across the app (FLAG_SECURE)
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

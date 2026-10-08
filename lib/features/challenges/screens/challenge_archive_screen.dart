@@ -73,6 +73,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
         ],
       ),
       body: Obx(() {
+        _ctrl.isManualRefreshing.value; // Track refresh state in Obx
         if (_ctrl.isLoading.value) {
           return const AppCircularLoading(
             title: 'Loading challenges...',
@@ -107,8 +108,7 @@ class _ChallengeArchiveScreenState extends State<ChallengeArchiveScreen> {
                               child: _ctrl.isOffline.value
                                   ? ChallengeOfflineState(
                                       dark: dark,
-                                      isRefreshing:
-                                          _ctrl.isManualRefreshing.value,
+                                      rxRefreshing: _ctrl.isManualRefreshing,
                                       onRefresh: () => _ctrl.manualRefresh(),
                                     )
                                   : ChallengeEmptyState(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
 import 'package:matricmate/features/exam/screens/question/widgets/image_section.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -120,10 +119,10 @@ class AppExplanationBox extends StatelessWidget {
                         final text = languageSelected.value == 'AM'
                             ? explanationAm
                             : explanationEn;
-                        final baseStyle = GoogleFonts.lora(
+                        final baseStyle = TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w400,
-                          height: 1.75,
+                          height: 1.65,
                           letterSpacing: 0.1,
                           color: dark
                               ? AppColors.white.withValues(alpha: 0.85)

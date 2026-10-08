@@ -791,6 +791,11 @@ class ChallengeRepository {
       if (q.passage != null) 'passage': q.passage!.toMap(),
     }).toList();
 
+    final rawPrem = chRow['is_premium'];
+    final isPrem = rawPrem == null
+        ? 1
+        : ((rawPrem == false || rawPrem == 0 || rawPrem == '0' || rawPrem == 'false') ? 0 : 1);
+
     return {
       'id': chRow['id']?.toString() ?? '',
       'challenge_id': chRow['id']?.toString() ?? '',
@@ -798,6 +803,7 @@ class ChallengeRepository {
       'subject_id': (chRow['subject_id'] as num?)?.toInt() ?? 0,
       'title': chRow['title']?.toString() ?? 'Challenge',
       'audience': chRow['audience']?.toString() ?? 'both',
+      'is_premium': isPrem,
       'questions': questionsList,
     };
   }

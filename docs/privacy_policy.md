@@ -18,14 +18,15 @@ This Privacy Policy describes how **Abopia** ("we", "us", or "our") collects, us
 | **Account Information** | Name (First & Last), Email Address, Password (hashed securely) | User authentication, account recovery, profile display. |
 | **Educational Stream** | Stream preference (Natural Science / Social Science) | Filtering relevant subjects, tests, and entrance exams. |
 | **Device & Session Identifier** | App-generated UUID (randomly generated, not a hardware IMEI) | Single-device session security and preventing unauthorized account takeover. |
-| **Push Notifications** | Firebase Cloud Messaging (FCM) registration token | Delivering study announcements, challenge updates, and payment status alerts. |
+| **Push Notifications** | Firebase Cloud Messaging (FCM) registration token | Delivering study announcements and challenge updates. |
 | **Academic Progress** | Test answers, scores, bookmarks, timer remaining, completion status | Local and remote test result reviews, analytics, and resume-in-progress features. |
-| **Payment Verification Proof** | User-uploaded transaction receipt screenshots, payment method name | Manual verification of bank/mobile money subscriptions by administrators. |
 
 ---
 
 ## 3. Information We Do NOT Collect
 MatricET does **not** collect:
+- Payment or financial details (the app is completely free of charge).
+- Photos, media gallery, or storage files.
 - Precise or approximate GPS location.
 - Device hardware serial numbers, IMEI, or MAC address.
 - Contact lists, phone logs, or SMS content.
@@ -36,7 +37,7 @@ MatricET does **not** collect:
 
 ## 4. How Information is Processed & Third-Party Services
 We do not sell, rent, or trade your personal data. Data is processed securely through trusted infrastructure providers:
-- **Supabase Inc. (Backend & Authentication):** Stores user accounts, encrypted passwords, relational test data, and receipt files over encrypted HTTPS/TLS connections.
+- **Supabase Inc. (Backend & Authentication):** Stores user accounts, encrypted passwords, and relational test data over encrypted HTTPS/TLS connections.
 - **Google Firebase Cloud Messaging (FCM):** Delivers encrypted push notifications to your device. No user profile data or test scores are shared with Firebase.
 
 ---

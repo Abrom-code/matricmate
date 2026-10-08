@@ -24,7 +24,7 @@ class CompletedChallengeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isPremium = ctrl.isPremium;
+      final canAccess = ctrl.canAccess(challenge);
       final isDone = ctrl.isAttemptedOrPracticed(challenge.id, setId: challenge.setId);
       final isPending = UserController.instance.user.value.isPending;
 
@@ -94,6 +94,7 @@ class CompletedChallengeCard extends StatelessWidget {
                     ],
                   ),
                 ),
+
 
                 const Spacer(),
 
@@ -268,7 +269,7 @@ class CompletedChallengeCard extends StatelessWidget {
                       ctrl.isOpeningReview[challenge.id] == true;
 
                   // 1. Pro Locked
-                  if (!isPremium) {
+                  if (!canAccess) {
                     return SizedBox(
                       width: 150,
                       height: 44,

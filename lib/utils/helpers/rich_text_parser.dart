@@ -646,7 +646,22 @@ class MathWidget extends StatelessWidget {
       );
     }
 
-    return mathWidget;
+    // Safeguard for inline math: bounded by screen width so wide equations
+    // inserted with inline \(...\) or $...$ scroll horizontally instead of overflowing.
+    return Builder(
+      builder: (context) {
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final maxW = screenWidth > 64 ? screenWidth - 64 : screenWidth;
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxW),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: mathWidget,
+          ),
+        );
+      },
+    );
   }
 }
 

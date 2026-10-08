@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
+import 'package:matricmate/features/notes/screens/widgets/note_rating_sheet.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -328,6 +329,12 @@ class NoteTile extends StatelessWidget {
                                 text: liveNote.sizeInMB,
                                 icon: Icons.attach_file_rounded,
                               ),
+                            if (liveNote.isCompleted)
+                              _buildRatingChip(
+                                context: context,
+                                dark: dark,
+                                note: liveNote,
+                              ),
                           ],
                         ),
                       ],
@@ -390,6 +397,61 @@ class NoteTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRatingChip({
+    required BuildContext context,
+    required bool dark,
+    required NoteModel note,
+  }) {
+    final isRated = note.isRated;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () {
+          NoteRatingSheet.show(context, note: note);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: isRated
+                ? const Color(0xFFF59E0B).withValues(alpha: dark ? 0.22 : 0.14)
+                : (dark ? AppColors.darkCard : AppColors.lightGrey),
+            borderRadius: BorderRadius.circular(6),
+            border: isRated
+                ? Border.all(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+                    width: 0.8,
+                  )
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isRated ? Icons.star_rounded : Icons.star_outline_rounded,
+                size: 11,
+                color: isRated
+                    ? const Color(0xFFF59E0B)
+                    : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+              ),
+              const SizedBox(width: 3),
+              Text(
+                isRated ? '${note.userRating}/5' : 'Rate',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: isRated
+                      ? (dark ? const Color(0xFFFBBF24) : const Color(0xFFD97706))
+                      : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -384,6 +384,35 @@ class NotesController extends GetxController {
     } catch (_) {}
   }
 
+  /// Rates a note (1 to 5). Allowed only if the note is finished / completed.
+  Future<bool> rateNote(int noteId, int rating) async {
+    if (rating < 1 || rating > 5) {
+      ToastHelper.warning('Please select a rating between 1 and 5');
+      return false;
+    }
+
+    final note = subjectNotes.firstWhereOrNull((n) => n.id == noteId);
+    if (note == null || !note.isCompleted) {
+      ToastHelper.warning('You can rate this note once you finish reading it.');
+      return false;
+    }
+
+    try {
+      final userId = UserController.instance.user.value.id;
+      await _repo.rateNote(noteId, rating, userId: userId);
+
+      final idx = subjectNotes.indexWhere((n) => n.id == noteId);
+      if (idx != -1) {
+        subjectNotes[idx] = subjectNotes[idx].copyWith(userRating: rating);
+      }
+      ToastHelper.success('Thank you for your rating!');
+      return true;
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+      return false;
+    }
+  }
+
   /// Open note directly into reader
   void openNote(NoteModel note) {
     NewTagHelper.markNoteOpened(note.id);

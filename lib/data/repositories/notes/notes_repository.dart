@@ -248,6 +248,7 @@ class NotesRepository {
           }
           map['is_completed'] = existing.first['is_completed'] ?? 0;
           map['completed_at'] = existing.first['completed_at'];
+          map['user_rating'] = existing.first['user_rating'] ?? 0;
           map['created_at'] =
               map['created_at'] ?? existing.first['created_at'];
         } else {
@@ -256,6 +257,7 @@ class NotesRepository {
           map['downloaded_at'] = null;
           map['is_completed'] = 0;
           map['completed_at'] = null;
+          map['user_rating'] = 0;
           map['created_at'] =
               map['created_at'] ?? DateTime.now().toIso8601String();
         }
@@ -288,6 +290,7 @@ class NotesRepository {
             'downloaded_at': map['downloaded_at'],
             'is_completed': map['is_completed'] ?? 0,
             'completed_at': map['completed_at'],
+            'user_rating': map['user_rating'] ?? 0,
             'created_at': map['created_at'],
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
@@ -298,6 +301,61 @@ class NotesRepository {
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
+  }
+
+  /// Records a rating (1 to 5) for a completed note in SQLite, and syncs to Supabase if authenticated.
+  Future<void> rateNote(int noteId, int rating, {String? userId}) async {
+    try {
+      final db = await _dbService.database;
+      await db.update(
+        'notes',
+        {'user_rating': rating},
+        where: 'id = ?',
+        whereArgs: [noteId],
+      );
+
+      final uid = userId ?? _supabase.auth.currentUser?.id;
+      if (uid != null && uid.isNotEmpty) {
+        try {
+          await _supabase.from('note_ratings').upsert({
+            'user_id': uid,
+            'note_id': noteId,
+            'rating': rating,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          }, onConflict: 'user_id,note_id');
+        } catch (_) {}
+      }
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  /// Syncs remote note ratings into local SQLite for the authenticated user.
+  Future<void> syncRemoteUserRatings(String userId) async {
+    if (userId.isEmpty) return;
+    try {
+      final rows = await _supabase
+          .from('note_ratings')
+          .select('note_id, rating')
+          .eq('user_id', userId);
+      if (rows.isNotEmpty) {
+        final db = await _dbService.database;
+        final batch = db.batch();
+        for (final r in rows) {
+          final noteId = (r['note_id'] as num?)?.toInt();
+          final rating = (r['rating'] as num?)?.toInt();
+          if (noteId != null && rating != null) {
+            batch.update(
+              'notes',
+              {'user_rating': rating},
+              where: 'id = ?',
+              whereArgs: [noteId],
+            );
+          }
+        }
+        await batch.commit(noResult: true);
+      }
+    } catch (_) {}
   }
 
   /// Marks a note as completed (read) in SQLite.

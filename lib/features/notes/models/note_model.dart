@@ -21,6 +21,7 @@ class NoteModel {
   final String? downloadedAt;
   final bool isCompleted;
   final String? completedAt;
+  final int userRating; // 0 = unrated, 1..5 = rated
   final DateTime? createdAt;
 
   const NoteModel({
@@ -43,8 +44,12 @@ class NoteModel {
     this.downloadedAt,
     this.isCompleted = false,
     this.completedAt,
+    this.userRating = 0,
     this.createdAt,
   });
+
+  /// Returns true if the user has rated this note (1 to 5).
+  bool get isRated => userRating >= 1 && userRating <= 5;
 
   /// Returns true if this note was created within the last 1 week (7 days) and has not yet been clicked/opened.
   bool get isNew => NewTagHelper.isNoteNew(
@@ -133,6 +138,7 @@ class NoteModel {
           map['is_completed'] == true ||
           map['is_completed'] == '1',
       completedAt: map['completed_at']?.toString(),
+      userRating: (map['user_rating'] as num?)?.toInt() ?? 0,
       createdAt: parsedCreatedAt,
     );
   }
@@ -158,6 +164,7 @@ class NoteModel {
       'downloaded_at': downloadedAt,
       'is_completed': isCompleted ? 1 : 0,
       'completed_at': completedAt,
+      'user_rating': userRating,
       'created_at': createdAt?.toIso8601String(),
     };
   }
@@ -182,6 +189,7 @@ class NoteModel {
     String? downloadedAt,
     bool? isCompleted,
     String? completedAt,
+    int? userRating,
     DateTime? createdAt,
   }) {
     return NoteModel(
@@ -204,6 +212,7 @@ class NoteModel {
       downloadedAt: downloadedAt ?? this.downloadedAt,
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
+      userRating: userRating ?? this.userRating,
       createdAt: createdAt ?? this.createdAt,
     );
   }

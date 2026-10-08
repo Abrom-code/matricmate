@@ -6,6 +6,7 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
+import 'package:matricmate/features/notes/screens/widgets/note_rating_sheet.dart';
 import 'package:matricmate/features/notes/services/note_download_service.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -406,13 +407,33 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     if (_hasPromptedCompletion) return;
     _hasPromptedCompletion = true;
     NotesController.instance.markNoteCompleted(note.id);
+
+    // Prompt rating sheet automatically when student reaches the end of an unrated note
+    final liveNote = NotesController.instance.subjectNotes
+        .firstWhereOrNull((n) => n.id == note.id) ?? note;
+    if (!liveNote.isRated && mounted) {
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (mounted) {
+          NoteRatingSheet.show(
+            context,
+            note: liveNote.copyWith(isCompleted: true),
+            onRated: (rating) {
+              setState(() {
+                note = note.copyWith(userRating: rating, isCompleted: true);
+              });
+            },
+          );
+        }
+      });
+    }
   }
 
-  // ── Test Button (slides up at bottom when last 3 pages left) ──────
+  // ── Completion Panel (slides up at bottom when in last 3 pages) ──────
 
-  Widget _buildCompletionPanel() {
-    // Only show test button if note has a chapter
-    if (note.chapterId == null) return const SizedBox.shrink();
+  Widget _buildCompletionPanel(bool dark) {
+    final liveNote = NotesController.instance.subjectNotes
+        .firstWhereOrNull((n) => n.id == note.id) ?? note;
+    final hasChapter = note.chapterId != null;
 
     return AnimatedSlide(
       duration: const Duration(milliseconds: 350),
@@ -426,34 +447,81 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
           child: Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             height: 48,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 4,
-                shadowColor: AppColors.primary.withValues(alpha: 0.35),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              onPressed: () {
-                Get.toNamed(
-                  Routes.testLists,
-                  arguments: {
-                    'subject_id': note.subjectId,
-                    'grade': note.grade,
-                    'subject': subjectTitle,
-                    'chapter': note.title,
-                    'chapter_id': note.chapterId,
-                    'chapter_number': note.chapterNumber,
+            child: Row(
+              children: [
+                if (hasChapter)
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: AppColors.primary.withValues(alpha: 0.35),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () {
+                        Get.toNamed(
+                          Routes.testLists,
+                          arguments: {
+                            'subject_id': note.subjectId,
+                            'grade': note.grade,
+                            'subject': subjectTitle,
+                            'chapter': note.title,
+                            'chapter_id': note.chapterId,
+                            'chapter_number': note.chapterNumber,
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.quiz_rounded, size: 18),
+                      label: const Text(
+                        'Practice Tests',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ),
+                if (hasChapter) const SizedBox(width: 10),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: dark ? const Color(0xFF26262B) : Colors.white,
+                    foregroundColor: const Color(0xFFD97706),
+                    elevation: 3,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    NoteRatingSheet.show(
+                      context,
+                      note: liveNote.copyWith(isCompleted: true),
+                      onRated: (rating) {
+                        setState(() {
+                          note = note.copyWith(userRating: rating, isCompleted: true);
+                        });
+                      },
+                    );
                   },
-                );
-              },
-              icon: const Icon(Icons.quiz_rounded, size: 18),
-              label: const Text(
-                'Practice Tests',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-              ),
+                  icon: Icon(
+                    liveNote.isRated ? Icons.star_rounded : Icons.star_outline_rounded,
+                    size: 19,
+                    color: const Color(0xFFF59E0B),
+                  ),
+                  label: Text(
+                    liveNote.isRated ? '${liveNote.userRating}/5' : 'Rate Note',
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFD97706),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -467,6 +535,11 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     final bgColor = _nightMode
         ? const Color(0xFF121212)
         : (dark ? AppColors.black : const Color(0xFFE2E8F0));
+
+    final liveNote = NotesController.instance.subjectNotes
+            .firstWhereOrNull((n) => n.id == note.id) ??
+        note;
+    final isFinished = liveNote.isCompleted || _hasPromptedCompletion;
 
     final appBar = AppBar(
       backgroundColor: AppColors.primary,
@@ -582,6 +655,37 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
               icon: const Icon(
                 Icons.quiz_rounded,
                 color: AppColors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        // Rating quick button if finished
+        if (isFinished)
+          SizedBox(
+            width: 36,
+            child: IconButton(
+              tooltip: liveNote.isRated
+                  ? 'Rating: ${liveNote.userRating}/5'
+                  : 'Rate note',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                NoteRatingSheet.show(
+                  context,
+                  note: liveNote.copyWith(isCompleted: true),
+                  onRated: (rating) {
+                    setState(() {
+                      note = note.copyWith(
+                        userRating: rating,
+                        isCompleted: true,
+                      );
+                    });
+                  },
+                );
+              },
+              icon: Icon(
+                liveNote.isRated ? Icons.star_rounded : Icons.star_outline_rounded,
+                color: const Color(0xFFFDE68A),
                 size: 20,
               ),
             ),
@@ -766,7 +870,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: _buildCompletionPanel(),
+                      child: _buildCompletionPanel(dark),
                     ),
                   ],
                 );

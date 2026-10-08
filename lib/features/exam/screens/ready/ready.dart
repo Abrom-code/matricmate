@@ -224,79 +224,6 @@ class _ReadyScreenState extends State<ReadyScreen> {
                     ),
                     const SizedBox(height: 22),
 
-                    // ── 3. In-Progress Resume Card (if draft exists) ──
-                    if (hasDraft) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.secondary.withValues(
-                                alpha: dark ? 0.18 : 0.12,
-                              ),
-                              AppColors.secondary.withValues(
-                                alpha: dark ? 0.08 : 0.04,
-                              ),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppColors.secondary.withValues(alpha: 0.35),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.secondary.withValues(
-                                      alpha: 0.2,
-                                    ),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.play_arrow_rounded,
-                                    size: 18,
-                                    color: AppColors.secondary,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                const Expanded(
-                                  child: Text(
-                                    'Paused Attempt In Progress',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.secondary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Answered $answered of ${widget.qnCount} questions. '
-                              'Resume below or choose a mode to restart.',
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                height: 1.45,
-                                color: dark
-                                    ? AppColors.white.withValues(alpha: 0.85)
-                                    : const Color(0xFF475569),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                    ],
-
                     // ── 4. Mode Selection Cards ───────────────────────
                     if (widget.forceExamMode) ...[
                       const Text(
@@ -357,7 +284,9 @@ class _ReadyScreenState extends State<ReadyScreen> {
                                       fontSize: 12,
                                       height: 1.4,
                                       color: dark
-                                          ? AppColors.white.withValues(alpha: 0.8)
+                                          ? AppColors.white.withValues(
+                                              alpha: 0.8,
+                                            )
                                           : AppColors.textSecondary,
                                     ),
                                   ),
@@ -417,28 +346,28 @@ class _ReadyScreenState extends State<ReadyScreen> {
                     ],
 
                     // ── 5. Description / About This Test ──────────────
-                    const Text(
-                      'TEST INSTRUCTIONS & DETAILS',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: AppColors.textSecondary,
+                    if (hasDescription) ...[
+                      const Text(
+                        'TEST INSTRUCTIONS & DETAILS',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: cardBg,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: borderColor),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (hasDescription) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
                               widget.description!.trim(),
                               style: TextStyle(
@@ -450,39 +379,11 @@ class _ReadyScreenState extends State<ReadyScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Divider(
-                              height: 1,
-                              color: borderColor.withValues(alpha: 0.5),
-                            ),
-                            const SizedBox(height: 12),
                           ],
-                          _InstructionBullet(
-                            icon: Icons.check_circle_outline_rounded,
-                            text:
-                                'Each question has 4 choices with one correct answer.',
-                            dark: dark,
-                          ),
-                          const SizedBox(height: 8),
-                          _InstructionBullet(
-                            icon: Icons.bookmark_border_rounded,
-                            text:
-                                'Bookmark tricky questions during the test for quick revision.',
-                            dark: dark,
-                          ),
-                          const SizedBox(height: 8),
-                          _InstructionBullet(
-                            icon: widget.canPause
-                                ? Icons.pause_circle_outline_rounded
-                                : Icons.timer_outlined,
-                            text: widget.canPause
-                                ? 'Your answers are auto-saved. You can pause anytime and resume later.'
-                                : 'Strict Exam: Pausing is disabled. Once started, you must complete before time expires.',
-                            dark: dark,
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
+                    ],
                   ],
                 ),
               ),
@@ -633,8 +534,8 @@ class _ReadyScreenState extends State<ReadyScreen> {
                                 widget.forceExamMode
                                     ? 'Start Pilot Exam (${widget.time} Min)'
                                     : (_isExamMode
-                                        ? 'Start in Exam Mode'
-                                        : 'Start in Practice Mode'),
+                                          ? 'Start in Exam Mode'
+                                          : 'Start in Practice Mode'),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,

@@ -435,6 +435,47 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
         .firstWhereOrNull((n) => n.id == note.id) ?? note;
     final hasChapter = note.chapterId != null;
 
+    final rateBtn = ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: dark ? const Color(0xFF26262B) : Colors.white,
+        foregroundColor: const Color(0xFFD97706),
+        elevation: 3,
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        side: const BorderSide(
+          color: Color(0xFFD97706),
+          width: 1.2,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      onPressed: () {
+        NoteRatingSheet.show(
+          context,
+          note: liveNote.copyWith(isCompleted: true),
+          onRated: (rating) {
+            setState(() {
+              note = note.copyWith(userRating: rating, isCompleted: true);
+            });
+          },
+        );
+      },
+      icon: Icon(
+        liveNote.isRated ? Icons.star_rounded : Icons.star_outline_rounded,
+        size: 19,
+        color: const Color(0xFFD97706),
+      ),
+      label: Text(
+        liveNote.isRated ? '${liveNote.userRating}/5' : 'Rate Note',
+        style: const TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFFD97706),
+        ),
+      ),
+    );
+
     return AnimatedSlide(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOutCubic,
@@ -448,6 +489,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             height: 48,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (hasChapter)
                   Expanded(
@@ -457,6 +499,8 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                         foregroundColor: Colors.white,
                         elevation: 4,
                         shadowColor: AppColors.primary.withValues(alpha: 0.35),
+                        minimumSize: const Size(0, 48),
+                        side: BorderSide.none,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -482,45 +526,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                     ),
                   ),
                 if (hasChapter) const SizedBox(width: 10),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: dark ? const Color(0xFF26262B) : Colors.white,
-                    foregroundColor: const Color(0xFFD97706),
-                    elevation: 3,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  onPressed: () {
-                    NoteRatingSheet.show(
-                      context,
-                      note: liveNote.copyWith(isCompleted: true),
-                      onRated: (rating) {
-                        setState(() {
-                          note = note.copyWith(userRating: rating, isCompleted: true);
-                        });
-                      },
-                    );
-                  },
-                  icon: Icon(
-                    liveNote.isRated ? Icons.star_rounded : Icons.star_outline_rounded,
-                    size: 19,
-                    color: const Color(0xFFF59E0B),
-                  ),
-                  label: Text(
-                    liveNote.isRated ? '${liveNote.userRating}/5' : 'Rate Note',
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFD97706),
-                    ),
-                  ),
-                ),
+                if (hasChapter) rateBtn else Expanded(child: rateBtn),
               ],
             ),
           ),

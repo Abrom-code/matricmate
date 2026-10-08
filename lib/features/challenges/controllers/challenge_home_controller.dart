@@ -31,7 +31,7 @@ class ChallengeHomeController extends GetxController {
   final _db = DatabaseService.instance;
   final _sb = Supabase.instance.client;
 
-  final isLoading = false.obs;
+  final isLoading = true.obs;
   final isRefreshing = false.obs;
   final availableChallenges = <LeaderboardChallengeModel>[].obs;
   final completedChallenges = <LeaderboardChallengeModel>[].obs;

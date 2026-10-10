@@ -83,7 +83,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
       body: Obx(() {
         final user = UserController.instance.user.value;
         final isPending = user.isPending;
-        final isInactiveOrPending = !user.isActive;
+        final needsUpgrade = user.needsUpgrade;
         final filteredSubjects = ctrl.filteredSubjects;
         final syncing = syncController.refreshing.value;
         final isOffline = ctrl.isOffline.value;
@@ -118,16 +118,10 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                     ],
 
                     // ── 2. Premium Upgrade Banner ─────────────────────
-                    // Shown if pending or inactive, removed when active.
-                    if (isInactiveOrPending) ...[
+                    // Shown if inactive/expired; hidden when pending or active (premium).
+                    if (needsUpgrade) ...[
                       PremiumBanner(
-                        onTap: () {
-                          if (user.isPending) {
-                            Get.toNamed(Routes.paymentVerification);
-                          } else {
-                            Get.toNamed(Routes.premium);
-                          }
-                        },
+                        onTap: () => Get.toNamed(Routes.premium),
                       ),
                       const SizedBox(height: 16),
                     ],

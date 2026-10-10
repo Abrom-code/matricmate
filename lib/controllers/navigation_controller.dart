@@ -40,6 +40,13 @@ class NavigationController extends GetxController {
       const _KeepAlivePage(child: OthersScreen()),
       const _KeepAlivePage(child: ProfileScreen()),
     ];
+
+    // If the app cold-launched from a notification tap, the FCM handler
+    // deferred navigation because the route stack wasn't ready yet.
+    // Now that NavigationMenu is mounted, drain the pending payload.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FcmService.instance.consumePendingNavigation();
+    });
   }
 
   @override

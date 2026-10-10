@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ui' show Color;
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/firebase_options.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -106,6 +107,11 @@ class FcmService {
   );
 
   bool _initialized = false;
+
+  /// Pending notification tap payload stored when the app is still
+  /// transitioning routes (cold launch / background resume). Consumed
+  /// by [consumePendingNavigation] once the NavigationMenu is ready.
+  static Map<String, dynamic>? _pendingTapPayload;
 
   /// Prevents stale launch notifications from re-navigating on hot restart.
   bool _shouldHandleLaunch(int hash) {
@@ -463,6 +469,25 @@ class FcmService {
   }
 
   void _handleTap(Map<String, dynamic> data) {
+    // If the main NavigationMenu route hasn't settled yet (cold launch or
+    // background resume), store the payload and let consumePendingNavigation
+    // handle it once the shell is ready.
+    final currentRoute = Get.currentRoute;
+    if (currentRoute == Routes.loading ||
+        currentRoute == '/' ||
+        currentRoute.isEmpty) {
+      debugPrint(
+        '[FcmService] Route not ready ($currentRoute) — deferring tap navigation',
+      );
+      _pendingTapPayload = Map<String, dynamic>.from(data);
+      return;
+    }
+
+    _executeTapNavigation(data);
+  }
+
+  /// Actually performs the navigation for a notification tap.
+  void _executeTapNavigation(Map<String, dynamic> data) {
     // Ensure notifications list and unread badge are synced on tap
     if (Get.isRegistered<NotificationsController>()) {
       unawaited(
@@ -496,6 +521,20 @@ class FcmService {
         }
         Get.toNamed(Routes.notifications);
     }
+  }
+
+  /// Called by [NavigationController] once the NavigationMenu is fully mounted.
+  /// Drains any pending notification-tap payload that was stored during cold
+  /// launch or background resume when the route stack wasn't ready.
+  void consumePendingNavigation() {
+    final data = _pendingTapPayload;
+    if (data == null) return;
+    _pendingTapPayload = null;
+
+    // Give the route stack one more frame to settle, then navigate.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _executeTapNavigation(data);
+    });
   }
 
   /// Unsubscribes from all topics on logout.

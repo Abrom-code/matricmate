@@ -42,7 +42,12 @@ class ModernAppbar extends StatelessWidget implements PreferredSizeWidget {
       title: _TitleColumn(
         title: title,
         subtitle: subtitle != null && subtitle!.isNotEmpty
-            ? Text(subtitle!, style: _subtitleStyle)
+            ? Text(
+                subtitle!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _subtitleStyle,
+              )
             : null,
       ),
     );
@@ -120,6 +125,8 @@ class _TitleColumn extends StatelessWidget {
       children: [
         Text(
           title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: AppColors.white,
             fontSize: 18.5,

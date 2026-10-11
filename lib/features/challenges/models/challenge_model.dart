@@ -93,7 +93,7 @@ class LeaderboardChallengeModel {
     this.isPremium = true,
   });
 
-  bool get isDraft => status == 'draft';
+  bool get isDraft => status == 'draft' || status == 'verification';
 
   bool get isScheduled {
     if (status == 'scheduled') {

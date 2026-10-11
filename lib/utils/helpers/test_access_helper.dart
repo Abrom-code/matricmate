@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/helpers/new_tag_helper.dart';
 
@@ -19,6 +20,10 @@ class TestAccessHelper {
     required TestModel test,
     required UserModel user,
   }) {
+    if (Get.isRegistered<UserController>() &&
+        Get.find<UserController>().isAdmin.value) {
+      return true;
+    }
     if (!test.isPremium) return true;
     return user.isActive;
   }

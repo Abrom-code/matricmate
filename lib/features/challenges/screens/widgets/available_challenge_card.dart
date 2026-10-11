@@ -78,23 +78,25 @@ class AvailableChallengeCard extends StatelessWidget {
             Row(
               children: [
                 // Subject Chip
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    challenge.subjectName ?? 'Challenge',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.teal,
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.teal.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      challenge.subjectName ?? 'Challenge',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.teal,
+                      ),
                     ),
                   ),
                 ),
@@ -322,15 +324,145 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ] else if (challenge.isDraft && UserController.instance.isAdmin.value) ...[
+              // Admin draft verification: Side-by-side Preview + Publish buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => ctrl.onChallengeTapped(challenge),
+                        icon: const Icon(
+                          Icons.visibility_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Preview',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: dark
+                              ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                              : const Color(0xFFECFDF5),
+                          foregroundColor: dark
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF059669),
+                          side: BorderSide(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () {
+                          AppHelperFunctions.showAppDialog(
+                            context,
+                            'Publish Challenge?',
+                            'This challenge will be verified and published for students nationwide.',
+                            () async {
+                              Get.back();
+                              await ctrl.verifyAndPublishChallenge(challenge.id);
+                            },
+                            okText: 'Publish Now',
+                            cancelText: 'Cancel',
+                            icon: Icons.verified_rounded,
+                            iconColor: const Color(0xFF10B981),
+                          );
+                        },
+                        icon: Icon(
+                          Icons.verified_rounded,
+                          size: 16,
+                          color: dark
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF059669),
+                        ),
+                        label: Text(
+                          'Publish Now',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: dark
+                                ? const Color(0xFF34D399)
+                                : const Color(0xFF059669),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (isLive) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => Get.to(
+                      () => LeaderboardScreen(
+                        challengeId: challenge.id,
+                        challengeTitle: challenge.title,
+                        audience: challenge.audience,
+                      ),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 2,
+                        horizontal: 4,
+                      ),
+                      child: Text(
+                        'View rankings →',
+                        style: TextStyle(
+                          color: AppColors.amber,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ] else if (isLive) ...[
               SizedBox(
                 width: double.infinity,
                 height: 46,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
-                    foregroundColor: const Color(0xFF04342C),
-                    side: const BorderSide(color: AppColors.secondary),
+                    backgroundColor: isDone
+                        ? AppColors.primary
+                        : const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
                     elevation: 0,
                     padding: EdgeInsets.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -346,14 +478,14 @@ class AvailableChallengeCard extends StatelessWidget {
                         ? Icons.visibility_outlined
                         : Icons.arrow_forward_rounded,
                     size: 16,
-                    color: AppColors.white,
+                    color: Colors.white,
                   ),
                   label: Text(
                     isDone ? 'Review' : 'Start challenge',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.white,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -371,7 +503,10 @@ class AvailableChallengeCard extends StatelessWidget {
                     ),
                   ),
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 2,
+                      horizontal: 4,
+                    ),
                     child: Text(
                       'View rankings →',
                       style: TextStyle(
@@ -386,72 +521,73 @@ class AvailableChallengeCard extends StatelessWidget {
             ] else ...[
               SizedBox(
                 width: double.infinity,
-                height: 46,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: const Color(0x26378ADD),
-                    foregroundColor: const Color(0xFF85B7EB),
-                    side: const BorderSide(color: Color(0x66378ADD), width: 1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                    padding: EdgeInsets.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: () => ctrl.onChallengeTapped(challenge),
-                  icon: const Icon(
-                    Icons.notifications_outlined,
-                    size: 16,
-                    color: Color(0xFF85B7EB),
-                  ),
-                  label: const Text(
-                    'Scheduled',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF85B7EB),
-                    ),
-                  ),
-                ),
-              ),
-              if (challenge.isDraft && UserController.instance.isAdmin.value) ...[
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  height: 42,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                height: 44,
+                child: UserController.instance.isAdmin.value
+                    ? ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => ctrl.onChallengeTapped(challenge),
+                        icon: const Icon(
+                          Icons.visibility_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Preview Questions',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: dark
+                              ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                              : const Color(0xFFF0F9FF),
+                          foregroundColor: dark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
+                          side: BorderSide(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => ctrl.onChallengeTapped(challenge),
+                        icon: Icon(
+                          Icons.notifications_outlined,
+                          size: 16,
+                          color: dark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
+                        ),
+                        label: Text(
+                          'Scheduled',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: dark
+                                ? const Color(0xFF38BDF8)
+                                : const Color(0xFF0284C7),
+                          ),
+                        ),
                       ),
-                    ),
-                    onPressed: () {
-                      AppHelperFunctions.showAppDialog(
-                        context,
-                        'Publish Challenge?',
-                        'This challenge will be verified and published for students.',
-                        () async {
-                          Get.back();
-                          await ctrl.verifyAndPublishChallenge(challenge.id);
-                        },
-                        okText: 'Publish Now',
-                        cancelText: 'Cancel',
-                        icon: Icons.verified_rounded,
-                        iconColor: AppColors.primary,
-                      );
-                    },
-                    icon: const Icon(Icons.verified_rounded, size: 16),
-                    label: const Text(
-                      'Verify & Publish Challenge',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ],
           ],
         ),

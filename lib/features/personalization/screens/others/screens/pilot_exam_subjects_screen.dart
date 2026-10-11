@@ -62,21 +62,29 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                     okText: 'Publish Now',
                     cancelText: 'Cancel',
                     icon: Icons.verified_rounded,
-                    iconColor: AppColors.primary,
+                    iconColor: const Color(0xFF10B981),
                   );
                 },
                 icon: Container(
-                  width: 34,
-                  height: 34,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.25),
+                    color: dark
+                        ? const Color(0xFF10B981).withValues(alpha: 0.20)
+                        : const Color(0xFFECFDF5),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                      width: 1,
+                    ),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.verified_rounded,
-                      color: Colors.amberAccent,
-                      size: 17,
+                      color: dark
+                          ? const Color(0xFF34D399)
+                          : const Color(0xFF059669),
+                      size: 16,
                     ),
                   ),
                 ),
@@ -113,7 +121,8 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
         }
 
         final user = UserController.instance.user.value;
-        final isLocked = !user.isActive;
+        final isAdmin = UserController.instance.isAdmin.value;
+        final isLocked = !isAdmin && !user.isActive;
 
         final subjects = controller.examSubjects;
         final completedCount = controller.completedSubjectsCount;
@@ -389,6 +398,75 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                   },
                 ),
               ],
+            ),
+          ),
+        );
+      }),
+      bottomNavigationBar: Obx(() {
+        final isAdmin = UserController.instance.isAdmin.value;
+        final isDraft = controller.selectedExam.value?.isDraft == true;
+        if (!isAdmin || !isDraft) return const SizedBox.shrink();
+
+        return Container(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            MediaQuery.paddingOf(context).bottom + 12,
+          ),
+          decoration: BoxDecoration(
+            color: dark ? AppColors.darkCard : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                width: 1,
+              ),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: dark ? 0.25 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -3),
+              ),
+            ],
+          ),
+          child: SizedBox(
+            height: 48,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () {
+                final exam = controller.selectedExam.value;
+                if (exam == null) return;
+                AppHelperFunctions.showAppDialog(
+                  context,
+                  'Publish Pilot Exam?',
+                  'This pilot exam and all 6 subjects will be verified and published nationwide for all students.',
+                  () async {
+                    Get.back();
+                    await controller.verifyAndPublishPilotExam(exam.id);
+                  },
+                  okText: 'Publish Now',
+                  cancelText: 'Cancel',
+                  icon: Icons.verified_rounded,
+                  iconColor: const Color(0xFF10B981),
+                );
+              },
+              icon: const Icon(Icons.verified_rounded, size: 18, color: Colors.white),
+              label: const Text(
+                'Verify & Publish Pilot Exam',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         );
@@ -921,6 +999,8 @@ class _SubjectExamTile extends StatelessWidget {
                               : (!isDownloaded
                                   ? '${subject.timeMinutes} mins • Tap to download'
                                   : '${subject.timeMinutes} mins • ${subject.questionCount} questions • Ready'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12,
                             color: isDownloading

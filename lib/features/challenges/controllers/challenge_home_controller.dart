@@ -762,7 +762,19 @@ class ChallengeHomeController extends GetxController {
       return;
     }
 
+    final isAdmin = UserController.instance.isAdmin.value;
+
     if (challenge.isLive) {
+      // Admin can preview live challenges without joining (practice mode)
+      if (isAdmin && challenge.isDraft) {
+        Get.to(() => ChallengePracticeScreen(
+          challengeId: challenge.id,
+          title: '${challenge.title} (Admin Preview)',
+          setId: challenge.setId,
+          isDraft: true,
+        ));
+        return;
+      }
       Get.to(
         () => ChallengeAttemptScreen(
           challengeId: challenge.id,
@@ -772,7 +784,17 @@ class ChallengeHomeController extends GetxController {
           durationMinutes: challenge.durationMinutes,
         ),
       );
-    } else if (challenge.isScheduled) {
+    } else if (challenge.isScheduled || challenge.isDraft) {
+      // Admin can preview scheduled/draft challenges without joining
+      if (isAdmin) {
+        Get.to(() => ChallengePracticeScreen(
+          challengeId: challenge.id,
+          title: '${challenge.title} (Admin Preview)',
+          setId: challenge.setId,
+          isDraft: challenge.isDraft,
+        ));
+        return;
+      }
       if (challenge.startsAt != null) {
         ToastHelper.info(
           'Opens in ${formatCountdown(challenge.startsAt!)}. Get ready!',
@@ -784,6 +806,7 @@ class ChallengeHomeController extends GetxController {
       Get.to(() => ChallengePracticeScreen(challengeId: challenge.id, title: challenge.title));
     }
   }
+
 
   
   void markAttemptedOrPracticed(String challengeId) {

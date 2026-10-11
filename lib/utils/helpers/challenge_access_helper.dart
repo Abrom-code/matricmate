@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 
 /// Central access gatekeeper for challenges.
@@ -16,6 +17,10 @@ class ChallengeAccessHelper {
     required LeaderboardChallengeModel challenge,
     required UserModel user,
   }) {
+    if (Get.isRegistered<UserController>() &&
+        Get.find<UserController>().isAdmin.value) {
+      return true;
+    }
     if (!challenge.isPremium) return true;
     return user.isActive;
   }

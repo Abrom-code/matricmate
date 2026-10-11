@@ -359,7 +359,10 @@ class PilotExamController extends GetxController {
   }) async {
     final testId = subject.testId;
     final user = UserController.instance.user.value;
-    if (!user.isActive) {
+    final isAdmin = UserController.instance.isAdmin.value;
+
+    // Admin can download draft exam questions; regular users need premium
+    if (!isAdmin && !user.isActive) {
       if (!silent) {
         TestAccessHelper.openPremiumSheet(user: user);
       }
@@ -420,7 +423,10 @@ class PilotExamController extends GetxController {
   /// Downloads all subjects in the current pilot exam for complete offline readiness
   Future<void> downloadAllSubjects() async {
     final user = UserController.instance.user.value;
-    if (!user.isActive) {
+    final isAdmin = UserController.instance.isAdmin.value;
+
+    // Admin can download draft exam questions; regular users need premium
+    if (!isAdmin && !user.isActive) {
       TestAccessHelper.openPremiumSheet(user: user);
       return;
     }
@@ -559,7 +565,10 @@ class PilotExamController extends GetxController {
     PilotExamSubjectModel subject,
     UserModel user,
   ) async {
-    if (!user.isActive) {
+    final isAdmin = UserController.instance.isAdmin.value;
+
+    // Admin can preview draft exams without premium; regular users need premium
+    if (!isAdmin && !user.isActive) {
       TestAccessHelper.openPremiumSheet(user: user);
       return;
     }

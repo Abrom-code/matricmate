@@ -6,9 +6,13 @@ import 'package:matricmate/features/challenges/controllers/challenge_practice_co
 import 'package:matricmate/features/challenges/screens/widgets/challenge_passage_container.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_passage_layout_ctrl.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
+import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
+import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ChallengePracticeScreen extends StatefulWidget {
   const ChallengePracticeScreen({
@@ -16,11 +20,13 @@ class ChallengePracticeScreen extends StatefulWidget {
     required this.challengeId,
     required this.title,
     this.setId,
+    this.isDraft = false,
   });
 
   final String challengeId;
   final String title;
   final String? setId;
+  final bool isDraft;
 
   @override
   State<ChallengePracticeScreen> createState() => _ChallengePracticeScreenState();
@@ -65,12 +71,118 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Practice: ${widget.title}',
+          widget.isDraft ? 'Preview: ${widget.title}' : 'Practice: ${widget.title}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
         actions: [
+          // ── Admin Inspector Mode Toggle ──
+          if (UserController.instance.isAdmin.value) ...[
+            Obx(() {
+              final active = _ctrl.adminInspectorMode.value;
+              return IconButton(
+                tooltip: active
+                    ? 'Hide answers'
+                    : 'Review mode: show answers',
+                onPressed: _ctrl.toggleAdminInspector,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                icon: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: active
+                        ? (dark
+                            ? const Color(0xFF10B981).withValues(alpha: 0.25)
+                            : const Color(0xFFECFDF5))
+                        : (dark
+                            ? Colors.white.withValues(alpha: 0.10)
+                            : const Color(0xFFF1F5F9)),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: active
+                          ? const Color(0xFF10B981).withValues(alpha: 0.5)
+                          : (dark
+                              ? AppColors.darkBorder
+                              : const Color(0xFFE2E8F0)),
+                      width: 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      active
+                          ? Icons.visibility_rounded
+                          : Icons.visibility_off_rounded,
+                      color: active
+                          ? (dark
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF059669))
+                          : (dark
+                              ? Colors.white70
+                              : const Color(0xFF475569)),
+                      size: 16,
+                    ),
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(width: 4),
+          ],
+          // ── Admin Publish Button (if draft) ──
+          if (widget.isDraft && UserController.instance.isAdmin.value) ...[
+            IconButton(
+              tooltip: 'Verify & Publish Challenge',
+              onPressed: () {
+                AppHelperFunctions.showAppDialog(
+                  context,
+                  'Publish Challenge?',
+                  'This challenge will be verified and published for students nationwide.',
+                  () async {
+                    Get.back();
+                    if (Get.isRegistered<ChallengeHomeController>()) {
+                      await ChallengeHomeController.instance
+                          .verifyAndPublishChallenge(widget.challengeId);
+                    } else {
+                      await ChallengeRepository()
+                          .verifyAndPublishChallenge(widget.challengeId);
+                      ToastHelper.success('Challenge verified & published!');
+                    }
+                  },
+                  okText: 'Publish Now',
+                  cancelText: 'Cancel',
+                  icon: Icons.verified_rounded,
+                  iconColor: const Color(0xFF10B981),
+                );
+              },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+              icon: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: dark
+                      ? const Color(0xFF10B981).withValues(alpha: 0.20)
+                      : const Color(0xFFECFDF5),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.verified_rounded,
+                    color: dark
+                        ? const Color(0xFF34D399)
+                        : const Color(0xFF059669),
+                    size: 16,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
           // ── Reading Passage Toggle (if question has a passage) ──
           Obx(() {
             final passage = _ctrl.currentPassage;
@@ -159,8 +271,8 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
                       totalQuestions: _ctrl.totalQuestions,
                       selectedChoice: selectedChoice,
                       onSelectChoice: (choice) => _ctrl.selectOption(choice),
-                      isChecked: isAnswered,
-                      showExplanation: isAnswered,
+                      isChecked: isAnswered || _ctrl.adminInspectorMode.value,
+                      showExplanation: isAnswered || _ctrl.adminInspectorMode.value,
                       initialExplanationExpanded: true,
                     ),
                   ],
@@ -191,20 +303,32 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
                     OutlinedButton.icon(
                       onPressed: () => _showQuestionGrid(context),
                       icon: const Icon(Iconsax.grid_4_copy, size: 16),
-                      label: Text('${_ctrl.currentIndex.value + 1}/${_ctrl.totalQuestions}'),
+                      label: Text(
+                        '${_ctrl.currentIndex.value + 1}/${_ctrl.totalQuestions}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const Spacer(),
                     if (_ctrl.currentIndex.value < _ctrl.totalQuestions - 1)
                       FilledButton.icon(
                         onPressed: _ctrl.nextQuestion,
                         icon: const Icon(Iconsax.arrow_right_3_copy, size: 16),
-                        label: const Text('Next'),
+                        label: const Text(
+                          'Next',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       )
                     else
                       FilledButton.icon(
                         onPressed: _ctrl.finishPracticeAndReview,
                         icon: const Icon(Iconsax.tick_circle_copy, size: 16),
-                        label: const Text('Finish & Review'),
+                        label: const Text(
+                          'Finish & Review',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                   ],
                 ),

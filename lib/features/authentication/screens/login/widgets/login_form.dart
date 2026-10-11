@@ -310,69 +310,34 @@ class LoginForm extends GetView<LoginController> {
 
           const SizedBox(height: 20),
 
-          // ── Divider ────────────────────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: Divider(
-                  color: dark
-                      ? AppColors.darkBorder
-                      : const Color(0xFFE2E8F0),
-                  thickness: 1,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Text(
-                  'or',
+          // ── Switch to Signup Footer ────────────────────────────────
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Don't have an account?",
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 13.5,
                     color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ),
-              ),
-              Expanded(
-                child: Divider(
-                  color: dark
-                      ? AppColors.darkBorder
-                      : const Color(0xFFE2E8F0),
-                  thickness: 1,
+                TextButton(
+                  onPressed: () => Get.offNamed(Routes.signup),
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // ── Create Account Outlined Button ─────────────────────────
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: OutlinedButton.icon(
-              onPressed: () => Get.offNamed(Routes.signup),
-              icon: const Icon(Iconsax.user_add_copy, size: 18),
-              label: const Text(
-                'Create New Account',
-                style: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(
-                  color: dark
-                      ? AppColors.darkBorder
-                      : const Color(0xFFCBD5E1),
-                  width: 1.2,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
+              ],
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
 
           // ── Support Bot Footer ─────────────────────────────────────
           Center(

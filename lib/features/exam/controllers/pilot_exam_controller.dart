@@ -35,7 +35,10 @@ class PilotExamController extends GetxController {
 
   final RxBool isLoading = false.obs;
   final RxBool isLoadingSubjects = false.obs;
+  final RxBool isRefreshing = false.obs;
+  final RxBool isRefreshingSubjects = false.obs;
   final RxMap<int, PilotExamProgress> examProgressMap = <int, PilotExamProgress>{}.obs;
+  final RxString adminStreamFilter = 'all'.obs; // 'all', 'natural', 'social'
 
   // ── Download States ────────────────────────────────────────────────────────
   final RxBool isBulkDownloading = false.obs;
@@ -83,37 +86,65 @@ class PilotExamController extends GetxController {
   bool _isLoadingSubjectsInternal = false;
 
   /// Loads all available pilot exams (offline SQLite first, then Supabase if online).
-  Future<void> loadPilotExams() async {
+  Future<void> loadPilotExams({bool isManual = false}) async {
     if (_isLoadingPilotExams) return;
     _isLoadingPilotExams = true;
     try {
-      isLoading.value = true;
+      if (isManual) {
+        isRefreshing.value = true;
+      } else if (pilotExams.isEmpty) {
+        isLoading.value = true;
+      }
 
       // 1. Purge legacy dummy seeded records if any
       await _repo.clearLegacyDummySeed();
 
       final isAdmin = UserController.instance.isAdmin.value;
 
-      // 2. Paint immediately from local SQLite
-      final local = await _repo.getLocalPilotExams(includeDrafts: isAdmin);
-      pilotExams.assignAll(local);
-      await loadAllExamProgresses();
+      // 2. Paint immediately from local SQLite if not already loaded or cold start
+      if (!isManual) {
+        final local = await _repo.getLocalPilotExams(includeDrafts: isAdmin);
+        pilotExams.assignAll(local);
+        await loadAllExamProgresses();
+      }
 
       // 3. Refresh from remote Supabase if connected
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await NetworkManager.instance.isConnected(force: isManual);
       if (isConnected) {
         final remote = await _repo.fetchRemotePilotExams(includeDrafts: isAdmin);
         if (remote != null) {
           await _repo.syncPilotExams(remote);
+
+          // Synchronize subjects for each remote exam
+          for (final examMap in remote) {
+            final rawId = examMap['id'];
+            final examId = rawId is int ? rawId : int.tryParse(rawId.toString()) ?? 0;
+            if (examId > 0) {
+              final remoteSubjects = await _repo.fetchRemotePilotExamSubjects(examId);
+              if (remoteSubjects != null) {
+                await _repo.syncPilotExamSubjects(examId, remoteSubjects);
+              }
+            }
+          }
+
           final updated = await _repo.getLocalPilotExams(includeDrafts: isAdmin);
           pilotExams.assignAll(updated);
           await loadAllExamProgresses();
+
+          if (isManual) {
+            ToastHelper.success('Pilot exams updated from cloud');
+          }
+        } else if (isManual) {
+          ToastHelper.info('Could not reach cloud server. Showing offline exams.');
         }
+      } else if (isManual) {
+        ToastHelper.warning('No internet connection. Please check your network.');
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoading.value = false;
+      isRefreshing.value = false;
       _isLoadingPilotExams = false;
     }
   }
@@ -137,11 +168,16 @@ class PilotExamController extends GetxController {
   /// Computes progress (completed count and score) for all pilot exams.
   Future<void> loadAllExamProgresses() async {
     try {
+      final isAdmin = UserController.instance.isAdmin.value;
       final userStream = UserController.instance.user.value.stream.toLowerCase().trim();
       final stream = userStream.isEmpty ? 'natural' : userStream;
 
       for (final exam in pilotExams) {
-        final subjects = await _repo.getLocalPilotExamSubjects(exam.id, stream);
+        final subjects = await _repo.getLocalPilotExamSubjects(
+          exam.id,
+          stream,
+          includeAllStreams: isAdmin,
+        );
         int completed = 0;
         double totalScore = 0.0;
 
@@ -166,6 +202,13 @@ class PilotExamController extends GetxController {
     } catch (_) {}
   }
 
+  /// Sets stream filter for administrators ('all', 'natural', 'social')
+  void setAdminStreamFilter(String filter) {
+    if (adminStreamFilter.value == filter) return;
+    adminStreamFilter.value = filter;
+    loadSubjectsForSelectedExam();
+  }
+
 
   /// Selects a pilot exam and loads its 6 subjects based on user stream.
   void selectExam(PilotExamModel exam) {
@@ -174,42 +217,65 @@ class PilotExamController extends GetxController {
   }
 
   /// Loads the 6 subjects and checks local completion results.
-  Future<void> loadSubjectsForSelectedExam() async {
+  Future<void> loadSubjectsForSelectedExam({bool isManual = false}) async {
     final exam = selectedExam.value;
     if (exam == null) return;
     if (_isLoadingSubjectsInternal) return;
     _isLoadingSubjectsInternal = true;
 
     try {
-      isLoadingSubjects.value = true;
-      examSubjects.clear();
-      testResults.clear();
-      testQuestionCounts.clear();
-      testHasQuestions.clear();
+      if (isManual) {
+        isRefreshingSubjects.value = true;
+      } else if (examSubjects.isEmpty) {
+        isLoadingSubjects.value = true;
+      }
 
+      final isAdmin = UserController.instance.isAdmin.value;
       final userStream = UserController.instance.user.value.stream.toLowerCase().trim();
       final stream = userStream.isEmpty ? 'natural' : userStream;
 
-      // 1. Load subjects from SQLite immediately
-      final subjects = await _repo.getLocalPilotExamSubjects(exam.id, stream);
-      examSubjects.assignAll(subjects);
-      await _loadSubjectTestMetadata(examSubjects);
+      // Administrators can preview all subjects or switch between streams
+      final effectiveStream = isAdmin ? adminStreamFilter.value : stream;
+      final includeAll = isAdmin && effectiveStream == 'all';
 
-      // If cached subjects exist locally, unblock UI immediately
-      if (examSubjects.isNotEmpty) {
-        isLoadingSubjects.value = false;
+      // 1. If not manual refresh, load subjects from SQLite immediately for snappy display
+      if (!isManual) {
+        final subjects = await _repo.getLocalPilotExamSubjects(
+          exam.id,
+          effectiveStream,
+          includeAllStreams: includeAll,
+        );
+        examSubjects.assignAll(subjects);
+        await _loadSubjectTestMetadata(examSubjects);
+
+        // If cached subjects exist locally, unblock UI immediately
+        if (examSubjects.isNotEmpty) {
+          isLoadingSubjects.value = false;
+        }
       }
 
       // 2. Fetch remote subjects if online and save
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await NetworkManager.instance.isConnected(force: isManual);
       if (isConnected) {
         final remote = await _repo.fetchRemotePilotExamSubjects(exam.id);
         if (remote != null) {
           await _repo.syncPilotExamSubjects(exam.id, remote);
-          final updated = await _repo.getLocalPilotExamSubjects(exam.id, stream);
+          final updated = await _repo.getLocalPilotExamSubjects(
+            exam.id,
+            effectiveStream,
+            includeAllStreams: includeAll,
+          );
           examSubjects.assignAll(updated);
           await _loadSubjectTestMetadata(examSubjects);
+
+          if (isManual) {
+            ToastHelper.success('Subjects refreshed from cloud');
+          }
+        } else if (isManual) {
+          ToastHelper.info('Could not reach cloud server. Showing offline subjects.');
         }
+      } else if (isManual) {
+        ToastHelper.warning('No internet connection. Please check your network.');
       }
 
       examProgressMap[exam.id] = PilotExamProgress(
@@ -221,6 +287,7 @@ class PilotExamController extends GetxController {
       AppExceptionHandler.handleResponse(e);
     } finally {
       isLoadingSubjects.value = false;
+      isRefreshingSubjects.value = false;
       _isLoadingSubjectsInternal = false;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/pilot_exam_model.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
@@ -46,22 +47,37 @@ class PilotExamRepository {
     } catch (_) {}
   }
 
-  /// Fetches the 6 subjects for a pilot exam matching the student's stream.
+  /// Fetches the subjects for a pilot exam matching the student's stream,
+  /// or all subjects if [includeAllStreams] is true (e.g. for administrators).
   Future<List<PilotExamSubjectModel>> getLocalPilotExamSubjects(
     int pilotExamId,
-    String stream,
-  ) async {
+    String stream, {
+    bool includeAllStreams = false,
+  }) async {
     try {
       final db = await _dbService.database;
       final normalizedStream = stream.toLowerCase().trim();
 
-      final rows = await db.query(
-        'pilot_exam_subjects',
-        where:
-            'pilot_exam_id = ? AND (stream = ? OR stream = "common" OR stream = "both")',
-        whereArgs: [pilotExamId, normalizedStream],
-        orderBy: 'order_index ASC',
-      );
+      final List<Map<String, dynamic>> rows;
+      if (includeAllStreams ||
+          normalizedStream == 'all' ||
+          normalizedStream == 'both' ||
+          normalizedStream.isEmpty) {
+        rows = await db.query(
+          'pilot_exam_subjects',
+          where: 'pilot_exam_id = ?',
+          whereArgs: [pilotExamId],
+          orderBy: 'order_index ASC',
+        );
+      } else {
+        rows = await db.query(
+          'pilot_exam_subjects',
+          where:
+              'pilot_exam_id = ? AND (stream = ? OR stream = "common" OR stream = "both")',
+          whereArgs: [pilotExamId, normalizedStream],
+          orderBy: 'order_index ASC',
+        );
+      }
 
       return rows.map((r) => PilotExamSubjectModel.fromMap(r)).toList();
     } catch (e) {
@@ -76,11 +92,30 @@ class PilotExamRepository {
     bool includeDrafts = false,
   }) async {
     try {
-      var query = _supabase.from('pilot_exams').select();
       if (!includeDrafts) {
-        query = query.eq('is_active', true).eq('status', 'published');
+        try {
+          final res = await _supabase
+              .from('pilot_exams')
+              .select()
+              .or('status.eq.published,status.eq.active,is_active.eq.true')
+              .order('id', ascending: true)
+              .timeout(AppTimeouts.query);
+          return List<Map<String, dynamic>>.from(res);
+        } catch (_) {
+          final res = await _supabase
+              .from('pilot_exams')
+              .select()
+              .eq('is_active', true)
+              .order('id', ascending: true)
+              .timeout(AppTimeouts.query);
+          return List<Map<String, dynamic>>.from(res);
+        }
       }
-      final response = await query.order('id', ascending: true).timeout(AppTimeouts.query);
+      final response = await _supabase
+          .from('pilot_exams')
+          .select()
+          .order('id', ascending: true)
+          .timeout(AppTimeouts.query);
       return List<Map<String, dynamic>>.from(response);
     } catch (_) {
       return null;
@@ -226,7 +261,7 @@ class PilotExamRepository {
   }
 
   /// Downloads questions, reading passages, and diagrams for a given subject test from Supabase
-  /// and saves them into local SQLite.
+  /// and saves them into local SQLite with full foreign-key constraint safety.
   Future<int> downloadSubjectQuestions(
     int testId,
     int subjectId, {
@@ -298,24 +333,121 @@ class PilotExamRepository {
         passageData = List<dynamic>.from(pResponse);
       }
 
-      // 4. Write to SQLite in a single transaction
+      // 4. Ensure foreign key dependencies exist before inserting questions
       onStep?.call('Saving to device…', 0.7);
-      final batch = db.batch();
-      for (final q in questions) {
-        batch.insert(
-          'questions',
-          q.toMap(),
+
+      // 4a. Ensure subject exists in local subjects table (satisfies tests.subject_id and questions.subject_id)
+      final existingSubject = await db.query(
+        'subjects',
+        where: 'id = ?',
+        whereArgs: [subjectId],
+        limit: 1,
+      );
+      if (existingSubject.isEmpty) {
+        await db.insert(
+          'subjects',
+          {
+            'id': subjectId,
+            'name': 'Subject $subjectId',
+            'is_natural': 1,
+            'is_common': 1,
+            'is_downloaded': 1,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+
+      // 4b. Ensure test exists in local tests table (satisfies questions.test_id foreign key)
+      final existingTest = await db.query(
+        'tests',
+        where: 'id = ?',
+        whereArgs: [testId],
+        limit: 1,
+      );
+      if (existingTest.isEmpty) {
+        Map<String, dynamic>? remoteTest;
+        try {
+          final tRes = await _supabase
+              .from('tests')
+              .select()
+              .eq('id', testId)
+              .maybeSingle()
+              .timeout(AppTimeouts.query);
+          if (tRes != null) remoteTest = Map<String, dynamic>.from(tRes);
+        } catch (_) {}
+
+        await db.insert(
+          'tests',
+          {
+            'id': testId,
+            'subject_id': subjectId,
+            'grade': remoteTest?['grade'] ?? 12,
+            'time': remoteTest?['time'] ?? 90,
+            'chapter_id': null, // Crucial: avoid foreign key constraint error on chapters
+            'title': remoteTest?['title'] ?? 'Pilot Exam Test',
+            'type': remoteTest?['type'] ?? 'pilot',
+            'question_count': remoteTest?['question_count'] ?? questions.length,
+            'description': remoteTest?['description'] ?? '',
+            'created_at':
+                remoteTest?['created_at'] ?? DateTime.now().toIso8601String(),
+            'is_premium': 1,
+            'status': 'published',
+          },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
-      for (final p in passageData) {
-        batch.insert(
-          'passages',
-          Map<String, dynamic>.from(p as Map),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+
+      // 4c. Insert passages FIRST before questions so passage_id references are valid
+      if (passageData.isNotEmpty) {
+        final pBatch = db.batch();
+        for (final p in passageData) {
+          final pMap = Map<String, dynamic>.from(p as Map);
+          pBatch.insert(
+            'passages',
+            {
+              'id': pMap['id'],
+              'content': pMap['content'] ?? '',
+              'title': pMap['title'],
+              'image_url': pMap['image_url'],
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await pBatch.commit(noResult: true);
       }
-      await batch.commit(noResult: true);
+
+      // 4d. Collect valid local chapter and passage IDs to sanitize references
+      final localChapters = await db.query('chapters', columns: ['id']);
+      final validChapterIds =
+          localChapters.map((c) => c['id'] as int).toSet();
+      final validPassageIds =
+          passageData.map((p) => p['id'] as int).toSet();
+
+      // 4e. Write questions to SQLite safely
+      await db.execute('PRAGMA foreign_keys = OFF');
+      try {
+        final batch = db.batch();
+        for (final q in questions) {
+          final qMap = q.toMap();
+          // Nullify foreign keys if the referenced row does not exist locally
+          if (qMap['chapter_id'] != null &&
+              !validChapterIds.contains(qMap['chapter_id'])) {
+            qMap['chapter_id'] = null;
+          }
+          if (qMap['passage_id'] != null &&
+              !validPassageIds.contains(qMap['passage_id'])) {
+            qMap['passage_id'] = null;
+          }
+          batch.insert(
+            'questions',
+            qMap,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await batch.commit(noResult: true);
+      } finally {
+        await db.execute('PRAGMA foreign_keys = ON');
+      }
 
       // 5. Download diagrams / images
       if (imgUrls.isNotEmpty) {
@@ -329,7 +461,8 @@ class PilotExamRepository {
 
       onStep?.call('Done', 1.0);
       return questions.length;
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Pilot Exam downloadSubjectQuestions error: $e\n$stack');
       throw AppExceptionHandler.handle(e);
     }
   }

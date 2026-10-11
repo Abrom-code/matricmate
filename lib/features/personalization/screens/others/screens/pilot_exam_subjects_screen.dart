@@ -27,16 +27,40 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    final user = UserController.instance.user.value;
-    final stream = user.stream.isNotEmpty
-        ? '${user.stream[0].toUpperCase()}${user.stream.substring(1)} Stream'
-        : 'National Stream';
 
     return Scaffold(
       backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
-      appBar: ModernAppbar(
+      appBar: ModernAppbarWithBuilder(
         title: controller.selectedExam.value?.title ?? 'Pilot Exam',
-        subtitle: '$stream • 6 Subjects Simulation',
+        subtitleBuilder: (_) => Obx(() {
+          final isAdmin = UserController.instance.isAdmin.value;
+          if (isAdmin) {
+            final filter = controller.adminStreamFilter.value;
+            final label = filter == 'all'
+                ? 'All Streams (${controller.examSubjects.length})'
+                : '${filter[0].toUpperCase()}${filter.substring(1)} Stream (${controller.examSubjects.length})';
+            return Text(
+              'Admin Preview • $label',
+              style: const TextStyle(
+                color: Color(0xFFD1FAE5),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+              ),
+            );
+          }
+          final user = UserController.instance.user.value;
+          final stream = user.stream.isNotEmpty
+              ? '${user.stream[0].toUpperCase()}${user.stream.substring(1)} Stream'
+              : 'National Stream';
+          return Text(
+            '$stream • 6 Subjects Simulation',
+            style: const TextStyle(
+              color: Color(0xFFD1FAE5),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
+          );
+        }),
         showBackArrow: true,
         actions: [
           Obx(() {
@@ -93,25 +117,40 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
           }),
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              tooltip: 'Refresh',
-              onPressed: () => controller.loadSubjectsForSelectedExam(),
-              icon: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(
-                    Iconsax.refresh_copy,
-                    size: 17,
-                    color: AppColors.white,
+            child: Obx(() {
+              final isRefreshing = controller.isRefreshingSubjects.value;
+              return IconButton(
+                tooltip: 'Refresh Subjects',
+                onPressed: isRefreshing
+                    ? null
+                    : () => controller.loadSubjectsForSelectedExam(isManual: true),
+                icon: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: isRefreshing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(AppColors.white),
+                            ),
+                          )
+                        : const Icon(
+                            Iconsax.refresh_copy,
+                            size: 17,
+                            color: AppColors.white,
+                          ),
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ),
         ],
       ),
@@ -132,7 +171,8 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
         if (subjects.isEmpty) {
           return RefreshIndicator(
             color: AppColors.primary,
-            onRefresh: controller.loadSubjectsForSelectedExam,
+            onRefresh: () =>
+                controller.loadSubjectsForSelectedExam(isManual: true),
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
@@ -171,6 +211,15 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                                   : AppColors.textSecondary,
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () =>
+                                controller.loadSubjectsForSelectedExam(
+                              isManual: true,
+                            ),
+                            icon: const Icon(Iconsax.refresh_copy, size: 16),
+                            label: const Text('Refresh from Cloud'),
+                          ),
                         ],
                       ),
                     ),
@@ -183,7 +232,8 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
 
         return RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: controller.loadSubjectsForSelectedExam,
+          onRefresh: () =>
+              controller.loadSubjectsForSelectedExam(isManual: true),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
@@ -204,7 +254,63 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                   compositePct: compositePct,
                 ),
 
-                const SizedBox(height: 22),
+                const SizedBox(height: 18),
+
+                // ── Admin Stream Switcher Tabs ─────────────────────────────
+                Obx(() {
+                  final isAdmin = UserController.instance.isAdmin.value;
+                  if (!isAdmin) return const SizedBox.shrink();
+
+                  final current = controller.adminStreamFilter.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: dark
+                            ? AppColors.darkCard
+                            : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: dark
+                              ? AppColors.darkBorder
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _AdminFilterTab(
+                              label: 'All Subjects',
+                              isSelected: current == 'all',
+                              onTap: () =>
+                                  controller.setAdminStreamFilter('all'),
+                              dark: dark,
+                            ),
+                          ),
+                          Expanded(
+                            child: _AdminFilterTab(
+                              label: 'Natural',
+                              isSelected: current == 'natural',
+                              onTap: () =>
+                                  controller.setAdminStreamFilter('natural'),
+                              dark: dark,
+                            ),
+                          ),
+                          Expanded(
+                            child: _AdminFilterTab(
+                              label: 'Social',
+                              isSelected: current == 'social',
+                              onTap: () =>
+                                  controller.setAdminStreamFilter('social'),
+                              dark: dark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
 
                 // ── Section Title Row with Download Action Icon ───────────
                 Row(
@@ -1139,6 +1245,58 @@ class _SubjectExamTile extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminFilterTab extends StatelessWidget {
+  const _AdminFilterTab({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.dark,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (dark ? const Color(0xFF1E293B) : Colors.white)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: dark ? 0.25 : 0.06),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected
+                  ? (dark ? Colors.white : AppColors.primary)
+                  : (dark ? AppColors.darkGrey : AppColors.textSecondary),
             ),
           ),
         ),

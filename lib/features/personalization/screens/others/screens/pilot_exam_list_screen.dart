@@ -62,25 +62,40 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              tooltip: 'Refresh Exams',
-              onPressed: () => controller.loadPilotExams(),
-              icon: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(
-                    Iconsax.refresh_copy,
-                    size: 17,
-                    color: AppColors.white,
+            child: Obx(() {
+              final isRefreshing = controller.isRefreshing.value;
+              return IconButton(
+                tooltip: 'Refresh Exams',
+                onPressed: isRefreshing
+                    ? null
+                    : () => controller.loadPilotExams(isManual: true),
+                icon: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: isRefreshing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(AppColors.white),
+                            ),
+                          )
+                        : const Icon(
+                            Iconsax.refresh_copy,
+                            size: 17,
+                            color: AppColors.white,
+                          ),
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ),
         ],
       ),
@@ -90,46 +105,67 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
         }
 
         if (controller.pilotExams.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Iconsax.document_text_copy,
-                    size: 48,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No Pilot Exams Available',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: dark ? Colors.white : AppColors.textPrimary,
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () => controller.loadPilotExams(isManual: true),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.6,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Iconsax.document_text_copy,
+                            size: 48,
+                            color: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No Pilot Exams Available',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: dark ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Upcoming national matric pilot exams will appear here.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: dark
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () =>
+                                controller.loadPilotExams(isManual: true),
+                            icon: const Icon(Iconsax.refresh_copy, size: 16),
+                            label: const Text('Check for Updates'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Upcoming national matric pilot exams will appear here.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: dark
-                          ? AppColors.darkGrey
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }
 
         return RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: controller.loadPilotExams,
+          onRefresh: () => controller.loadPilotExams(isManual: true),
           child: ListView.separated(
             padding: EdgeInsets.fromLTRB(
               16,

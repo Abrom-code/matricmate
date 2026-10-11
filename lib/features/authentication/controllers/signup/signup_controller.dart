@@ -28,11 +28,26 @@ class SignupController extends GetxController {
   final RxString selectedStream = ''.obs;
   final RxBool isSigning = false.obs;
   final RxBool acceptPrivacyPolicy = false.obs;
+  final RxBool privacyPolicyError = false.obs;
 
   GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
 
   void setStream(String stream) {
     selectedStream.value = stream;
+  }
+
+  void setPrivacyPolicy(bool val) {
+    acceptPrivacyPolicy.value = val;
+    if (val) {
+      privacyPolicyError.value = false;
+    }
+  }
+
+  void togglePrivacyPolicy() {
+    acceptPrivacyPolicy.toggle();
+    if (acceptPrivacyPolicy.value) {
+      privacyPolicyError.value = false;
+    }
   }
 
   @override
@@ -51,7 +66,11 @@ class SignupController extends GetxController {
 
   Future<void> signup() async {
     try {
-      if (!signupFormKey.currentState!.validate()) return;
+      final isFormValid = signupFormKey.currentState?.validate() ?? false;
+      if (!acceptPrivacyPolicy.value) {
+        privacyPolicyError.value = true;
+      }
+      if (!isFormValid) return;
       if (password.text.trim() != confirmPassword.text.trim()) {
         ToastHelper.warning('Passwords do not match');
         return;
@@ -61,7 +80,6 @@ class SignupController extends GetxController {
         return;
       }
       if (!acceptPrivacyPolicy.value) {
-        ToastHelper.warning('Please accept the Privacy Policy to continue.');
         return;
       }
 

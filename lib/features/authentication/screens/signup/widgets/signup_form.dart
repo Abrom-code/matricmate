@@ -443,63 +443,97 @@ class SignupForm extends GetView<SignupController> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Obx(
-                  () => Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                Obx(() {
+                  final hasError = controller.privacyPolicyError.value;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Checkbox(
-                          value: controller.acceptPrivacyPolicy.value,
-                          onChanged: (val) =>
-                              controller.acceptPrivacyPolicy.value =
-                                  val ?? false,
-                          activeColor: AppColors.primary,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Checkbox(
+                              value: controller.acceptPrivacyPolicy.value,
+                              onChanged: (val) =>
+                                  controller.setPrivacyPolicy(val ?? false),
+                              activeColor: AppColors.primary,
+                              side: BorderSide(
+                                color: hasError
+                                    ? AppColors.error
+                                    : (dark
+                                          ? const Color(0xFF64748B)
+                                          : const Color(0xFF94A3B8)),
+                                width: hasError ? 2.0 : 1.5,
+                              ),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => controller.togglePrivacyPolicy(),
+                                  child: Text(
+                                    'I agree to the ',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: dark
+                                          ? AppColors.darkGrey
+                                          : AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: ProfileActionsHelper.openPrivacyPolicy,
+                                  child: const Text(
+                                    'Privacy Policy',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                                const Text(
+                                  ' *',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (hasError) ...[
+                        const SizedBox(height: 6),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Text(
+                            'Please accept the Privacy Policy to continue',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.error,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            GestureDetector(
-                              onTap: () =>
-                                  controller.acceptPrivacyPolicy.toggle(),
-                              child: Text(
-                                'I agree to the ',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: dark
-                                      ? AppColors.darkGrey
-                                      : AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: ProfileActionsHelper.openPrivacyPolicy,
-                              child: const Text(
-                                'Privacy Policy',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      ],
                     ],
-                  ),
-                ),
+                  );
+                }),
               ],
             ),
           ),
@@ -581,7 +615,10 @@ class SignupForm extends GetView<SignupController> {
               onTap: ProfileActionsHelper.openTelegramSupport,
               borderRadius: BorderRadius.circular(20),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -597,14 +634,20 @@ class SignupForm extends GetView<SignupController> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.30),
+                            color: const Color(
+                              0xFF0284C7,
+                            ).withValues(alpha: 0.30),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
                       child: const Center(
-                        child: Icon(Icons.send_rounded, size: 12, color: Colors.white),
+                        child: Icon(
+                          Icons.send_rounded,
+                          size: 12,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -613,7 +656,9 @@ class SignupForm extends GetView<SignupController> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                        color: dark
+                            ? const Color(0xFF38BDF8)
+                            : const Color(0xFF0284C7),
                       ),
                     ),
                   ],

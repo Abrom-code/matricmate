@@ -34,17 +34,27 @@ class AvailableChallengeCard extends StatelessWidget {
           ? (challenge.endsAt ?? challenge.startsAt)
           : challenge.startsAt;
 
-      String hours = '00';
-      String minutes = '00';
-      String seconds = '00';
+      int days = 0;
+      int hours = 0;
+      int minutes = 0;
+      int seconds = 0;
 
       if (targetTime != null) {
         final diff = targetTime.difference(ctrl.now.value);
         final totalSec = diff.isNegative ? 0 : diff.inSeconds;
-        hours = (totalSec ~/ 3600).toString().padLeft(2, '0');
-        minutes = ((totalSec % 3600) ~/ 60).toString().padLeft(2, '0');
-        seconds = (totalSec % 60).toString().padLeft(2, '0');
+        days = totalSec ~/ 86400;
+        hours = (totalSec % 86400) ~/ 3600;
+        minutes = (totalSec % 3600) ~/ 60;
+        seconds = totalSec % 60;
       }
+
+      final hStr = hours.toString().padLeft(2, '0');
+      final mStr = minutes.toString().padLeft(2, '0');
+      final sStr = seconds.toString().padLeft(2, '0');
+
+      final countdownText = days > 0
+          ? '${days}d ${hStr}h ${mStr}m ${sStr}s'
+          : '$hStr:$mStr:$sStr';
 
       final durationMins = challenge.durationMinutes > 0
           ? challenge.durationMinutes
@@ -226,29 +236,32 @@ class AvailableChallengeCard extends StatelessWidget {
                     : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    isLive ? 'Ends in ' : 'Starts in ',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      isLive ? 'Closes in ' : 'Starts in ',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$hours:$minutes:$seconds',
-                    style: TextStyle(
-                      color: dark ? Colors.white : AppColors.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      letterSpacing: 0.5,
+                    const SizedBox(width: 6),
+                    Text(
+                      countdownText,
+                      style: TextStyle(
+                        color: dark ? Colors.white : AppColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 

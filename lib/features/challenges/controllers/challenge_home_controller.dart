@@ -734,11 +734,14 @@ class ChallengeHomeController extends GetxController {
     final diff = target.difference(current);
     if (diff.isNegative) return 'Starting now...';
 
-    final hours = diff.inHours;
+    final days = diff.inDays;
+    final hours = diff.inHours % 24;
     final minutes = diff.inMinutes % 60;
     final seconds = diff.inSeconds % 60;
 
-    if (hours > 0) {
+    if (days > 0) {
+      return '${days}d ${hours}h ${minutes}m ${seconds}s';
+    } else if (hours > 0) {
       return '${hours}h ${minutes}m ${seconds}s';
     } else if (minutes > 0) {
       return '${minutes}m ${seconds}s';

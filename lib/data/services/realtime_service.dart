@@ -224,6 +224,17 @@ class RealtimeService {
       // Store with this user's id so local queries work correctly.
       final n = AppNotification.fromMap({...record, 'user_id': userId});
       final db = await DatabaseService.instance.database;
+
+      // Do not re-insert notifications that have already been dismissed locally
+      final isDismissed = await db.query(
+        'notification_dismissals',
+        columns: ['notification_id'],
+        where: 'notification_id = ? AND (user_id = ? OR user_id = \'\')',
+        whereArgs: [n.id, userId],
+        limit: 1,
+      );
+      if (isDismissed.isNotEmpty) return;
+
       await db.insert('notifications', {
         ...n.toMap(),
         'is_read': 0,
@@ -274,6 +285,17 @@ class RealtimeService {
 
       final n = AppNotification.fromMap({...record, 'user_id': userId});
       final db = await DatabaseService.instance.database;
+
+      // Do not re-insert notifications that have already been dismissed locally
+      final isDismissed = await db.query(
+        'notification_dismissals',
+        columns: ['notification_id'],
+        where: 'notification_id = ? AND (user_id = ? OR user_id = \'\')',
+        whereArgs: [n.id, userId],
+        limit: 1,
+      );
+      if (isDismissed.isNotEmpty) return;
+
       await db.insert(
         'notifications',
         n.toMap(),

@@ -22,6 +22,7 @@ class NotificationsController extends GetxController
   final RxBool isLoading = false.obs;
   final RxBool isNotificationPermissionGranted = true.obs;
   bool _isSyncing = false;
+  int _syncEpoch = 0;
 
   // ── Filter state ────────────────────────────────────────────────────
   final Rx<NotificationFilter> selectedFilter = NotificationFilter.all.obs;
@@ -188,6 +189,8 @@ class NotificationsController extends GetxController
       return;
     }
 
+    final epoch = ++_syncEpoch;
+
     try {
       isLoading.value = true;
       debugPrint(
@@ -206,15 +209,25 @@ class NotificationsController extends GetxController
         }
       }
 
-      notifications.assignAll(await _repo.getLocal(_userId));
+      // Check if deleteAll() or another action invalidated this load
+      if (epoch != _syncEpoch) return;
+
+      final localList = await _repo.getLocal(_userId);
+      if (epoch != _syncEpoch) return;
+
+      notifications.assignAll(localList);
       _recalcUnread();
       debugPrint(
         '[Notifications] loaded ${notifications.length} notifications, ${unreadCount.value} unread',
       );
     } catch (e) {
-      AppExceptionHandler.handleResponse(e);
+      if (epoch == _syncEpoch) {
+        AppExceptionHandler.handleResponse(e);
+      }
     } finally {
-      isLoading.value = false;
+      if (epoch == _syncEpoch) {
+        isLoading.value = false;
+      }
     }
   }
 
@@ -296,12 +309,16 @@ class NotificationsController extends GetxController
   Future<void> deleteAll() async {
     if (_userId.isEmpty) return;
 
+    // Immediately cancel any in-flight background sync or load from repopulating
+    _syncEpoch++;
+
     // Snapshot for undo.
     _lastDeletedAll = notifications.toList();
 
-    // Clear in-memory list immediately.
+    // Clear in-memory list and reset badge immediately.
     notifications.clear();
-    _recalcUnread();
+    unreadCount.value = 0;
+    selectedIds.clear();
 
     // Persist deletion and dismissals in local SQLite atomically + server sync.
     await _repo.deleteAllNotifications(_userId, _lastDeletedAll!);
@@ -361,6 +378,7 @@ class NotificationsController extends GetxController
   Future<void> deleteSelected() async {
     if (selectedIds.isEmpty) return;
 
+    _syncEpoch++;
     final targetIds = selectedIds.toSet();
     _lastDeletedSelected = notifications.where((n) => targetIds.contains(n.id)).toList();
     _lastDeletedSelectedIndexes = {

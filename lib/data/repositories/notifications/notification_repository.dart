@@ -134,7 +134,7 @@ class NotificationRepository {
       final localDismissedRows = await db.query(
         'notification_dismissals',
         columns: ['notification_id'],
-        where: 'user_id = ?',
+        where: 'user_id = ? OR user_id = \'\'',
         whereArgs: [userId],
       );
       final dismissedIds = <int>{
@@ -155,8 +155,8 @@ class NotificationRepository {
         final placeholders = List.filled(dismissedIds.length, '?').join(',');
         await db.delete(
           'notifications',
-          where: 'id IN ($placeholders) AND user_id = ?',
-          whereArgs: [...dismissedIds, userId],
+          where: 'id IN ($placeholders)',
+          whereArgs: dismissedIds.toList(),
         );
       }
 
@@ -309,8 +309,8 @@ class NotificationRepository {
       final placeholders = List.filled(ids.length, '?').join(',');
       await txn.delete(
         'notifications',
-        where: 'id IN ($placeholders) AND user_id = ?',
-        whereArgs: [...ids, effectiveUid],
+        where: 'id IN ($placeholders)',
+        whereArgs: ids,
       );
       final now = DateTime.now().toIso8601String();
       for (final id in ids) {
@@ -326,7 +326,18 @@ class NotificationRepository {
       }
     });
 
-    // 2. Server update (best-effort batch call)
+    // 2. Mark as read on Supabase so it can NEVER resurrect as unread on remote sync
+    try {
+      final readRows = ids
+          .map((id) => {'notification_id': id, 'user_id': effectiveUid})
+          .toList();
+      await _supabase
+          .from('notification_reads')
+          .upsert(readRows, onConflict: 'notification_id,user_id')
+          .timeout(AppTimeouts.bestEffort);
+    } catch (_) {}
+
+    // 3. Server update (best-effort batch calls)
     try {
       final dismissalRows = ids
           .map((id) => {'notification_id': id, 'user_id': effectiveUid})
@@ -335,7 +346,9 @@ class NotificationRepository {
           .from('notification_dismissals')
           .upsert(dismissalRows, onConflict: 'notification_id,user_id')
           .timeout(AppTimeouts.bestEffort);
+    } catch (_) {}
 
+    try {
       // Best effort: also delete personal notifications owned by this user
       await _supabase
           .from('notifications')
@@ -343,9 +356,7 @@ class NotificationRepository {
           .inFilter('id', ids)
           .eq('user_id', effectiveUid)
           .timeout(AppTimeouts.bestEffort);
-    } catch (_) {
-      // Best-effort remote sync. Local DB is updated so UI is correct and resilient.
-    }
+    } catch (_) {}
   }
 
   /// Deletes a single notification for [userId].
@@ -353,12 +364,78 @@ class NotificationRepository {
     await deleteNotifications(userId, [n]);
   }
 
-  /// Deletes/dismisses all notifications for [userId].
+  /// Deletes/dismisses all notifications for [userId] thoroughly.
   Future<void> deleteAllNotifications(
     String userId,
     List<AppNotification> notifications,
   ) async {
-    await deleteNotifications(userId, notifications);
+    final effectiveUid = userId.isNotEmpty ? userId : (_currentUid ?? '');
+    final db = await _db.database;
+
+    // 1. Find all notification IDs currently in local SQLite (not just in-memory list)
+    final localRows = await db.query(
+      'notifications',
+      columns: ['id'],
+    );
+    final allIds = <int>{
+      for (final r in localRows)
+        if (r['id'] is int)
+          r['id'] as int
+        else
+          int.tryParse(r['id'].toString()) ?? 0,
+      for (final n in notifications) n.id,
+    }..remove(0);
+
+    // 2. Wipe notifications table locally in SQLite
+    await db.transaction((txn) async {
+      await txn.delete('notifications');
+
+      final now = DateTime.now().toIso8601String();
+      for (final id in allIds) {
+        await txn.insert(
+          'notification_dismissals',
+          {
+            'notification_id': id,
+            'user_id': effectiveUid,
+            'dismissed_at': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+
+    // 3. Mark all as read on Supabase so they NEVER trigger unread badge on remote sync
+    if (effectiveUid.isNotEmpty && allIds.isNotEmpty) {
+      try {
+        final readRows = allIds
+            .map((id) => {'notification_id': id, 'user_id': effectiveUid})
+            .toList();
+        await _supabase
+            .from('notification_reads')
+            .upsert(readRows, onConflict: 'notification_id,user_id')
+            .timeout(AppTimeouts.bestEffort);
+      } catch (_) {}
+
+      try {
+        final dismissalRows = allIds
+            .map((id) => {'notification_id': id, 'user_id': effectiveUid})
+            .toList();
+        await _supabase
+            .from('notification_dismissals')
+            .upsert(dismissalRows, onConflict: 'notification_id,user_id')
+            .timeout(AppTimeouts.bestEffort);
+      } catch (_) {}
+
+      try {
+        // Also delete personal notifications owned by this user
+        await _supabase
+            .from('notifications')
+            .delete()
+            .inFilter('id', allIds.toList())
+            .eq('user_id', effectiveUid)
+            .timeout(AppTimeouts.bestEffort);
+      } catch (_) {}
+    }
   }
 
   /// Restores previously deleted notifications on undo.

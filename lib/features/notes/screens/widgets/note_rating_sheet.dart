@@ -42,21 +42,22 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
   @override
   void initState() {
     super.initState();
-    _selectedRating = widget.note.userRating > 0 ? widget.note.userRating : 5;
+    // Do not pre-select 5 stars. Start at 0 if unrated to avoid default-selection bias.
+    _selectedRating = widget.note.userRating;
   }
 
   String _getRatingLabel(int rating) {
     switch (rating) {
       case 1:
-        return 'Needs Improvement';
+        return '1 Star — Needs Improvement 😕';
       case 2:
-        return 'Fair';
+        return '2 Stars — Fair / Okay 😐';
       case 3:
-        return 'Good';
+        return '3 Stars — Good & Helpful 🙂';
       case 4:
-        return 'Very Good';
+        return '4 Stars — Very Good & Clear 😊';
       case 5:
-        return 'Excellent! 🌟';
+        return '5 Stars — Outstanding! 🌟';
       default:
         return 'Tap a star to rate';
     }
@@ -84,11 +85,12 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final isAlreadyRated = widget.note.isRated;
+    final hasSelected = _selectedRating > 0;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
         24,
-        14,
+        12,
         24,
         MediaQuery.paddingOf(context).bottom + 20,
       ),
@@ -106,40 +108,62 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Drag handle
-          Container(
-            width: 44,
-            height: 4.5,
-            decoration: BoxDecoration(
-              color: dark ? Colors.white24 : Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(10),
-            ),
+          // Drag handle & Close button row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(width: 32),
+              Container(
+                width: 44,
+                height: 4.5,
+                decoration: BoxDecoration(
+                  color: dark ? Colors.white24 : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 20,
+                    color: dark ? Colors.white54 : Colors.black45,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
 
           // Star badge icon
           Container(
-            width: 58,
-            height: 58,
+            width: 54,
+            height: 54,
             decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+              color: hasSelected
+                  ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                  : (dark ? Colors.white10 : Colors.grey.shade100),
               shape: BoxShape.circle,
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
-                Icons.star_rounded,
-                size: 34,
-                color: Color(0xFFF59E0B),
+                hasSelected ? Icons.star_rounded : Icons.star_outline_rounded,
+                size: 30,
+                color: hasSelected
+                    ? const Color(0xFFF59E0B)
+                    : (dark ? Colors.white38 : Colors.grey.shade500),
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Title
           Text(
             isAlreadyRated ? 'Update Your Rating' : 'Rate this Note',
             style: TextStyle(
-              fontSize: 19,
+              fontSize: 18.5,
               fontWeight: FontWeight.w800,
               color: dark ? AppColors.textWhite : AppColors.textPrimary,
               letterSpacing: -0.3,
@@ -154,7 +178,7 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 13.5,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.primary,
             ),
@@ -162,15 +186,15 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
           const SizedBox(height: 6),
 
           Text(
-            'How helpful was this note? Your feedback helps us improve study materials.',
+            'How helpful was this note? Your honest feedback helps us improve study materials.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: 12,
               height: 1.35,
               color: dark ? AppColors.textSecondary : const Color(0xFF64748B),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
           // Interactive 5 stars
           Row(
@@ -183,7 +207,7 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 5),
                 child: InkWell(
                   onTap: () {
-                    HapticFeedback.selectionClick();
+                    HapticFeedback.lightImpact();
                     setState(() {
                       _selectedRating = starIndex;
                     });
@@ -192,8 +216,8 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
                   child: Padding(
                     padding: const EdgeInsets.all(4),
                     child: AnimatedScale(
-                      scale: isFilled ? 1.08 : 0.95,
-                      duration: const Duration(milliseconds: 160),
+                      scale: isFilled ? 1.12 : 0.95,
+                      duration: const Duration(milliseconds: 180),
                       curve: Curves.easeOutBack,
                       child: Icon(
                         isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
@@ -211,22 +235,27 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
           const SizedBox(height: 12),
 
           // Rating description label
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+              color: hasSelected
+                  ? const Color(0xFFF59E0B).withValues(alpha: 0.12)
+                  : (dark ? Colors.white10 : Colors.grey.shade100),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
               _getRatingLabel(_selectedRating),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFFD97706),
+                color: hasSelected
+                    ? const Color(0xFFD97706)
+                    : (dark ? Colors.white54 : Colors.grey.shade600),
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // Action buttons
           Row(
@@ -241,7 +270,7 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
                     ),
                   ),
                   child: Text(
-                    isAlreadyRated ? 'Close' : 'Maybe Later',
+                    isAlreadyRated ? 'Cancel' : 'Not Now',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -254,11 +283,13 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitRating,
+                  onPressed: (_isSubmitting || !hasSelected) ? null : _submitRating,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    elevation: 0,
+                    disabledBackgroundColor: dark ? Colors.white12 : Colors.grey.shade200,
+                    disabledForegroundColor: dark ? Colors.white38 : Colors.grey.shade400,
+                    elevation: hasSelected ? 2 : 0,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -274,7 +305,9 @@ class _NoteRatingSheetState extends State<NoteRatingSheet> {
                           ),
                         )
                       : Text(
-                          isAlreadyRated ? 'Update Rating' : 'Submit Rating',
+                          !hasSelected
+                              ? 'Tap a Star to Rate'
+                              : (isAlreadyRated ? 'Update Rating' : 'Submit Rating'),
                           style: const TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w700,

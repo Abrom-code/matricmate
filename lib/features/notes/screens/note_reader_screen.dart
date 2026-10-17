@@ -523,11 +523,6 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
         ? const Color(0xFF121212)
         : (dark ? AppColors.black : const Color(0xFFE2E8F0));
 
-    final liveNote = NotesController.instance.subjectNotes
-            .firstWhereOrNull((n) => n.id == note.id) ??
-        note;
-    final isFinished = liveNote.isCompleted || _hasPromptedCompletion;
-
     final appBar = AppBar(
       backgroundColor: AppColors.primary,
       elevation: 0,
@@ -642,37 +637,6 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
               icon: const Icon(
                 Icons.quiz_rounded,
                 color: AppColors.white,
-                size: 20,
-              ),
-            ),
-          ),
-        // Rating quick button if finished
-        if (isFinished)
-          SizedBox(
-            width: 36,
-            child: IconButton(
-              tooltip: liveNote.isRated
-                  ? 'Rating: ${liveNote.userRating}/5'
-                  : 'Rate note',
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              onPressed: () {
-                NoteRatingSheet.show(
-                  context,
-                  note: liveNote.copyWith(isCompleted: true),
-                  onRated: (rating) {
-                    setState(() {
-                      note = note.copyWith(
-                        userRating: rating,
-                        isCompleted: true,
-                      );
-                    });
-                  },
-                );
-              },
-              icon: Icon(
-                liveNote.isRated ? Icons.star_rounded : Icons.star_outline_rounded,
-                color: const Color(0xFFFDE68A),
                 size: 20,
               ),
             ),

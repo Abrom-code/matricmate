@@ -55,6 +55,10 @@ class NotesController extends GetxController {
     loadSubjectNotes();
   }
 
+  bool _isLoadingRemoteNotes = false;
+  DateTime? _lastNotesRemoteSyncAt;
+  static const Duration _notesRefreshCooldown = Duration(seconds: 15);
+
   /// Loads notes from local SQLite first (offline-first).
   /// Remote sync is only performed on user pull-to-refresh ([forceRemote] = true)
   /// or when local cache is empty on first open.
@@ -71,6 +75,19 @@ class NotesController extends GetxController {
         return;
       }
 
+      // Concurrency guard: avoid launching parallel remote syncs for the same subject notes
+      if (_isLoadingRemoteNotes) {
+        return;
+      }
+
+      // Throttle remote fetch if pulled within cooldown window
+      if (forceRemote && _lastNotesRemoteSyncAt != null) {
+        final elapsed = DateTime.now().difference(_lastNotesRemoteSyncAt!);
+        if (elapsed < _notesRefreshCooldown) {
+          return;
+        }
+      }
+
       // Check internet connectivity before attempting any remote fetch
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
@@ -85,15 +102,21 @@ class NotesController extends GetxController {
       }
 
       // 2. Fetch metadata from Supabase
-      final remote = await _repo.fetchRemoteNotes(subjectId);
-      if (remote.isNotEmpty) {
-        await _repo.saveNotesBatch(
-          remote,
-          subjectId: subjectId,
-          pruneDeleted: forceRemote,
-        );
-        final updated = await _repo.getLocalNotes(subjectId);
-        subjectNotes.assignAll(_validateLocalFiles(updated));
+      _isLoadingRemoteNotes = true;
+      try {
+        final remote = await _repo.fetchRemoteNotes(subjectId);
+        if (remote.isNotEmpty) {
+          await _repo.saveNotesBatch(
+            remote,
+            subjectId: subjectId,
+            pruneDeleted: forceRemote,
+          );
+          final updated = await _repo.getLocalNotes(subjectId);
+          subjectNotes.assignAll(_validateLocalFiles(updated));
+        }
+        _lastNotesRemoteSyncAt = DateTime.now();
+      } finally {
+        _isLoadingRemoteNotes = false;
       }
     } catch (e) {
       if (forceRemote) {

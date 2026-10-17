@@ -58,7 +58,7 @@ class _EntranceScreenState extends State<EntranceScreen> with RouteAware {
               isSyncing: syncing,
               tooltip: 'Sync entrance exams',
               tooltipSyncing: 'Sync in progress…',
-              onPressed: () => syncController.syncEntranceExams(),
+              onPressed: () => syncController.syncEntranceExams(force: true),
             );
           }),
           // Paused tests (entrance + model only)

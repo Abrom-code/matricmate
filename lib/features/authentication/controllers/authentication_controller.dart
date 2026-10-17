@@ -17,6 +17,7 @@ import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/utils/local_storage/sync_prefs.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -73,11 +74,12 @@ class AuthenticationController extends GetxController
     super.onClose();
   }
 
-  /// Runs session check on app resume if 12h have elapsed.
+  /// Runs session check and background delta sync on app resume.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_periodicSessionCheck());
+      unawaited(_onResumeSync());
     }
   }
 
@@ -253,6 +255,30 @@ class AuthenticationController extends GetxController
       }
     } catch (_) {
       // Non-fatal — never interrupt user for background check failure
+    }
+  }
+
+  static const Duration _kResumeSyncInterval = Duration(minutes: 30);
+
+  /// Silently delta-syncs content when the app is resumed from background,
+  /// provided that at least 30 minutes have elapsed since the last delta sync.
+  Future<void> _onResumeSync() async {
+    try {
+      if (authRepo.currentUser == null) return;
+      if (!Get.isRegistered<SyncingController>()) return;
+
+      final lastSync = await SyncPrefs.lastSubjectsSync();
+      if (lastSync != null) {
+        final elapsed = DateTime.now().toUtc().difference(lastSync);
+        if (elapsed < _kResumeSyncInterval) return;
+      }
+
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) return;
+
+      unawaited(SyncingController.instance.syncAll(showUiLoading: false));
+    } catch (_) {
+      // Non-fatal background refresh
     }
   }
 

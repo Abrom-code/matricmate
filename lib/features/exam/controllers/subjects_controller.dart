@@ -162,7 +162,7 @@ class SubjectsController extends GetxController {
 
   Future<void> syncAll() async {
     try {
-      final finished = await SyncingController.instance.syncAll();
+      final finished = await SyncingController.instance.syncAll(force: true);
       if (finished) {
         ToastHelper.success('All subjects synced successfully!');
       }

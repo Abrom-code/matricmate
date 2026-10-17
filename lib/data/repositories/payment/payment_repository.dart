@@ -150,10 +150,36 @@ class PaymentRepository {
   /// Cancels payment receipt and resets status to inactive if still pending.
   Future<void> cancelPayment(String userId) async {
     try {
-      // 1. Delete every receipt row for this user from database table
+      // 1. Fetch receipt paths to clean up from Cloudflare R2
+      try {
+        final existing = await _supabase
+            .from('payment_receipts')
+            .select('receipt_path')
+            .eq('user_id', userId)
+            .timeout(AppTimeouts.query);
+        final paths = (existing as List)
+            .map((r) => r['receipt_path']?.toString())
+            .whereType<String>()
+            .where((p) => p.isNotEmpty)
+            .toList();
+
+        if (paths.isNotEmpty) {
+          await _supabase.functions.invoke(
+            'receipt-storage',
+            body: {
+              'action': 'delete_receipts',
+              'receipt_paths': paths,
+            },
+          ).timeout(AppTimeouts.bestEffort);
+        }
+      } catch (_) {
+        // Non-fatal: proceed to clear database records even if R2 cleanup fails
+      }
+
+      // 2. Delete every receipt row for this user from database table
       await _supabase.from('payment_receipts').delete().eq('user_id', userId).timeout(AppTimeouts.delete);
 
-      // 2. Revert to inactive and reset upload count only when status is still pending
+      // 3. Revert to inactive and reset upload count only when status is still pending
       await _supabase
           .from('users')
           .update({

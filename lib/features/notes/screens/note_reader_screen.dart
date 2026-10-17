@@ -407,25 +407,6 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     if (_hasPromptedCompletion) return;
     _hasPromptedCompletion = true;
     NotesController.instance.markNoteCompleted(note.id);
-
-    // Prompt rating sheet automatically when student reaches the end of an unrated note
-    final liveNote = NotesController.instance.subjectNotes
-        .firstWhereOrNull((n) => n.id == note.id) ?? note;
-    if (!liveNote.isRated && mounted) {
-      Future.delayed(const Duration(milliseconds: 600), () {
-        if (mounted) {
-          NoteRatingSheet.show(
-            context,
-            note: liveNote.copyWith(isCompleted: true),
-            onRated: (rating) {
-              setState(() {
-                note = note.copyWith(userRating: rating, isCompleted: true);
-              });
-            },
-          );
-        }
-      });
-    }
   }
 
   // ── Completion Panel (slides up at bottom when in last 3 pages) ──────

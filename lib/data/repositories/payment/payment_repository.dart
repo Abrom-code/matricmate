@@ -154,26 +154,54 @@ class PaymentRepository {
       try {
         final existing = await _supabase
             .from('payment_receipts')
-            .select('receipt_path')
+            .select('receipt_path, receipt_url')
             .eq('user_id', userId)
             .timeout(AppTimeouts.query);
-        final paths = (existing as List)
-            .map((r) => r['receipt_path']?.toString())
-            .whereType<String>()
-            .where((p) => p.isNotEmpty)
-            .toList();
 
-        if (paths.isNotEmpty) {
-          await _supabase.functions.invoke(
+        final fileKeys = <String>{};
+        for (final row in (existing as List)) {
+          final p = row['receipt_path']?.toString().trim();
+          final u = row['receipt_url']?.toString().trim();
+          for (final raw in [p, u]) {
+            if (raw == null || raw.isEmpty) continue;
+            String key = raw;
+            if (key.startsWith('http://') || key.startsWith('https://')) {
+              try {
+                key = Uri.parse(key).path;
+              } catch (_) {}
+            }
+            while (key.startsWith('/')) {
+              key = key.substring(1);
+            }
+            if (key.contains('matricet-notes/')) {
+              key = key.split('matricet-notes/').last;
+            }
+            if (key.isNotEmpty) {
+              fileKeys.add(key);
+              if (!key.startsWith('receipts/')) {
+                fileKeys.add('receipts/$key');
+              }
+            }
+          }
+        }
+
+        if (fileKeys.isNotEmpty) {
+          final edgeRes = await _supabase.functions.invoke(
             'receipt-storage',
             body: {
-              'action': 'delete_receipts',
-              'receipt_paths': paths,
+              'action': 'delete_files',
+              'file_keys': fileKeys.toList(),
             },
           ).timeout(AppTimeouts.bestEffort);
+
+          if (kDebugMode) {
+            debugPrint('[PaymentRepository] delete_files response: ${edgeRes.status} => ${edgeRes.data}');
+          }
         }
-      } catch (_) {
-        // Non-fatal: proceed to clear database records even if R2 cleanup fails
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('[PaymentRepository] Error deleting receipts from R2: $e\n$st');
+        }
       }
 
       // 2. Delete every receipt row for this user from database table

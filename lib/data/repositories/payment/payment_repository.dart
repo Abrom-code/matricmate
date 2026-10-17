@@ -65,9 +65,19 @@ class PaymentRepository {
         },
       ).timeout(AppTimeouts.upload);
 
-      final data = edgeRes.data as Map<String, dynamic>;
-      final uploadUrl = data['upload_url'] as String;
-      final fileKey = data['file_key'] as String;
+      final rawData = edgeRes.data;
+      if (edgeRes.status != 200 || rawData == null) {
+        final err = rawData is Map ? rawData['error'] : null;
+        throw err?.toString() ?? 'Failed to get upload authorization (HTTP ${edgeRes.status})';
+      }
+
+      final data = Map<String, dynamic>.from(rawData as Map);
+      final uploadUrl = data['upload_url']?.toString();
+      final fileKey = data['file_key']?.toString();
+
+      if (uploadUrl == null || fileKey == null || uploadUrl.isEmpty) {
+        throw 'Invalid upload credentials received from server';
+      }
 
       // 2. Upload binary directly to Cloudflare R2 via HTTP PUT
       final httpResponse = await http.put(
@@ -79,7 +89,7 @@ class PaymentRepository {
       ).timeout(AppTimeouts.upload);
 
       if (httpResponse.statusCode != 200) {
-        throw 'Failed to upload receipt to Cloudflare (HTTP ${httpResponse.statusCode})';
+        throw 'Cloudflare upload failed (HTTP ${httpResponse.statusCode})';
       }
 
       return {

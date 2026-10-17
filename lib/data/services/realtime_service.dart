@@ -26,10 +26,11 @@ class RealtimeService {
   RealtimeChannel? _notificationsChannel;
   RealtimeChannel? _notificationReadsChannel;
 
-  /// Start listening. Safe to call multiple times — stops existing first.
   Future<void> start(List<int> subjectIds, {required String userId}) async {
     await stop();
-    _startQuestionChannel(subjectIds);
+    // Questions are kept in sync via delta sync during app launch / pull-to-refresh.
+    // Disabling the live unfiltered questions channel saves continuous ping logs and bandwidth.
+    // _startQuestionChannel(subjectIds);
     _startUserChannel(userId);
     _startAppConfigChannel();
     _startNotificationsChannel(userId);
@@ -68,6 +69,7 @@ class RealtimeService {
 
   // ── Questions channel ──────────────────────────────────────────────────
 
+  // ignore: unused_element
   void _startQuestionChannel(List<int> subjectIds) {
     if (subjectIds.isEmpty) return;
 

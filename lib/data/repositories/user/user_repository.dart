@@ -68,31 +68,7 @@ class UserRepository {
 
   Future<void> deleteUserRecord(String userId) async {
     try {
-      // 1. Clean up payment receipt images in storage
-      try {
-        final receipts = await _supabase
-            .from('payment_receipts')
-            .select('receipt_path')
-            .eq('user_id', userId)
-            .timeout(AppTimeouts.delete);
-
-        if (receipts.isNotEmpty) {
-          final filesToDelete = receipts
-              .map((e) => e['receipt_path']?.toString().trim() ?? '')
-              .where((p) => p.isNotEmpty)
-              .toList();
-
-          if (filesToDelete.isNotEmpty) {
-            try {
-              await _supabase.storage.from('receipts').remove(filesToDelete).timeout(AppTimeouts.bestEffort);
-            } catch (_) {}
-          }
-        }
-      } catch (_) {}
-      // 2. Note: Device binding in user_sessions is intentionally preserved on logout
-      // so the account remains locked to this device.
-
-      // 3. Clear local user table
+      // Clear local user table
       final db = await databaseService.database;
       await db.delete('user');
     } catch (e) {

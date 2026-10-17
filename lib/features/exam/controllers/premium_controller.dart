@@ -117,7 +117,12 @@ class PremiumController extends GetxController {
   Future<void> pickReceipt() async {
     try {
       final picker = ImagePicker();
-      final file = await picker.pickImage(source: ImageSource.gallery);
+      final file = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1800,
+        imageQuality: 80,
+      );
       if (file != null) {
         receipt.value = file;
         showReceiptError.value = false;

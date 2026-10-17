@@ -280,16 +280,14 @@ class ChallengeAttemptController extends GetxController
     userAnswers[questionId] = choice;
     _saveLastQuestionIndex(currentIndex.value);
 
-    // Send answer asynchronously to server
-    if (attemptId != null) {
-      _repo
-          .submitAnswer(
-            attemptId: attemptId!,
-            questionId: questionId,
-            selectedChoice: choice,
-          )
-          .catchError((_) {});
-    }
+    // Save locally to SQLite immediately — zero network latency, 100% crash/offline safe
+    DatabaseService.instance.saveChallengePracticeResult(
+      challengeId: challengeId,
+      score: 0,
+      totalQuestions: totalQuestions,
+      userAnswers: Map<String, String>.from(userAnswers),
+      timeSpentSeconds: _timeSpentSeconds,
+    ).catchError((_) {});
   }
 
   void nextQuestion() {

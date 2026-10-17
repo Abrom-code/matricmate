@@ -713,42 +713,6 @@ class _ModeCard extends StatelessWidget {
   }
 }
 
-// ── Bullet Point Helper ───────────────────────────────────────────────────────
-
-class _InstructionBullet extends StatelessWidget {
-  const _InstructionBullet({
-    required this.icon,
-    required this.text,
-    required this.dark,
-  });
-
-  final IconData icon;
-  final String text;
-  final bool dark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: AppColors.primary),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.4,
-              color: dark
-                  ? AppColors.white.withValues(alpha: 0.75)
-                  : const Color(0xFF475569),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 // ── Backwards-Compatible Adapter (For any code invoking ReadyDialog) ──────────
 

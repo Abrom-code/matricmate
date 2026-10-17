@@ -101,7 +101,6 @@ class ChallengeHomeController extends GetxController {
 
   Timer? _countdownTimer;
   RealtimeChannel? _realtimeChannel;
-  RealtimeChannel? _attemptsRealtimeChannel;
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream;
@@ -128,9 +127,7 @@ class ChallengeHomeController extends GetxController {
     _countdownTimer?.cancel();
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
-    }
-    if (_attemptsRealtimeChannel != null) {
-      _sb.removeChannel(_attemptsRealtimeChannel!);
+      _realtimeChannel = null;
     }
     super.onClose();
   }
@@ -191,9 +188,7 @@ class ChallengeHomeController extends GetxController {
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
     }
-    if (_attemptsRealtimeChannel != null) {
-      _sb.removeChannel(_attemptsRealtimeChannel!);
-    }
+    // Only listen to leaderboard_challenges status transitions (live/closed)
     _realtimeChannel = _sb
         .channel('public:leaderboard_challenges')
         .onPostgresChanges(
@@ -208,33 +203,6 @@ class ChallengeHomeController extends GetxController {
         .subscribe((status, [error]) {
           debugPrint('[Realtime] Challenges status: $status ${error ?? ''}');
         });
-
-    _attemptsRealtimeChannel = _sb
-        .channel('public:challenge_attempts')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'challenge_attempts',
-          callback: (payload) {
-            debugPrint('[Realtime] Attempt changed: ${payload.eventType}');
-            _refreshParticipantCounts();
-          },
-        )
-        .subscribe((status, [error]) {
-          debugPrint('[Realtime] Attempts status: $status ${error ?? ''}');
-        });
-  }
-
-  Future<void> _refreshParticipantCounts() async {
-    try {
-      final challengeIds = [
-        ...availableChallenges.map((c) => c.id),
-        ...completedChallenges.map((c) => c.id),
-      ];
-      if (challengeIds.isEmpty) return;
-      final counts = await _repo.fetchParticipantCounts(challengeIds: challengeIds);
-      participantCounts.addAll(counts);
-    } catch (_) {}
   }
 
   Future<void> _preloadLocalChallenges() async {

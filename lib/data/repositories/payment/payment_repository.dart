@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -49,19 +50,42 @@ class PaymentRepository {
     } catch (_) {}
   }
 
-  /// Upload receipt into folder scoped by userId for RLS compliance
+  /// Uploads receipt directly to Cloudflare R2 via presigned PUT URL (0 MB on Supabase Storage).
   Future<Map<String, String>> uploadReceipt(XFile file, String userId) async {
     try {
       final bytes = await file.readAsBytes();
+      final fileName = 'receipt_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      final fileName =
-          '$userId/receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      // 1. Request temporary presigned Cloudflare R2 upload URL from Edge Function
+      final edgeRes = await _supabase.functions.invoke(
+        'receipt-storage',
+        body: {
+          'action': 'get_upload_url',
+          'file_name': fileName,
+        },
+      ).timeout(AppTimeouts.upload);
 
-      await _supabase.storage.from('receipts').uploadBinary(fileName, bytes).timeout(AppTimeouts.upload);
+      final data = edgeRes.data as Map<String, dynamic>;
+      final uploadUrl = data['upload_url'] as String;
+      final fileKey = data['file_key'] as String;
 
-      final url = _supabase.storage.from('receipts').getPublicUrl(fileName);
+      // 2. Upload binary directly to Cloudflare R2 via HTTP PUT
+      final httpResponse = await http.put(
+        Uri.parse(uploadUrl),
+        headers: {
+          'Content-Type': 'image/jpeg',
+        },
+        body: bytes,
+      ).timeout(AppTimeouts.upload);
 
-      return {'filePath': fileName, 'url': url};
+      if (httpResponse.statusCode != 200) {
+        throw 'Failed to upload receipt to Cloudflare (HTTP ${httpResponse.statusCode})';
+      }
+
+      return {
+        'filePath': fileKey,
+        'url': fileKey,
+      };
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('[PaymentRepository] uploadReceipt error: $e\n$st');
@@ -116,31 +140,10 @@ class PaymentRepository {
   /// Cancels payment receipt and resets status to inactive if still pending.
   Future<void> cancelPayment(String userId) async {
     try {
-      // 1. Collect all file paths so storage stays clean.
-      final data = await _supabase
-          .from('payment_receipts')
-          .select('receipt_path')
-          .eq('user_id', userId)
-          .timeout(AppTimeouts.delete);
-
-      if (data.isNotEmpty) {
-        final filesToDelete = data
-            .map((e) => e['receipt_path']?.toString().trim() ?? '')
-            .where((p) => p.isNotEmpty)
-            .toList();
-
-        if (filesToDelete.isNotEmpty) {
-          // Best-effort — a storage failure must not block the DB cleanup.
-          try {
-              await _supabase.storage.from('receipts').remove(filesToDelete).timeout(AppTimeouts.bestEffort);
-          } catch (_) {}
-        }
-      }
-
-      // 2. Delete every receipt row for this user.
+      // 1. Delete every receipt row for this user from database table
       await _supabase.from('payment_receipts').delete().eq('user_id', userId).timeout(AppTimeouts.delete);
 
-      // 3. Revert to inactive and reset upload count only when status is still pending
+      // 2. Revert to inactive and reset upload count only when status is still pending
       await _supabase
           .from('users')
           .update({

@@ -43,7 +43,11 @@ class AppHelperFunctions {
         if (index >= validUrls.length) break;
         final url = validUrls[index++];
         try {
-          await cache.downloadFile(url).timeout(const Duration(seconds: 12));
+          // Check if image is already cached on device
+          final existing = await cache.getFileFromCache(url);
+          if (existing == null || !existing.file.existsSync() || existing.file.lengthSync() == 0) {
+            await cache.downloadFile(url).timeout(const Duration(seconds: 12));
+          }
         } catch (e) {
           debugPrint('Image download failed for $url: $e');
         } finally {

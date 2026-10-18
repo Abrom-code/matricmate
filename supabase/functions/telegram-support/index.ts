@@ -3,18 +3,25 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const SUPPORT_CHAT_ID_RAW = Deno.env.get("SUPPORT_CHAT_ID") ?? "";
 
-// Supports multiple comma-separated IDs (e.g. "12345678, 98765432, -100123456789")
+// Robust parsing: handles commas, semicolons, spaces, newlines, and quotes
 const SUPPORT_CHAT_IDS = SUPPORT_CHAT_ID_RAW
-  .split(",")
+  .replace(/["']/g, "")
+  .split(/[\s,;]+/)
   .map((id) => id.trim())
   .filter(Boolean);
 
-const isSupportChat = (id: string | number) =>
-  SUPPORT_CHAT_IDS.includes(String(id));
+// An update is from support if either the chat ID (group/DM) OR sender user ID matches
+const isSupport = (chatId?: string | number, fromId?: string | number) => {
+  const cId = String(chatId ?? "");
+  const fId = String(fromId ?? "");
+  return SUPPORT_CHAT_IDS.includes(cId) || (fId !== "" && SUPPORT_CHAT_IDS.includes(fId));
+};
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY =
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
+  Deno.env.get("SUPABASE_ANON_KEY") ||
+  "";
 
 const supabase =
   SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
@@ -52,16 +59,19 @@ Deno.serve(async (req) => {
     }
 
     const chatId = message.chat?.id;
+    const fromId = message.from?.id;
 
     if (!chatId) {
       return new Response("OK");
     }
 
+    const userIsSupport = isSupport(chatId, fromId);
+
     // ==================================================
     // MESSAGE FROM SUPPORT ADMIN → COMMANDS OR REPLIES
     // ==================================================
 
-    if (isSupportChat(chatId)) {
+    if (userIsSupport) {
       const trimmedText = (message.text ?? "").trim();
       const repliedMessage = message.reply_to_message;
 
@@ -134,7 +144,7 @@ Deno.serve(async (req) => {
       } else if (repliedMessage) {
         // Reply format: swipe-reply /unban or /ban [reason]
         const repliedText = repliedMessage.text ?? repliedMessage.caption ?? "";
-        const match = repliedText.match(/User ID:\s*(\d+)/);
+        const match = repliedText.match(/User ID:\s*`?(\d+)`?/i);
         if (match) {
           targetUserChatId = match[1];
           if (isBanCmd) {
@@ -150,7 +160,7 @@ Deno.serve(async (req) => {
             chat_id: chatId,
             text:
               "⚠️ *Usage:*\n" +
-              "• Reply `/ban` to a user's message, or\n" +
+              "• Reply `/ban` to a forwarded user message, or\n" +
               "• Type `/ban <User_ID> [reason]`",
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
@@ -254,14 +264,15 @@ Deno.serve(async (req) => {
 
       // ── 5. Regular Message Reply Forwarding ─────────
       if (!repliedMessage) {
+        // Internal admin chatter that is not a reply to a user ticket is ignored
         return new Response("OK");
       }
 
       const repliedText = repliedMessage.text ?? repliedMessage.caption ?? "";
-      const match = repliedText.match(/User ID:\s*(\d+)/);
+      const match = repliedText.match(/User ID:\s*`?(\d+)`?/i);
 
       if (!match) {
-        console.log("Could not find user chat ID.");
+        console.log("Could not find user chat ID in replied message.");
         return new Response("OK");
       }
 

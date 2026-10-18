@@ -12,6 +12,7 @@ import 'package:matricmate/features/exam/screens/subject/widgets/premium_banner.
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -70,6 +71,19 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
           );
         }),
         actions: [
+          const IconButton(
+            tooltip: 'Telegram Channel',
+            visualDensity: VisualDensity.compact,
+            constraints: BoxConstraints(),
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            onPressed: ProfileActionsHelper.openTelegramChannel,
+            icon: Icon(
+              Icons.message_rounded,
+              size: 20,
+              color: AppColors.white,
+            ),
+          ),
+          const SizedBox(width: 2),
           Obx(() {
             final syncing = syncController.refreshing.value;
             return SyncIconButton(

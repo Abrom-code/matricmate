@@ -17,8 +17,8 @@ class ProfileActionsHelper {
   ProfileActionsHelper._();
 
   static const String appName = 'MatricET';
-  static const String appVersion = '1.0.7';
-  static const String appBuildNumber = '8';
+  static const String appVersion = '1.0.8';
+  static const String appBuildNumber = '9';
   static const String packageId = 'com.abopia.matricet';
   static const String fallbackSupportEmail = 'abopiatech@gmail.com';
   static const String fallbackTelegramChannelLink = 'https://t.me/MatricET';

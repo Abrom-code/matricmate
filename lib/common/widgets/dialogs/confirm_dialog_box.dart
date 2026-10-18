@@ -754,10 +754,13 @@ class AppDialogBoxes {
                     // Action Button
                     SizedBox(
                       width: double.infinity,
-                      height: 44,
+                      height: 46,
                       child: ElevatedButton(
                         onPressed: () => Navigator.pop(dialogContext),
                         style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           elevation: 0,
@@ -768,8 +771,9 @@ class AppDialogBoxes {
                         child: const Text(
                           'Great',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 14.5,
                             fontWeight: FontWeight.w700,
+                            height: 1.0,
                           ),
                         ),
                       ),
@@ -974,10 +978,13 @@ class AppDialogBoxes {
                       children: [
                         Expanded(
                           child: SizedBox(
-                            height: 44,
+                            height: 46,
                             child: OutlinedButton(
                               onPressed: () => Navigator.pop(dialogContext),
                               style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 side: BorderSide(
                                   color: dark
                                       ? AppColors.darkInputBorder
@@ -990,8 +997,9 @@ class AppDialogBoxes {
                               child: Text(
                                 'Later',
                                 style: TextStyle(
-                                  fontSize: 13.5,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w600,
+                                  height: 1.0,
                                   color: dark
                                       ? AppColors.white
                                       : const Color(0xFF334155),
@@ -1003,13 +1011,16 @@ class AppDialogBoxes {
                         const SizedBox(width: 12),
                         Expanded(
                           child: SizedBox(
-                            height: 44,
+                            height: 46,
                             child: ElevatedButton(
                               onPressed: () {
                                 Navigator.pop(dialogContext);
                                 onUpdate();
                               },
                               style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
@@ -1020,13 +1031,14 @@ class AppDialogBoxes {
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.download_rounded, size: 16),
+                                  Icon(Icons.download_rounded, size: 17),
                                   SizedBox(width: 6),
                                   Text(
                                     'Update',
                                     style: TextStyle(
-                                      fontSize: 13.5,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w700,
+                                      height: 1.0,
                                     ),
                                   ),
                                 ],

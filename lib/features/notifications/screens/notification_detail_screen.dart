@@ -729,19 +729,26 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
     required bool dark,
   }) {
     final isTelegram = link.isTelegram;
+    final isPlayStore = link.isPlayStore;
+    final isContact = link.isContactOrSupport;
+
     final bgColor = isTelegram
         ? const Color(0xFF0284C7)
-        : (isPrimary
-            ? AppColors.primary
-            : (dark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)));
-    final fgColor = (isTelegram || isPrimary)
+        : (isPlayStore
+            ? const Color(0xFF10B981)
+            : (isPrimary
+                ? AppColors.primary
+                : (dark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9))));
+    final fgColor = (isTelegram || isPlayStore || isPrimary)
         ? Colors.white
         : (dark ? const Color(0xFFE2E8F0) : AppColors.primary);
     final borderColor = isTelegram
         ? const Color(0xFF0284C7)
-        : (isPrimary
-            ? AppColors.primary
-            : (dark ? AppColors.darkBorder : const Color(0xFFCBD5E1)));
+        : (isPlayStore
+            ? const Color(0xFF10B981)
+            : (isPrimary
+                ? AppColors.primary
+                : (dark ? AppColors.darkBorder : const Color(0xFFCBD5E1))));
 
     return SizedBox(
       width: double.infinity,
@@ -768,6 +775,10 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                 angle: -25 * (3.141592653589793 / 180),
                 child: const Icon(Icons.send_rounded, size: 20),
               )
+            else if (isPlayStore)
+              const Icon(Icons.system_update_rounded, size: 20)
+            else if (isContact)
+              const Icon(Icons.support_agent_rounded, size: 20)
             else
               Icon(
                 Icons.open_in_new_rounded,

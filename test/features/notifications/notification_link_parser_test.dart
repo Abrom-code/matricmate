@@ -218,6 +218,39 @@ void main() {
       expect(links[0].url, 'https://t.me/channel');
       expect(links[1].url, 'https://matricmate.com');
     });
+
+    test('actionButtonLabel auto-detects Play Store link as Update App', () {
+      const text =
+          'New features available: [a]https://play.google.com/store/apps/details?id=com.abopia.matricmate[/a]';
+      final link = NotificationLinkParser.extractPrimaryLink(text);
+      expect(link, isNotNull);
+      expect(link?.isPlayStore, isTrue);
+      expect(link?.actionButtonLabel, 'Update App');
+    });
+
+    test('actionButtonLabel auto-detects support link as Contact Us', () {
+      const text = 'Need help? [a]https://t.me/matric_support[/a]';
+      final link = NotificationLinkParser.extractPrimaryLink(text);
+      expect(link, isNotNull);
+      expect(link?.isContactOrSupport, isTrue);
+      expect(link?.actionButtonLabel, 'Contact Us');
+    });
+
+    test('actionButtonLabel respects custom label in [a] tag and payload', () {
+      const text = '[a href="https://t.me/matric_et"]Join Channel[/a]';
+      final link = NotificationLinkParser.extractPrimaryLink(text);
+      expect(link?.actionButtonLabel, 'Join Channel');
+
+      final payloadLink = NotificationLinkParser.extractPrimaryLink(
+        'Check out our bot',
+        payload: {
+          'url': 'https://t.me/my_bot',
+          'button_text': 'Start Bot',
+        },
+      );
+      expect(payloadLink?.actionButtonLabel, 'Start Bot');
+    });
   });
 }
+
 

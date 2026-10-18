@@ -29,14 +29,38 @@ class NotificationLink {
         (url.trim().startsWith('@') && !url.trim().contains(' '));
   }
 
+  /// Whether this link points to Google Play Store / App Store.
+  bool get isPlayStore {
+    final lower = url.trim().toLowerCase();
+    return lower.contains('play.google.com/store') ||
+        lower.startsWith('market://') ||
+        lower.contains('apps.apple.com');
+  }
+
+  /// Whether this link points to contact or support.
+  bool get isContactOrSupport {
+    final lower = url.trim().toLowerCase();
+    return lower.startsWith('mailto:') ||
+        lower.contains('contact') ||
+        lower.contains('support') ||
+        lower.contains('help');
+  }
+
   /// Context-aware label for prominent action buttons.
   String get actionButtonLabel {
     final cleanText = text.trim();
     if (cleanText.isNotEmpty &&
-        cleanText.length <= 25 &&
+        cleanText.length <= 40 &&
         !cleanText.startsWith('http://') &&
-        !cleanText.startsWith('https://')) {
+        !cleanText.startsWith('https://') &&
+        cleanText.toLowerCase() != 'open link') {
       return cleanText;
+    }
+    if (isPlayStore) {
+      return 'Update App';
+    }
+    if (isContactOrSupport) {
+      return 'Contact Us';
     }
     if (isTelegram) {
       return 'Join Telegram';
@@ -202,9 +226,15 @@ class NotificationLinkParser {
         final urlStr = payloadUrl.toString().trim();
         if (!seenUrls.contains(urlStr)) {
           seenUrls.add(urlStr);
+          final customLabel = payload['action_text'] ??
+              payload['action_title'] ??
+              payload['button_text'] ??
+              payload['button_title'] ??
+              payload['button_label'] ??
+              payload['label'];
           links.add(
             NotificationLink(
-              text: payload['action_text']?.toString().trim() ?? 'Open Link',
+              text: customLabel?.toString().trim() ?? 'Open Link',
               url: urlStr,
             ),
           );

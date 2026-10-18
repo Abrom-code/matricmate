@@ -908,10 +908,12 @@ class ChallengeHomeController extends GetxController {
             ? UserController.instance.user.value.id
             : (Supabase.instance.client.auth.currentUser?.id ?? '');
         if (userId.isNotEmpty) {
-          final online = await _repo.fetchUserSubmittedChallengeIds(userId);
-          attemptedIds.addAll(online.difference(deleted));
+          // Single combined query instead of two separate HTTP requests
+          final result = await _repo.fetchUserChallengeAttemptIds(userId);
+          final submitted = result['submitted'] ?? <String>{};
+          final inProg = result['inProgress'] ?? <String>{};
 
-          final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
+          attemptedIds.addAll(submitted.difference(deleted));
           inProgressIds.assignAll(inProg.difference(deleted));
           inProgressIds.removeAll(attemptedIds);
         }

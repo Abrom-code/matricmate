@@ -27,6 +27,11 @@ class LeaderboardController extends GetxController {
   final entries = <ChallengeLeaderboardEntry>[].obs;
   final displayLimit = 10.obs;
 
+  /// The user's personal standing, fetched separately when not in top entries.
+  final Rxn<ChallengeLeaderboardEntry> _userStanding = Rxn<ChallengeLeaderboardEntry>();
+
+  static const _initialFetchLimit = 10;
+
   List<ChallengeLeaderboardEntry> get displayedEntries =>
       entries.take(displayLimit.value).toList();
 
@@ -35,12 +40,54 @@ class LeaderboardController extends GetxController {
 
   void loadMore() {
     displayLimit.value += 10;
+    // If we've exhausted locally loaded entries, fetch more from server
+    if (displayLimit.value > entries.length) {
+      _fetchMore();
+    }
+  }
+
+  Future<void> _fetchMore() async {
+    try {
+      final newLimit = entries.length + 20;
+      List<ChallengeLeaderboardEntry> moreEntries;
+
+      if (activeTab.value == 'challenge' && challengeId != null) {
+        final aud = audience?.toLowerCase().trim();
+        final filterStream = (aud == null || aud.isEmpty || aud == 'both')
+            ? null
+            : aud;
+        moreEntries = await _repo.fetchLeaderboard(
+          challengeId: challengeId!,
+          stream: filterStream,
+          limit: newLimit,
+        );
+      } else {
+        final period = activeTab.value == 'weekly'
+            ? 'week'
+            : activeTab.value == 'monthly'
+                ? 'month'
+                : 'year';
+        moreEntries = await _repo.fetchPeriodLeaderboard(
+          stream: activeStream.value,
+          period: period,
+          limit: newLimit,
+        );
+      }
+
+      if (moreEntries.length > entries.length) {
+        entries.value = moreEntries;
+      }
+    } catch (_) {}
   }
 
   String get currentUserId => UserController.instance.user.value.id;
 
-  ChallengeLeaderboardEntry? get currentUserEntry =>
-      entries.firstWhereOrNull((e) => e.userId == currentUserId);
+  /// Returns the user's entry from the top entries list, or their separately fetched standing.
+  ChallengeLeaderboardEntry? get currentUserEntry {
+    final inList = entries.firstWhereOrNull((e) => e.userId == currentUserId);
+    if (inList != null) return inList;
+    return _userStanding.value;
+  }
 
   @override
   void onInit() {
@@ -54,7 +101,7 @@ class LeaderboardController extends GetxController {
     } else {
       isLoading.value = true;
       entries.clear();
-      displayLimit.value = 10;
+      displayLimit.value = _initialFetchLimit;
     }
 
     try {
@@ -67,26 +114,40 @@ class LeaderboardController extends GetxController {
         entries.value = await _repo.fetchLeaderboard(
           challengeId: challengeId!,
           stream: filterStream,
-          limit: 100,
+          limit: _initialFetchLimit,
         );
-      } else if (activeTab.value == 'weekly') {
+
+        // Fetch user standing separately if not in top results
+        _userStanding.value = null;
+        if (entries.every((e) => e.userId != currentUserId) && currentUserId.isNotEmpty) {
+          _userStanding.value = await _repo.fetchUserChallengeStanding(
+            challengeId: challengeId!,
+            userId: currentUserId,
+            stream: filterStream,
+          );
+        }
+      } else {
+        final period = activeTab.value == 'weekly'
+            ? 'week'
+            : activeTab.value == 'monthly'
+                ? 'month'
+                : 'year';
+
         entries.value = await _repo.fetchPeriodLeaderboard(
           stream: activeStream.value,
-          period: 'week',
-          limit: 100,
+          period: period,
+          limit: _initialFetchLimit,
         );
-      } else if (activeTab.value == 'monthly') {
-        entries.value = await _repo.fetchPeriodLeaderboard(
-          stream: activeStream.value,
-          period: 'month',
-          limit: 100,
-        );
-      } else if (activeTab.value == 'yearly') {
-        entries.value = await _repo.fetchPeriodLeaderboard(
-          stream: activeStream.value,
-          period: 'year',
-          limit: 100,
-        );
+
+        // Fetch user period standing separately if not in top results
+        _userStanding.value = null;
+        if (entries.every((e) => e.userId != currentUserId) && currentUserId.isNotEmpty) {
+          _userStanding.value = await _repo.fetchUserPeriodStanding(
+            stream: activeStream.value,
+            period: period,
+            userId: currentUserId,
+          );
+        }
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -99,12 +160,12 @@ class LeaderboardController extends GetxController {
   void setTab(String tab) {
     if (activeTab.value == tab) return;
     activeTab.value = tab;
-    displayLimit.value = 10;
+    displayLimit.value = _initialFetchLimit;
     loadLeaderboard(isManual: false);
   }
 
   Future<void> manualRefresh() async {
-    displayLimit.value = 10;
+    displayLimit.value = _initialFetchLimit;
     await loadLeaderboard(isManual: true);
   }
 }

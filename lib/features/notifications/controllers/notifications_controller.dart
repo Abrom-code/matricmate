@@ -23,6 +23,8 @@ class NotificationsController extends GetxController
   final RxBool isNotificationPermissionGranted = true.obs;
   bool _isSyncing = false;
   int _syncEpoch = 0;
+  DateTime _lastResumeSyncAt = DateTime(2000);
+  static const _resumeSyncCooldown = Duration(seconds: 60);
 
   // ── Filter state ────────────────────────────────────────────────────
   final Rx<NotificationFilter> selectedFilter = NotificationFilter.all.obs;
@@ -131,7 +133,11 @@ class NotificationsController extends GetxController
     if (state == AppLifecycleState.resumed) {
       checkNotificationPermission();
       if (_userId.isNotEmpty) {
-        loadNotifications(syncRemote: true);
+        final now = DateTime.now();
+        if (now.difference(_lastResumeSyncAt) > _resumeSyncCooldown) {
+          _lastResumeSyncAt = now;
+          loadNotifications(syncRemote: true);
+        }
       }
     }
   }

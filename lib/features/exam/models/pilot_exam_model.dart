@@ -5,6 +5,7 @@ class PilotExamModel {
   final String edition;
   final bool isPremium;
   final bool isActive;
+  final String status;
   final String? createdAt;
 
   PilotExamModel({
@@ -14,8 +15,12 @@ class PilotExamModel {
     this.edition = '2019 E.C.',
     this.isPremium = true,
     this.isActive = true,
+    this.status = 'published',
     this.createdAt,
   });
+
+  bool get isDraft => status == 'draft' || status == 'verification' || !isActive;
+  bool get isPublished => status == 'published' && isActive;
 
   Map<String, dynamic> toMap() {
     return {
@@ -25,6 +30,7 @@ class PilotExamModel {
       'edition': edition,
       'is_premium': isPremium ? 1 : 0,
       'is_active': isActive ? 1 : 0,
+      'status': status,
       'created_at': createdAt,
     };
   }
@@ -36,13 +42,17 @@ class PilotExamModel {
         rawPremium == 1 ||
         rawPremium == '1';
 
+    final active = map['is_active'] == 1 || map['is_active'] == true;
+    final stat = map['status']?.toString() ?? (active ? 'published' : 'draft');
+
     return PilotExamModel(
       id: (map['id'] as num?)?.toInt() ?? 0,
       title: map['title'] as String? ?? 'Pilot Exam',
       description: map['description'] as String? ?? '',
       edition: map['edition'] as String? ?? '2019 E.C.',
       isPremium: isPrem,
-      isActive: map['is_active'] == 1 || map['is_active'] == true,
+      isActive: active,
+      status: stat,
       createdAt: map['created_at'] as String?,
     );
   }
@@ -54,6 +64,7 @@ class PilotExamModel {
     String? edition,
     bool? isPremium,
     bool? isActive,
+    String? status,
     String? createdAt,
   }) {
     return PilotExamModel(
@@ -63,6 +74,7 @@ class PilotExamModel {
       edition: edition ?? this.edition,
       isPremium: isPremium ?? this.isPremium,
       isActive: isActive ?? this.isActive,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
     );
   }

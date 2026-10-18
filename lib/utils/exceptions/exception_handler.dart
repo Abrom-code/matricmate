@@ -102,6 +102,27 @@ class AppExceptionHandler {
       );
     }
 
+    // ── Supabase Edge Functions ──────────────────────────────────
+    if (e is FunctionException) {
+      final details = e.details;
+      final msg = details is Map && details['error'] != null
+          ? details['error'].toString()
+          : (e.reasonPhrase ?? 'Server error (${e.status})');
+      return AppFailure(
+        title: 'Server Error',
+        message: msg,
+        code: e.status.toString(),
+      );
+    }
+
+    // ── Raw String / Custom Message ──────────────────────────────
+    if (e is String && e.trim().isNotEmpty) {
+      return AppFailure(
+        title: 'Notice',
+        message: e.trim(),
+      );
+    }
+
     // ── Fallback ─────────────────────────────────────────────────
     return const AppFailure(
       title: 'Something Went Wrong',

@@ -31,7 +31,7 @@ class ChallengeHomeController extends GetxController {
   final _db = DatabaseService.instance;
   final _sb = Supabase.instance.client;
 
-  final isLoading = false.obs;
+  final isLoading = true.obs;
   final isRefreshing = false.obs;
   final availableChallenges = <LeaderboardChallengeModel>[].obs;
   final completedChallenges = <LeaderboardChallengeModel>[].obs;
@@ -101,7 +101,7 @@ class ChallengeHomeController extends GetxController {
 
   Timer? _countdownTimer;
   RealtimeChannel? _realtimeChannel;
-  RealtimeChannel? _attemptsRealtimeChannel;
+  Timer? _realtimeDebounceTimer;
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream;
@@ -120,17 +120,29 @@ class ChallengeHomeController extends GetxController {
     _startTimer();
     _startRealtime();
 
-    ever(UserController.instance.user, (_) => loadAllChallenges(showLoading: false));
+    String lastUserId = UserController.instance.user.value.id;
+    String lastUserStream = UserController.instance.user.value.stream;
+    String lastUserStatus = UserController.instance.user.value.status;
+
+    ever(UserController.instance.user, (u) {
+      if (u.id != lastUserId ||
+          u.stream != lastUserStream ||
+          u.status != lastUserStatus) {
+        lastUserId = u.id;
+        lastUserStream = u.stream;
+        lastUserStatus = u.status;
+        loadAllChallenges(showLoading: false);
+      }
+    });
   }
 
   @override
   void onClose() {
     _countdownTimer?.cancel();
+    _realtimeDebounceTimer?.cancel();
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
-    }
-    if (_attemptsRealtimeChannel != null) {
-      _sb.removeChannel(_attemptsRealtimeChannel!);
+      _realtimeChannel = null;
     }
     super.onClose();
   }
@@ -167,6 +179,7 @@ class ChallengeHomeController extends GetxController {
           completedChallenges.insert(0, c);
         }
       }
+      sortAvailableChallenges();
       return;
     }
 
@@ -181,6 +194,7 @@ class ChallengeHomeController extends GetxController {
     }
 
     if (stateChanged) {
+      sortAvailableChallenges();
       availableChallenges.refresh();
     }
   }
@@ -189,9 +203,7 @@ class ChallengeHomeController extends GetxController {
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
     }
-    if (_attemptsRealtimeChannel != null) {
-      _sb.removeChannel(_attemptsRealtimeChannel!);
-    }
+    // Only listen to leaderboard_challenges status transitions (live/closed)
     _realtimeChannel = _sb
         .channel('public:leaderboard_challenges')
         .onPostgresChanges(
@@ -200,39 +212,15 @@ class ChallengeHomeController extends GetxController {
           table: 'leaderboard_challenges',
           callback: (payload) {
             debugPrint('[Realtime] Challenge changed: ${payload.eventType}');
-            loadAllChallenges(showLoading: false);
+            _realtimeDebounceTimer?.cancel();
+            _realtimeDebounceTimer = Timer(const Duration(seconds: 3), () {
+              loadAllChallenges(showLoading: false);
+            });
           },
         )
         .subscribe((status, [error]) {
           debugPrint('[Realtime] Challenges status: $status ${error ?? ''}');
         });
-
-    _attemptsRealtimeChannel = _sb
-        .channel('public:challenge_attempts')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'challenge_attempts',
-          callback: (payload) {
-            debugPrint('[Realtime] Attempt changed: ${payload.eventType}');
-            _refreshParticipantCounts();
-          },
-        )
-        .subscribe((status, [error]) {
-          debugPrint('[Realtime] Attempts status: $status ${error ?? ''}');
-        });
-  }
-
-  Future<void> _refreshParticipantCounts() async {
-    try {
-      final challengeIds = [
-        ...availableChallenges.map((c) => c.id),
-        ...completedChallenges.map((c) => c.id),
-      ];
-      if (challengeIds.isEmpty) return;
-      final counts = await _repo.fetchParticipantCounts(challengeIds: challengeIds);
-      participantCounts.addAll(counts);
-    } catch (_) {}
   }
 
   Future<void> _preloadLocalChallenges() async {
@@ -424,8 +412,9 @@ class ChallengeHomeController extends GetxController {
       deletedChallengeIds.assignAll(deleted);
 
       // Fetch all published challenges from Supabase in one roundtrip with timeout
+      final isAdmin = UserController.instance.isAdmin.value;
       final allPublished = await _repo
-          .fetchAllChallenges(stream: userStream)
+          .fetchAllChallenges(stream: userStream, isAdmin: isAdmin)
           .timeout(const Duration(seconds: 4));
 
       final validFiltered = allPublished.where((c) {
@@ -459,6 +448,7 @@ class ChallengeHomeController extends GetxController {
 
       availableChallenges.assignAll(available);
       completedChallenges.assignAll(closed);
+      sortAvailableChallenges();
       isOffline.value = false;
 
       // Cache all valid challenges for offline resilience
@@ -511,6 +501,22 @@ class ChallengeHomeController extends GetxController {
       isLoading.value = false;
       isRefreshing.value = false;
       _isLoadingAllChallenges = false;
+    }
+  }
+
+  /// Verifies and publishes a draft challenge to make it available (Admin only).
+  Future<void> verifyAndPublishChallenge(String challengeId) async {
+    try {
+      isLoading.value = true;
+      final ok = await _repo.verifyAndPublishChallenge(challengeId);
+      if (ok) {
+        ToastHelper.success('Challenge verified and published!');
+        await loadAllChallenges(showLoading: true);
+      }
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -714,11 +720,14 @@ class ChallengeHomeController extends GetxController {
     final diff = target.difference(current);
     if (diff.isNegative) return 'Starting now...';
 
-    final hours = diff.inHours;
+    final days = diff.inDays;
+    final hours = diff.inHours % 24;
     final minutes = diff.inMinutes % 60;
     final seconds = diff.inSeconds % 60;
 
-    if (hours > 0) {
+    if (days > 0) {
+      return '${days}d ${hours}h ${minutes}m ${seconds}s';
+    } else if (hours > 0) {
       return '${hours}h ${minutes}m ${seconds}s';
     } else if (minutes > 0) {
       return '${minutes}m ${seconds}s';
@@ -742,7 +751,19 @@ class ChallengeHomeController extends GetxController {
       return;
     }
 
+    final isAdmin = UserController.instance.isAdmin.value;
+
     if (challenge.isLive) {
+      // Admin can preview live challenges without joining (practice mode)
+      if (isAdmin && challenge.isDraft) {
+        Get.to(() => ChallengePracticeScreen(
+          challengeId: challenge.id,
+          title: '${challenge.title} (Admin Preview)',
+          setId: challenge.setId,
+          isDraft: true,
+        ));
+        return;
+      }
       Get.to(
         () => ChallengeAttemptScreen(
           challengeId: challenge.id,
@@ -752,7 +773,17 @@ class ChallengeHomeController extends GetxController {
           durationMinutes: challenge.durationMinutes,
         ),
       );
-    } else if (challenge.isScheduled) {
+    } else if (challenge.isScheduled || challenge.isDraft) {
+      // Admin can preview scheduled/draft challenges without joining
+      if (isAdmin) {
+        Get.to(() => ChallengePracticeScreen(
+          challengeId: challenge.id,
+          title: '${challenge.title} (Admin Preview)',
+          setId: challenge.setId,
+          isDraft: challenge.isDraft,
+        ));
+        return;
+      }
       if (challenge.startsAt != null) {
         ToastHelper.info(
           'Opens in ${formatCountdown(challenge.startsAt!)}. Get ready!',
@@ -765,10 +796,12 @@ class ChallengeHomeController extends GetxController {
     }
   }
 
+
   
   void markAttemptedOrPracticed(String challengeId) {
     attemptedIds.add(challengeId);
     inProgressIds.remove(challengeId);
+    sortAvailableChallenges();
   }
 
   bool isAttemptedOrPracticed(String challengeId, {String? setId}) {
@@ -777,6 +810,80 @@ class ChallengeHomeController extends GetxController {
       return true;
     }
     return false;
+  }
+
+  /// Determines whether the current user has completed/practiced this challenge
+  /// or if the challenge has been placed into completed challenge history.
+  bool isChallengeCompleted(LeaderboardChallengeModel challenge) {
+    if (isAttemptedOrPracticed(challenge.id, setId: challenge.setId)) return true;
+    if (completedChallenges.any((c) =>
+        c.id == challenge.id ||
+        (challenge.setId.isNotEmpty && c.setId == challenge.setId))) {
+      return true;
+    }
+    return false;
+  }
+
+  int _challengePriority(LeaderboardChallengeModel c) {
+    final completed = isChallengeCompleted(c);
+    if (c.isLive && !completed) {
+      return 0; // Top: Live and not completed
+    } else if (c.isScheduled) {
+      return 1; // Second: Scheduled
+    } else if (c.isLive && completed) {
+      return 2; // Third: Live but already completed by user
+    } else {
+      return 3; // Other available (e.g. draft/verifying)
+    }
+  }
+
+  /// Sorts available challenges:
+  /// 1. Live and not completed challenges at the very top.
+  /// 2. Scheduled challenges next.
+  /// 3. Live challenges already completed by user.
+  /// 4. Other available challenges.
+  void sortAvailableChallenges() {
+    if (availableChallenges.isEmpty) return;
+    final items = List<LeaderboardChallengeModel>.from(availableChallenges);
+    items.sort((a, b) {
+      final pA = _challengePriority(a);
+      final pB = _challengePriority(b);
+      if (pA != pB) return pA.compareTo(pB);
+
+      // Same priority tie-breakers:
+      if (pA == 0) {
+        // Live & uncompleted: closing sooner comes first
+        if (a.endsAt != null && b.endsAt != null) {
+          final cmp = a.endsAt!.compareTo(b.endsAt!);
+          if (cmp != 0) return cmp;
+        } else if (a.endsAt != null) {
+          return -1;
+        } else if (b.endsAt != null) {
+          return 1;
+        }
+        if (a.startsAt != null && b.startsAt != null) {
+          return a.startsAt!.compareTo(b.startsAt!);
+        }
+      } else if (pA == 1) {
+        // Scheduled: starting sooner comes first
+        if (a.startsAt != null && b.startsAt != null) {
+          final cmp = a.startsAt!.compareTo(b.startsAt!);
+          if (cmp != 0) return cmp;
+        } else if (a.startsAt != null) {
+          return -1;
+        } else if (b.startsAt != null) {
+          return 1;
+        }
+      } else if (pA == 2) {
+        // Live & completed: closing sooner comes first
+        if (a.endsAt != null && b.endsAt != null) {
+          final cmp = a.endsAt!.compareTo(b.endsAt!);
+          if (cmp != 0) return cmp;
+        }
+      }
+      return 0;
+    });
+    availableChallenges.assignAll(items);
   }
 
   bool isInProgress(String challengeId) => inProgressIds.contains(challengeId);
@@ -819,18 +926,27 @@ class ChallengeHomeController extends GetxController {
             ? UserController.instance.user.value.id
             : (Supabase.instance.client.auth.currentUser?.id ?? '');
         if (userId.isNotEmpty) {
-          final online = await _repo.fetchUserSubmittedChallengeIds(userId);
-          attemptedIds.addAll(online.difference(deleted));
+          // Single combined query instead of two separate HTTP requests
+          final result = await _repo.fetchUserChallengeAttemptIds(userId);
+          final submitted = result['submitted'] ?? <String>{};
+          final inProg = result['inProgress'] ?? <String>{};
 
-          final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
+          attemptedIds.addAll(submitted.difference(deleted));
           inProgressIds.assignAll(inProg.difference(deleted));
           inProgressIds.removeAll(attemptedIds);
         }
       }
+      sortAvailableChallenges();
     } catch (_) {}
   }
 
   Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+    if (!challenge.canReviewQuestions) {
+      ToastHelper.info(
+        'Question review will be unlocked once this challenge closes.',
+      );
+      return;
+    }
     if (isOpeningReview[challenge.id] == true) return;
     isOpeningReview[challenge.id] = true;
     try {

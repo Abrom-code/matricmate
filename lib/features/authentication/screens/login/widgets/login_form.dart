@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
+import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -309,69 +310,83 @@ class LoginForm extends GetView<LoginController> {
 
           const SizedBox(height: 20),
 
-          // ── Divider ────────────────────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: Divider(
-                  color: dark
-                      ? AppColors.darkBorder
-                      : const Color(0xFFE2E8F0),
-                  thickness: 1,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Text(
-                  'or',
+          // ── Switch to Signup Footer ────────────────────────────────
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Don't have an account?",
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 13.5,
                     color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ),
-              ),
-              Expanded(
-                child: Divider(
-                  color: dark
-                      ? AppColors.darkBorder
-                      : const Color(0xFFE2E8F0),
-                  thickness: 1,
+                TextButton(
+                  onPressed: () => Get.offNamed(Routes.signup),
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
 
-          // ── Create Account Outlined Button ─────────────────────────
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: OutlinedButton.icon(
-              onPressed: () => Get.offNamed(Routes.signup),
-              icon: const Icon(Iconsax.user_add_copy, size: 18),
-              label: const Text(
-                'Create New Account',
-                style: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(
-                  color: dark
-                      ? AppColors.darkBorder
-                      : const Color(0xFFCBD5E1),
-                  width: 1.2,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          // ── Support Bot Footer ─────────────────────────────────────
+          Center(
+            child: InkWell(
+              onTap: ProfileActionsHelper.openTelegramSupport,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.30),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.send_rounded, size: 12, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Need help?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
         ],
       ),
     );

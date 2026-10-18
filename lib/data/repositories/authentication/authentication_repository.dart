@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,8 +8,11 @@ class AuthenticationRepository {
 
   User? get currentUser => _supabase.auth.currentUser;
 
-  Stream<User?> get userChanges =>
-      _supabase.auth.onAuthStateChange.map((state) => state.session?.user);
+  Stream<User?> get userChanges => _supabase.auth.onAuthStateChange
+      .handleError((error, stackTrace) {
+        debugPrint('[AuthRepo] onAuthStateChange caught error: $error');
+      })
+      .map((state) => state.session?.user);
 
   Future<AuthResponse> registerWithEmailAndPassword(
     String email,

@@ -1,6 +1,7 @@
 // supabase/functions/challenge-scheduler/index.ts
 // Cron job edge function: flips scheduled -> live at starts_at, and live -> closed at ends_at.
-// Triggers notifications on status transitions (only if not already notified).
+// - Challenge LIVE: sends Firebase FCM push to student devices (NO Supabase notification table insert).
+// - Challenge CLOSED: flips status only (NO Supabase notification table insert, NO FCM push).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -12,7 +13,7 @@ function getSupabaseClient() {
   return createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 }
 
-// ── Google OAuth2 Token for FCM ───────────────────────────────────────────────
+// ── Google OAuth2 Token for FCM (RS256 JWT Flow) ──────────────────────────────
 
 function base64urlEncode(bytes: Uint8Array): string {
   let binary = "";
@@ -23,6 +24,10 @@ function base64urlEncode(bytes: Uint8Array): string {
     .replace(/=+$/, "")
     .replace(/\+/g, "-")
     .replace(/\//g, "_");
+}
+
+function encodeJsonBase64url(obj: unknown): string {
+  return base64urlEncode(new TextEncoder().encode(JSON.stringify(obj)));
 }
 
 function pemToArrayBuffer(pem: string): ArrayBuffer {
@@ -40,19 +45,63 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
   return buf;
 }
 
-async function getAccessToken(): Promise<string | null> {
-  const rawSa = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
-  if (!rawSa) return null;
+function parseJsonLenient(raw: string): any {
+  const s = raw.trim();
+  try {
+    return JSON.parse(s);
+  } catch (_) {}
+
+  if (s.startsWith('"') && s.endsWith('"')) {
+    try {
+      return JSON.parse(JSON.parse(s));
+    } catch (_) {}
+  }
+
+  if (!s.startsWith("{") && !s.startsWith("[")) {
+    try {
+      const decoded = atob(s);
+      return JSON.parse(decoded);
+    } catch (_) {}
+  }
 
   try {
-    let trimmed = rawSa.trim();
-    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-      trimmed = JSON.parse(trimmed);
-    }
-    const serviceAccount = typeof trimmed === "string" ? JSON.parse(trimmed) : trimmed;
-    if (!serviceAccount.client_email || !serviceAccount.private_key) return null;
+    const fixed = s
+      .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+      .replace(/'/g, '"');
+    return JSON.parse(fixed);
+  } catch (_) {}
 
-    const now = Math.floor(Date.now() / 1000);
+  throw new Error(`SyntaxError parsing JSON (len: ${s.length})`);
+}
+
+let cachedAccessToken: { token: string; expiresAt: number } | null = null;
+
+async function getAccessToken(): Promise<string | null> {
+  const now = Math.floor(Date.now() / 1000);
+  if (cachedAccessToken && cachedAccessToken.expiresAt > now + 60) {
+    return cachedAccessToken.token;
+  }
+
+  const rawSa = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
+  if (!rawSa) {
+    console.warn("FCM_SERVICE_ACCOUNT_JSON is not set in Supabase secrets");
+    return null;
+  }
+
+  let serviceAccount: { client_email?: string; private_key?: string };
+  try {
+    serviceAccount = parseJsonLenient(rawSa);
+  } catch (err) {
+    console.error("Failed to parse FCM_SERVICE_ACCOUNT_JSON:", err);
+    return null;
+  }
+
+  if (!serviceAccount.client_email || !serviceAccount.private_key) {
+    console.error("FCM_SERVICE_ACCOUNT_JSON is missing client_email or private_key");
+    return null;
+  }
+
+  try {
     const header = { alg: "RS256", typ: "JWT" };
     const claim = {
       iss: serviceAccount.client_email,
@@ -62,10 +111,7 @@ async function getAccessToken(): Promise<string | null> {
       iat: now,
     };
 
-    const encode = (o: unknown) =>
-      base64urlEncode(new TextEncoder().encode(JSON.stringify(o)));
-    const unsigned = `${encode(header)}.${encode(claim)}`;
-
+    const unsigned = `${encodeJsonBase64url(header)}.${encodeJsonBase64url(claim)}`;
     const keyBuffer = pemToArrayBuffer(serviceAccount.private_key);
     const key = await crypto.subtle.importKey(
       "pkcs8",
@@ -92,9 +138,20 @@ async function getAccessToken(): Promise<string | null> {
       }),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`Google OAuth2 token request failed [${res.status}]: ${await res.text()}`);
+      return null;
+    }
+
     const data = await res.json();
-    return data.access_token ?? null;
+    if (!data.access_token) return null;
+
+    cachedAccessToken = {
+      token: data.access_token,
+      expiresAt: now + (data.expires_in ?? 3600),
+    };
+
+    return data.access_token;
   } catch (err) {
     console.error("Scheduler FCM auth error:", err);
     return null;
@@ -117,20 +174,34 @@ async function sendFcmToStream(
       query = query.ilike("stream", stream);
     }
 
-    const { data: users } = await query;
-    const tokens: string[] = (users ?? [])
-      .map((u: { fcm_token?: string | null }) => u.fcm_token?.trim() ?? "")
-      .filter((t) => t.length > 0);
+    const { data: users, error: userError } = await query;
+    if (userError) {
+      console.error("Scheduler FCM: failed to query users", userError);
+      return;
+    }
 
-    if (tokens.length === 0) return;
+    const tokens: string[] = Array.from(
+      new Set(
+        (users ?? [])
+          .map((u: { fcm_token?: string | null }) => u.fcm_token?.trim() ?? "")
+          .filter((t) => t.length > 0)
+      )
+    );
+
+    if (tokens.length === 0) {
+      console.log(`Scheduler FCM: no valid tokens found for stream=${stream ?? "all"}`);
+      return;
+    }
 
     const accessToken = await getAccessToken();
-    if (!accessToken) return;
+    if (!accessToken) {
+      console.error("Scheduler FCM: cannot send, failed to get access token");
+      return;
+    }
 
     console.log(`Scheduler FCM: sending to ${tokens.length} token(s), stream=${stream ?? "all"}`);
 
-    // Data-only FCM messages — no notification field.
-    // The Flutter app handles display via background handler and foreground listener.
+    // Data-only FCM messages — Flutter app displays foreground/background banner and handles navigation
     const batchSize = 50;
     for (let i = 0; i < tokens.length; i += batchSize) {
       const batch = tokens.slice(i, i + batchSize);
@@ -177,19 +248,19 @@ async function sendFcmToStream(
 
 // ── Main Scheduler Entrypoint ─────────────────────────────────────────────────
 
-Deno.serve(async (req: Request) => {
+Deno.serve(async (_req: Request) => {
   const supabase = getSupabaseClient();
   try {
     const now = new Date().toISOString();
 
-    // 0. Expired scheduled challenges (ends_at <= now): flip directly to closed without firing live notification
+    // 0. Expired scheduled challenges (ends_at <= now): flip directly to closed without notification/FCM
     await supabase
       .from("leaderboard_challenges")
       .update({ status: "closed" })
       .eq("status", "scheduled")
       .lte("ends_at", now);
 
-    // 1. Flip scheduled -> live (only if currently within the active window)
+    // 1. Flip scheduled -> live (Sends Firebase FCM push, NO Supabase notifications row inserted)
     const { data: newlyLive, error: liveErr } = await supabase
       .from("leaderboard_challenges")
       .update({ status: "live" })
@@ -204,19 +275,6 @@ Deno.serve(async (req: Request) => {
       console.log(`Flipped ${newlyLive.length} challenges to live`);
 
       for (const ch of newlyLive) {
-        // Check if a live notification was already created for this challenge
-        const { data: existing } = await supabase
-          .from("notifications")
-          .select("id")
-          .eq("type", "challenge")
-          .contains("payload", { challenge_id: String(ch.id), type: "challenge_live" })
-          .limit(1);
-
-        if (existing && existing.length > 0) {
-          console.log(`Skipping live notification for challenge ${ch.id} — already notified (notification ${existing[0].id})`);
-          continue;
-        }
-
         const { data: subject } = await supabase
           .from("subjects")
           .select("name")
@@ -228,31 +286,12 @@ Deno.serve(async (req: Request) => {
         const notifBody = `${ch.title} (${subjName}) is now open. Test your skills and compete for the leaderboard!`;
         const targetStream = ch.audience === "both" ? null : ch.audience;
 
-        // Insert exactly one notification row
-        const { data: inserted } = await supabase
-          .from("notifications")
-          .insert({
-            title: notifTitle,
-            body: notifBody,
-            type: "challenge",
-            target_stream: targetStream,
-            payload: {
-              type: "challenge_live",
-              challenge_id: String(ch.id),
-            },
-            is_read: false,
-            created_at: new Date().toISOString(),
-          })
-          .select("id")
-          .single();
-
-        // Send data-only FCM push to student devices
+        // Broadcast high-priority FCM push notification to student devices
         await sendFcmToStream(
           targetStream,
           {
             type: "challenge_live",
             challenge_id: String(ch.id),
-            notification_id: String(inserted?.id ?? ""),
             title: notifTitle,
             body: notifBody,
           },
@@ -260,7 +299,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // 2. Flip live -> closed (No notification sent)
+    // 2. Flip live -> closed (no notification inserted, no FCM sent)
     const { data: newlyClosed, error: closeErr } = await supabase
       .from("leaderboard_challenges")
       .update({ status: "closed" })
@@ -271,7 +310,7 @@ Deno.serve(async (req: Request) => {
     if (closeErr) {
       console.error("Error flipping live to closed:", closeErr);
     } else if (newlyClosed && newlyClosed.length > 0) {
-      console.log(`Flipped ${newlyClosed.length} challenges to closed (no notification sent)`);
+      console.log(`Flipped ${newlyClosed.length} challenges to closed (no notification, no FCM)`);
     }
 
     return new Response(

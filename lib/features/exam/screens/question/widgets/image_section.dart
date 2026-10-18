@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -56,7 +55,7 @@ class _ImageSectionState extends State<ImageSection> {
     }
 
     try {
-      final file = await DefaultCacheManager().getSingleFile(url);
+      final file = await AppHelperFunctions.imageCacheManager.getSingleFile(url);
       _memoryCache[url] = file;
       return file;
     } catch (e) {

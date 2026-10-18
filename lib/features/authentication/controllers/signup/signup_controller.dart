@@ -27,8 +27,6 @@ class SignupController extends GetxController {
   final confirmPassword = TextEditingController();
   final RxString selectedStream = ''.obs;
   final RxBool isSigning = false.obs;
-  final RxBool acceptPrivacyPolicy = false.obs;
-
   GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
 
   void setStream(String stream) {
@@ -58,10 +56,6 @@ class SignupController extends GetxController {
       }
       if (selectedStream.value.isEmpty) {
         ToastHelper.warning('Please select stream, you can edit later!');
-        return;
-      }
-      if (!acceptPrivacyPolicy.value) {
-        ToastHelper.warning('Please accept the Privacy Policy to continue.');
         return;
       }
 

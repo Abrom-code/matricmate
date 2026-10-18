@@ -8,6 +8,7 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/utils/exceptions/app_failure_model.dart';
+import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
 
 class ChallengeRepository {
@@ -26,24 +27,30 @@ class ChallengeRepository {
   // ── Fetch Visible Challenges for Student ───────────────────────────────────
 
   /// Fetches all published challenges (live, scheduled, closed, archived).
+  /// If [isAdmin] is true, includes 'draft' and 'verification' challenges for testing.
   Future<List<LeaderboardChallengeModel>> fetchAllChallenges({
     String? stream,
+    bool isAdmin = false,
   }) async {
     await _checkConnectivity();
+
+    final allowedStatuses = isAdmin
+        ? ['draft', 'verification', 'live', 'scheduled', 'closed', 'archived']
+        : ['live', 'scheduled', 'closed', 'archived'];
 
     dynamic rows;
     try {
       rows = await _sb
           .from('leaderboard_challenges')
           .select('*, subjects(name), challenge_questions(id), challenge_attempts(count)')
-          .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+          .inFilter('status', allowedStatuses)
           .order('created_at', ascending: false)
           .timeout(const Duration(seconds: 6));
     } on PostgrestException catch (_) {
       rows = await _sb
           .from('leaderboard_challenges')
           .select('*, subjects(name), challenge_questions(id)')
-          .inFilter('status', ['live', 'scheduled', 'closed', 'archived'])
+          .inFilter('status', allowedStatuses)
           .order('created_at', ascending: false)
           .timeout(const Duration(seconds: 6));
     }
@@ -60,6 +67,19 @@ class ChallengeRepository {
       }).toList();
     }
     return list;
+  }
+
+  /// Verifies and publishes a draft challenge (Admin only).
+  Future<bool> verifyAndPublishChallenge(String challengeId) async {
+    try {
+      final res = await _sb.rpc(
+        'verify_and_publish_challenge',
+        params: {'p_challenge_id': challengeId},
+      );
+      return res == true;
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
   }
 
   /// Fetches real participant counts from challenge_attempts (live standings & attempts).
@@ -87,12 +107,15 @@ class ChallengeRepository {
         }
       } catch (_) {}
 
-      // 2. Fallback: direct query
-      var query = _sb.from('challenge_attempts').select('challenge_id');
-      if (challengeIds != null && challengeIds.isNotEmpty) {
-        query = query.inFilter('challenge_id', challengeIds);
+      // 2. Fallback: direct query (only for requested challenge IDs)
+      if (challengeIds == null || challengeIds.isEmpty) {
+        return {};
       }
-      final rows = await query.timeout(AppTimeouts.query);
+      final rows = await _sb
+          .from('challenge_attempts')
+          .select('challenge_id')
+          .inFilter('challenge_id', challengeIds)
+          .timeout(AppTimeouts.query);
       final Map<String, int> counts = {};
       for (final r in (rows as List)) {
         final id = r['challenge_id']?.toString() ?? '';
@@ -167,15 +190,29 @@ class ChallengeRepository {
       final rawQuestions = res['questions'];
       final List<ChallengeQuestionModel> questions = [];
       if (rawQuestions is List) {
+        final parsed = <ChallengeQuestionModel>[];
+        final neededPassageIds = <dynamic>{};
+
         for (final item in rawQuestions) {
           if (item is Map<String, dynamic>) {
             final q = ChallengeQuestionModel.fromJson(item);
+            parsed.add(q);
             if (q.passageId != null && q.passage == null) {
-              final p = await getPassage(q.passageId);
-              questions.add(q.copyWith(passage: p));
-            } else {
-              questions.add(q);
+              neededPassageIds.add(q.passageId);
             }
+          }
+        }
+
+        // Fetch unique passages in parallel
+        if (neededPassageIds.isNotEmpty) {
+          await Future.wait(neededPassageIds.map((id) => getPassage(id)));
+        }
+
+        for (final q in parsed) {
+          if (q.passageId != null && q.passage == null) {
+            questions.add(q.copyWith(passage: _passageCache[q.passageId.toString()]));
+          } else {
+            questions.add(q);
           }
         }
       }
@@ -223,6 +260,19 @@ class ChallengeRepository {
     if (answers.isEmpty) return;
     try {
       await _checkConnectivity();
+
+      // 1. Try single batch RPC (1 HTTP request instead of N)
+      try {
+        await _sb.rpc('rpc_batch_submit_answers', params: {
+          'p_attempt_id': attemptId,
+          'p_answers': answers,
+        }).timeout(AppTimeouts.rpc);
+        return;
+      } catch (_) {
+        // Fall back to individual submission calls if RPC not yet deployed
+      }
+
+      // 2. Fallback: concurrent individual calls
       final futures = answers.entries.map((entry) {
         return _sb.rpc('rpc_submit_answer', params: {
           'p_attempt_id': attemptId,
@@ -340,11 +390,24 @@ class ChallengeRepository {
     }
 
     final list = <ChallengeQuestionModel>[];
+    final parsed = <ChallengeQuestionModel>[];
+    final neededPassageIds = <dynamic>{};
+
     for (final r in rows) {
       final q = ChallengeQuestionModel.fromJson(r as Map<String, dynamic>);
+      parsed.add(q);
       if (q.passageId != null && q.passage == null) {
-        final p = await getPassage(q.passageId);
-        list.add(q.copyWith(passage: p));
+        neededPassageIds.add(q.passageId);
+      }
+    }
+
+    if (neededPassageIds.isNotEmpty) {
+      await Future.wait(neededPassageIds.map((id) => getPassage(id)));
+    }
+
+    for (final q in parsed) {
+      if (q.passageId != null && q.passage == null) {
+        list.add(q.copyWith(passage: _passageCache[q.passageId.toString()]));
       } else {
         list.add(q);
       }
@@ -399,7 +462,7 @@ class ChallengeRepository {
   Future<List<ChallengeLeaderboardEntry>> fetchLeaderboard({
     required String challengeId,
     String? stream,
-    int limit = 50,
+    int limit = 10,
   }) async {
     await _checkConnectivity();
 
@@ -466,11 +529,72 @@ class ChallengeRepository {
     return [];
   }
 
+  /// Fetches the current user's personal standing and rank when not in Top 10.
+  Future<ChallengeLeaderboardEntry?> fetchUserChallengeStanding({
+    required String challengeId,
+    required String userId,
+    String? stream,
+  }) async {
+    try {
+      await _checkConnectivity();
+
+      final userAttempt = await _sb
+          .from('challenge_attempts')
+          .select('*, users(first_name, last_name)')
+          .eq('challenge_id', challengeId)
+          .eq('user_id', userId)
+          .eq('status', 'submitted')
+          .maybeSingle()
+          .timeout(AppTimeouts.query);
+
+      if (userAttempt == null) return null;
+
+      final score = (userAttempt['score'] as num?)?.toInt() ?? 0;
+      final time = (userAttempt['total_time_seconds'] as num?)?.toInt() ??
+          (userAttempt['time_spent_seconds'] as num?)?.toInt() ??
+          0;
+
+      // Count how many participants placed higher
+      var countQuery = _sb
+          .from('challenge_attempts')
+          .count(CountOption.exact)
+          .eq('challenge_id', challengeId)
+          .eq('status', 'submitted');
+
+      if (stream != null && stream.isNotEmpty && stream != 'all' && stream != 'both') {
+        countQuery = countQuery.ilike('stream', stream);
+      }
+
+      final higherRes = await countQuery
+          .or('score.gt.$score,and(score.eq.$score,total_time_seconds.lt.$time)')
+          .timeout(AppTimeouts.query);
+
+      final rank = higherRes + 1;
+      final user = userAttempt['users'] as Map<String, dynamic>? ?? {};
+
+      return ChallengeLeaderboardEntry(
+        rank: rank,
+        userId: userId,
+        firstName: user['first_name']?.toString() ?? 'Student',
+        lastName: user['last_name']?.toString() ?? '',
+        stream: userAttempt['stream']?.toString() ?? '',
+        score: score,
+        totalTimeSeconds: time,
+        correctCount: score,
+        incorrectCount: (userAttempt['incorrect_count'] as num?)?.toInt() ?? 0,
+        notDoneCount: (userAttempt['not_done_count'] as num?)?.toInt() ?? 0,
+        challengesTaken: 1,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<List<ChallengeLeaderboardEntry>> fetchPeriodLeaderboard({
     required String stream,
     required String period, // 'week', 'month', or 'year'
     DateTime? periodStart,
-    int limit = 100,
+    int limit = 10,
   }) async {
     await _checkConnectivity();
 
@@ -511,26 +635,22 @@ class ChallengeRepository {
       var query = _sb
           .from('challenge_attempts')
           .select('*, users(first_name, last_name)')
-          .eq('status', 'submitted');
+          .eq('status', 'submitted')
+          .gte('submitted_at', startDate.toIso8601String());
 
       if (stream.isNotEmpty && stream != 'all' && stream != 'both') {
         query = query.ilike('stream', stream);
       }
 
-      final rows = await query.order('submitted_at', ascending: false).timeout(AppTimeouts.sync);
+      final rows = await query
+          .order('submitted_at', ascending: false)
+          .limit(500)
+          .timeout(AppTimeouts.sync);
 
       final userMap = <String, Map<String, dynamic>>{};
       for (final r in rows) {
         final userId = r['user_id']?.toString() ?? '';
         if (userId.isEmpty) continue;
-
-        final submittedAtStr = r['submitted_at']?.toString();
-        if (submittedAtStr != null) {
-          final submittedAt = DateTime.tryParse(submittedAtStr);
-          if (submittedAt != null && submittedAt.isBefore(startDate)) {
-            continue;
-          }
-        }
 
         final user = r['users'] as Map<String, dynamic>? ?? {};
         final score = (r['score'] as num?)?.toInt() ?? 0;
@@ -808,37 +928,183 @@ class ChallengeRepository {
     };
   }
 
-  Future<Set<String>> fetchUserSubmittedChallengeIds(String userId) async {
+  /// Single combined query to fetch both submitted and in-progress attempts in 1 HTTP request.
+  Future<Map<String, Set<String>>> fetchUserChallengeAttemptIds(String userId) async {
     try {
       final rows = await _sb
           .from('challenge_attempts')
-          .select('challenge_id')
+          .select('challenge_id, status')
           .eq('user_id', userId)
-          .neq('status', 'in_progress')
           .timeout(AppTimeouts.query);
-      return rows
-          .map((r) => r['challenge_id']?.toString() ?? '')
-          .where((id) => id.isNotEmpty)
-          .toSet();
+
+      final Set<String> submitted = {};
+      final Set<String> inProgress = {};
+
+      for (final r in rows) {
+        final cid = r['challenge_id']?.toString() ?? '';
+        if (cid.isEmpty) continue;
+        final status = r['status']?.toString();
+        if (status == 'in_progress') {
+          inProgress.add(cid);
+        } else {
+          submitted.add(cid);
+        }
+      }
+      return {
+        'submitted': submitted,
+        'inProgress': inProgress,
+      };
     } catch (_) {
-      return {};
+      return {'submitted': <String>{}, 'inProgress': <String>{}};
     }
   }
 
+  Future<Set<String>> fetchUserSubmittedChallengeIds(String userId) async {
+    final result = await fetchUserChallengeAttemptIds(userId);
+    return result['submitted'] ?? {};
+  }
+
   Future<Set<String>> fetchUserInProgressChallengeIds(String userId) async {
+    final result = await fetchUserChallengeAttemptIds(userId);
+    return result['inProgress'] ?? {};
+  }
+
+  /// Fetches the user's aggregate standing for a weekly/monthly/yearly period when not in Top 10.
+  Future<ChallengeLeaderboardEntry?> fetchUserPeriodStanding({
+    required String stream,
+    required String period,
+    required String userId,
+    DateTime? periodStart,
+  }) async {
     try {
-      final rows = await _sb
+      await _checkConnectivity();
+      final now = DateTime.now();
+      DateTime startDate;
+      if (periodStart != null) {
+        startDate = periodStart;
+      } else if (period == 'week') {
+        final daysFromMon = (now.weekday - 1);
+        startDate = DateTime(now.year, now.month, now.day - daysFromMon);
+      } else if (period == 'year') {
+        startDate = DateTime(now.year, 1, 1);
+      } else {
+        startDate = DateTime(now.year, now.month, 1);
+      }
+
+      // 1. Try RPC with a large limit to obtain exact dense rank
+      try {
+        final pStream =
+            (stream.isEmpty || stream == 'all' || stream == 'both') ? 'all' : stream;
+        final res = await _sb.rpc('rpc_get_period_leaderboard', params: {
+          'p_stream': pStream,
+          'p_period': period,
+          if (periodStart != null)
+            'p_period_start': periodStart.toIso8601String().split('T').first,
+          'p_limit': 1000,
+        }).timeout(AppTimeouts.sync);
+
+        if (res is List && res.isNotEmpty) {
+          for (final item in res) {
+            if (item is Map<String, dynamic> &&
+                item['user_id']?.toString() == userId) {
+              return ChallengeLeaderboardEntry.fromJson(item);
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint(
+            '[ChallengeRepo] rpc_get_period_leaderboard user standing check: $e');
+      }
+
+      // 2. Direct aggregation fallback
+      final userRows = await _sb
           .from('challenge_attempts')
-          .select('challenge_id')
+          .select(
+              'score, total_time_seconds, time_spent_seconds, users(first_name, last_name)')
           .eq('user_id', userId)
-          .eq('status', 'in_progress')
+          .eq('status', 'submitted')
+          .gte('submitted_at', startDate.toIso8601String())
           .timeout(AppTimeouts.query);
-      return rows
-          .map((r) => r['challenge_id']?.toString() ?? '')
-          .where((id) => id.isNotEmpty)
-          .toSet();
+
+      if (userRows.isEmpty) return null;
+
+      int userScore = 0;
+      int userTime = 0;
+      for (final r in userRows) {
+        userScore += (r['score'] as num?)?.toInt() ?? 0;
+        final t = (r['total_time_seconds'] as num?)?.toInt() ??
+            (r['time_spent_seconds'] as num?)?.toInt() ??
+            0;
+        userTime += t;
+      }
+
+      // Compute rank among participants in the period
+      int computedRank = 1;
+      try {
+        var query = _sb
+            .from('challenge_attempts')
+            .select('user_id, score, total_time_seconds, time_spent_seconds')
+            .eq('status', 'submitted')
+            .gte('submitted_at', startDate.toIso8601String());
+
+        if (stream.isNotEmpty && stream != 'all' && stream != 'both') {
+          query = query.ilike('stream', stream);
+        }
+
+        final allRows =
+            await query.limit(1000).timeout(AppTimeouts.sync);
+
+        final userAggregates = <String, Map<String, int>>{};
+        for (final r in allRows) {
+          final uid = r['user_id']?.toString() ?? '';
+          if (uid.isEmpty) continue;
+          final s = (r['score'] as num?)?.toInt() ?? 0;
+          final t = (r['total_time_seconds'] as num?)?.toInt() ??
+              (r['time_spent_seconds'] as num?)?.toInt() ??
+              0;
+
+          if (!userAggregates.containsKey(uid)) {
+            userAggregates[uid] = {'score': s, 'time': t};
+          } else {
+            final existing = userAggregates[uid]!;
+            existing['score'] = (existing['score'] ?? 0) + s;
+            existing['time'] = (existing['time'] ?? 0) + t;
+          }
+        }
+
+        int higherCount = 0;
+        for (final entry in userAggregates.entries) {
+          if (entry.key != userId) {
+            final otherScore = entry.value['score'] ?? 0;
+            final otherTime = entry.value['time'] ?? 0;
+            if (otherScore > userScore ||
+                (otherScore == userScore && otherTime < userTime)) {
+              higherCount++;
+            }
+          }
+        }
+        computedRank = higherCount + 1;
+      } catch (e) {
+        debugPrint(
+            '[ChallengeRepo] compute user period rank fallback error: $e');
+      }
+
+      final user = (userRows.first['users'] as Map<String, dynamic>?) ?? {};
+
+      return ChallengeLeaderboardEntry(
+        rank: computedRank,
+        userId: userId,
+        firstName: user['first_name']?.toString() ?? 'Student',
+        lastName: user['last_name']?.toString() ?? '',
+        stream: stream,
+        score: userScore,
+        totalTimeSeconds: userTime,
+        correctCount: userScore,
+        challengesTaken: userRows.length,
+        periodStart: startDate.toIso8601String().split('T').first,
+      );
     } catch (_) {
-      return {};
+      return null;
     }
   }
 

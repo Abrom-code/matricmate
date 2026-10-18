@@ -367,33 +367,9 @@ class SignupForm extends GetView<SignupController> {
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
+                const SizedBox(height: 20),
 
-          const SizedBox(height: 20),
-
-          // ── Stream Selection Card ──────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: dark ? AppColors.darkCard : AppColors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: dark ? 0.2 : 0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                // ── Academic Stream ────────────────────────────────────────
                 Row(
                   children: [
                     const Icon(
@@ -437,64 +413,6 @@ class SignupForm extends GetView<SignupController> {
                               controller.selectedStream.value == 'social',
                           onTap: () => controller.setStream('social'),
                           dark: dark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Obx(
-                  () => Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Checkbox(
-                          value: controller.acceptPrivacyPolicy.value,
-                          onChanged: (val) =>
-                              controller.acceptPrivacyPolicy.value =
-                                  val ?? false,
-                          activeColor: AppColors.primary,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            GestureDetector(
-                              onTap: () =>
-                                  controller.acceptPrivacyPolicy.toggle(),
-                              child: Text(
-                                'I agree to the ',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: dark
-                                      ? AppColors.darkGrey
-                                      : AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: ProfileActionsHelper.openPrivacyPolicy,
-                              child: const Text(
-                                'Privacy Policy',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
@@ -570,6 +488,66 @@ class SignupForm extends GetView<SignupController> {
                   ),
                 ),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // ── Support Bot Footer ─────────────────────────────────────
+          Center(
+            child: InkWell(
+              onTap: ProfileActionsHelper.openTelegramSupport,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF0284C7,
+                            ).withValues(alpha: 0.30),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.send_rounded,
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Need help?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: dark
+                            ? const Color(0xFF38BDF8)
+                            : const Color(0xFF0284C7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
 

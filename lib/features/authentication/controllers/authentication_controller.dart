@@ -17,6 +17,7 @@ import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/utils/local_storage/sync_prefs.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
@@ -28,8 +29,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// GetStorage key that records the last time session validation ran.
 const _kLastSessionCheckKey = 'last_session_check_ms';
 
-/// Minimum gap between periodic session checks (5 minutes).
-const _kSessionCheckInterval = Duration(minutes: 5);
+/// Minimum gap between periodic session checks (12 hours).
+const _kSessionCheckInterval = Duration(hours: 12);
 
 /// Persisted flag so returning users see Login instead of Signup.
 const _kHasLoggedInKey = 'has_logged_in';
@@ -53,13 +54,22 @@ class AuthenticationController extends GetxController
   void onReady() {
     WidgetsBinding.instance.addObserver(this);
     authUser = Rx<User?>(authRepo.currentUser);
-    authUser.bindStream(authRepo.userChanges);
+    authUser.bindStream(
+      authRepo.userChanges.handleError((e) {
+        debugPrint('[AuthController] auth stream caught error: $e');
+      }),
+    );
 
     // Validate session and refresh when connectivity is restored
     _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
       final isOnline = !results.contains(ConnectivityResult.none);
       if (isOnline && authRepo.currentUser != null) {
-        unawaited(UserController.instance.fetchUserRecord());
+        unawaited(
+          UserController.instance.fetchUserRecord().catchError((e) {
+            debugPrint('[AuthController] fetchUserRecord on reconnect error: $e');
+            return false;
+          }),
+        );
       }
     });
 
@@ -73,11 +83,12 @@ class AuthenticationController extends GetxController
     super.onClose();
   }
 
-  /// Runs session check on app resume if 12h have elapsed.
+  /// Runs session check and background delta sync on app resume.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_periodicSessionCheck());
+      unawaited(_onResumeSync());
     }
   }
 
@@ -253,6 +264,30 @@ class AuthenticationController extends GetxController
       }
     } catch (_) {
       // Non-fatal — never interrupt user for background check failure
+    }
+  }
+
+  static const Duration _kResumeSyncInterval = Duration(minutes: 30);
+
+  /// Silently delta-syncs content when the app is resumed from background,
+  /// provided that at least 30 minutes have elapsed since the last delta sync.
+  Future<void> _onResumeSync() async {
+    try {
+      if (authRepo.currentUser == null) return;
+      if (!Get.isRegistered<SyncingController>()) return;
+
+      final lastSync = await SyncPrefs.lastSubjectsSync();
+      if (lastSync != null) {
+        final elapsed = DateTime.now().toUtc().difference(lastSync);
+        if (elapsed < _kResumeSyncInterval) return;
+      }
+
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) return;
+
+      unawaited(SyncingController.instance.syncAll(showUiLoading: false));
+    } catch (_) {
+      // Non-fatal background refresh
     }
   }
 

@@ -5,6 +5,8 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 /// Redesigned Available Challenge Card for Upcoming and Live rounds.
 class AvailableChallengeCard extends StatelessWidget {
@@ -33,29 +35,33 @@ class AvailableChallengeCard extends StatelessWidget {
           ? (challenge.endsAt ?? challenge.startsAt)
           : challenge.startsAt;
 
-      String hours = '00';
-      String minutes = '00';
-      String seconds = '00';
+      int days = 0;
+      int hours = 0;
+      int minutes = 0;
+      int seconds = 0;
 
       if (targetTime != null) {
         final diff = targetTime.difference(ctrl.now.value);
         final totalSec = diff.isNegative ? 0 : diff.inSeconds;
-        hours = (totalSec ~/ 3600).toString().padLeft(2, '0');
-        minutes = ((totalSec % 3600) ~/ 60).toString().padLeft(2, '0');
-        seconds = (totalSec % 60).toString().padLeft(2, '0');
+        days = totalSec ~/ 86400;
+        hours = (totalSec % 86400) ~/ 3600;
+        minutes = (totalSec % 3600) ~/ 60;
+        seconds = totalSec % 60;
       }
+
+      final hStr = hours.toString().padLeft(2, '0');
+      final mStr = minutes.toString().padLeft(2, '0');
+      final sStr = seconds.toString().padLeft(2, '0');
+
+      final countdownText = days > 0
+          ? '${days}d ${hStr}h ${mStr}m ${sStr}s'
+          : '$hStr:$mStr:$sStr';
 
       final durationMins = challenge.durationMinutes > 0
           ? challenge.durationMinutes
           : (challenge.durationSeconds / 60).round();
 
-      final isDone =
-          ctrl.isAttemptedOrPracticed(challenge.id) ||
-          ctrl.completedChallenges.any(
-            (c) =>
-                c.id == challenge.id ||
-                (challenge.setId.isNotEmpty && c.setId == challenge.setId),
-          );
+      final isDone = ctrl.isChallengeCompleted(challenge);
 
       return Container(
         decoration: BoxDecoration(
@@ -83,23 +89,25 @@ class AvailableChallengeCard extends StatelessWidget {
             Row(
               children: [
                 // Subject Chip
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.teal.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    challenge.subjectName ?? 'Challenge',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.teal,
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.teal.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      challenge.subjectName ?? 'Challenge',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.teal,
+                      ),
                     ),
                   ),
                 ),
@@ -120,8 +128,19 @@ class AvailableChallengeCard extends StatelessWidget {
                   const SizedBox(width: 8),
                 ],
 
-                // Status Indicator (Live / Upcoming)
-                if (isLive) ...[
+                // Status Indicator (Live / Upcoming / Draft)
+                if (challenge.isDraft) ...[
+                  const Icon(Icons.build_circle_outlined, size: 14, color: Colors.amber),
+                  const SizedBox(width: 5),
+                  const Text(
+                    'Draft Mode',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.amber,
+                    ),
+                  ),
+                ] else if (isLive) ...[
                   const Icon(Icons.circle, size: 8, color: Color(0xFFE24B4A)),
                   const SizedBox(width: 5),
                   const Text(
@@ -218,29 +237,32 @@ class AvailableChallengeCard extends StatelessWidget {
                     : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    isLive ? 'Ends in ' : 'Starts in ',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      isLive ? 'Closes in ' : 'Starts in ',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$hours:$minutes:$seconds',
-                    style: TextStyle(
-                      color: dark ? Colors.white : AppColors.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      letterSpacing: 0.5,
+                    const SizedBox(width: 6),
+                    Text(
+                      countdownText,
+                      style: TextStyle(
+                        color: dark ? Colors.white : AppColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
@@ -316,15 +338,145 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ] else if (challenge.isDraft && UserController.instance.isAdmin.value) ...[
+              // Admin draft verification: Side-by-side Preview + Publish buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => ctrl.onChallengeTapped(challenge),
+                        icon: const Icon(
+                          Icons.visibility_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Preview',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: dark
+                              ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                              : const Color(0xFFECFDF5),
+                          foregroundColor: dark
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF059669),
+                          side: BorderSide(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () {
+                          AppHelperFunctions.showAppDialog(
+                            context,
+                            'Publish Challenge?',
+                            'This challenge will be verified and published for students nationwide.',
+                            () async {
+                              Get.back();
+                              await ctrl.verifyAndPublishChallenge(challenge.id);
+                            },
+                            okText: 'Publish Now',
+                            cancelText: 'Cancel',
+                            icon: Icons.verified_rounded,
+                            iconColor: const Color(0xFF10B981),
+                          );
+                        },
+                        icon: Icon(
+                          Icons.verified_rounded,
+                          size: 16,
+                          color: dark
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF059669),
+                        ),
+                        label: Text(
+                          'Publish Now',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: dark
+                                ? const Color(0xFF34D399)
+                                : const Color(0xFF059669),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (isLive) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => Get.to(
+                      () => LeaderboardScreen(
+                        challengeId: challenge.id,
+                        challengeTitle: challenge.title,
+                        audience: challenge.audience,
+                      ),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 2,
+                        horizontal: 4,
+                      ),
+                      child: Text(
+                        'View rankings →',
+                        style: TextStyle(
+                          color: AppColors.amber,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ] else if (isLive) ...[
               SizedBox(
                 width: double.infinity,
                 height: 46,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
-                    foregroundColor: const Color(0xFF04342C),
-                    side: const BorderSide(color: AppColors.secondary),
+                    backgroundColor: isDone
+                        ? AppColors.primary
+                        : const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
                     elevation: 0,
                     padding: EdgeInsets.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -333,21 +485,35 @@ class AvailableChallengeCard extends StatelessWidget {
                     ),
                   ),
                   onPressed: isDone
-                      ? () => ctrl.openCompletedChallenge(challenge)
+                      ? () {
+                          if (!challenge.canReviewQuestions) {
+                            ToastHelper.info(
+                              'Question review will be unlocked once this challenge closes.',
+                            );
+                            return;
+                          }
+                          ctrl.openCompletedChallenge(challenge);
+                        }
                       : () => ctrl.onChallengeTapped(challenge),
                   icon: Icon(
                     isDone
-                        ? Icons.visibility_outlined
+                        ? (challenge.canReviewQuestions
+                            ? Icons.visibility_outlined
+                            : Icons.lock_clock_outlined)
                         : Icons.arrow_forward_rounded,
                     size: 16,
-                    color: AppColors.white,
+                    color: Colors.white,
                   ),
                   label: Text(
-                    isDone ? 'Review' : 'Start challenge',
+                    isDone
+                        ? (challenge.canReviewQuestions
+                            ? 'Review'
+                            : 'Review when closed')
+                        : 'Start challenge',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.white,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -365,7 +531,10 @@ class AvailableChallengeCard extends StatelessWidget {
                     ),
                   ),
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 2,
+                      horizontal: 4,
+                    ),
                     child: Text(
                       'View rankings →',
                       style: TextStyle(
@@ -380,34 +549,72 @@ class AvailableChallengeCard extends StatelessWidget {
             ] else ...[
               SizedBox(
                 width: double.infinity,
-                height: 46,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: const Color(0x26378ADD),
-                    foregroundColor: const Color(0xFF85B7EB),
-                    side: const BorderSide(color: Color(0x66378ADD), width: 1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                    padding: EdgeInsets.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: () => ctrl.onChallengeTapped(challenge),
-                  icon: const Icon(
-                    Icons.notifications_outlined,
-                    size: 16,
-                    color: Color(0xFF85B7EB),
-                  ),
-                  label: const Text(
-                    'Scheduled',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF85B7EB),
-                    ),
-                  ),
-                ),
+                height: 44,
+                child: UserController.instance.isAdmin.value
+                    ? ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => ctrl.onChallengeTapped(challenge),
+                        icon: const Icon(
+                          Icons.visibility_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Preview Questions',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: dark
+                              ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                              : const Color(0xFFF0F9FF),
+                          foregroundColor: dark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
+                          side: BorderSide(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => ctrl.onChallengeTapped(challenge),
+                        icon: Icon(
+                          Icons.notifications_outlined,
+                          size: 16,
+                          color: dark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
+                        ),
+                        label: Text(
+                          'Scheduled',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: dark
+                                ? const Color(0xFF38BDF8)
+                                : const Color(0xFF0284C7),
+                          ),
+                        ),
+                      ),
               ),
             ],
           ],

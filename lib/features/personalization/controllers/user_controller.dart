@@ -47,20 +47,45 @@ class UserController extends GetxController {
   /// row can switch from "send" to "re-check".
   final RxBool verificationLinkSent = false.obs;
 
+  /// True if the authenticated user has verified admin privileges in Supabase.
+  final RxBool isAdmin = false.obs;
+
   @override
   void onInit() {
     super.onInit();
 
-    _authSub = _authRepo.userChanges.listen((authUser) async {
-      if (authUser != null) {
-        syncEmailVerified();
-        await loadLocalUser();
-      } else {
-        user.value = UserModel.empty();
-        isEmailVerified.value = false;
-        verificationLinkSent.value = false;
-      }
-    });
+    _authSub = _authRepo.userChanges.listen(
+      (authUser) async {
+        if (authUser != null) {
+          syncEmailVerified();
+          await loadLocalUser();
+          await checkAdminStatus();
+        } else {
+          user.value = UserModel.empty();
+          isEmailVerified.value = false;
+          verificationLinkSent.value = false;
+          isAdmin.value = false;
+        }
+      },
+      onError: (e) {
+        debugPrint('[UserController] authSub stream caught error: $e');
+      },
+    );
+  }
+
+  /// Verifies whether the authenticated user has admin role via Postgres is_admin RPC.
+  Future<void> checkAdminStatus() async {
+    final uid = _authRepo.currentUser?.id;
+    if (uid == null) {
+      isAdmin.value = false;
+      return;
+    }
+    try {
+      final res = await Supabase.instance.client.rpc('is_admin');
+      isAdmin.value = res == true;
+    } catch (_) {
+      isAdmin.value = false;
+    }
   }
 
   /// Mirrors the Supabase user's emailConfirmedAt flag into [isEmailVerified].

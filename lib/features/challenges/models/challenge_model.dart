@@ -73,6 +73,7 @@ class LeaderboardChallengeModel {
   final int questionCount;
   final int attemptCount;
   final bool isPremium;
+  final String reviewPolicy; // 'on_completion' (default) or 'when_closed'
 
   LeaderboardChallengeModel({
     required this.id,
@@ -91,9 +92,10 @@ class LeaderboardChallengeModel {
     this.questionCount = 0,
     this.attemptCount = 0,
     this.isPremium = true,
+    this.reviewPolicy = 'on_completion',
   });
 
-  bool get isDraft => status == 'draft';
+  bool get isDraft => status == 'draft' || status == 'verification';
 
   bool get isScheduled {
     if (status == 'scheduled') {
@@ -132,6 +134,15 @@ class LeaderboardChallengeModel {
 
   bool get isArchived => status == 'archived';
   int get durationMinutes => durationSeconds ~/ 60;
+
+  bool get isReviewWhenClosed =>
+      reviewPolicy == 'when_closed' || reviewPolicy == 'closed';
+
+  /// Whether questions and answers can be reviewed by students.
+  bool get canReviewQuestions {
+    if (isClosed) return true;
+    return !isReviewWhenClosed;
+  }
 
   /// Pre-visibility window: scheduled & starts_at is within 12 hours
   bool get isUpcomingVisible {
@@ -210,6 +221,7 @@ class LeaderboardChallengeModel {
       questionCount: (json['question_count'] as num?)?.toInt() ?? 0,
       attemptCount: attempts,
       isPremium: isPrem,
+      reviewPolicy: json['review_policy']?.toString() ?? 'on_completion',
     );
   }
 
@@ -230,6 +242,7 @@ class LeaderboardChallengeModel {
     int? questionCount,
     int? attemptCount,
     bool? isPremium,
+    String? reviewPolicy,
   }) {
     return LeaderboardChallengeModel(
       id: id ?? this.id,
@@ -248,6 +261,7 @@ class LeaderboardChallengeModel {
       questionCount: questionCount ?? this.questionCount,
       attemptCount: attemptCount ?? this.attemptCount,
       isPremium: isPremium ?? this.isPremium,
+      reviewPolicy: reviewPolicy ?? this.reviewPolicy,
     );
   }
 
@@ -267,6 +281,7 @@ class LeaderboardChallengeModel {
       'question_count': questionCount,
       'attempt_count': attemptCount,
       'is_premium': isPremium ? 1 : 0,
+      'review_policy': reviewPolicy,
       'created_at': createdAt.toIso8601String(),
       if (createdBy != null) 'created_by': createdBy,
     };

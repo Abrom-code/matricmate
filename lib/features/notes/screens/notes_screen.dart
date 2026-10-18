@@ -6,8 +6,10 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/screens/widgets/note_tile.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -171,7 +173,8 @@ class _NotesScreenState extends State<NotesScreen>
         return const AppCircularLoading(title: 'Loading notes...');
       }
 
-      final notes = controller.subjectNotes;
+      final user = UserController.instance.user.value;
+      final notes = TestAccessHelper.sortNotesForUser(controller.subjectNotes, user);
       return RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () => controller.loadSubjectNotes(forceRemote: true),
@@ -219,7 +222,11 @@ class _NotesScreenState extends State<NotesScreen>
             return const AppCircularLoading(title: 'Loading notes...');
           }
 
-          final notes = controller.getNotesByGrade(grade);
+          final user = UserController.instance.user.value;
+          final notes = TestAccessHelper.sortNotesForUser(
+            controller.getNotesByGrade(grade),
+            user,
+          );
 
           return RefreshIndicator(
             color: AppColors.primary,

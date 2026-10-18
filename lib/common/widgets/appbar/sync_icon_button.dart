@@ -86,7 +86,7 @@ class _SyncIconButtonState extends State<SyncIconButton>
           child: AnimatedBuilder(
             animation: _ctrl,
             builder: (_, child) => Transform.rotate(
-              angle: _ctrl.value * 2 * math.pi,
+              angle: -_ctrl.value * 2 * math.pi,
               child: child,
             ),
             child: Icon(

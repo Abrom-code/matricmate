@@ -24,7 +24,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 19,
+      version: 22,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -271,6 +271,32 @@ class DatabaseService extends GetxController {
             );
           } catch (_) {}
         }
+        if (oldVersion < 20) {
+          try {
+            await db.execute(
+              'ALTER TABLE tests ADD COLUMN status TEXT DEFAULT "published"',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE pilot_exams ADD COLUMN status TEXT DEFAULT "published"',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 21) {
+          try {
+            await db.execute(
+              'ALTER TABLE notes ADD COLUMN user_rating INTEGER DEFAULT 0',
+            );
+          } catch (_) {}
+        }
+        if (oldVersion < 22) {
+          try {
+            await db.execute(
+              'ALTER TABLE results ADD COLUMN completed_at TEXT',
+            );
+          } catch (_) {}
+        }
       },
       onOpen: (db) async {
         try {
@@ -410,6 +436,11 @@ class DatabaseService extends GetxController {
           try {
             await db.execute(
               'ALTER TABLE local_challenge_sets ADD COLUMN is_premium INTEGER DEFAULT 1',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE results ADD COLUMN completed_at TEXT',
             );
           } catch (_) {}
         } catch (_) {}

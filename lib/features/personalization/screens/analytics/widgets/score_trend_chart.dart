@@ -205,7 +205,33 @@ class _LinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (points.length < 2) return;
+    if (points.isEmpty) return;
+
+    if (points.length == 1) {
+      final y = size.height * 0.5;
+      final x = size.width / 2;
+      final o = Offset(x, y);
+
+      final gridPaint = Paint()
+        ..color = dark
+            ? Colors.white.withValues(alpha: 0.05)
+            : const Color(0xFFE2E8F0)
+        ..strokeWidth = 1;
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        gridPaint,
+      );
+
+      canvas.drawCircle(
+        o,
+        12,
+        Paint()..color = AppColors.primary.withValues(alpha: 0.25),
+      );
+      canvas.drawCircle(o, 6, Paint()..color = AppColors.primary);
+      canvas.drawCircle(o, 3.5, Paint()..color = Colors.white);
+      return;
+    }
 
     final minScore = points.map((p) => p.score).reduce((a, b) => a < b ? a : b);
     final maxScore = points.map((p) => p.score).reduce((a, b) => a > b ? a : b);

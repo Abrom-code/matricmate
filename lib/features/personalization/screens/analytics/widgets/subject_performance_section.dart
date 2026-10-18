@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
+import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
+import 'package:matricmate/features/exam/models/subject_model.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -142,103 +146,129 @@ class _SubjectTile extends StatelessWidget {
       statusLabel = 'Needs Focus';
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: dark
-            ? Colors.white.withValues(alpha: 0.03)
-            : const Color(0xFFF8FAFC),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: dark
-              ? Colors.white.withValues(alpha: 0.06)
-              : const Color(0xFFF1F5F9),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        onTap: () {
+          SubjectModel? targetSubject;
+          final subjectsCtrl = Get.isRegistered<SubjectsController>()
+              ? SubjectsController.instance
+              : Get.put(SubjectsController());
+          final subjects = subjectsCtrl.subjects;
+          targetSubject = subjects.firstWhereOrNull(
+            (s) =>
+                (stat.subjectId != null && s.id == stat.subjectId) ||
+                s.name.trim().toLowerCase() == stat.name.trim().toLowerCase(),
+          );
+          if (targetSubject != null) {
+            SubjectModeModal.show(context, targetSubject);
+          } else {
+            Get.until((route) => route.isFirst);
+            if (Get.isRegistered<NavigationController>()) {
+              NavigationController.instance.changePage(0);
+            }
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: dark
+                ? Colors.white.withValues(alpha: 0.03)
+                : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: dark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : const Color(0xFFF1F5F9),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Artwork Thumbnail
-              Container(
-                width: 38,
-                height: 38,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: dark
-                      ? AppColors.darkSurface
-                      : AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Image.asset(
-                  AppHelperFunctions.getSubjectImage(stat.name),
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Subject Title
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stat.name,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                        color: dark ? AppColors.white : const Color(0xFF0F172A),
-                      ),
+              Row(
+                children: [
+                  // Artwork Thumbnail
+                  Container(
+                    width: 38,
+                    height: 38,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: dark
+                          ? AppColors.darkSurface
+                          : AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      statusLabel,
+                    child: Image.asset(
+                      AppHelperFunctions.getSubjectImage(stat.name),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Subject Title
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          stat.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                            color: dark ? AppColors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          statusLabel,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Percentage Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: dark ? 0.22 : 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${pct.toStringAsFixed(0)}%',
                       style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w900,
                         color: statusColor,
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // Percentage Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: dark ? 0.22 : 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${pct.toStringAsFixed(0)}%',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w900,
-                    color: statusColor,
                   ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Progress Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: pct / 100,
+                  minHeight: 6,
+                  backgroundColor: dark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : const Color(0xFFE2E8F0),
+                  valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-
-          // Progress Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: pct / 100,
-              minHeight: 6,
-              backgroundColor: dark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : const Color(0xFFE2E8F0),
-              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

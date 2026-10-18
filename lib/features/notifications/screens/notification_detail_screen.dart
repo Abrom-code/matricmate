@@ -10,6 +10,8 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
+import 'package:matricmate/features/notifications/screens/widgets/notification_body_text.dart';
+import 'package:matricmate/features/notifications/services/notification_link_parser.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -38,6 +40,12 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
   Future<void>? _challengeFetchFuture;
 
   AppNotification get notification => widget.notification;
+
+  List<NotificationLink> get _actionLinks =>
+      NotificationLinkParser.extractAllLinks(
+        notification.body,
+        payload: notification.payload,
+      );
 
   String get _paymentStatus => notification.payload['status']?.toString() ?? '';
 
@@ -404,7 +412,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
 
                   // Title
                   Text(
-                    notification.title,
+                    NotificationLinkParser.stripTags(notification.title),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -511,8 +519,9 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  SelectableText(
-                    notification.body,
+                  NotificationBodyText(
+                    text: notification.body,
+                    payload: notification.payload,
                     style: TextStyle(
                       fontSize: 14.5,
                       height: 1.6,
@@ -695,9 +704,96 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           ],
                         ),
                 ),
-              ),
+              )
+            else if (_actionLinks.isNotEmpty) ...[
+              for (int i = 0; i < _actionLinks.length; i++) ...[
+                if (i > 0) const SizedBox(height: 10),
+                _buildActionButton(
+                  _actionLinks[i],
+                  isPrimary: i == 0,
+                  dark: dark,
+                ),
+              ],
+            ],
 
             const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+    NotificationLink link, {
+    required bool isPrimary,
+    required bool dark,
+  }) {
+    final isTelegram = link.isTelegram;
+    final isPlayStore = link.isPlayStore;
+    final isContact = link.isContactOrSupport;
+
+    final bgColor = isTelegram
+        ? const Color(0xFF0284C7)
+        : (isPlayStore
+            ? const Color(0xFF10B981)
+            : (isPrimary
+                ? AppColors.primary
+                : (dark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9))));
+    final fgColor = (isTelegram || isPlayStore || isPrimary)
+        ? Colors.white
+        : (dark ? const Color(0xFFE2E8F0) : AppColors.primary);
+    final borderColor = isTelegram
+        ? const Color(0xFF0284C7)
+        : (isPlayStore
+            ? const Color(0xFF10B981)
+            : (isPrimary
+                ? AppColors.primary
+                : (dark ? AppColors.darkBorder : const Color(0xFFCBD5E1))));
+
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: () => NotificationLinkParser.launchLink(link.url),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: fgColor,
+          side: BorderSide(
+            color: borderColor,
+            width: 1.5,
+          ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isTelegram)
+              Transform.rotate(
+                angle: -25 * (3.141592653589793 / 180),
+                child: const Icon(Icons.send_rounded, size: 20),
+              )
+            else if (isPlayStore)
+              const Icon(Icons.system_update_rounded, size: 20)
+            else if (isContact)
+              const Icon(Icons.support_agent_rounded, size: 20)
+            else
+              Icon(
+                Icons.open_in_new_rounded,
+                size: 20,
+                color: fgColor,
+              ),
+            const SizedBox(width: 8),
+            Text(
+              link.actionButtonLabel,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: fgColor,
+              ),
+            ),
           ],
         ),
       ),

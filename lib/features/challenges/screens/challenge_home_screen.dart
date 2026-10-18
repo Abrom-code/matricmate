@@ -144,10 +144,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
       ),
       body: Obx(() {
         _ctrl.isRefreshing.value; // Track refresh state in Obx
-        if (_ctrl.isLoading.value &&
-            !_ctrl.isOffline.value &&
-            _ctrl.availableChallenges.isEmpty &&
-            _ctrl.completedChallenges.isEmpty) {
+        if (_ctrl.isLoading.value) {
           return const AppCircularLoading(title: 'Loading challenges...');
         }
 

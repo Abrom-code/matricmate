@@ -290,7 +290,6 @@ class _ExamList extends StatelessWidget {
         }
 
         final test = displayTests[index - 1];
-        final hasQn = controller.testHasQuestions[test.id] ?? false;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -322,16 +321,23 @@ class _ExamList extends StatelessWidget {
                 TestAccessHelper.handleTestTap(
                   test: test,
                   user: user,
+                  onQuestionsDownloaded: (hasQuestions, count) {
+                    controller.testHasQuestions[test.id] = hasQuestions;
+                    controller.testQuestionCounts[test.id] = count;
+                  },
                   onStart: () {
-                    if (!hasQn) {
+                    final currentHasQn =
+                        controller.testHasQuestions[test.id] ?? false;
+                    if (!currentHasQn) {
                       ToastHelper.info('No questions added yet!');
                       return;
                     }
+                    final updatedCount =
+                        controller.testQuestionCounts[test.id] ??
+                        test.questionCount;
                     Get.to(
                       () => ReadyScreen(
-                        qnCount:
-                            controller.testQuestionCounts[test.id] ??
-                            test.questionCount,
+                        qnCount: updatedCount,
                         time: test.time,
                         testId: test.id,
                         id: 2,

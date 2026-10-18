@@ -55,6 +55,10 @@ class NotesController extends GetxController {
     loadSubjectNotes();
   }
 
+  bool _isLoadingRemoteNotes = false;
+  DateTime? _lastNotesRemoteSyncAt;
+  static const Duration _notesRefreshCooldown = Duration(seconds: 15);
+
   /// Loads notes from local SQLite first (offline-first).
   /// Remote sync is only performed on user pull-to-refresh ([forceRemote] = true)
   /// or when local cache is empty on first open.
@@ -71,6 +75,19 @@ class NotesController extends GetxController {
         return;
       }
 
+      // Concurrency guard: avoid launching parallel remote syncs for the same subject notes
+      if (_isLoadingRemoteNotes) {
+        return;
+      }
+
+      // Throttle remote fetch if pulled within cooldown window
+      if (forceRemote && _lastNotesRemoteSyncAt != null) {
+        final elapsed = DateTime.now().difference(_lastNotesRemoteSyncAt!);
+        if (elapsed < _notesRefreshCooldown) {
+          return;
+        }
+      }
+
       // Check internet connectivity before attempting any remote fetch
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
@@ -85,15 +102,21 @@ class NotesController extends GetxController {
       }
 
       // 2. Fetch metadata from Supabase
-      final remote = await _repo.fetchRemoteNotes(subjectId);
-      if (remote.isNotEmpty) {
-        await _repo.saveNotesBatch(
-          remote,
-          subjectId: subjectId,
-          pruneDeleted: forceRemote,
-        );
-        final updated = await _repo.getLocalNotes(subjectId);
-        subjectNotes.assignAll(_validateLocalFiles(updated));
+      _isLoadingRemoteNotes = true;
+      try {
+        final remote = await _repo.fetchRemoteNotes(subjectId);
+        if (remote.isNotEmpty) {
+          await _repo.saveNotesBatch(
+            remote,
+            subjectId: subjectId,
+            pruneDeleted: forceRemote,
+          );
+          final updated = await _repo.getLocalNotes(subjectId);
+          subjectNotes.assignAll(_validateLocalFiles(updated));
+        }
+        _lastNotesRemoteSyncAt = DateTime.now();
+      } finally {
+        _isLoadingRemoteNotes = false;
       }
     } catch (e) {
       if (forceRemote) {
@@ -382,6 +405,35 @@ class NotesController extends GetxController {
         );
       }
     } catch (_) {}
+  }
+
+  /// Rates a note (1 to 5). Allowed only if the note is finished / completed.
+  Future<bool> rateNote(int noteId, int rating) async {
+    if (rating < 1 || rating > 5) {
+      ToastHelper.warning('Please select a rating between 1 and 5');
+      return false;
+    }
+
+    final note = subjectNotes.firstWhereOrNull((n) => n.id == noteId);
+    if (note == null || !note.isCompleted) {
+      ToastHelper.warning('You can rate this note once you finish reading it.');
+      return false;
+    }
+
+    try {
+      final userId = UserController.instance.user.value.id;
+      await _repo.rateNote(noteId, rating, userId: userId);
+
+      final idx = subjectNotes.indexWhere((n) => n.id == noteId);
+      if (idx != -1) {
+        subjectNotes[idx] = subjectNotes[idx].copyWith(userRating: rating);
+      }
+      ToastHelper.success('Thank you for your rating!');
+      return true;
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+      return false;
+    }
   }
 
   /// Open note directly into reader

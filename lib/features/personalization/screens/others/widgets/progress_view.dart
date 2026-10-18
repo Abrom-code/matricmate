@@ -94,9 +94,9 @@ class ProgressView extends StatelessWidget {
           const SizedBox(height: 14),
           SubjectPerformanceSection(controller: controller),
 
-          // ── 4. Score Trajectory Trend (only if tests >= 2) ────────────────
+          // ── 4. Score Trajectory Trend ──────────────────────────────────────
           Obx(() {
-            if (controller.trendPoints.length >= 2) {
+            if (controller.trendPoints.isNotEmpty || controller.testsCompleted.value > 0) {
               return Column(
                 children: [
                   const SizedBox(height: 14),

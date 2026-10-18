@@ -48,6 +48,10 @@ class ChallengePracticeController extends GetxController {
   // Selected answers: { question_id: selected_choice_index_or_text }
   final userAnswers = <String, String>{}.obs;
   final stopwatch = Stopwatch();
+  final adminInspectorMode = false.obs;
+
+  void toggleAdminInspector() =>
+      adminInspectorMode.value = !adminInspectorMode.value;
 
   int get totalQuestions => questions.length;
   ChallengeQuestionModel get currentQuestion => questions[currentIndex.value];
@@ -76,7 +80,7 @@ class ChallengePracticeController extends GetxController {
             .toList();
       } else {
         // Fallback to online repository if not downloaded
-        loaded = await _repo.fetchQuestionsForReview(challengeId);
+        loaded = await _repo.fetchQuestionsForReview(challengeId, setId: setId);
       }
 
       // Ensure any question with passageId has its passage loaded

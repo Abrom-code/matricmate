@@ -6,6 +6,7 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
+import 'package:matricmate/features/notes/screens/widgets/note_rating_sheet.dart';
 import 'package:matricmate/features/notes/services/note_download_service.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -408,11 +409,53 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
     NotesController.instance.markNoteCompleted(note.id);
   }
 
-  // ── Test Button (slides up at bottom when last 3 pages left) ──────
+  // ── Completion Panel (slides up at bottom when in last 3 pages) ──────
 
-  Widget _buildCompletionPanel() {
-    // Only show test button if note has a chapter
-    if (note.chapterId == null) return const SizedBox.shrink();
+  Widget _buildCompletionPanel(bool dark) {
+    final liveNote = NotesController.instance.subjectNotes
+        .firstWhereOrNull((n) => n.id == note.id) ?? note;
+    final hasChapter = note.chapterId != null;
+
+    final rateBtn = ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: dark ? const Color(0xFF26262B) : Colors.white,
+        foregroundColor: const Color(0xFFD97706),
+        elevation: 3,
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        side: const BorderSide(
+          color: Color(0xFFD97706),
+          width: 1.2,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      onPressed: () {
+        NoteRatingSheet.show(
+          context,
+          note: liveNote.copyWith(isCompleted: true),
+          onRated: (rating) {
+            setState(() {
+              note = note.copyWith(userRating: rating, isCompleted: true);
+            });
+          },
+        );
+      },
+      icon: Icon(
+        liveNote.isRated ? Icons.star_rounded : Icons.star_outline_rounded,
+        size: 19,
+        color: const Color(0xFFD97706),
+      ),
+      label: Text(
+        liveNote.isRated ? '${liveNote.userRating}/5' : 'Rate Note',
+        style: const TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFFD97706),
+        ),
+      ),
+    );
 
     return AnimatedSlide(
       duration: const Duration(milliseconds: 350),
@@ -426,34 +469,46 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
           child: Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             height: 48,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 4,
-                shadowColor: AppColors.primary.withValues(alpha: 0.35),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              onPressed: () {
-                Get.toNamed(
-                  Routes.testLists,
-                  arguments: {
-                    'subject_id': note.subjectId,
-                    'grade': note.grade,
-                    'subject': subjectTitle,
-                    'chapter': note.title,
-                    'chapter_id': note.chapterId,
-                    'chapter_number': note.chapterNumber,
-                  },
-                );
-              },
-              icon: const Icon(Icons.quiz_rounded, size: 18),
-              label: const Text(
-                'Practice Tests',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-              ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (hasChapter)
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: AppColors.primary.withValues(alpha: 0.35),
+                        minimumSize: const Size(0, 48),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () {
+                        Get.toNamed(
+                          Routes.testLists,
+                          arguments: {
+                            'subject_id': note.subjectId,
+                            'grade': note.grade,
+                            'subject': subjectTitle,
+                            'chapter': note.title,
+                            'chapter_id': note.chapterId,
+                            'chapter_number': note.chapterNumber,
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.quiz_rounded, size: 18),
+                      label: const Text(
+                        'Practice Tests',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ),
+                if (hasChapter) const SizedBox(width: 10),
+                if (hasChapter) rateBtn else Expanded(child: rateBtn),
+              ],
             ),
           ),
         ),
@@ -766,7 +821,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: _buildCompletionPanel(),
+                      child: _buildCompletionPanel(dark),
                     ),
                   ],
                 );

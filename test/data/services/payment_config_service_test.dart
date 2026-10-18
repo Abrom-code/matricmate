@@ -18,11 +18,11 @@ void main() {
     });
 
     test('defaults to fallback links', () {
-      expect(service.telegramSupportLinkValue, 'https://t.me/matericetbot');
+      expect(service.telegramSupportLinkValue, 'https://t.me/matricetbot');
       expect(service.telegramChannelLinkValue, 'https://t.me/MatricET');
       expect(service.telegramLinkValue, service.telegramSupportLinkValue);
       expect(ProfileActionsHelper.fallbackTelegramChannelLink, 'https://t.me/MatricET');
-      expect(ProfileActionsHelper.fallbackTelegramSupportLink, 'https://t.me/matericetbot');
+      expect(ProfileActionsHelper.fallbackTelegramSupportLink, 'https://t.me/matricetbot');
     });
 
     test('updates support link independently via telegram_support_link row', () {
@@ -45,7 +45,7 @@ void main() {
 
       expect(service.telegramChannelLinkValue, 'https://t.me/matric_community');
       // Support link remains default
-      expect(service.telegramSupportLinkValue, 'https://t.me/matericetbot');
+      expect(service.telegramSupportLinkValue, 'https://t.me/matricetbot');
     });
 
     test('supports telegram_community_link alias for channel', () {
@@ -81,7 +81,7 @@ void main() {
 
       // Delete support
       service.deleteKey('telegram_support_link');
-      expect(service.telegramSupportLinkValue, 'https://t.me/matericetbot');
+      expect(service.telegramSupportLinkValue, 'https://t.me/matricetbot');
       expect(service.telegramChannelLinkValue, 'https://t.me/matric_community');
 
       // Delete channel

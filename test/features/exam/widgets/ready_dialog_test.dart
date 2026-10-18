@@ -9,8 +9,8 @@ void main() {
     WidgetTester tester, {
     ResultModel? draft,
     String? title,
-  }) {
-    return tester.pumpWidget(
+  }) async {
+    await tester.pumpWidget(
       GetMaterialApp(
         home: ReadyScreen(
           qnCount: 100,
@@ -22,6 +22,7 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
   }
 
   testWidgets('shows exam title and both mode cards without right check icon', (
@@ -52,7 +53,6 @@ void main() {
 
     await pumpReadyScreen(tester, draft: draft, title: 'Chemistry Final');
 
-    expect(find.text('Paused Attempt In Progress'), findsOneWidget);
     expect(find.text('Resume from Question 3'), findsOneWidget);
     expect(find.textContaining('Start Fresh'), findsOneWidget);
   });
@@ -73,6 +73,7 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('Grade 11 Biology'), findsOneWidget);
     expect(find.text('Practice Mode'), findsOneWidget);

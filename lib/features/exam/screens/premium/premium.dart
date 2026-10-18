@@ -232,7 +232,6 @@ class PremiumScreen extends StatelessWidget {
         bottomNavigationBar: Obx(() {
           final isPending = UserController.instance.user.value.isPending;
           final hasMethod = controller.selectedPayment.value != null;
-          final price = controller.selectedPlanPrice;
 
           return Container(
             padding: EdgeInsets.fromLTRB(
@@ -288,7 +287,7 @@ class PremiumScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      isPending ? 'Check Payment Status' : 'Pay  $price ETB',
+                      isPending ? 'Check Payment Status' : 'Continue',
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,

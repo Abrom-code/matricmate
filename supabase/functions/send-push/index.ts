@@ -372,9 +372,13 @@ async function sendFcmToStream(
     return { total: 0, sent: 0, failed: 0, errors: [`DB query error: ${error.message}`] };
   }
 
-  const tokens: string[] = (users ?? [])
-    .map((u: { fcm_token?: string | null }) => u.fcm_token?.trim() ?? "")
-    .filter((t) => t.length > 0);
+  const tokens: string[] = Array.from(
+    new Set(
+      (users ?? [])
+        .map((u: { fcm_token?: string | null }) => u.fcm_token?.trim() ?? "")
+        .filter((t) => t.length > 0)
+    )
+  );
 
   console.log(`sendFcmToStream: stream=${stream ?? "all"} → ${tokens.length} token(s)`);
   return await sendFcmToTokens(tokens, notification, data);
@@ -397,9 +401,13 @@ async function sendFcmToStatus(
     return { total: 0, sent: 0, failed: 0, errors: [`DB query error: ${error.message}`] };
   }
 
-  const tokens: string[] = (users ?? [])
-    .map((u: { fcm_token?: string | null }) => u.fcm_token?.trim() ?? "")
-    .filter((t) => t.length > 0);
+  const tokens: string[] = Array.from(
+    new Set(
+      (users ?? [])
+        .map((u: { fcm_token?: string | null }) => u.fcm_token?.trim() ?? "")
+        .filter((t) => t.length > 0)
+    )
+  );
 
   console.log(`sendFcmToStatus: status=${status} → ${tokens.length} token(s) (found ${(users ?? []).length} users)`);
   return await sendFcmToTokens(tokens, notification, data);
@@ -511,7 +519,13 @@ async function handleNewTest(body: NewTestBody) {
   const fcmResult = await sendFcmToStream(
     targetStream,
     { title, body: notifBody },
-    { type: "new_content", title, body: notifBody, ...payload },
+    {
+      type: "new_content",
+      title,
+      body: notifBody,
+      notification_id: String(inserted?.id ?? ""),
+      ...payload,
+    },
   );
 
   return { ok: true, notification_id: inserted?.id ?? null, fcm: fcmResult };

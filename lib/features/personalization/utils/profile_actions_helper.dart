@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/common/widgets/dialogs/confirm_dialog_box.dart';
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -8,17 +10,19 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfileActionsHelper {
   ProfileActionsHelper._();
 
   static const String appName = 'MatricET';
-  static const String appVersion = '1.0.3';
+  static const String appVersion = '1.0.8';
+  static const String appBuildNumber = '9';
   static const String packageId = 'com.abopia.matricet';
   static const String fallbackSupportEmail = 'abopiatech@gmail.com';
   static const String fallbackTelegramChannelLink = 'https://t.me/MatricET';
-  static const String fallbackTelegramSupportLink = 'https://t.me/matericetbot';
+  static const String fallbackTelegramSupportLink = 'https://t.me/matricetbot';
   static const String fallbackTelegramLink = fallbackTelegramChannelLink;
   static const String fallbackPlayStoreUrl =
       'https://play.google.com/store/apps/details?id=$packageId';
@@ -84,7 +88,10 @@ Diagnostic Info (Please do not delete):
     String rawLink, {
     String unavailableMessage = 'Telegram link is not available.',
   }) async {
-    final cleanLink = rawLink.trim();
+    var cleanLink = rawLink.trim();
+    if (cleanLink.contains('matericetbot')) {
+      cleanLink = cleanLink.replaceAll('matericetbot', 'matricetbot');
+    }
 
     if (cleanLink.isEmpty) {
       ToastHelper.warning(unavailableMessage);
@@ -284,7 +291,7 @@ Diagnostic Info (Please do not delete):
                       ),
                     ),
                     Text(
-                      'Version $appVersion (Build 4)',
+                      'Version $appVersion (Build $appBuildNumber)',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
@@ -362,4 +369,127 @@ Diagnostic Info (Please do not delete):
       },
     );
   }
+
+  /// Observable indicating whether an update check is currently in flight.
+  static final isCheckingUpdate = false.obs;
+
+  /// Semantic version comparator.
+  /// Returns a positive number if [v1] is newer than [v2],
+  /// negative if older, and 0 if equal.
+  static int compareVersions(String v1, String v2) {
+    final clean1 = v1.replaceAll(RegExp(r'[^0-9.]'), '');
+    final clean2 = v2.replaceAll(RegExp(r'[^0-9.]'), '');
+    final parts1 = clean1
+        .split('.')
+        .where((s) => s.isNotEmpty)
+        .map((s) => int.tryParse(s) ?? 0)
+        .toList();
+    final parts2 = clean2
+        .split('.')
+        .where((s) => s.isNotEmpty)
+        .map((s) => int.tryParse(s) ?? 0)
+        .toList();
+    final maxLen =
+        parts1.length > parts2.length ? parts1.length : parts2.length;
+    for (int i = 0; i < maxLen; i++) {
+      final p1 = i < parts1.length ? parts1[i] : 0;
+      final p2 = i < parts2.length ? parts2[i] : 0;
+      if (p1 != p2) return p1.compareTo(p2);
+    }
+    return 0;
+  }
+
+  /// Checks Supabase `app_config` for the latest app version and build.
+  /// Shows an update dialog if a newer version is available, or an up-to-date dialog otherwise.
+  static Future<void> checkForUpdates(BuildContext context) async {
+    if (isCheckingUpdate.value) return;
+    isCheckingUpdate.value = true;
+
+    try {
+      String latestVersion = appVersion;
+      int latestBuild = int.tryParse(appBuildNumber) ?? 0;
+      String updateNotes = '';
+      String updateUrl = fallbackPlayStoreUrl;
+
+      try {
+        final rows = await Supabase.instance.client
+            .from('app_config')
+            .select('key, value')
+            .timeout(const Duration(seconds: 5));
+
+        for (final row in rows) {
+          final k = row['key']?.toString().toLowerCase().trim() ?? '';
+          final v = row['value']?.toString().trim() ?? '';
+          if (v.isEmpty || v == 'EMPTY') continue;
+
+          if (k == 'latest_version' ||
+              k == 'latest_app_version' ||
+              k == 'app_version') {
+            latestVersion = v;
+          } else if (k == 'latest_build' || k == 'latest_app_build') {
+            final parsed = int.tryParse(v);
+            if (parsed != null) latestBuild = parsed;
+          } else if (k == 'update_notes' ||
+              k == 'app_update_notes' ||
+              k == 'changelog') {
+            updateNotes = v;
+          } else if (k == 'update_url' ||
+              k == 'app_update_url' ||
+              k == 'play_store_url') {
+            updateUrl = v;
+          }
+        }
+      } catch (e) {
+        debugPrint('[ProfileActionsHelper] check updates config fetch: $e');
+      }
+
+      // Small visual pause so the user sees the network check completed
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final int currentBuild = int.tryParse(appBuildNumber) ?? 0;
+      final int versionComparison = compareVersions(latestVersion, appVersion);
+      final bool hasNewerVersion = versionComparison > 0;
+      final bool hasNewerBuild =
+          versionComparison == 0 && latestBuild > currentBuild;
+
+      if (!context.mounted) return;
+
+      if (hasNewerVersion || hasNewerBuild) {
+        AppDialogBoxes.showUpdateAvailableDialog(
+          context: context,
+          currentVersion: appVersion,
+          latestVersion: latestVersion,
+          releaseNotes: updateNotes.isNotEmpty ? updateNotes : null,
+          onUpdate: () async {
+            final uri =
+                Uri.tryParse(updateUrl) ?? Uri.parse(fallbackPlayStoreUrl);
+            try {
+              final launched = await launchUrl(
+                uri,
+                mode: LaunchMode.externalApplication,
+              );
+              if (!launched) {
+                await rateApp();
+              }
+            } catch (_) {
+              await rateApp();
+            }
+          },
+        );
+      } else {
+        AppDialogBoxes.showUpToDateDialog(
+          context: context,
+          currentVersion: appVersion,
+          buildNumber: appBuildNumber,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ToastHelper.error('Could not check for updates. Please try again.');
+      }
+    } finally {
+      isCheckingUpdate.value = false;
+    }
+  }
 }
+

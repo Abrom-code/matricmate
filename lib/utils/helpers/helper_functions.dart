@@ -19,6 +19,16 @@ class AppHelperFunctions {
     }
   }
 
+  /// Persistent custom CacheManager with capacity for 20,000 images and 1-year stale period.
+  /// Prevents premature eviction of question images that previously forced re-downloads from Supabase Storage.
+  static final CacheManager imageCacheManager = CacheManager(
+    Config(
+      'matricmate_images',
+      stalePeriod: const Duration(days: 365),
+      maxNrOfCacheObjects: 20000,
+    ),
+  );
+
   static Future<void> downloadImages(
     Set<String> urls, {
     void Function(double progress)? onProgress,
@@ -33,7 +43,7 @@ class AppHelperFunctions {
       return;
     }
 
-    final cache = DefaultCacheManager();
+    final cache = imageCacheManager;
     int completed = 0;
     const maxConcurrency = 6;
     int index = 0;
@@ -43,7 +53,11 @@ class AppHelperFunctions {
         if (index >= validUrls.length) break;
         final url = validUrls[index++];
         try {
-          await cache.downloadFile(url).timeout(const Duration(seconds: 12));
+          // Check if image is already cached on device
+          final existing = await cache.getFileFromCache(url);
+          if (existing == null || !existing.file.existsSync() || existing.file.lengthSync() == 0) {
+            await cache.downloadFile(url).timeout(const Duration(seconds: 12));
+          }
         } catch (e) {
           debugPrint('Image download failed for $url: $e');
         } finally {
@@ -59,7 +73,7 @@ class AppHelperFunctions {
 
   static Future<void> removeCachedImages(Set<String> urls) async {
     if (urls.isEmpty) return;
-    final cache = DefaultCacheManager();
+    final cache = imageCacheManager;
     await Future.wait(
       urls.map((url) async {
         try {

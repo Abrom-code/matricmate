@@ -27,5 +27,26 @@ void main() {
       expect(controller.activeFilterCount, 7);
       expect(controller.hasActiveFilters, isTrue);
     });
+
+    test('resetFilters resets all active filter counts back to 0', () {
+      controller.selectedSubject.value = 'Physics';
+      controller.selectedTestType.value = 'Entrance';
+      controller.selectedTimeFilter.value = TimeFilter.lastMonth;
+
+      expect(controller.hasActiveFilters, isTrue);
+
+      controller.selectedSubject.value = 'All Subjects';
+      controller.selectedTestType.value = 'All Categories';
+      controller.selectedTimeFilter.value = TimeFilter.all;
+
+      expect(controller.activeFilterCount, 0);
+      expect(controller.hasActiveFilters, isFalse);
+    });
+
+    test('holisticReadiness returns 0 when no tests and notes are completed', () {
+      controller.testsCompleted.value = 0;
+      controller.completedNotesCount.value = 0;
+      expect(controller.holisticReadiness, 0.0);
+    });
   });
 }

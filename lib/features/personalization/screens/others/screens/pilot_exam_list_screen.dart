@@ -62,25 +62,40 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              tooltip: 'Refresh Exams',
-              onPressed: () => controller.loadPilotExams(),
-              icon: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(
-                    Iconsax.refresh_copy,
-                    size: 17,
-                    color: AppColors.white,
+            child: Obx(() {
+              final isRefreshing = controller.isRefreshing.value;
+              return IconButton(
+                tooltip: 'Refresh Exams',
+                onPressed: isRefreshing
+                    ? null
+                    : () => controller.loadPilotExams(isManual: true),
+                icon: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: isRefreshing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(AppColors.white),
+                            ),
+                          )
+                        : const Icon(
+                            Iconsax.refresh_copy,
+                            size: 17,
+                            color: AppColors.white,
+                          ),
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ),
         ],
       ),
@@ -90,46 +105,67 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
         }
 
         if (controller.pilotExams.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Iconsax.document_text_copy,
-                    size: 48,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No Pilot Exams Available',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: dark ? Colors.white : AppColors.textPrimary,
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () => controller.loadPilotExams(isManual: true),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.6,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Iconsax.document_text_copy,
+                            size: 48,
+                            color: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No Pilot Exams Available',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: dark ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Upcoming national matric pilot exams will appear here.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: dark
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () =>
+                                controller.loadPilotExams(isManual: true),
+                            icon: const Icon(Iconsax.refresh_copy, size: 16),
+                            label: const Text('Check for Updates'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Upcoming national matric pilot exams will appear here.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: dark
-                          ? AppColors.darkGrey
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }
 
         return RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: controller.loadPilotExams,
+          onRefresh: () => controller.loadPilotExams(isManual: true),
           child: ListView.separated(
             padding: EdgeInsets.fromLTRB(
               16,
@@ -143,7 +179,8 @@ class _PilotExamListScreenState extends State<PilotExamListScreen> {
               final exam = controller.pilotExams[index];
               return Obx(() {
                 final user = UserController.instance.user.value;
-                final isFreeUser = !user.isActive;
+                final isAdmin = UserController.instance.isAdmin.value;
+                final isFreeUser = !isAdmin && !user.isActive;
                 final progress = controller.getProgressForExam(exam.id);
                 return _PilotExamCard(
                   exam: exam,
@@ -223,16 +260,44 @@ class _PilotExamCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        exam.title,
-                        style: TextStyle(
-                          fontSize: 17.5,
-                          fontWeight: FontWeight.w800,
-                          color: dark
-                              ? Colors.white
-                              : AppColors.textPrimary,
-                          letterSpacing: -0.3,
-                        ),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              exam.title,
+                              style: TextStyle(
+                                fontSize: 17.5,
+                                fontWeight: FontWeight.w800,
+                                color: dark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          if (exam.isDraft) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: Colors.amber, width: 0.8),
+                              ),
+                              child: const Text(
+                                'UNVERIFIED',
+                                style: TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -301,73 +366,152 @@ class _PilotExamCard extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // Bottom Action Pill Bar with short text
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isFreeUser
-                        ? Colors.amber.withValues(
-                            alpha: dark ? 0.22 : 0.12,
-                          )
-                        : progress.isCompleted
-                        ? const Color(
-                            0xFF10B981,
-                          ).withValues(alpha: dark ? 0.2 : 0.1)
-                        : progress.isStarted
-                        ? const Color(
-                            0xFF0284C7,
-                          ).withValues(alpha: dark ? 0.2 : 0.1)
-                        : dark
-                        ? const Color(0xFF0F766E).withValues(alpha: 0.2)
-                        : const Color(0xFFF0FDFA),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isFreeUser
-                          ? Colors.amber.withValues(alpha: 0.4)
-                          : progress.isCompleted
-                          ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                          : progress.isStarted
-                          ? const Color(0xFF0284C7).withValues(alpha: 0.3)
-                          : const Color(0xFF0D9488).withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                // Bottom Action: Admin Draft Dual Action OR Student Pill Bar
+                if (exam.isDraft && UserController.instance.isAdmin.value) ...[
+                  Row(
                     children: [
-                      Icon(
-                        isFreeUser
-                            ? Icons.lock_rounded
-                            : progress.isCompleted
-                            ? Iconsax.tick_circle_copy
-                            : progress.isStarted
-                            ? Iconsax.play_copy
-                            : Iconsax.timer_1_copy,
-                        size: 16,
-                        color: isFreeUser
-                            ? Colors.amber
-                            : progress.isCompleted
-                            ? const Color(0xFF10B981)
-                            : progress.isStarted
-                            ? const Color(0xFF0284C7)
-                            : const Color(0xFF0D9488),
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0284C7),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: EdgeInsets.zero,
+                            ),
+                            onPressed: onTap,
+                            icon: const Icon(
+                              Icons.visibility_outlined,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              'Preview Exam',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isFreeUser
-                            ? 'Start Exam'
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: dark
+                                  ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                                  : const Color(0xFFECFDF5),
+                              foregroundColor: dark
+                                  ? const Color(0xFF34D399)
+                                  : const Color(0xFF059669),
+                              side: BorderSide(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                                width: 1.2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                              padding: EdgeInsets.zero,
+                            ),
+                            onPressed: () {
+                              AppHelperFunctions.showAppDialog(
+                                context,
+                                'Publish Pilot Exam?',
+                                'This pilot exam and all subjects will be verified and published for students nationwide.',
+                                () async {
+                                  Get.back();
+                                  await PilotExamController.instance
+                                      .verifyAndPublishPilotExam(exam.id);
+                                },
+                                okText: 'Publish Now',
+                                cancelText: 'Cancel',
+                                icon: Icons.verified_rounded,
+                                iconColor: const Color(0xFF10B981),
+                              );
+                            },
+                            icon: Icon(
+                              Icons.verified_rounded,
+                              size: 16,
+                              color: dark
+                                  ? const Color(0xFF34D399)
+                                  : const Color(0xFF059669),
+                            ),
+                            label: Text(
+                              'Publish Now',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: dark
+                                    ? const Color(0xFF34D399)
+                                    : const Color(0xFF059669),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  // Bottom Action Pill Bar with short text
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isFreeUser
+                          ? Colors.amber.withValues(
+                              alpha: dark ? 0.22 : 0.12,
+                            )
+                          : progress.isCompleted
+                          ? const Color(
+                              0xFF10B981,
+                            ).withValues(alpha: dark ? 0.2 : 0.1)
+                          : progress.isStarted
+                          ? const Color(
+                              0xFF0284C7,
+                            ).withValues(alpha: dark ? 0.2 : 0.1)
+                          : dark
+                          ? const Color(0xFF0F766E).withValues(alpha: 0.2)
+                          : const Color(0xFFF0FDFA),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isFreeUser
+                            ? Colors.amber.withValues(alpha: 0.4)
                             : progress.isCompleted
-                            ? 'Review Answers'
+                            ? const Color(0xFF10B981).withValues(alpha: 0.3)
                             : progress.isStarted
-                            ? 'Resume Exam'
-                            : 'Start Exam',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
+                            ? const Color(0xFF0284C7).withValues(alpha: 0.3)
+                            : const Color(0xFF0D9488).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isFreeUser
+                              ? Icons.lock_rounded
+                              : progress.isCompleted
+                              ? Iconsax.tick_circle_copy
+                              : progress.isStarted
+                              ? Iconsax.play_copy
+                              : Iconsax.timer_1_copy,
+                          size: 16,
                           color: isFreeUser
                               ? Colors.amber
                               : progress.isCompleted
@@ -376,10 +520,31 @@ class _PilotExamCard extends StatelessWidget {
                               ? const Color(0xFF0284C7)
                               : const Color(0xFF0D9488),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Text(
+                          isFreeUser
+                              ? 'Start Exam'
+                              : progress.isCompleted
+                              ? 'Review Answers'
+                              : progress.isStarted
+                              ? 'Resume Exam'
+                              : 'Start Exam',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: isFreeUser
+                                ? Colors.amber
+                                : progress.isCompleted
+                                ? const Color(0xFF10B981)
+                                : progress.isStarted
+                                ? const Color(0xFF0284C7)
+                                : const Color(0xFF0D9488),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

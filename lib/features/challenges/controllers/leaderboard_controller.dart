@@ -25,22 +25,23 @@ class LeaderboardController extends GetxController {
   final activeTab = 'challenge'.obs; // 'challenge', 'weekly', 'monthly', 'yearly'
   final activeStream = 'natural'.obs; // Locked to student's stream
   final entries = <ChallengeLeaderboardEntry>[].obs;
-  final displayLimit = 10.obs;
+
+  /// The user's personal standing, fetched separately when not in top entries.
+  final Rxn<ChallengeLeaderboardEntry> _userStanding = Rxn<ChallengeLeaderboardEntry>();
+
+  static const _topLimit = 10;
 
   List<ChallengeLeaderboardEntry> get displayedEntries =>
-      entries.take(displayLimit.value).toList();
-
-  bool get hasMore => displayLimit.value < entries.length;
-  int get remainingCount => (entries.length - displayLimit.value).clamp(0, entries.length);
-
-  void loadMore() {
-    displayLimit.value += 10;
-  }
+      entries.take(10).toList();
 
   String get currentUserId => UserController.instance.user.value.id;
 
-  ChallengeLeaderboardEntry? get currentUserEntry =>
-      entries.firstWhereOrNull((e) => e.userId == currentUserId);
+  /// Returns the user's entry from the top entries list, or their separately fetched standing.
+  ChallengeLeaderboardEntry? get currentUserEntry {
+    final inList = entries.firstWhereOrNull((e) => e.userId == currentUserId);
+    if (inList != null) return inList;
+    return _userStanding.value;
+  }
 
   @override
   void onInit() {
@@ -54,7 +55,6 @@ class LeaderboardController extends GetxController {
     } else {
       isLoading.value = true;
       entries.clear();
-      displayLimit.value = 10;
     }
 
     try {
@@ -64,29 +64,47 @@ class LeaderboardController extends GetxController {
             ? null
             : aud;
 
-        entries.value = await _repo.fetchLeaderboard(
+        final res = await _repo.fetchLeaderboard(
           challengeId: challengeId!,
           stream: filterStream,
-          limit: 100,
+          limit: _topLimit,
         );
-      } else if (activeTab.value == 'weekly') {
-        entries.value = await _repo.fetchPeriodLeaderboard(
+
+        entries.value = res.take(10).toList();
+
+        // Fetch user standing separately if not in top results
+        _userStanding.value = null;
+        if (entries.every((e) => e.userId != currentUserId) && currentUserId.isNotEmpty) {
+          _userStanding.value = await _repo.fetchUserChallengeStanding(
+            challengeId: challengeId!,
+            userId: currentUserId,
+            stream: filterStream,
+          );
+        }
+      } else {
+        final period = activeTab.value == 'weekly'
+            ? 'week'
+            : activeTab.value == 'monthly'
+                ? 'month'
+                : 'year';
+
+        final res = await _repo.fetchPeriodLeaderboard(
           stream: activeStream.value,
-          period: 'week',
-          limit: 100,
+          period: period,
+          limit: _topLimit,
         );
-      } else if (activeTab.value == 'monthly') {
-        entries.value = await _repo.fetchPeriodLeaderboard(
-          stream: activeStream.value,
-          period: 'month',
-          limit: 100,
-        );
-      } else if (activeTab.value == 'yearly') {
-        entries.value = await _repo.fetchPeriodLeaderboard(
-          stream: activeStream.value,
-          period: 'year',
-          limit: 100,
-        );
+
+        entries.value = res.take(10).toList();
+
+        // Fetch user period standing separately if not in top results
+        _userStanding.value = null;
+        if (entries.every((e) => e.userId != currentUserId) && currentUserId.isNotEmpty) {
+          _userStanding.value = await _repo.fetchUserPeriodStanding(
+            stream: activeStream.value,
+            period: period,
+            userId: currentUserId,
+          );
+        }
       }
     } catch (e) {
       AppExceptionHandler.handleResponse(e);
@@ -99,12 +117,10 @@ class LeaderboardController extends GetxController {
   void setTab(String tab) {
     if (activeTab.value == tab) return;
     activeTab.value = tab;
-    displayLimit.value = 10;
     loadLeaderboard(isManual: false);
   }
 
   Future<void> manualRefresh() async {
-    displayLimit.value = 10;
     await loadLeaderboard(isManual: true);
   }
 }

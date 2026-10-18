@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ui' show Color;
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:get_storage/get_storage.dart';
 import 'package:matricmate/firebase_options.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -12,6 +13,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
+import 'package:matricmate/features/notifications/services/notification_link_parser.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -52,12 +54,22 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     ),
   );
 
+  final type = message.data['type']?.toString() ?? '';
+  if (type == 'challenge_closed') {
+    return;
+  }
+
   final title = message.data['title']?.toString();
   final body = message.data['body']?.toString();
 
+  final notifIdStr = message.data['notification_id']?.toString();
+  final int notifId = (notifIdStr != null && int.tryParse(notifIdStr) != null)
+      ? int.parse(notifIdStr)
+      : ('${title}_$body'.hashCode & 0x7FFFFFFF);
+
   if (title != null && body != null) {
     await plugin.show(
-      id: message.hashCode & 0x7FFFFFFF,
+      id: notifId & 0x7FFFFFFF,
       title: title,
       body: body,
       notificationDetails: NotificationDetails(
@@ -96,6 +108,11 @@ class FcmService {
   );
 
   bool _initialized = false;
+
+  /// Pending notification tap payload stored when the app is still
+  /// transitioning routes (cold launch / background resume). Consumed
+  /// by [consumePendingNavigation] once the NavigationMenu is ready.
+  static Map<String, dynamic>? _pendingTapPayload;
 
   /// Prevents stale launch notifications from re-navigating on hot restart.
   bool _shouldHandleLaunch(int hash) {
@@ -400,12 +417,12 @@ class FcmService {
     if (title != null && body != null) {
       final notifId = notifIdStr != null && int.tryParse(notifIdStr) != null
           ? int.parse(notifIdStr)
-          : (message.hashCode & 0x7FFFFFFF);
+          : ('${title}_$body'.hashCode & 0x7FFFFFFF);
 
       await _localNotifications.show(
         id: notifId & 0x7FFFFFFF,
-        title: title,
-        body: body,
+        title: NotificationLinkParser.stripTags(title),
+        body: NotificationLinkParser.stripTags(body),
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             _channel.id,
@@ -421,13 +438,8 @@ class FcmService {
         ),
         payload: jsonEncode(message.data),
       );
-    }
 
-    // Insert into local SQLite immediately so it appears offline & instantaneously
-    if (title != null && body != null) {
-      final notifId = notifIdStr != null && int.tryParse(notifIdStr) != null
-          ? int.parse(notifIdStr)
-          : (message.hashCode & 0x7FFFFFFF);
+      // Insert into local SQLite immediately so it appears offline & instantaneously
       final currentUserId = UserController.instance.user.value.id;
       if (currentUserId.isNotEmpty) {
         final newNotif = AppNotification.fromMap({
@@ -458,6 +470,25 @@ class FcmService {
   }
 
   void _handleTap(Map<String, dynamic> data) {
+    // If the main NavigationMenu route hasn't settled yet (cold launch or
+    // background resume), store the payload and let consumePendingNavigation
+    // handle it once the shell is ready.
+    final currentRoute = Get.currentRoute;
+    if (currentRoute == Routes.loading ||
+        currentRoute == '/' ||
+        currentRoute.isEmpty) {
+      debugPrint(
+        '[FcmService] Route not ready ($currentRoute) — deferring tap navigation',
+      );
+      _pendingTapPayload = Map<String, dynamic>.from(data);
+      return;
+    }
+
+    _executeTapNavigation(data);
+  }
+
+  /// Actually performs the navigation for a notification tap.
+  void _executeTapNavigation(Map<String, dynamic> data) {
     // Ensure notifications list and unread badge are synced on tap
     if (Get.isRegistered<NotificationsController>()) {
       unawaited(
@@ -491,6 +522,20 @@ class FcmService {
         }
         Get.toNamed(Routes.notifications);
     }
+  }
+
+  /// Called by [NavigationController] once the NavigationMenu is fully mounted.
+  /// Drains any pending notification-tap payload that was stored during cold
+  /// launch or background resume when the route stack wasn't ready.
+  void consumePendingNavigation() {
+    final data = _pendingTapPayload;
+    if (data == null) return;
+    _pendingTapPayload = null;
+
+    // Give the route stack one more frame to settle, then navigate.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _executeTapNavigation(data);
+    });
   }
 
   /// Unsubscribes from all topics on logout.

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -187,6 +189,12 @@ class AnalyticsSummaryGrid extends StatelessWidget {
               value: '$tests',
               label: 'Tests Completed',
               trend: tests > 0 ? '$tests taken' : 'Start now',
+              onTap: () {
+                Get.until((route) => route.isFirst);
+                if (Get.isRegistered<NavigationController>()) {
+                  NavigationController.instance.changePage(0);
+                }
+              },
             ),
             _StatCard(
               icon: Iconsax.book_1_copy,
@@ -196,6 +204,12 @@ class AnalyticsSummaryGrid extends StatelessWidget {
               trend: notesTotal > 0
                   ? '${(notesCompleted / notesTotal * 100).toStringAsFixed(0)}% read'
                   : 'Syllabus',
+              onTap: () {
+                Get.until((route) => route.isFirst);
+                if (Get.isRegistered<NavigationController>()) {
+                  NavigationController.instance.changePage(1);
+                }
+              },
             ),
             _StatCard(
               icon: Iconsax.chart_copy,
@@ -210,6 +224,7 @@ class AnalyticsSummaryGrid extends StatelessWidget {
               value: '${controller.bookmarkCount.value}',
               label: 'Saved Questions',
               trend: 'Revision',
+              onTap: () => Get.toNamed(Routes.bookmark),
             ),
           ],
         ),
@@ -226,6 +241,7 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.label,
     required this.trend,
+    this.onTap,
   });
 
   final IconData icon;
@@ -233,16 +249,22 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String label;
   final String trend;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: dark ? AppColors.darkCard : AppColors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: dark ? AppColors.darkCard : AppColors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
           color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
           width: 1.2,
         ),
@@ -323,6 +345,8 @@ class _StatCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
+    ),
     );
   }
 }

@@ -12,6 +12,7 @@ import 'package:matricmate/features/challenges/models/challenge_question_model.d
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
+import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
@@ -280,16 +281,14 @@ class ChallengeAttemptController extends GetxController
     userAnswers[questionId] = choice;
     _saveLastQuestionIndex(currentIndex.value);
 
-    // Send answer asynchronously to server
-    if (attemptId != null) {
-      _repo
-          .submitAnswer(
-            attemptId: attemptId!,
-            questionId: questionId,
-            selectedChoice: choice,
-          )
-          .catchError((_) {});
-    }
+    // Save locally to SQLite immediately — zero network latency, 100% crash/offline safe
+    DatabaseService.instance.saveChallengePracticeResult(
+      challengeId: challengeId,
+      score: 0,
+      totalQuestions: totalQuestions,
+      userAnswers: Map<String, String>.from(userAnswers),
+      timeSpentSeconds: _timeSpentSeconds,
+    ).catchError((_) {});
   }
 
   void nextQuestion() {
@@ -408,18 +407,33 @@ class ChallengeAttemptController extends GetxController
 
       AppFullScreenLoader.stopLoading();
 
-      // 4. Show completion feedback and transition to full review screen
-      Get.off(
-        () => ChallengeReviewScreen(
-          title: title,
-          questions: reviewQuestions,
-          userAnswers: Map<String, String>.from(userAnswers),
-          score: score,
-          timeSpentSeconds: _timeSpentSeconds,
-          challengeId: challengeId,
-          audience: audience,
-        ),
-      );
+      // 4. Show completion feedback and transition to review screen or leaderboard
+      if (reviewQuestions.isEmpty) {
+        ToastHelper.success(
+          'Attempt submitted! Question review will be unlocked once this challenge closes.',
+        );
+        Get.off(
+          () => LeaderboardScreen(
+            challengeId: challengeId,
+            challengeTitle: title,
+            audience: audience,
+            userScore: score,
+            userTimeSeconds: _timeSpentSeconds,
+          ),
+        );
+      } else {
+        Get.off(
+          () => ChallengeReviewScreen(
+            title: title,
+            questions: reviewQuestions,
+            userAnswers: Map<String, String>.from(userAnswers),
+            score: score,
+            timeSpentSeconds: _timeSpentSeconds,
+            challengeId: challengeId,
+            audience: audience,
+          ),
+        );
+      }
     } catch (e) {
       AppFullScreenLoader.stopLoading();
       final msg = e.toString().toLowerCase();

@@ -41,19 +41,23 @@ class UserRepository {
   }
 
   Future<UserModel?> fetchCurrentUserDetails() async {
-    final uid = _uid;
-    if (uid == null) return null;
+    try {
+      final uid = _uid;
+      if (uid == null) return null;
 
-    final data = await _supabase
-        .from('users')
-        .select()
-        .eq('id', uid)
-        .maybeSingle()
-        .timeout(AppTimeouts.query);
+      final data = await _supabase
+          .from('users')
+          .select()
+          .eq('id', uid)
+          .maybeSingle()
+          .timeout(AppTimeouts.query);
 
-    if (data == null) return null;
+      if (data == null) return null;
 
-    return UserModel.fromJson(data);
+      return UserModel.fromJson(data);
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> updateFullUserRecord(UserModel user) async {
@@ -68,31 +72,7 @@ class UserRepository {
 
   Future<void> deleteUserRecord(String userId) async {
     try {
-      // 1. Clean up payment receipt images in storage
-      try {
-        final receipts = await _supabase
-            .from('payment_receipts')
-            .select('receipt_path')
-            .eq('user_id', userId)
-            .timeout(AppTimeouts.delete);
-
-        if (receipts.isNotEmpty) {
-          final filesToDelete = receipts
-              .map((e) => e['receipt_path']?.toString().trim() ?? '')
-              .where((p) => p.isNotEmpty)
-              .toList();
-
-          if (filesToDelete.isNotEmpty) {
-            try {
-              await _supabase.storage.from('receipts').remove(filesToDelete).timeout(AppTimeouts.bestEffort);
-            } catch (_) {}
-          }
-        }
-      } catch (_) {}
-      // 2. Note: Device binding in user_sessions is intentionally preserved on logout
-      // so the account remains locked to this device.
-
-      // 3. Clear local user table
+      // Clear local user table
       final db = await databaseService.database;
       await db.delete('user');
     } catch (e) {

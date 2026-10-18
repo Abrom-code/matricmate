@@ -21,6 +21,7 @@ class TestTile extends StatelessWidget {
     this.questionCount = 0,
     this.timeMinutes = -1,
     this.isNew = false,
+    this.isDraft = false,
     this.description,
     this.testId,
   });
@@ -40,6 +41,9 @@ class TestTile extends StatelessWidget {
 
   /// When true, shows a "NEW" badge next to the test title.
   final bool isNew;
+
+  /// When true, displays an "UNVERIFIED" badge for admins.
+  final bool isDraft;
 
   @override
   Widget build(BuildContext context) {
@@ -198,6 +202,29 @@ class TestTile extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (isDraft)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: Colors.amber, width: 0.8),
+                              ),
+                              child: const Text(
+                                'UNVERIFIED',
+                                style: TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
                         if (isNew &&
                             (testId == null ||
                                 !NewTagHelper.isTestOpened(testId!)))

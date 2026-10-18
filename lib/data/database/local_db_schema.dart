@@ -65,6 +65,7 @@ class DBschema {
         description TEXT,
         created_at TEXT NOT NULL,
         is_premium INTEGER DEFAULT 1,
+        status TEXT DEFAULT 'published',
         FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
         FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
       );
@@ -107,6 +108,7 @@ class DBschema {
         isCompleted INTEGER DEFAULT 1,
         checkedQuestions TEXT,
         remainingSeconds INTEGER DEFAULT 0,
+        completed_at TEXT,
         UNIQUE(user_id, test_id)
       );
     ''');
@@ -224,6 +226,7 @@ class DBschema {
         downloaded_at TEXT,
         is_completed INTEGER DEFAULT 0,
         completed_at TEXT,
+        user_rating INTEGER DEFAULT 0,
         created_at TEXT,
         FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
         FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE SET NULL
@@ -246,6 +249,7 @@ class DBschema {
         edition TEXT DEFAULT '2019 E.C.',
         is_premium INTEGER DEFAULT 1,
         is_active INTEGER DEFAULT 1,
+        status TEXT DEFAULT 'published',
         created_at TEXT
       );
     ''');

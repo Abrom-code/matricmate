@@ -12,6 +12,7 @@ import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/local_storage/sync_prefs.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -26,9 +27,43 @@ class SyncingController extends GetxController {
   final refreshing = false.obs;
   final entranceSyncing = false.obs;
 
+  /// Coalescing in-flight syncs to prevent concurrent duplicate network runs.
+  Future<bool>? _inFlightSyncAll;
+  Future<void>? _inFlightEntranceSync;
+
+  /// Cooldown window between full remote roundtrips during pull-to-refresh.
+  static const Duration _syncCooldown = Duration(seconds: 30);
+  DateTime? _lastSyncAllCompletedAt;
+  DateTime? _lastEntranceSyncCompletedAt;
+
   // ── Entrance-only sync (from entrance screen button) ─────────────────────
 
-  Future<void> syncEntranceExams() async {
+  Future<void> syncEntranceExams({bool force = false}) async {
+    // If a sync is already running, wait for it rather than launching a duplicate
+    if (_inFlightEntranceSync != null) {
+      return _inFlightEntranceSync!;
+    }
+
+    // Pull-to-refresh cooldown: if completed recently and not forced, reload SQLite state
+    if (!force && _lastEntranceSyncCompletedAt != null) {
+      final elapsed = DateTime.now().difference(_lastEntranceSyncCompletedAt!);
+      if (elapsed < _syncCooldown) {
+        await SubjectsController.instance.loadLocalSubjects();
+        return;
+      }
+    }
+
+    final future = _performSyncEntranceExams();
+    _inFlightEntranceSync = future;
+    try {
+      await future;
+      _lastEntranceSyncCompletedAt = DateTime.now();
+    } finally {
+      _inFlightEntranceSync = null;
+    }
+  }
+
+  Future<void> _performSyncEntranceExams() async {
     try {
       entranceSyncing.value = true;
 
@@ -106,7 +141,36 @@ class SyncingController extends GetxController {
 
   // ── Full sync (from home screen button) ──────────────────────────────────
 
-  Future<bool> syncAll({bool showUiLoading = true}) async {
+  Future<bool> syncAll({bool showUiLoading = true, bool force = false}) async {
+    // 1. If another syncAll is already in progress, coalesce and wait for it.
+    if (_inFlightSyncAll != null) {
+      return _inFlightSyncAll!;
+    }
+
+    // 2. Pull-to-refresh cooldown: if sync completed recently and not forced,
+    // quickly ensure local SQLite data is loaded in state without hitting remote network.
+    if (!force && _lastSyncAllCompletedAt != null) {
+      final elapsed = DateTime.now().difference(_lastSyncAllCompletedAt!);
+      if (elapsed < _syncCooldown) {
+        await SubjectsController.instance.loadLocalSubjects();
+        return true;
+      }
+    }
+
+    final future = _performSyncAll(showUiLoading: showUiLoading);
+    _inFlightSyncAll = future;
+    try {
+      final success = await future;
+      if (success) {
+        _lastSyncAllCompletedAt = DateTime.now();
+      }
+      return success;
+    } finally {
+      _inFlightSyncAll = null;
+    }
+  }
+
+  Future<bool> _performSyncAll({bool showUiLoading = true}) async {
     try {
       if (showUiLoading) {
         refreshing.value = true;
@@ -207,7 +271,11 @@ class SyncingController extends GetxController {
         .map((e) => TestModel.fromJson(e))
         .toList();
 
-    final newTestIds = tests.map((t) => t.id).toList();
+    final isPremium = TestAccessHelper.isCurrentUserPremium;
+    final allowedNewTests = isPremium
+        ? tests
+        : tests.where((t) => !t.isPremium).toList();
+    final newTestIds = allowedNewTests.map((t) => t.id).toList();
 
     // 2. Fetch questions (aware of newTestIds) + chapters in parallel
     final futures = <Future>[

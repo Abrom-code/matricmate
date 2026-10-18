@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
@@ -8,9 +9,11 @@ import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/premium/widgets/pending_payment_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/paused_test_banner.dart';
+import 'package:matricmate/features/exam/screens/subject/widgets/premium_banner.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_container.dart';
 import 'package:matricmate/features/exam/screens/subject/widgets/subject_mode_modal.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -77,10 +80,53 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               onPressed: () => ctrl.syncAll(),
             );
           }),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: 'Telegram Channel',
+            child: InkWell(
+              onTap: ProfileActionsHelper.openTelegramChannel,
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
+                child: Container(
+                  width: 25,
+                  height: 25,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1.5),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Transform.rotate(
+                      angle: -25 * math.pi / 180,
+                      child: const Icon(
+                        Icons.send_rounded,
+                        size: 13,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
         ],
       ),
       body: Obx(() {
-        final isPending = UserController.instance.user.value.isPending;
+        final user = UserController.instance.user.value;
+        final isPending = user.isPending;
+        final needsUpgrade = user.needsUpgrade;
         final filteredSubjects = ctrl.filteredSubjects;
         final syncing = syncController.refreshing.value;
         final isOffline = ctrl.isOffline.value;
@@ -114,7 +160,16 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       const SizedBox(height: 16),
                     ],
 
-                    // ── 2. Paused / In-Progress Tests Banner ─────────
+                    // ── 2. Premium Upgrade Banner ─────────────────────
+                    // Shown if inactive/expired; hidden when pending or active (premium).
+                    if (needsUpgrade) ...[
+                      PremiumBanner(
+                        onTap: () => Get.toNamed(Routes.premium),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // ── 3. Paused / In-Progress Tests Banner ─────────
                     const PausedTestBanner(),
 
                     // ── 4. Subject Grid ──────────────────────────────

@@ -220,7 +220,6 @@ class PaymentVerificationScreen extends StatelessWidget {
                           icon: Icons.cancel_outlined,
                           isDestructive: true,
                           onPressed: () {
-                            Get.back();
                             controller.cancelPayment();
                           },
                         );

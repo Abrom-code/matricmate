@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
@@ -26,14 +29,21 @@ class RealtimeService {
   RealtimeChannel? _notificationsChannel;
   RealtimeChannel? _notificationReadsChannel;
 
-  /// Start listening. Safe to call multiple times — stops existing first.
   Future<void> start(List<int> subjectIds, {required String userId}) async {
     await stop();
-    _startQuestionChannel(subjectIds);
+    // 1. User status channel: filtered by id=userId (instant account activation on payment approval)
     _startUserChannel(userId);
-    _startAppConfigChannel();
-    _startNotificationsChannel(userId);
-    _startNotificationReadsChannel(userId);
+
+    // 2. Questions channel: DISABLED (handled via delta sync)
+    // _startQuestionChannel(subjectIds);
+
+    // 3. App config channel: DISABLED (fetched on demand at startup and in payment screen)
+    // _startAppConfigChannel();
+
+    // 4. Notifications & Reads: DISABLED from Realtime to prevent global cross-user message broadcasts.
+    // Delivered via FCM push notifications and lightweight delta sync (.gte('created_at', effectiveSince)).
+    // _startNotificationsChannel(userId);
+    // _startNotificationReadsChannel(userId);
   }
 
   /// Stop and clean up all Realtime channels.
@@ -68,6 +78,7 @@ class RealtimeService {
 
   // ── Questions channel ──────────────────────────────────────────────────
 
+  // ignore: unused_element
   void _startQuestionChannel(List<int> subjectIds) {
     if (subjectIds.isEmpty) return;
 
@@ -125,6 +136,7 @@ class RealtimeService {
 
   // ── App-config channel ─────────────────────────────────────────────────
 
+  // ignore: unused_element
   void _startAppConfigChannel() {
     _appConfigChannel = _supabase
         .channel('app_config_changes')
@@ -166,6 +178,7 @@ class RealtimeService {
 
   // ── Notifications channel ──────────────────────────────────────────────
 
+  // ignore: unused_element
   void _startNotificationsChannel(String userId) {
     if (userId.isEmpty) return;
 
@@ -222,6 +235,17 @@ class RealtimeService {
       // Store with this user's id so local queries work correctly.
       final n = AppNotification.fromMap({...record, 'user_id': userId});
       final db = await DatabaseService.instance.database;
+
+      // Do not re-insert notifications that have already been dismissed locally
+      final isDismissed = await db.query(
+        'notification_dismissals',
+        columns: ['notification_id'],
+        where: 'notification_id = ? AND (user_id = ? OR user_id = \'\')',
+        whereArgs: [n.id, userId],
+        limit: 1,
+      );
+      if (isDismissed.isNotEmpty) return;
+
       await db.insert('notifications', {
         ...n.toMap(),
         'is_read': 0,
@@ -272,6 +296,17 @@ class RealtimeService {
 
       final n = AppNotification.fromMap({...record, 'user_id': userId});
       final db = await DatabaseService.instance.database;
+
+      // Do not re-insert notifications that have already been dismissed locally
+      final isDismissed = await db.query(
+        'notification_dismissals',
+        columns: ['notification_id'],
+        where: 'notification_id = ? AND (user_id = ? OR user_id = \'\')',
+        whereArgs: [n.id, userId],
+        limit: 1,
+      );
+      if (isDismissed.isNotEmpty) return;
+
       await db.insert(
         'notifications',
         n.toMap(),
@@ -290,6 +325,7 @@ class RealtimeService {
 
   // ── Notification reads channel ─────────────────────────────────────────
 
+  // ignore: unused_element
   void _startNotificationReadsChannel(String userId) {
     if (userId.isEmpty) return;
 
@@ -409,6 +445,13 @@ class RealtimeService {
         duration: const Duration(seconds: 4),
         snackPosition: SnackPosition.TOP,
       );
+
+      // Trigger background sync to immediately download newly unlocked premium content
+      if (Get.isRegistered<SyncingController>()) {
+        unawaited(
+          SyncingController.instance.syncAll(showUiLoading: false, force: true),
+        );
+      }
     } else if (updated.isPending) {
       Get.snackbar(
         '⏳ Payment Pending',

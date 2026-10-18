@@ -17,6 +17,9 @@ class ResultModel {
   /// Remaining countdown seconds when draft was saved.
   final int remainingSeconds;
 
+  /// Timestamp when the test was submitted or draft was updated.
+  final DateTime? completedAt;
+
   ResultModel({
     required this.testQuestions,
     required this.selectedAnswers,
@@ -26,7 +29,9 @@ class ResultModel {
     this.isCompleted = true,
     Set<int>? checkedQuestions,
     this.remainingSeconds = 0,
-  }) : checkedQuestions = checkedQuestions ?? {};
+    DateTime? completedAt,
+  }) : checkedQuestions = checkedQuestions ?? {},
+       completedAt = completedAt ?? (isCompleted ? DateTime.now() : null);
 
   Map<String, dynamic> toMap() {
     return {
@@ -40,6 +45,7 @@ class ResultModel {
       'isCompleted': isCompleted ? 1 : 0,
       'checkedQuestions': jsonEncode(checkedQuestions.toList()),
       'remainingSeconds': remainingSeconds,
+      if (completedAt != null) 'completed_at': completedAt!.toIso8601String(),
     };
   }
 
@@ -74,6 +80,9 @@ class ResultModel {
       isCompleted: (map['isCompleted'] as int? ?? 1) == 1,
       checkedQuestions: checked,
       remainingSeconds: map['remainingSeconds'] as int? ?? 0,
+      completedAt: map['completed_at'] != null
+          ? DateTime.tryParse(map['completed_at'] as String)
+          : null,
     );
   }
 }

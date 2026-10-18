@@ -16,6 +16,12 @@ class NavigationController extends GetxController {
 
   final Rx<int> selectedIdx = 0.obs;
 
+  /// Cooldown tracking to prevent spamming Supabase on rapid tab switches
+  DateTime _lastNotifSync = DateTime(2000);
+  DateTime _lastAnalyticsLoad = DateTime(2000);
+  static const _notifCooldown = Duration(seconds: 30);
+  static const _analyticsCooldown = Duration(seconds: 60);
+
   late final PageController pageController;
 
   /// Screens are instantiated once and kept alive via AutomaticKeepAlive.
@@ -40,6 +46,13 @@ class NavigationController extends GetxController {
       const _KeepAlivePage(child: OthersScreen()),
       const _KeepAlivePage(child: ProfileScreen()),
     ];
+
+    // If the app cold-launched from a notification tap, the FCM handler
+    // deferred navigation because the route stack wasn't ready yet.
+    // Now that NavigationMenu is mounted, drain the pending payload.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FcmService.instance.consumePendingNavigation();
+    });
   }
 
   @override
@@ -72,26 +85,32 @@ class NavigationController extends GetxController {
         curve: Curves.easeInOut,
       );
     }
-    if (index == 0 && Get.isRegistered<NotificationsController>()) {
-      unawaited(
-        NotificationsController.instance.loadNotifications(syncRemote: true),
-      );
-    }
-    if (index == 2 && Get.isRegistered<AnalyticsController>()) {
-      unawaited(AnalyticsController.instance.loadAll());
-    }
+    _triggerTabSideEffects(index);
   }
 
   /// Called when the user swipes — syncs the nav bar indicator.
   void onPageChanged(int index) {
     selectedIdx.value = index;
+    _triggerTabSideEffects(index);
+  }
+
+  /// Shared logic for tab switch side-effects with cooldown guards.
+  void _triggerTabSideEffects(int index) {
     if (index == 0 && Get.isRegistered<NotificationsController>()) {
-      unawaited(
-        NotificationsController.instance.loadNotifications(syncRemote: true),
-      );
+      final now = DateTime.now();
+      if (now.difference(_lastNotifSync) > _notifCooldown) {
+        _lastNotifSync = now;
+        unawaited(
+          NotificationsController.instance.loadNotifications(syncRemote: true),
+        );
+      }
     }
     if (index == 2 && Get.isRegistered<AnalyticsController>()) {
-      unawaited(AnalyticsController.instance.loadAll());
+      final now = DateTime.now();
+      if (now.difference(_lastAnalyticsLoad) > _analyticsCooldown) {
+        _lastAnalyticsLoad = now;
+        unawaited(AnalyticsController.instance.loadAll());
+      }
     }
   }
 

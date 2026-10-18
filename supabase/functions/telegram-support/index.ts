@@ -1,7 +1,16 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const SUPPORT_CHAT_ID = Deno.env.get("SUPPORT_CHAT_ID");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY =
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+const supabase =
+  SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    : null;
 
 const telegramApi = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
@@ -31,7 +40,7 @@ Deno.serve(async (req) => {
     }
 
     // ==================================================
-    // MESSAGE FROM YOU → SEND REPLY TO USER
+    // MESSAGE FROM SUPPORT ADMIN → REPLY OR /ban COMMAND
     // ==================================================
 
     if (String(chatId) === String(SUPPORT_CHAT_ID)) {
@@ -51,8 +60,93 @@ Deno.serve(async (req) => {
       }
 
       const userChatId = match[1];
+      const trimmedText = (message.text ?? "").trim();
 
-      // Text reply
+      // ── Handle /ban command ─────────────────────────
+      if (trimmedText.startsWith("/ban")) {
+        if (!supabase) {
+          await sendTelegram("sendMessage", {
+            chat_id: SUPPORT_CHAT_ID,
+            text: "⚠️ Supabase client is not initialized to record bans.",
+            reply_parameters: { message_id: message.message_id },
+          });
+          return new Response("OK");
+        }
+
+        const reason =
+          trimmedText.replace(/^\/ban\s*/, "").trim() ||
+          "Spam or policy violation";
+
+        const { error } = await supabase
+          .from("telegram_banned_users")
+          .upsert({
+            chat_id: String(userChatId),
+            reason,
+            banned_at: new Date().toISOString(),
+          });
+
+        if (error) {
+          console.error("Error banning user:", error);
+          await sendTelegram("sendMessage", {
+            chat_id: SUPPORT_CHAT_ID,
+            text: `❌ Failed to ban user \`${userChatId}\`: ${error.message}`,
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+        } else {
+          await sendTelegram("sendMessage", {
+            chat_id: SUPPORT_CHAT_ID,
+            text:
+              `🚫 *User Banned Successfully*\n\n` +
+              `• *User ID:* \`${userChatId}\`\n` +
+              `• *Reason:* ${reason}\n\n` +
+              `Future messages from this user will be silently ignored.`,
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+        }
+        return new Response("OK");
+      }
+
+      // ── Handle /unban command ───────────────────────
+      if (trimmedText.startsWith("/unban")) {
+        if (!supabase) {
+          await sendTelegram("sendMessage", {
+            chat_id: SUPPORT_CHAT_ID,
+            text: "⚠️ Supabase client is not initialized to remove bans.",
+            reply_parameters: { message_id: message.message_id },
+          });
+          return new Response("OK");
+        }
+
+        const { error } = await supabase
+          .from("telegram_banned_users")
+          .delete()
+          .eq("chat_id", String(userChatId));
+
+        if (error) {
+          console.error("Error unbanning user:", error);
+          await sendTelegram("sendMessage", {
+            chat_id: SUPPORT_CHAT_ID,
+            text: `❌ Failed to unban user \`${userChatId}\`: ${error.message}`,
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+        } else {
+          await sendTelegram("sendMessage", {
+            chat_id: SUPPORT_CHAT_ID,
+            text:
+              `✅ *User Unbanned Successfully*\n\n` +
+              `• *User ID:* \`${userChatId}\`\n` +
+              `This user can now send support messages again.`,
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+        }
+        return new Response("OK");
+      }
+
+      // Text reply forwarding
       if (message.text) {
         await sendTelegram("sendMessage", {
           chat_id: userChatId,
@@ -62,7 +156,7 @@ Deno.serve(async (req) => {
         return new Response("OK");
       }
 
-      // Image reply
+      // Image reply forwarding
       if (message.photo) {
         const photo = message.photo[message.photo.length - 1];
 
@@ -76,6 +170,23 @@ Deno.serve(async (req) => {
       }
 
       return new Response("OK");
+    }
+
+    // ==================================================
+    // CHECK IF SENDER IS BANNED
+    // ==================================================
+
+    if (supabase) {
+      const { data: bannedUser } = await supabase
+        .from("telegram_banned_users")
+        .select("chat_id")
+        .eq("chat_id", String(chatId))
+        .maybeSingle();
+
+      if (bannedUser) {
+        console.log(`Silently dropped message from banned user ${chatId}`);
+        return new Response("OK");
+      }
     }
 
     // ==================================================

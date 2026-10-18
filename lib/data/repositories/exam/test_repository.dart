@@ -13,10 +13,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class TestRepository {
   TestRepository({DatabaseService? databaseService, SupabaseClient? supabase})
       : _dbService = databaseService ?? DatabaseService.instance,
-        _supabase = supabase ?? Supabase.instance.client;
+        _injectedSupabase = supabase;
 
   final DatabaseService _dbService;
-  final SupabaseClient _supabase;
+  final SupabaseClient? _injectedSupabase;
+
+  SupabaseClient get _supabase => _injectedSupabase ?? Supabase.instance.client;
 
   Future<List<Map<String, dynamic>>> getLocalTests({
     required int subjectId,

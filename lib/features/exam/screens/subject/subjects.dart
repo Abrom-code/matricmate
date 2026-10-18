@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
@@ -105,11 +106,14 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
                       ),
                     ],
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.send_rounded,
-                      size: 13,
-                      color: Colors.white,
+                  child: Center(
+                    child: Transform.rotate(
+                      angle: -25 * math.pi / 180,
+                      child: const Icon(
+                        Icons.send_rounded,
+                        size: 13,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

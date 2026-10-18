@@ -238,7 +238,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             ),
                           ),
                           Text(
-                            'Top ${displayed.length}',
+                            _ctrl.activeTab.value == 'challenge'
+                                ? 'Top ${displayed.length}'
+                                : 'Top 10',
                             style: TextStyle(
                               fontSize: 11.5,
                               color: dark
@@ -258,8 +260,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       ),
                     ],
 
-                    // ── See More Button (Loads Next 10) ───────────────────
-                    if (_ctrl.hasMore.value) ...[
+                    // ── See More Button (Only for specific challenge if hasMore) ───────────────────
+                    if (_ctrl.activeTab.value == 'challenge' &&
+                        _ctrl.hasMore.value) ...[
                       const SizedBox(height: AppSizes.spaceBtwItems),
                       Center(
                         child: OutlinedButton.icon(
@@ -366,7 +369,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             ),
                           ),
                           Text(
-                            'Score: $scoreVal pts • Time: $timeVal',
+                            myEntry != null && myEntry.challengesTaken > 1
+                                ? 'Score: $scoreVal pts • $timeVal • ${myEntry.challengesTaken} rds'
+                                : 'Score: $scoreVal pts • Time: $timeVal',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,

@@ -35,9 +35,20 @@ class LeaderboardController extends GetxController {
   final RxBool hasMore = false.obs;
   final RxBool isLoadingMore = false.obs;
 
-  List<ChallengeLeaderboardEntry> get displayedEntries => entries.toList();
+  List<ChallengeLeaderboardEntry> get displayedEntries {
+    if (activeTab.value != 'challenge') {
+      return entries.take(10).toList();
+    }
+    return entries.toList();
+  }
 
   Future<void> loadMore() async {
+    // Only 'challenge' tab allows loading more than 10.
+    // Weekly, monthly, and yearly are strictly capped at top 10.
+    if (activeTab.value != 'challenge') {
+      hasMore.value = false;
+      return;
+    }
     if (isLoadingMore.value || !hasMore.value) return;
     try {
       isLoadingMore.value = true;
@@ -136,13 +147,16 @@ class LeaderboardController extends GetxController {
                 ? 'month'
                 : 'year';
 
-        entries.value = await _repo.fetchPeriodLeaderboard(
+        final res = await _repo.fetchPeriodLeaderboard(
           stream: activeStream.value,
           period: period,
           limit: _initialFetchLimit,
         );
 
-        hasMore.value = entries.length >= _initialFetchLimit;
+        entries.value = res.take(10).toList();
+
+        // Weekly, monthly, and yearly strictly show only top 10 with no pagination
+        hasMore.value = false;
 
         // Fetch user period standing separately if not in top results
         _userStanding.value = null;

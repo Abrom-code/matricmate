@@ -5,6 +5,7 @@
 -- ─────────────────────────────────────────────────────────────────────
 -- 1. rpc_download_subject: Bundles chapters, tests, questions & passages in 1 call
 -- ─────────────────────────────────────────────────────────────────────
+DROP FUNCTION IF EXISTS rpc_download_subject;
 CREATE OR REPLACE FUNCTION rpc_download_subject(
   p_subject_id INTEGER,
   p_is_premium BOOLEAN DEFAULT FALSE
@@ -74,6 +75,7 @@ $$;
 -- ─────────────────────────────────────────────────────────────────────
 -- 2. rpc_download_entrance: Bundles entrance/model tests, questions & passages
 -- ─────────────────────────────────────────────────────────────────────
+DROP FUNCTION IF EXISTS rpc_download_entrance;
 CREATE OR REPLACE FUNCTION rpc_download_entrance(
   p_subject_id INTEGER,
   p_is_premium BOOLEAN DEFAULT FALSE,
@@ -142,6 +144,7 @@ $$;
 -- ─────────────────────────────────────────────────────────────────────
 -- 3. rpc_get_test_content: Bundles on-demand test questions & passages in 1 call
 -- ─────────────────────────────────────────────────────────────────────
+DROP FUNCTION IF EXISTS rpc_get_test_content;
 CREATE OR REPLACE FUNCTION rpc_get_test_content(p_test_id INTEGER)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -181,6 +184,9 @@ $$;
 -- ─────────────────────────────────────────────────────────────────────
 -- 4. increment_receipt_upload_count: Atomically increments upload count
 -- ─────────────────────────────────────────────────────────────────────
+DROP FUNCTION IF EXISTS increment_receipt_upload_count(TEXT);
+DROP FUNCTION IF EXISTS increment_receipt_upload_count(UUID);
+DROP FUNCTION IF EXISTS increment_receipt_upload_count;
 CREATE OR REPLACE FUNCTION increment_receipt_upload_count(p_user_id TEXT)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -199,6 +205,7 @@ GRANT EXECUTE ON FUNCTION increment_receipt_upload_count TO anon;
 -- ─────────────────────────────────────────────────────────────────────
 -- 5. rpc_batch_submit_answers: Submits all challenge answers in 1 call
 -- ─────────────────────────────────────────────────────────────────────
+DROP FUNCTION IF EXISTS public.rpc_batch_submit_answers;
 CREATE OR REPLACE FUNCTION public.rpc_batch_submit_answers(
   p_attempt_id uuid,
   p_answers jsonb

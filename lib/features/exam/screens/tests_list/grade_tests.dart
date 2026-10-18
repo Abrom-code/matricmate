@@ -198,7 +198,6 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
             }
 
             final test = tests[index - 1];
-            final hasQn = ctrl.testHasQuestions[test.id] ?? false;
             final qnCount =
                 ctrl.testQuestionCounts[test.id] ?? test.questionCount;
             final time = test.time;
@@ -249,7 +248,7 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
                             ctrl.testQuestionCounts[test.id] ?? qnCount;
                         Get.to(
                           () => ReadyScreen(
-                            qnCount: qnCount,
+                            qnCount: updatedCount,
                             time: time,
                             testId: test.id,
                             id: 0,

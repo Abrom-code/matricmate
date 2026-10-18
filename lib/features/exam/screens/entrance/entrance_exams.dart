@@ -290,7 +290,6 @@ class _ExamList extends StatelessWidget {
         }
 
         final test = displayTests[index - 1];
-        final hasQn = controller.testHasQuestions[test.id] ?? false;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),

@@ -206,7 +206,6 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
             }
 
             final test = tests[index - 1];
-            final hasQn = ctrl.testHasQuestions[test.id] ?? false;
             final qnCount =
                 ctrl.testQuestionCounts[test.id] ?? test.questionCount;
             final time = test.time;
@@ -257,7 +256,7 @@ class _ChapterTestScreenState extends State<ChapterTestScreen> with RouteAware {
                             ctrl.testQuestionCounts[test.id] ?? qnCount;
                         Get.to(
                           () => ReadyScreen(
-                            qnCount: qnCount,
+                            qnCount: updatedCount,
                             time: time,
                             testId: test.id,
                             id: 1,

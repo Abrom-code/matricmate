@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
 
         const { data: bannedList, error } = await supabase
           .from("telegram_banned_users")
-          .select("chat_id, reason, banned_at")
+          .select("chat_id, username, full_name, reason, banned_at")
           .order("banned_at", { ascending: false })
           .limit(50);
 
@@ -130,15 +130,22 @@ Deno.serve(async (req) => {
             reply_parameters: { message_id: message.message_id },
           });
         } else {
-          const lines = bannedList.map(
-            (u, i) =>
-              `${i + 1}. \`${u.chat_id}\` — _${u.reason || "No reason"}_`,
-          );
+          const lines = bannedList.map((u, i) => {
+            const userHandle = u.username
+              ? (u.username.startsWith("@") ? u.username : `@${u.username}`)
+              : "";
+            const displayName = [u.full_name, userHandle]
+              .filter(Boolean)
+              .join(" ");
+            const who = displayName ? ` — ${displayName}` : "";
+            return `${i + 1}. \`${u.chat_id}\`${who}\n   _Reason: ${u.reason || "No reason"}_`;
+          });
+
           await sendTelegram("sendMessage", {
             chat_id: chatId,
             text:
               `🚫 *Banned Users (${bannedList.length}):*\n\n` +
-              `${lines.join("\n")}\n\n` +
+              `${lines.join("\n\n")}\n\n` +
               `_To unban: /unban <ID>_`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
@@ -147,8 +154,10 @@ Deno.serve(async (req) => {
         return new Response("OK");
       }
 
-      // ── 2. Determine target user ID from argument or reply ──
+      // ── 2. Determine target user ID & metadata from argument or reply ──
       let targetUserChatId: string | null = null;
+      let targetUsername: string | null = null;
+      let targetFullName: string | null = null;
       let commandReason: string | null = null;
 
       const parts = trimmedText.split(/\s+/);
@@ -173,6 +182,14 @@ Deno.serve(async (req) => {
           targetUserChatId = match[1];
           if (isBanCmd) {
             commandReason = trimmedText.replace(/^\/ban\s*/, "").trim() || null;
+          }
+          const userMatch = repliedText.match(/@([a-zA-Z0-9_]{3,32})/);
+          if (userMatch) {
+            targetUsername = `@${userMatch[1]}`;
+          }
+          const nameMatch = repliedText.match(/👤\s*([^\n]+)/);
+          if (nameMatch) {
+            targetFullName = nameMatch[1].trim();
           }
         }
       }
@@ -203,13 +220,17 @@ Deno.serve(async (req) => {
 
         const reason = commandReason || "Spam or policy violation";
 
+        const banPayload: Record<string, unknown> = {
+          chat_id: String(targetUserChatId),
+          reason,
+          banned_at: new Date().toISOString(),
+        };
+        if (targetUsername) banPayload.username = targetUsername;
+        if (targetFullName) banPayload.full_name = targetFullName;
+
         const { error } = await supabase
           .from("telegram_banned_users")
-          .upsert({
-            chat_id: String(targetUserChatId),
-            reason,
-            banned_at: new Date().toISOString(),
-          });
+          .upsert(banPayload);
 
         if (error) {
           console.error("Error banning user:", error);
@@ -220,13 +241,19 @@ Deno.serve(async (req) => {
             reply_parameters: { message_id: message.message_id },
           });
         } else {
+          const userIdentifier = targetUsername
+            ? ` (${targetUsername})`
+            : targetFullName
+              ? ` (${targetFullName})`
+              : "";
+
           await sendTelegram("sendMessage", {
             chat_id: chatId,
             text:
               `🚫 *User Banned Successfully*\n\n` +
-              `• *User ID:* \`${targetUserChatId}\`\n` +
+              `• *User ID:* \`${targetUserChatId}\`${userIdentifier}\n` +
               `• *Reason:* ${reason}\n\n` +
-              `Future messages from this user will be silently ignored.\n` +
+              `Future messages from this user will be blocked with an alert.\n` +
               `_To unban: /unban ${targetUserChatId}_`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
@@ -238,7 +265,7 @@ Deno.serve(async (req) => {
             text:
               `🚫 *Admin Banned User*\n\n` +
               `• *By Admin:* ${adminTag}\n` +
-              `• *User ID:* \`${targetUserChatId}\`\n` +
+              `• *User ID:* \`${targetUserChatId}\`${userIdentifier}\n` +
               `• *Reason:* ${reason}`,
             parse_mode: "Markdown",
           }));
@@ -383,11 +410,30 @@ Deno.serve(async (req) => {
     if (supabase) {
       const { data: bannedUser } = await supabase
         .from("telegram_banned_users")
-        .select("chat_id")
+        .select("chat_id, username, full_name")
         .eq("chat_id", String(chatId))
         .maybeSingle();
 
       if (bannedUser) {
+        // Backfill username / full_name if missing
+        const senderUsername = message.from?.username
+          ? `@${message.from?.username}`
+          : null;
+        const senderName =
+          `${message.from?.first_name ?? ""} ${message.from?.last_name ?? ""}`.trim();
+        if (
+          (senderUsername && !bannedUser.username) ||
+          (senderName && !bannedUser.full_name)
+        ) {
+          await supabase
+            .from("telegram_banned_users")
+            .update({
+              username: senderUsername || bannedUser.username,
+              full_name: senderName || bannedUser.full_name,
+            })
+            .eq("chat_id", String(chatId));
+        }
+
         await sendTelegram("sendMessage", {
           chat_id: chatId,
           text: "⛔ Sorry, you are banned from contacting support.",

@@ -3,9 +3,15 @@
 
 CREATE TABLE IF NOT EXISTS telegram_banned_users (
   chat_id TEXT PRIMARY KEY,
+  username TEXT,
+  full_name TEXT,
   reason TEXT,
   banned_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Safely add columns if table already exists
+ALTER TABLE telegram_banned_users ADD COLUMN IF NOT EXISTS username TEXT;
+ALTER TABLE telegram_banned_users ADD COLUMN IF NOT EXISTS full_name TEXT;
 
 -- Enable Row Level Security
 ALTER TABLE telegram_banned_users ENABLE ROW LEVEL SECURITY;

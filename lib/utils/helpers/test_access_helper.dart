@@ -28,6 +28,25 @@ class TestAccessHelper {
     return user.isActive;
   }
 
+  /// Returns whether the currently logged-in user has premium/active entitlement (or is admin).
+  static bool get isCurrentUserPremium {
+    if (!Get.isRegistered<UserController>()) return false;
+    final userController = Get.find<UserController>();
+    if (userController.isAdmin.value) return true;
+    return userController.user.value.isActive;
+  }
+
+  /// Returns true if a test (Map or TestModel) is free (non-premium).
+  static bool isTestFree(dynamic test) {
+    if (test == null) return false;
+    if (test is TestModel) return !test.isPremium;
+    if (test is Map) {
+      final raw = test['is_premium'];
+      return raw == false || raw == 0 || raw == 'false' || raw == '0';
+    }
+    return false;
+  }
+
   /// Handles user interaction when tapping a test tile:
   /// - Invokes [onStart] if the user has access.
   /// - Routes to payment verification screen if the user has a pending receipt.

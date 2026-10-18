@@ -388,7 +388,10 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (bannedUser) {
-        console.log(`Silently dropped message from banned user ${chatId}`);
+        await sendTelegram("sendMessage", {
+          chat_id: chatId,
+          text: "⛔ Sorry, you are banned from contacting support.",
+        });
         return new Response("OK");
       }
     }
@@ -471,16 +474,7 @@ Deno.serve(async (req) => {
       }));
     }
 
-    // ==================================================
-    // CONFIRMATION TO USER
-    // ==================================================
-
-    await sendTelegram("sendMessage", {
-      chat_id: chatId,
-      text: "✅ *Message Received*",
-      parse_mode: "Markdown",
-    });
-
+    // User message forwarded to support — do not send any automated text to user
     return new Response("OK");
   } catch (error) {
     console.error("Telegram support error:", error);

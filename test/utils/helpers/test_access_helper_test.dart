@@ -295,4 +295,45 @@ void main() {
       expect(sorted, isEmpty);
     });
   });
+
+  group('TestAccessHelper.isTestFree', () {
+    test('returns true for free TestModel and false for premium TestModel', () {
+      final freeTest = TestModel(
+        id: 1,
+        subjectId: 1,
+        questionCount: 10,
+        createdAt: DateTime.now(),
+        type: 'chapter',
+        title: 'Free Test',
+        time: 15,
+        isPremium: false,
+      );
+      final premTest = TestModel(
+        id: 2,
+        subjectId: 1,
+        questionCount: 10,
+        createdAt: DateTime.now(),
+        type: 'chapter',
+        title: 'Premium Test',
+        time: 15,
+        isPremium: true,
+      );
+
+      expect(TestAccessHelper.isTestFree(freeTest), isTrue);
+      expect(TestAccessHelper.isTestFree(premTest), isFalse);
+    });
+
+    test('correctly evaluates Map test entries', () {
+      expect(TestAccessHelper.isTestFree({'is_premium': false}), isTrue);
+      expect(TestAccessHelper.isTestFree({'is_premium': 0}), isTrue);
+      expect(TestAccessHelper.isTestFree({'is_premium': 'false'}), isTrue);
+      expect(TestAccessHelper.isTestFree({'is_premium': '0'}), isTrue);
+
+      expect(TestAccessHelper.isTestFree({'is_premium': true}), isFalse);
+      expect(TestAccessHelper.isTestFree({'is_premium': 1}), isFalse);
+      expect(TestAccessHelper.isTestFree({'is_premium': null}), isFalse);
+      expect(TestAccessHelper.isTestFree(null), isFalse);
+    });
+  });
 }
+

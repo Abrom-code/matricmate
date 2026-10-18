@@ -179,16 +179,16 @@ void main() {
       expect(segments[3].text, ' today!');
     });
 
-    // ── 8. stripTags ───────────────────────────────────────────────────────
+    // ── 8. stripTags with question and explanation formatting ──────────────
 
-    test('stripTags cleanly strips BBCode and HTML tags', () {
+    test('stripTags cleanly strips BBCode, HTML, math, and table tags', () {
       const text =
-          '[b]Hello[/b]! Join [a href="https://t.me/matric_et"]our Telegram[/a] or [a]https://matricmate.com[/a]!';
+          r'[b]Q1:[/b] Solve $\Delta > 0$ with [table][row][cell]A[/cell][/row][/table] [a]https://t.me/matric_et[/a]!';
       final clean = NotificationLinkParser.stripTags(text);
-      expect(clean, 'Hello! Join our Telegram or https://matricmate.com!');
+      expect(clean, r'Q1: Solve \Delta > 0 with A https://t.me/matric_et!');
     });
 
-    // ── 9. extractPrimaryLink ─────────────────────────────────────────────
+    // ── 9. extractPrimaryLink and extractAllLinks ──────────────────────────
 
     test('extractPrimaryLink finds first link in text', () {
       const text = 'Updates on [a]https://t.me/matric_et[/a]!';
@@ -199,16 +199,25 @@ void main() {
       expect(link?.actionButtonLabel, 'Join Telegram');
     });
 
-    test('extractPrimaryLink falls back to payload if no tag in text', () {
-      const text = 'Payment successful.';
-      final payload = {'url': 'https://matricmate.com/receipt'};
-      final link = NotificationLinkParser.extractPrimaryLink(
-        text,
-        payload: payload,
-      );
-      expect(link, isNotNull);
-      expect(link?.url, 'https://matricmate.com/receipt');
-      expect(link?.actionButtonLabel, 'Open Link');
+    test('extractAllLinks finds all distinct links and deduplicates', () {
+      const text =
+          'Join [a]https://t.me/channel1[/a] and [a href="https://example.com"]Website[/a] or [a]https://t.me/channel1[/a]';
+      final links = NotificationLinkParser.extractAllLinks(text);
+      expect(links.length, 2);
+      expect(links[0].url, 'https://t.me/channel1');
+      expect(links[0].isTelegram, isTrue);
+      expect(links[1].url, 'https://example.com');
+      expect(links[1].text, 'Website');
+    });
+
+    test('extractAllLinks includes payload url if not already in text', () {
+      const text = 'Check [a]https://t.me/channel[/a]';
+      final payload = {'url': 'https://matricmate.com'};
+      final links = NotificationLinkParser.extractAllLinks(text, payload: payload);
+      expect(links.length, 2);
+      expect(links[0].url, 'https://t.me/channel');
+      expect(links[1].url, 'https://matricmate.com');
     });
   });
 }
+

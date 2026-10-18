@@ -1,13 +1,21 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:matricmate/common/widgets/exam/bb_table_widget.dart';
 import 'package:matricmate/features/notifications/services/notification_link_parser.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/question_content_parser.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
-/// Renders notification body text with interactive, clickable links.
+/// Renders notification body text with interactive, clickable links and full
+/// support for question and explanation formatting tags:
+/// - Multiple interactive links: `[a]...[/a]`, `[a href="..."]`, `[a=...]`, `[a]text|url[/a]`
+/// - LaTeX mathematics: inline (`$...$`, `\(...\)`) and block (`$$...$$`, `\[...\]`)
+/// - BBCode formatting: `[b]`, `[i]`, `[u]`, `[s]`, `[bi]`, `[sup]`, `[sub]`, `[h]`, `[c=#hex]`
+/// - Markdown: `**bold**`, `*italic*`, `~~strikethrough~~`, `# Heading`
+/// - Data tables: `[table][row][cell]...[/cell][/row][/table]`
 ///
-/// Supports BBCode `[a]url[/a]`, `[a href="url"]text[/a]`, `[a]text|url[/a]`,
-/// HTML `<a href="...">text</a>`, markdown `[text](url)`, and plain URLs.
-/// Manages [TapGestureRecognizer] lifecycle to prevent memory and gesture leaks.
+/// Manages [TapGestureRecognizer] lifecycle safely to prevent memory and gesture leaks.
 class NotificationBodyText extends StatefulWidget {
   const NotificationBodyText({
     super.key,
@@ -80,16 +88,64 @@ class _NotificationBodyTextState extends State<NotificationBodyText> {
       decorationThickness: 1.5,
     ).merge(widget.linkStyle);
 
+    // If text contains block-level elements (tables or block equations)
+    if (QuestionContentParser.hasBlockElements(widget.text)) {
+      final blockSegments = QuestionContentParser.splitSegments(widget.text);
+      final blockWidgets = <Widget>[];
+
+      for (final bSeg in blockSegments) {
+        if (bSeg.isTable && bSeg.tableRows != null) {
+          blockWidgets.add(const SizedBox(height: 10));
+          blockWidgets.add(
+            BBTableWidget(
+              rows: bSeg.tableRows!,
+              baseStyle: baseStyle,
+            ),
+          );
+          blockWidgets.add(const SizedBox(height: 10));
+        } else if (bSeg.isBlockMath) {
+          blockWidgets.add(
+            _NotificationBlockMath(
+              tex: bSeg.mathTex ?? '',
+              raw: bSeg.mathRaw ?? '',
+              style: baseStyle,
+            ),
+          );
+        } else if (bSeg.isText && bSeg.text != null && bSeg.text!.isNotEmpty) {
+          blockWidgets.add(
+            _buildRichTextWidget(bSeg.text!, baseStyle, effectiveLinkStyle),
+          );
+        }
+      }
+
+      return SelectionArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: blockWidgets,
+        ),
+      );
+    }
+
+    // Default inline path (handles inline math, all BBCode/Markdown tags, and multiple links)
+    return SelectionArea(
+      child: _buildRichTextWidget(widget.text, baseStyle, effectiveLinkStyle),
+    );
+  }
+
+  /// Builds a [Text.rich] combining interactive links and RichTextParser formatting.
+  Widget _buildRichTextWidget(
+    String rawChunk,
+    TextStyle baseStyle,
+    TextStyle linkStyle,
+  ) {
     final segments = NotificationLinkParser.parseSegments(
-      widget.text,
+      rawChunk,
       payload: widget.payload,
     );
 
     if (segments.isEmpty) {
-      return Text(
-        widget.text,
-        style: baseStyle,
-      );
+      return Text(rawChunk, style: baseStyle);
     }
 
     final spans = <InlineSpan>[];
@@ -106,28 +162,94 @@ class _NotificationBodyTextState extends State<NotificationBodyText> {
           };
         _recognizers.add(recognizer);
 
-        spans.add(
-          TextSpan(
-            text: seg.text,
-            style: effectiveLinkStyle,
-            recognizer: recognizer,
-            mouseCursor: SystemMouseCursors.click,
-          ),
-        );
+        // Parse inner formatting if markup present, else use direct styled TextSpan
+        final hasInnerMarkup = seg.text.contains(r'$') ||
+            seg.text.contains(r'\') ||
+            seg.text.contains('[') ||
+            seg.text.contains('*') ||
+            seg.text.contains('<');
+
+        if (hasInnerMarkup) {
+          final innerLinkSpan = RichTextParser.parse(seg.text, linkStyle);
+          spans.add(
+            TextSpan(
+              children: [innerLinkSpan],
+              recognizer: recognizer,
+              mouseCursor: SystemMouseCursors.click,
+            ),
+          );
+        } else {
+          spans.add(
+            TextSpan(
+              text: seg.text,
+              style: linkStyle,
+              recognizer: recognizer,
+              mouseCursor: SystemMouseCursors.click,
+            ),
+          );
+        }
       } else {
-        spans.add(
-          TextSpan(
-            text: seg.text,
-            style: seg.applyFormatting(baseStyle),
-          ),
-        );
+        // Parse question & explanation formatting (LaTeX math, bold, color, sub/sup, etc.)
+        final richSpan = RichTextParser.parse(seg.text, baseStyle);
+        spans.add(richSpan);
       }
     }
 
-    return SelectionArea(
-      child: Text.rich(
-        TextSpan(children: spans),
-        style: baseStyle,
+    return Text.rich(
+      TextSpan(children: spans),
+      style: baseStyle,
+    );
+  }
+}
+
+/// Responsive horizontal scrollable block math widget for display equations.
+class _NotificationBlockMath extends StatelessWidget {
+  const _NotificationBlockMath({
+    required this.tex,
+    required this.raw,
+    required this.style,
+  });
+
+  final String tex;
+  final String raw;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final fallbackColor = dark ? Colors.white : const Color(0xFF0F172A);
+    final effectiveColor = style.color ?? fallbackColor;
+    final effectiveStyle = style.copyWith(
+      fontSize: (style.fontSize ?? 16.0) * 1.08,
+      color: effectiveColor,
+    );
+
+    Widget mathWidget;
+    try {
+      mathWidget = Math.tex(
+        tex,
+        mathStyle: MathStyle.display,
+        textStyle: effectiveStyle,
+        onErrorFallback: (err) => Text(
+          raw,
+          style: effectiveStyle,
+        ),
+      );
+    } catch (_) {
+      mathWidget = Text(raw, style: effectiveStyle);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Center(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: mathWidget,
+          ),
+        ),
       ),
     );
   }

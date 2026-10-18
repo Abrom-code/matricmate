@@ -150,29 +150,48 @@ class NotificationLinkParser {
       return (m.group(1) ?? '').trim();
     });
 
-    // 4. Remove other BBCode tags like [b], [/b], [i], [u]
+    // 4. Remove table tags [table], [row], [cell]
+    text = text.replaceAll(
+      RegExp(r'\[/?(?:table|row|cell)\]', caseSensitive: false),
+      ' ',
+    );
+
+    // 5. Remove LaTeX math delimiters
+    text = text.replaceAll(RegExp(r'\\{1,2}[\[\]\(\)]'), '');
+    text = text.replaceAll(r'$$', '').replaceAll(r'$', '');
+
+    // 6. Remove other BBCode tags like [b], [/b], [i], [u], [s], [bi], [sup], [sub], [h], [c=...]
     text = text.replaceAll(RegExp(r'\[/?[a-zA-Z]+(?:=[^\]]+)?\]'), '');
 
-    // 5. Remove HTML tags
+    // 7. Remove HTML tags
     text = text.replaceAll(RegExp(r'</?[a-zA-Z]+(?:[^>]*?)>'), '');
 
+    // 8. Collapse whitespace
+    text = text.replaceAll(RegExp(r'[ \t]+'), ' ');
     return text.trim();
   }
 
-  /// Extracts the first primary link from text or payload, if available.
-  static NotificationLink? extractPrimaryLink(
+  /// Extracts all distinct links found in the text and/or payload.
+  static List<NotificationLink> extractAllLinks(
     String rawText, {
     Map<String, dynamic>? payload,
   }) {
-    // 1. Check parsed segments from body
+    final links = <NotificationLink>[];
+    final seenUrls = <String>{};
+
+    // 1. Collect all links from parsed segments
     final segments = parseSegments(rawText, payload: payload);
     for (final seg in segments) {
       if (seg.isLink && seg.link != null) {
-        return seg.link;
+        final normalized = seg.link!.url.trim();
+        if (normalized.isNotEmpty && !seenUrls.contains(normalized)) {
+          seenUrls.add(normalized);
+          links.add(seg.link!);
+        }
       }
     }
 
-    // 2. Fall back to payload keys
+    // 2. Also check payload if not already added
     if (payload != null) {
       final payloadUrl = payload['url'] ??
           payload['link'] ??
@@ -181,14 +200,28 @@ class NotificationLinkParser {
           payload['href'];
       if (payloadUrl != null && payloadUrl.toString().trim().isNotEmpty) {
         final urlStr = payloadUrl.toString().trim();
-        return NotificationLink(
-          text: payload['action_text']?.toString().trim() ?? 'Open Link',
-          url: urlStr,
-        );
+        if (!seenUrls.contains(urlStr)) {
+          seenUrls.add(urlStr);
+          links.add(
+            NotificationLink(
+              text: payload['action_text']?.toString().trim() ?? 'Open Link',
+              url: urlStr,
+            ),
+          );
+        }
       }
     }
 
-    return null;
+    return links;
+  }
+
+  /// Extracts the first primary link from text or payload, if available.
+  static NotificationLink? extractPrimaryLink(
+    String rawText, {
+    Map<String, dynamic>? payload,
+  }) {
+    final all = extractAllLinks(rawText, payload: payload);
+    return all.isNotEmpty ? all.first : null;
   }
 
   /// Parses text into styled and clickable segments.

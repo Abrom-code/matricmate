@@ -41,8 +41,8 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
 
   AppNotification get notification => widget.notification;
 
-  NotificationLink? get _primaryLink =>
-      NotificationLinkParser.extractPrimaryLink(
+  List<NotificationLink> get _actionLinks =>
+      NotificationLinkParser.extractAllLinks(
         notification.body,
         payload: notification.payload,
       );
@@ -705,53 +705,84 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                         ),
                 ),
               )
-            else if (_primaryLink != null)
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () =>
-                      NotificationLinkParser.launchLink(_primaryLink!.url),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primaryLink!.isTelegram
-                        ? const Color(0xFF0284C7)
-                        : AppColors.primary,
-                    foregroundColor: Colors.white,
-                    side: BorderSide(
-                      color: _primaryLink!.isTelegram
-                          ? const Color(0xFF0284C7)
-                          : AppColors.primary,
-                      width: 1.5,
-                    ),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_primaryLink!.isTelegram)
-                        Transform.rotate(
-                          angle: -25 * (3.141592653589793 / 180),
-                          child: const Icon(Icons.send_rounded, size: 20),
-                        )
-                      else
-                        const Icon(Icons.open_in_new_rounded, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        _primaryLink!.actionButtonLabel,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
+            else if (_actionLinks.isNotEmpty) ...[
+              for (int i = 0; i < _actionLinks.length; i++) ...[
+                if (i > 0) const SizedBox(height: 10),
+                _buildActionButton(
+                  _actionLinks[i],
+                  isPrimary: i == 0,
+                  dark: dark,
                 ),
-              ),
+              ],
+            ],
 
             const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+    NotificationLink link, {
+    required bool isPrimary,
+    required bool dark,
+  }) {
+    final isTelegram = link.isTelegram;
+    final bgColor = isTelegram
+        ? const Color(0xFF0284C7)
+        : (isPrimary
+            ? AppColors.primary
+            : (dark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)));
+    final fgColor = (isTelegram || isPrimary)
+        ? Colors.white
+        : (dark ? const Color(0xFFE2E8F0) : AppColors.primary);
+    final borderColor = isTelegram
+        ? const Color(0xFF0284C7)
+        : (isPrimary
+            ? AppColors.primary
+            : (dark ? AppColors.darkBorder : const Color(0xFFCBD5E1)));
+
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: () => NotificationLinkParser.launchLink(link.url),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: fgColor,
+          side: BorderSide(
+            color: borderColor,
+            width: 1.5,
+          ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isTelegram)
+              Transform.rotate(
+                angle: -25 * (3.141592653589793 / 180),
+                child: const Icon(Icons.send_rounded, size: 20),
+              )
+            else
+              Icon(
+                Icons.open_in_new_rounded,
+                size: 20,
+                color: fgColor,
+              ),
+            const SizedBox(width: 8),
+            Text(
+              link.actionButtonLabel,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: fgColor,
+              ),
+            ),
           ],
         ),
       ),

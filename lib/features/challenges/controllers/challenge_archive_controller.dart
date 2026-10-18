@@ -96,19 +96,37 @@ class ChallengeArchiveController extends GetxController {
     return challenges.where((c) => c.subjectId == subjId).length;
   }
 
+  Timer? _realtimeDebounceTimer;
+
   @override
   void onInit() {
     super.onInit();
     _preloadLocalArchivedChallenges();
     loadArchive();
     _startRealtime();
-    ever(UserController.instance.user, (_) => loadArchive(showLoading: false, isManual: false));
+
+    String lastUserId = UserController.instance.user.value.id;
+    String lastUserStream = UserController.instance.user.value.stream;
+    String lastUserStatus = UserController.instance.user.value.status;
+
+    ever(UserController.instance.user, (u) {
+      if (u.id != lastUserId ||
+          u.stream != lastUserStream ||
+          u.status != lastUserStatus) {
+        lastUserId = u.id;
+        lastUserStream = u.stream;
+        lastUserStatus = u.status;
+        loadArchive(showLoading: false, isManual: false);
+      }
+    });
   }
 
   @override
   void onClose() {
+    _realtimeDebounceTimer?.cancel();
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
+      _realtimeChannel = null;
     }
     super.onClose();
   }
@@ -128,7 +146,10 @@ class ChallengeArchiveController extends GetxController {
             debugPrint(
               '[Realtime] Archive challenge changed: ${payload.eventType}',
             );
-            loadArchive(isManual: false);
+            _realtimeDebounceTimer?.cancel();
+            _realtimeDebounceTimer = Timer(const Duration(seconds: 3), () {
+              loadArchive(isManual: false);
+            });
           },
         )
         .subscribe((status, [error]) {

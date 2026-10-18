@@ -34,8 +34,22 @@ class NotificationRepository {
         '[Notifications] syncFromRemote userId=$userId stream=$userStream signupAt=$signupAt',
       );
 
-      // Build date filter for signup-based filtering
-      final String? sinceIso = signupAt?.toUtc().toIso8601String();
+      // Delta sync: If we already have notifications locally, only fetch notifications created
+      // after the newest local one (with a 2-second safety buffer). Otherwise fall back to signup date.
+      final db = await _db.database;
+      DateTime? effectiveSince = signupAt;
+      final latestLocalRows = await db.rawQuery(
+        'SELECT created_at FROM notifications WHERE user_id = ? OR user_id = \'\' ORDER BY created_at DESC LIMIT 1',
+        [userId],
+      );
+      if (latestLocalRows.isNotEmpty && latestLocalRows.first['created_at'] != null) {
+        final parsed = DateTime.tryParse(latestLocalRows.first['created_at'].toString());
+        if (parsed != null) {
+          effectiveSince = parsed.subtract(const Duration(seconds: 2));
+        }
+      }
+
+      final String? sinceIso = effectiveSince?.toUtc().toIso8601String();
 
       // Fetch personal, broadcast, and read receipts in parallel
       final readsQuery = _supabase
@@ -130,7 +144,6 @@ class NotificationRepository {
       );
 
       // Load dismissed IDs from local + remote
-      final db = await _db.database;
       final localDismissedRows = await db.query(
         'notification_dismissals',
         columns: ['notification_id'],

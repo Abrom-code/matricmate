@@ -101,6 +101,7 @@ class ChallengeHomeController extends GetxController {
 
   Timer? _countdownTimer;
   RealtimeChannel? _realtimeChannel;
+  Timer? _realtimeDebounceTimer;
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream;
@@ -119,12 +120,26 @@ class ChallengeHomeController extends GetxController {
     _startTimer();
     _startRealtime();
 
-    ever(UserController.instance.user, (_) => loadAllChallenges(showLoading: false));
+    String lastUserId = UserController.instance.user.value.id;
+    String lastUserStream = UserController.instance.user.value.stream;
+    String lastUserStatus = UserController.instance.user.value.status;
+
+    ever(UserController.instance.user, (u) {
+      if (u.id != lastUserId ||
+          u.stream != lastUserStream ||
+          u.status != lastUserStatus) {
+        lastUserId = u.id;
+        lastUserStream = u.stream;
+        lastUserStatus = u.status;
+        loadAllChallenges(showLoading: false);
+      }
+    });
   }
 
   @override
   void onClose() {
     _countdownTimer?.cancel();
+    _realtimeDebounceTimer?.cancel();
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
       _realtimeChannel = null;
@@ -197,7 +212,10 @@ class ChallengeHomeController extends GetxController {
           table: 'leaderboard_challenges',
           callback: (payload) {
             debugPrint('[Realtime] Challenge changed: ${payload.eventType}');
-            loadAllChallenges(showLoading: false);
+            _realtimeDebounceTimer?.cancel();
+            _realtimeDebounceTimer = Timer(const Duration(seconds: 3), () {
+              loadAllChallenges(showLoading: false);
+            });
           },
         )
         .subscribe((status, [error]) {

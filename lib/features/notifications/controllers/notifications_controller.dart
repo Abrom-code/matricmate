@@ -116,9 +116,17 @@ class NotificationsController extends GetxController
       loadNotifications(syncRemote: true);
     }
 
-    // Load local notifications and sync remote whenever user profile updates
-    ever(UserController.instance.user, (_) {
-      if (_userId.isNotEmpty) loadNotifications(syncRemote: true);
+    String lastUserId = UserController.instance.user.value.id;
+    String lastUserStream = UserController.instance.user.value.stream;
+
+    // Load local notifications and sync remote only when user ID or stream actually changes
+    ever(UserController.instance.user, (u) {
+      if (u.id.isNotEmpty &&
+          (u.id != lastUserId || u.stream != lastUserStream)) {
+        lastUserId = u.id;
+        lastUserStream = u.stream;
+        loadNotifications(syncRemote: true);
+      }
     });
   }
 

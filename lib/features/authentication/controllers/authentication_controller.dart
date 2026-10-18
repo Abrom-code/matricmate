@@ -29,8 +29,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// GetStorage key that records the last time session validation ran.
 const _kLastSessionCheckKey = 'last_session_check_ms';
 
-/// Minimum gap between periodic session checks (5 minutes).
-const _kSessionCheckInterval = Duration(minutes: 5);
+/// Minimum gap between periodic session checks (12 hours).
+const _kSessionCheckInterval = Duration(hours: 12);
 
 /// Persisted flag so returning users see Login instead of Signup.
 const _kHasLoggedInKey = 'has_logged_in';

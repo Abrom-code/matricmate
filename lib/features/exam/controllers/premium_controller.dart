@@ -119,9 +119,8 @@ class PremiumController extends GetxController {
       final picker = ImagePicker();
       final file = await picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1200,
-        maxHeight: 1800,
-        imageQuality: 80,
+        maxWidth: 1280,
+        imageQuality: 60,
       );
       if (file != null) {
         receipt.value = file;

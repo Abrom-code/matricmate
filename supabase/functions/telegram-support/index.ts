@@ -59,30 +59,106 @@ Deno.serve(async (req) => {
     }
 
     // ==================================================
-    // MESSAGE FROM SUPPORT ADMIN → REPLY OR /ban COMMAND
+    // MESSAGE FROM SUPPORT ADMIN → COMMANDS OR REPLIES
     // ==================================================
 
     if (isSupportChat(chatId)) {
+      const trimmedText = (message.text ?? "").trim();
       const repliedMessage = message.reply_to_message;
 
-      if (!repliedMessage) {
+      // ── 1. Handle /banned or /banlist command ────────
+      if (trimmedText === "/banned" || trimmedText === "/banlist") {
+        if (!supabase) {
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text: "⚠️ Supabase client is not initialized to read bans.",
+            reply_parameters: { message_id: message.message_id },
+          });
+          return new Response("OK");
+        }
+
+        const { data: bannedList, error } = await supabase
+          .from("telegram_banned_users")
+          .select("chat_id, reason, banned_at")
+          .order("banned_at", { ascending: false })
+          .limit(50);
+
+        if (error) {
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text: `❌ Error fetching banned users: ${error.message}`,
+            reply_parameters: { message_id: message.message_id },
+          });
+        } else if (!bannedList || bannedList.length === 0) {
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text: "📋 *No banned users.* The ban list is currently empty.",
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+        } else {
+          const lines = bannedList.map(
+            (u, i) =>
+              `${i + 1}. \`${u.chat_id}\` — _${u.reason || "No reason"}_`,
+          );
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text:
+              `🚫 *Banned Users (${bannedList.length}):*\n\n` +
+              `${lines.join("\n")}\n\n` +
+              `_To unban: /unban <ID>_`,
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+        }
         return new Response("OK");
       }
 
-      const repliedText = repliedMessage.text ?? repliedMessage.caption ?? "";
+      // ── 2. Determine target user ID from argument or reply ──
+      let targetUserChatId: string | null = null;
+      let commandReason: string | null = null;
 
-      const match = repliedText.match(/User ID:\s*(\d+)/);
+      const parts = trimmedText.split(/\s+/);
+      const isBanCmd = parts[0] === "/ban";
+      const isUnbanCmd = parts[0] === "/unban";
 
-      if (!match) {
-        console.log("Could not find user chat ID.");
-        return new Response("OK");
+      if (
+        (isBanCmd || isUnbanCmd) &&
+        parts.length > 1 &&
+        /^\d+$/.test(parts[1])
+      ) {
+        // Direct format: /unban 12345678 or /ban 12345678 reason
+        targetUserChatId = parts[1];
+        if (isBanCmd) {
+          commandReason = parts.slice(2).join(" ").trim() || null;
+        }
+      } else if (repliedMessage) {
+        // Reply format: swipe-reply /unban or /ban [reason]
+        const repliedText = repliedMessage.text ?? repliedMessage.caption ?? "";
+        const match = repliedText.match(/User ID:\s*(\d+)/);
+        if (match) {
+          targetUserChatId = match[1];
+          if (isBanCmd) {
+            commandReason = trimmedText.replace(/^\/ban\s*/, "").trim() || null;
+          }
+        }
       }
 
-      const userChatId = match[1];
-      const trimmedText = (message.text ?? "").trim();
+      // ── 3. Handle /ban command ──────────────────────
+      if (isBanCmd) {
+        if (!targetUserChatId) {
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text:
+              "⚠️ *Usage:*\n" +
+              "• Reply `/ban` to a user's message, or\n" +
+              "• Type `/ban <User_ID> [reason]`",
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+          return new Response("OK");
+        }
 
-      // ── Handle /ban command ─────────────────────────
-      if (trimmedText.startsWith("/ban")) {
         if (!supabase) {
           await sendTelegram("sendMessage", {
             chat_id: chatId,
@@ -92,14 +168,12 @@ Deno.serve(async (req) => {
           return new Response("OK");
         }
 
-        const reason =
-          trimmedText.replace(/^\/ban\s*/, "").trim() ||
-          "Spam or policy violation";
+        const reason = commandReason || "Spam or policy violation";
 
         const { error } = await supabase
           .from("telegram_banned_users")
           .upsert({
-            chat_id: String(userChatId),
+            chat_id: String(targetUserChatId),
             reason,
             banned_at: new Date().toISOString(),
           });
@@ -108,7 +182,7 @@ Deno.serve(async (req) => {
           console.error("Error banning user:", error);
           await sendTelegram("sendMessage", {
             chat_id: chatId,
-            text: `❌ Failed to ban user \`${userChatId}\`: ${error.message}`,
+            text: `❌ Failed to ban user \`${targetUserChatId}\`: ${error.message}`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
           });
@@ -117,9 +191,10 @@ Deno.serve(async (req) => {
             chat_id: chatId,
             text:
               `🚫 *User Banned Successfully*\n\n` +
-              `• *User ID:* \`${userChatId}\`\n` +
+              `• *User ID:* \`${targetUserChatId}\`\n` +
               `• *Reason:* ${reason}\n\n` +
-              `Future messages from this user will be silently ignored.`,
+              `Future messages from this user will be silently ignored.\n` +
+              `_To unban: /unban ${targetUserChatId}_`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
           });
@@ -127,8 +202,21 @@ Deno.serve(async (req) => {
         return new Response("OK");
       }
 
-      // ── Handle /unban command ───────────────────────
-      if (trimmedText.startsWith("/unban")) {
+      // ── 4. Handle /unban command ────────────────────
+      if (isUnbanCmd) {
+        if (!targetUserChatId) {
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text:
+              "⚠️ *Usage:*\n" +
+              "• Reply `/unban` to a user's message, or\n" +
+              "• Type `/unban <User_ID>`",
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+          return new Response("OK");
+        }
+
         if (!supabase) {
           await sendTelegram("sendMessage", {
             chat_id: chatId,
@@ -141,13 +229,13 @@ Deno.serve(async (req) => {
         const { error } = await supabase
           .from("telegram_banned_users")
           .delete()
-          .eq("chat_id", String(userChatId));
+          .eq("chat_id", String(targetUserChatId));
 
         if (error) {
           console.error("Error unbanning user:", error);
           await sendTelegram("sendMessage", {
             chat_id: chatId,
-            text: `❌ Failed to unban user \`${userChatId}\`: ${error.message}`,
+            text: `❌ Failed to unban user \`${targetUserChatId}\`: ${error.message}`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
           });
@@ -156,7 +244,7 @@ Deno.serve(async (req) => {
             chat_id: chatId,
             text:
               `✅ *User Unbanned Successfully*\n\n` +
-              `• *User ID:* \`${userChatId}\`\n` +
+              `• *User ID:* \`${targetUserChatId}\`\n` +
               `This user can now send support messages again.`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
@@ -164,6 +252,21 @@ Deno.serve(async (req) => {
         }
         return new Response("OK");
       }
+
+      // ── 5. Regular Message Reply Forwarding ─────────
+      if (!repliedMessage) {
+        return new Response("OK");
+      }
+
+      const repliedText = repliedMessage.text ?? repliedMessage.caption ?? "";
+      const match = repliedText.match(/User ID:\s*(\d+)/);
+
+      if (!match) {
+        console.log("Could not find user chat ID.");
+        return new Response("OK");
+      }
+
+      const userChatId = match[1];
 
       // Text reply forwarding to user
       if (message.text) {

@@ -49,6 +49,21 @@ async function broadcastToSupport(
   );
 }
 
+// Broadcasts a copy of an admin's action/reply to all OTHER support admins
+async function broadcastToOtherAdmins(
+  currentChatId: string | number,
+  method: string,
+  bodyBuilder: (supportChatId: string) => Record<string, unknown>,
+) {
+  const otherIds = SUPPORT_CHAT_IDS.filter(
+    (id) => id !== String(currentChatId),
+  );
+  if (otherIds.length === 0) return [];
+  return await Promise.allSettled(
+    otherIds.map((id) => sendTelegram(method, bodyBuilder(id))),
+  );
+}
+
 Deno.serve(async (req) => {
   try {
     const update = await req.json();
@@ -74,6 +89,15 @@ Deno.serve(async (req) => {
     if (userIsSupport) {
       const trimmedText = (message.text ?? "").trim();
       const repliedMessage = message.reply_to_message;
+
+      // Build admin tag (e.g. "Abebe Bikila (@abebe)" or "Abebe")
+      const adminFirstName = message.from?.first_name ?? "Admin";
+      const adminLastName = message.from?.last_name ?? "";
+      const adminFullName = `${adminFirstName} ${adminLastName}`.trim();
+      const adminHandle = message.from?.username
+        ? `(@${message.from?.username})`
+        : "";
+      const adminTag = `${adminFullName} ${adminHandle}`.trim();
 
       // ── 1. Handle /banned or /banlist command ────────
       if (trimmedText === "/banned" || trimmedText === "/banlist") {
@@ -207,6 +231,17 @@ Deno.serve(async (req) => {
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
           });
+
+          // Notify other admins about the ban
+          await broadcastToOtherAdmins(chatId, "sendMessage", (otherId) => ({
+            chat_id: otherId,
+            text:
+              `🚫 *Admin Banned User*\n\n` +
+              `• *By Admin:* ${adminTag}\n` +
+              `• *User ID:* \`${targetUserChatId}\`\n` +
+              `• *Reason:* ${reason}`,
+            parse_mode: "Markdown",
+          }));
         }
         return new Response("OK");
       }
@@ -258,6 +293,16 @@ Deno.serve(async (req) => {
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
           });
+
+          // Notify other admins about the unban
+          await broadcastToOtherAdmins(chatId, "sendMessage", (otherId) => ({
+            chat_id: otherId,
+            text:
+              `✅ *Admin Unbanned User*\n\n` +
+              `• *By Admin:* ${adminTag}\n` +
+              `• *User ID:* \`${targetUserChatId}\``,
+            parse_mode: "Markdown",
+          }));
         }
         return new Response("OK");
       }
@@ -278,25 +323,52 @@ Deno.serve(async (req) => {
 
       const userChatId = match[1];
 
-      // Text reply forwarding to user
+      // Text reply forwarding to user + sync to other admins
       if (message.text) {
+        // 1. Send clean reply to the student
         await sendTelegram("sendMessage", {
           chat_id: userChatId,
           text: message.text,
         });
 
+        // 2. Notify other admins with the Admin Tag
+        await broadcastToOtherAdmins(chatId, "sendMessage", (otherId) => ({
+          chat_id: otherId,
+          text:
+            `💬 *Admin Reply Sent*\n\n` +
+            `• *By Admin:* ${adminTag}\n` +
+            `• *To User ID:* \`${userChatId}\`\n\n` +
+            `*Message:*\n${message.text}`,
+          parse_mode: "Markdown",
+        }));
+
         return new Response("OK");
       }
 
-      // Image reply forwarding to user
+      // Image reply forwarding to user + sync to other admins
       if (message.photo) {
         const photo = message.photo[message.photo.length - 1];
 
+        // 1. Send photo to the student
         await sendTelegram("sendPhoto", {
           chat_id: userChatId,
           photo: photo.file_id,
           caption: message.caption || undefined,
         });
+
+        // 2. Notify other admins with the Admin Tag
+        const otherCaption =
+          `🖼️ *Admin Photo Reply Sent*\n\n` +
+          `• *By Admin:* ${adminTag}\n` +
+          `• *To User ID:* \`${userChatId}\`` +
+          (message.caption ? `\n\n*Caption:*\n${message.caption}` : "");
+
+        await broadcastToOtherAdmins(chatId, "sendPhoto", (otherId) => ({
+          chat_id: otherId,
+          photo: photo.file_id,
+          caption: otherCaption,
+          parse_mode: "Markdown",
+        }));
 
         return new Response("OK");
       }

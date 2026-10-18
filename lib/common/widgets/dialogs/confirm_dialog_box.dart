@@ -645,129 +645,137 @@ class AppDialogBoxes {
           ),
           insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Icon Badge
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(
-                        alpha: dark ? 0.18 : 0.10,
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon Badge
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(
+                          alpha: dark ? 0.18 : 0.10,
+                        ),
+                        shape: BoxShape.circle,
                       ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(
-                            alpha: dark ? 0.25 : 0.16,
+                      child: Center(
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(
+                              alpha: dark ? 0.25 : 0.16,
+                            ),
+                            shape: BoxShape.circle,
                           ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check_circle_rounded,
-                          color: AppColors.success,
-                          size: 28,
+                          child: const Icon(
+                            Icons.check_circle_rounded,
+                            color: AppColors.success,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 14),
 
-                  // Title
-                  Text(
-                    "You're Up to Date!",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: dark ? AppColors.white : const Color(0xFF0F172A),
+                    // Title
+                    Text(
+                      "You're Up to Date!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 6),
 
-                  // Subtitle
-                  Text(
-                    'MatricET is currently running the latest available release with all up-to-date question banks and features.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.45,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    // Subtitle (shorter per user request)
+                    Text(
+                      "You're using the latest version of MatricET.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.4,
+                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
-                  // Version Pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: dark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
+                    // Version Pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
                         color: dark
-                            ? AppColors.darkBorder
-                            : const Color(0xFFE2E8F0),
-                        width: 1,
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: dark
+                              ? AppColors.darkBorder
+                              : const Color(0xFFE2E8F0),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.verified_rounded,
+                            size: 14,
+                            color: AppColors.success,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Version $currentVersion (Build $buildNumber)',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: dark
+                                  ? AppColors.white
+                                  : const Color(0xFF334155),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.verified_rounded,
-                          size: 15,
-                          color: AppColors.success,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Version $currentVersion (Build $buildNumber)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: dark ? AppColors.white : const Color(0xFF334155),
+
+                    const SizedBox(height: 20),
+
+                    // Action Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Action Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 46,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Great',
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
+                        child: const Text(
+                          'Great',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -804,216 +812,232 @@ class AppDialogBoxes {
           insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 380),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Icon Badge
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(
-                        alpha: dark ? 0.20 : 0.12,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon Badge
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(
+                          alpha: dark ? 0.20 : 0.12,
+                        ),
+                        shape: BoxShape.circle,
                       ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(
-                            alpha: dark ? 0.30 : 0.18,
+                      child: Center(
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(
+                              alpha: dark ? 0.30 : 0.18,
+                            ),
+                            shape: BoxShape.circle,
                           ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.system_update_rounded,
-                          color: AppColors.primary,
-                          size: 26,
+                          child: const Icon(
+                            Icons.system_update_rounded,
+                            color: AppColors.primary,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 14),
 
-                  // Title
-                  Text(
-                    'New Version Available!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: dark ? AppColors.white : const Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Version comparison pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.25),
+                    // Title
+                    Text(
+                      'New Version Available!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: dark ? AppColors.white : const Color(0xFF0F172A),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'v$currentVersion',
+                    const SizedBox(height: 8),
+
+                    // Version comparison pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'v$currentVersion',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: dark
+                                  ? AppColors.darkGrey
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 6),
+                            child: Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 13,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          Text(
+                            'v$latestVersion',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (releaseNotes != null && releaseNotes.isNotEmpty) ...[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "WHAT'S NEW",
                           style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6),
-                          child: Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 13,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        Text(
-                          'v$latestVersion',
-                          style: const TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
+                            letterSpacing: 0.8,
+                            color: dark
+                                ? AppColors.darkGrey
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: double.infinity,
+                        constraints: const BoxConstraints(maxHeight: 120),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: dark
+                              ? Colors.white.withValues(alpha: 0.04)
+                              : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: dark
+                              ? AppColors.darkBorder
+                              : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: SingleChildScrollView(
+                          child: Text(
+                            releaseNotes,
+                            style: TextStyle(
+                              fontSize: 12,
+                              height: 1.45,
+                              color: dark
+                                  ? AppColors.white
+                                  : const Color(0xFF334155),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ] else ...[
+                      Text(
+                        'A new update is available with improvements, question additions, and bug fixes.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.4,
+                          color: dark
+                              ? AppColors.darkGrey
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 44,
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(dialogContext),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: dark
+                                      ? AppColors.darkInputBorder
+                                      : const Color(0xFFCBD5E1),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                'Later',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: dark
+                                      ? AppColors.white
+                                      : const Color(0xFF334155),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: SizedBox(
+                            height: 44,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(dialogContext);
+                                onUpdate();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.download_rounded, size: 16),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Update',
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  if (releaseNotes != null && releaseNotes.isNotEmpty) ...[
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "WHAT'S NEW",
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      width: double.infinity,
-                      constraints: const BoxConstraints(maxHeight: 120),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: dark
-                            ? Colors.white.withValues(alpha: 0.04)
-                            : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: dark
-                              ? AppColors.darkBorder
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: SingleChildScrollView(
-                        child: Text(
-                          releaseNotes,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            height: 1.45,
-                            color: dark ? AppColors.white : const Color(0xFF334155),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                  ] else ...[
-                    Text(
-                      'A new update is available with improvements, question additions, and bug fixes.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        height: 1.45,
-                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
                   ],
-
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 46,
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: dark
-                                    ? AppColors.darkInputBorder
-                                    : const Color(0xFFCBD5E1),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              'Later',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: dark ? AppColors.white : const Color(0xFF334155),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: SizedBox(
-                          height: 46,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(dialogContext);
-                              onUpdate();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.download_rounded, size: 17),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Update',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           ),

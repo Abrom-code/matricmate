@@ -653,6 +653,12 @@ class ChallengeArchiveController extends GetxController {
   }
 
   Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+    if (!challenge.canReviewQuestions) {
+      ToastHelper.info(
+        'Question review will be unlocked once this challenge closes.',
+      );
+      return;
+    }
     if (isOpeningReview[challenge.id] == true) return;
     isOpeningReview[challenge.id] = true;
     try {

@@ -329,6 +329,7 @@ CREATE TABLE IF NOT EXISTS public.leaderboard_challenges (
     xp_reward        integer     NOT NULL DEFAULT 100,
     coin_reward      integer     NOT NULL DEFAULT 50,
     badge_name       text,
+    review_policy    text        NOT NULL DEFAULT 'on_completion',
     created_at       timestamptz NOT NULL DEFAULT now(),
     updated_at       timestamptz NOT NULL DEFAULT now()
 );

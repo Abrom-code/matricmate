@@ -6,6 +6,7 @@ import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 /// Redesigned Available Challenge Card for Upcoming and Live rounds.
 class AvailableChallengeCard extends StatelessWidget {
@@ -484,17 +485,31 @@ class AvailableChallengeCard extends StatelessWidget {
                     ),
                   ),
                   onPressed: isDone
-                      ? () => ctrl.openCompletedChallenge(challenge)
+                      ? () {
+                          if (!challenge.canReviewQuestions) {
+                            ToastHelper.info(
+                              'Question review will be unlocked once this challenge closes.',
+                            );
+                            return;
+                          }
+                          ctrl.openCompletedChallenge(challenge);
+                        }
                       : () => ctrl.onChallengeTapped(challenge),
                   icon: Icon(
                     isDone
-                        ? Icons.visibility_outlined
+                        ? (challenge.canReviewQuestions
+                            ? Icons.visibility_outlined
+                            : Icons.lock_clock_outlined)
                         : Icons.arrow_forward_rounded,
                     size: 16,
                     color: Colors.white,
                   ),
                   label: Text(
-                    isDone ? 'Review' : 'Start challenge',
+                    isDone
+                        ? (challenge.canReviewQuestions
+                            ? 'Review'
+                            : 'Review when closed')
+                        : 'Start challenge',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

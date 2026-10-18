@@ -71,19 +71,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
           );
         }),
         actions: [
-          const IconButton(
-            tooltip: 'Telegram Channel',
-            visualDensity: VisualDensity.compact,
-            constraints: BoxConstraints(),
-            padding: EdgeInsets.symmetric(horizontal: 6),
-            onPressed: ProfileActionsHelper.openTelegramChannel,
-            icon: Icon(
-              Icons.message_rounded,
-              size: 20,
-              color: AppColors.white,
-            ),
-          ),
-          const SizedBox(width: 2),
           Obx(() {
             final syncing = syncController.refreshing.value;
             return SyncIconButton(
@@ -92,6 +79,44 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               onPressed: () => ctrl.syncAll(),
             );
           }),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: 'Telegram Channel',
+            child: InkWell(
+              onTap: ProfileActionsHelper.openTelegramChannel,
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
+                child: Container(
+                  width: 25,
+                  height: 25,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1.5),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.send_rounded,
+                      size: 13,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
         ],
       ),
       body: Obx(() {

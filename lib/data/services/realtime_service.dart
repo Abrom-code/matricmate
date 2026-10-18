@@ -31,13 +31,19 @@ class RealtimeService {
 
   Future<void> start(List<int> subjectIds, {required String userId}) async {
     await stop();
-    // Questions are kept in sync via delta sync during app launch / pull-to-refresh.
-    // Disabling the live unfiltered questions channel saves continuous ping logs and bandwidth.
-    // _startQuestionChannel(subjectIds);
+    // 1. User status channel: filtered by id=userId (instant account activation on payment approval)
     _startUserChannel(userId);
-    _startAppConfigChannel();
-    _startNotificationsChannel(userId);
-    _startNotificationReadsChannel(userId);
+
+    // 2. Questions channel: DISABLED (handled via delta sync)
+    // _startQuestionChannel(subjectIds);
+
+    // 3. App config channel: DISABLED (fetched on demand at startup and in payment screen)
+    // _startAppConfigChannel();
+
+    // 4. Notifications & Reads: DISABLED from Realtime to prevent global cross-user message broadcasts.
+    // Delivered via FCM push notifications and lightweight delta sync (.gte('created_at', effectiveSince)).
+    // _startNotificationsChannel(userId);
+    // _startNotificationReadsChannel(userId);
   }
 
   /// Stop and clean up all Realtime channels.
@@ -130,6 +136,7 @@ class RealtimeService {
 
   // ── App-config channel ─────────────────────────────────────────────────
 
+  // ignore: unused_element
   void _startAppConfigChannel() {
     _appConfigChannel = _supabase
         .channel('app_config_changes')
@@ -171,6 +178,7 @@ class RealtimeService {
 
   // ── Notifications channel ──────────────────────────────────────────────
 
+  // ignore: unused_element
   void _startNotificationsChannel(String userId) {
     if (userId.isEmpty) return;
 
@@ -317,6 +325,7 @@ class RealtimeService {
 
   // ── Notification reads channel ─────────────────────────────────────────
 
+  // ignore: unused_element
   void _startNotificationReadsChannel(String userId) {
     if (userId.isEmpty) return;
 

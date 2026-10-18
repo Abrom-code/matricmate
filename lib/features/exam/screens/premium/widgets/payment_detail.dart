@@ -54,7 +54,9 @@ class _PaymentDetailState extends State<PaymentDetail> {
         ? activePayment.account
         : (PaymentConfigService.hardcodedAccounts[activePayment.key] ??
             widget.payment.account);
-    final name = activePayment.holder;
+    final name = activePayment.holder.isNotEmpty
+        ? activePayment.holder
+        : PaymentConfigService.defaultAccountHolder;
 
     return Padding(
       padding: const EdgeInsets.only(top: 14),

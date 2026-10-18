@@ -53,6 +53,9 @@ class PaymentConfigService {
     'payment_abyssinia': '165093089',
   };
 
+  /// Hardcoded default account holder name used when not configured in app_config
+  static const defaultAccountHolder = 'Abrham Teramed';
+
   // Internal mutable state (built-ins keyed by DB key)──
   final _accounts = <String, String>{};
   final _holders = <String, String>{};
@@ -405,12 +408,17 @@ class PaymentConfigService {
     for (final b in _builtIns) {
       final account = hardcodedAccounts[b.key] ?? _accounts[b.key] ?? '';
       if (account.isEmpty) continue; // hidden until admin sets the account
+      final configuredHolder = _holders[b.holderKey]?.trim();
+      final holder = (configuredHolder != null && configuredHolder.isNotEmpty)
+          ? configuredHolder
+          : defaultAccountHolder;
+
       result.add(
         PaymentConfig(
           key: b.key,
           label: b.label,
           account: account,
-          holder: _holders[b.holderKey] ?? '',
+          holder: holder,
           icon: b.icon,
         ),
       );
@@ -440,13 +448,20 @@ class PaymentConfigService {
                 e['key']?.toString().isNotEmpty == true,
           )
           .map(
-            (e) => PaymentConfig(
-              key: e['key']?.toString() ?? '',
-              label: e['label']?.toString() ?? e['key']?.toString() ?? '',
-              account: e['account']?.toString() ?? '',
-              holder: e['holder']?.toString() ?? '',
-              icon: Icons.account_balance_wallet_outlined,
-            ),
+            (e) {
+              final configuredHolder = e['holder']?.toString().trim();
+              final holder = (configuredHolder != null && configuredHolder.isNotEmpty)
+                  ? configuredHolder
+                  : defaultAccountHolder;
+
+              return PaymentConfig(
+                key: e['key']?.toString() ?? '',
+                label: e['label']?.toString() ?? e['key']?.toString() ?? '',
+                account: e['account']?.toString() ?? '',
+                holder: holder,
+                icon: Icons.account_balance_wallet_outlined,
+              );
+            },
           )
           .toList();
     } catch (_) {

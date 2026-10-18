@@ -238,7 +238,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             ),
                           ),
                           Text(
-                            _ctrl.activeTab.value == 'challenge'
+                            displayed.length < 10
                                 ? 'Top ${displayed.length}'
                                 : 'Top 10',
                             style: TextStyle(
@@ -256,37 +256,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           entry: e,
                           isCurrentUser: e.userId == _ctrl.currentUserId,
                           dark: dark,
-                        ),
-                      ),
-                    ],
-
-                    // ── See More Button (Only for specific challenge if hasMore) ───────────────────
-                    if (_ctrl.activeTab.value == 'challenge' &&
-                        _ctrl.hasMore.value) ...[
-                      const SizedBox(height: AppSizes.spaceBtwItems),
-                      Center(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                          ),
-                          onPressed: _ctrl.isLoadingMore.value
-                              ? null
-                              : () => _ctrl.loadMore(),
-                          icon: _ctrl.isLoadingMore.value
-                              ? const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.arrow_downward_rounded, size: 16),
-                          label: Text(
-                            _ctrl.isLoadingMore.value
-                                ? 'Loading...'
-                                : 'See More (Next 10)',
-                          ),
                         ),
                       ),
                     ],

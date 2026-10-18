@@ -1,17 +1,21 @@
 -- Migration: 0014_create_telegram_banned_users.sql
--- Description: Stores Telegram chat IDs of banned users for the support bot
+-- Description: Stores Telegram chat IDs of banned users and warnings for the support bot
 
 CREATE TABLE IF NOT EXISTS telegram_banned_users (
   chat_id TEXT PRIMARY KEY,
   username TEXT,
   full_name TEXT,
   reason TEXT,
+  warning_count INTEGER NOT NULL DEFAULT 0,
+  is_banned BOOLEAN NOT NULL DEFAULT true,
   banned_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Safely add columns if table already exists
 ALTER TABLE telegram_banned_users ADD COLUMN IF NOT EXISTS username TEXT;
 ALTER TABLE telegram_banned_users ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE telegram_banned_users ADD COLUMN IF NOT EXISTS warning_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE telegram_banned_users ADD COLUMN IF NOT EXISTS is_banned BOOLEAN NOT NULL DEFAULT true;
 
 -- Enable Row Level Security
 ALTER TABLE telegram_banned_users ENABLE ROW LEVEL SECURITY;

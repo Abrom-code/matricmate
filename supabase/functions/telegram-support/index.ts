@@ -112,7 +112,8 @@ Deno.serve(async (req) => {
 
         const { data: bannedList, error } = await supabase
           .from("telegram_banned_users")
-          .select("chat_id, username, full_name, reason, banned_at")
+          .select("chat_id, username, full_name, reason, warning_count, is_banned, banned_at")
+          .or("is_banned.eq.true,warning_count.gte.3")
           .order("banned_at", { ascending: false })
           .limit(50);
 
@@ -138,7 +139,8 @@ Deno.serve(async (req) => {
               .filter(Boolean)
               .join(" ");
             const who = displayName ? ` — ${displayName}` : "";
-            return `${i + 1}. \`${u.chat_id}\`${who}\n   _Reason: ${u.reason || "No reason"}_`;
+            const warnInfo = (u.warning_count ?? 0) > 0 ? ` [Warnings: ${u.warning_count}/3]` : "";
+            return `${i + 1}. \`${u.chat_id}\`${who}${warnInfo}\n   _Reason: ${u.reason || "No reason"}_`;
           });
 
           await sendTelegram("sendMessage", {
@@ -162,26 +164,29 @@ Deno.serve(async (req) => {
 
       const parts = trimmedText.split(/\s+/);
       const isBanCmd = parts[0] === "/ban";
+      const isWarnCmd = parts[0] === "/warn";
       const isUnbanCmd = parts[0] === "/unban";
 
       if (
-        (isBanCmd || isUnbanCmd) &&
+        (isBanCmd || isWarnCmd || isUnbanCmd) &&
         parts.length > 1 &&
         /^\d+$/.test(parts[1])
       ) {
-        // Direct format: /unban 12345678 or /ban 12345678 reason
+        // Direct format: /warn 12345678 reason or /ban 12345678 reason
         targetUserChatId = parts[1];
-        if (isBanCmd) {
+        if (isBanCmd || isWarnCmd) {
           commandReason = parts.slice(2).join(" ").trim() || null;
         }
       } else if (repliedMessage) {
-        // Reply format: swipe-reply /unban or /ban [reason]
+        // Reply format: swipe-reply /warn [reason] or /ban [reason]
         const repliedText = repliedMessage.text ?? repliedMessage.caption ?? "";
         const match = repliedText.match(/User ID:\s*`?(\d+)`?/i);
         if (match) {
           targetUserChatId = match[1];
           if (isBanCmd) {
             commandReason = trimmedText.replace(/^\/ban\s*/, "").trim() || null;
+          } else if (isWarnCmd) {
+            commandReason = trimmedText.replace(/^\/warn\s*/, "").trim() || null;
           }
           const userMatch = repliedText.match(/@([a-zA-Z0-9_]{3,32})/);
           if (userMatch) {
@@ -194,14 +199,165 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ── 3. Handle /ban command ──────────────────────
+      // ── 3. Handle /warn command ─────────────────────
+      if (isWarnCmd) {
+        if (!targetUserChatId) {
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text:
+              "⚠️ *Usage:*\n" +
+              "• Reply `/warn` to a user's message, or\n" +
+              "• Type `/warn <User_ID> [reason]`\n\n" +
+              "_Note: 3 warnings lead to an automatic ban._",
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+          return new Response("OK");
+        }
+
+        if (!supabase) {
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text: "⚠️ Supabase client is not initialized to record warnings.",
+            reply_parameters: { message_id: message.message_id },
+          });
+          return new Response("OK");
+        }
+
+        const reason = commandReason || "Violation of support guidelines";
+
+        // Fetch current warning status for user
+        const { data: existingUser } = await supabase
+          .from("telegram_banned_users")
+          .select("chat_id, warning_count, is_banned, username, full_name")
+          .eq("chat_id", String(targetUserChatId))
+          .maybeSingle();
+
+        const currentWarnings = existingUser?.warning_count ?? 0;
+        const newWarnings = currentWarnings + 1;
+        const isNowBanned = newWarnings >= 3;
+
+        const warnPayload: Record<string, unknown> = {
+          chat_id: String(targetUserChatId),
+          warning_count: newWarnings,
+          is_banned: isNowBanned,
+          reason,
+          banned_at: new Date().toISOString(),
+        };
+        if (targetUsername || existingUser?.username) {
+          warnPayload.username = targetUsername || existingUser?.username;
+        }
+        if (targetFullName || existingUser?.full_name) {
+          warnPayload.full_name = targetFullName || existingUser?.full_name;
+        }
+
+        const { error } = await supabase
+          .from("telegram_banned_users")
+          .upsert(warnPayload);
+
+        if (error) {
+          console.error("Error warning user:", error);
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text: `❌ Failed to warn user \`${targetUserChatId}\`: ${error.message}`,
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+          return new Response("OK");
+        }
+
+        const userIdentifier = (warnPayload.username as string)
+          ? ` (${warnPayload.username})`
+          : (warnPayload.full_name as string)
+            ? ` (${warnPayload.full_name})`
+            : "";
+
+        if (isNowBanned) {
+          // ── 3 warnings reached: Auto-Ban ────────────
+          // 1. Notify the student
+          await sendTelegram("sendMessage", {
+            chat_id: targetUserChatId,
+            text:
+              `⛔ *Support Access Banned*\n\n` +
+              `You have reached *3 warnings* and are now banned from contacting support.\n` +
+              `*Final Reason:* ${reason}`,
+            parse_mode: "Markdown",
+          });
+
+          // 2. Notify the admin
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text:
+              `🚫 *User Auto-Banned (3/3 Warnings Reached)*\n\n` +
+              `• *User ID:* \`${targetUserChatId}\`${userIdentifier}\n` +
+              `• *Warnings:* 3/3 (Threshold reached)\n` +
+              `• *Final Reason:* ${reason}\n\n` +
+              `Student has been informed of the ban. Future messages will be blocked.\n` +
+              `_To unban: /unban ${targetUserChatId}_`,
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+
+          // 3. Notify other admins
+          await broadcastToOtherAdmins(chatId, "sendMessage", (otherId) => ({
+            chat_id: otherId,
+            text:
+              `🚫 *Admin Warned User → Auto-Banned (3/3)*\n\n` +
+              `• *By Admin:* ${adminTag}\n` +
+              `• *User ID:* \`${targetUserChatId}\`${userIdentifier}\n` +
+              `• *Reason:* ${reason}`,
+            parse_mode: "Markdown",
+          }));
+        } else {
+          // ── Warnings 1 or 2: Send official warning ─
+          const remaining = 3 - newWarnings;
+
+          // 1. Warn the student directly
+          await sendTelegram("sendMessage", {
+            chat_id: targetUserChatId,
+            text:
+              `⚠️ *Official Warning (${newWarnings}/3)*\n\n` +
+              `*Reason:* ${reason}\n\n` +
+              `_Please follow support guidelines. ${remaining} more warning(s) will result in a permanent ban._`,
+            parse_mode: "Markdown",
+          });
+
+          // 2. Notify the admin
+          await sendTelegram("sendMessage", {
+            chat_id: chatId,
+            text:
+              `⚠️ *Warning Issued (${newWarnings}/3)*\n\n` +
+              `• *User ID:* \`${targetUserChatId}\`${userIdentifier}\n` +
+              `• *Total Warnings:* ${newWarnings}/3\n` +
+              `• *Reason:* ${reason}\n\n` +
+              `Student was notified. ${remaining} more warning(s) before automatic ban.`,
+            parse_mode: "Markdown",
+            reply_parameters: { message_id: message.message_id },
+          });
+
+          // 3. Notify other admins
+          await broadcastToOtherAdmins(chatId, "sendMessage", (otherId) => ({
+            chat_id: otherId,
+            text:
+              `⚠️ *Admin Issued Warning (${newWarnings}/3)*\n\n` +
+              `• *By Admin:* ${adminTag}\n` +
+              `• *User ID:* \`${targetUserChatId}\`${userIdentifier}\n` +
+              `• *Reason:* ${reason}`,
+            parse_mode: "Markdown",
+          }));
+        }
+
+        return new Response("OK");
+      }
+
+      // ── 4. Handle /ban command (Immediate Direct Ban) ──
       if (isBanCmd) {
         if (!targetUserChatId) {
           await sendTelegram("sendMessage", {
             chat_id: chatId,
             text:
               "⚠️ *Usage:*\n" +
-              "• Reply `/ban` to a forwarded user message, or\n" +
+              "• Reply `/ban` to a user's message, or\n" +
               "• Type `/ban <User_ID> [reason]`",
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
@@ -222,6 +378,8 @@ Deno.serve(async (req) => {
 
         const banPayload: Record<string, unknown> = {
           chat_id: String(targetUserChatId),
+          warning_count: 3,
+          is_banned: true,
           reason,
           banned_at: new Date().toISOString(),
         };
@@ -246,6 +404,16 @@ Deno.serve(async (req) => {
             : targetFullName
               ? ` (${targetFullName})`
               : "";
+
+          // Inform user
+          await sendTelegram("sendMessage", {
+            chat_id: targetUserChatId,
+            text:
+              `⛔ *Support Access Banned*\n\n` +
+              `You have been banned from contacting support.\n` +
+              `*Reason:* ${reason}`,
+            parse_mode: "Markdown",
+          });
 
           await sendTelegram("sendMessage", {
             chat_id: chatId,
@@ -273,7 +441,7 @@ Deno.serve(async (req) => {
         return new Response("OK");
       }
 
-      // ── 4. Handle /unban command ────────────────────
+      // ── 5. Handle /unban command ────────────────────
       if (isUnbanCmd) {
         if (!targetUserChatId) {
           await sendTelegram("sendMessage", {
@@ -297,6 +465,7 @@ Deno.serve(async (req) => {
           return new Response("OK");
         }
 
+        // Delete from table entirely so warnings and ban status are reset
         const { error } = await supabase
           .from("telegram_banned_users")
           .delete()
@@ -311,12 +480,21 @@ Deno.serve(async (req) => {
             reply_parameters: { message_id: message.message_id },
           });
         } else {
+          // Inform student they are unbanned
+          await sendTelegram("sendMessage", {
+            chat_id: targetUserChatId,
+            text:
+              `✅ *Support Access Restored*\n\n` +
+              `Your support access has been unbanned. You may contact support again.`,
+            parse_mode: "Markdown",
+          });
+
           await sendTelegram("sendMessage", {
             chat_id: chatId,
             text:
               `✅ *User Unbanned Successfully*\n\n` +
               `• *User ID:* \`${targetUserChatId}\`\n` +
-              `This user can now send support messages again.`,
+              `Warnings reset to 0. This user can now send support messages again.`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
           });
@@ -334,7 +512,7 @@ Deno.serve(async (req) => {
         return new Response("OK");
       }
 
-      // ── 5. Regular Message Reply Forwarding ─────────
+      // ── 6. Regular Message Reply Forwarding ─────────
       if (!repliedMessage) {
         // Internal admin chatter that is not a reply to a user ticket is ignored
         return new Response("OK");
@@ -410,11 +588,15 @@ Deno.serve(async (req) => {
     if (supabase) {
       const { data: bannedUser } = await supabase
         .from("telegram_banned_users")
-        .select("chat_id, username, full_name")
+        .select("chat_id, username, full_name, is_banned, warning_count")
         .eq("chat_id", String(chatId))
         .maybeSingle();
 
-      if (bannedUser) {
+      const isUserBanned =
+        bannedUser &&
+        (bannedUser.is_banned === true || (bannedUser.warning_count ?? 0) >= 3);
+
+      if (isUserBanned) {
         // Backfill username / full_name if missing
         const senderUsername = message.from?.username
           ? `@${message.from?.username}`

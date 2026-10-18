@@ -54,18 +54,23 @@ class UserController extends GetxController {
   void onInit() {
     super.onInit();
 
-    _authSub = _authRepo.userChanges.listen((authUser) async {
-      if (authUser != null) {
-        syncEmailVerified();
-        await loadLocalUser();
-        await checkAdminStatus();
-      } else {
-        user.value = UserModel.empty();
-        isEmailVerified.value = false;
-        verificationLinkSent.value = false;
-        isAdmin.value = false;
-      }
-    });
+    _authSub = _authRepo.userChanges.listen(
+      (authUser) async {
+        if (authUser != null) {
+          syncEmailVerified();
+          await loadLocalUser();
+          await checkAdminStatus();
+        } else {
+          user.value = UserModel.empty();
+          isEmailVerified.value = false;
+          verificationLinkSent.value = false;
+          isAdmin.value = false;
+        }
+      },
+      onError: (e) {
+        debugPrint('[UserController] authSub stream caught error: $e');
+      },
+    );
   }
 
   /// Verifies whether the authenticated user has admin role via Postgres is_admin RPC.

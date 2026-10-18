@@ -272,13 +272,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               return const SizedBox.shrink();
             }
 
-            final rankStr = myEntry != null ? '#${myEntry.rank}' : '--';
+            final hasRank = myEntry != null && myEntry.rank > 0;
+            final rankStr = hasRank ? '#${myEntry.rank}' : '--';
             final scoreVal = myEntry != null ? myEntry.score : (widget.userScore ?? 0);
             final timeVal = myEntry != null
                 ? myEntry.formattedTime
                 : (widget.userTimeSeconds != null
                     ? '${widget.userTimeSeconds! ~/ 60}m ${widget.userTimeSeconds! % 60}s'
                     : '--');
+
+            final streamStr = myEntry?.stream.isNotEmpty == true
+                ? myEntry!.stream
+                : _ctrl.activeStream.value;
+            final isNat = streamStr.toLowerCase().contains('nat');
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
@@ -305,17 +311,25 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
+                        color: hasRank
+                            ? AppColors.primary.withValues(alpha: 0.15)
+                            : (dark
+                                ? AppColors.darkContainer
+                                : AppColors.grey.withValues(alpha: 0.2)),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.star_rounded, size: 16, color: AppColors.primary),
+                          Icon(
+                            hasRank ? Icons.star_rounded : Icons.star_border_rounded,
+                            size: 16,
+                            color: hasRank ? AppColors.primary : AppColors.textSecondary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             rankStr,
-                            style: const TextStyle(
-                              color: AppColors.primary,
+                            style: TextStyle(
+                              color: hasRank ? AppColors.primary : AppColors.textSecondary,
                               fontWeight: FontWeight.w900,
                               fontSize: 14,
                             ),
@@ -329,13 +343,43 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            'Your Standing',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
+                          Row(
+                            children: [
+                              const Text(
+                                'Your Standing',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (streamStr.isNotEmpty) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: (isNat
+                                            ? const Color(0xFF0284C7)
+                                            : const Color(0xFF0EA5E9))
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    streamStr.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: isNat
+                                          ? const Color(0xFF0284C7)
+                                          : const Color(0xFF0EA5E9),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                           Text(
                             myEntry != null && myEntry.challengesTaken > 1
@@ -352,13 +396,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: hasRank
+                            ? AppColors.primary
+                            : (dark
+                                ? AppColors.darkContainer
+                                : AppColors.grey.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        'Ranked',
+                      child: Text(
+                        hasRank ? 'Ranked' : 'Unranked',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: hasRank
+                              ? Colors.white
+                              : (dark ? Colors.white70 : AppColors.textSecondary),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                         ),

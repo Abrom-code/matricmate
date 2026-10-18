@@ -22,7 +22,7 @@ class ProfileActionsHelper {
   static const String packageId = 'com.abopia.matricet';
   static const String fallbackSupportEmail = 'abopiatech@gmail.com';
   static const String fallbackTelegramChannelLink = 'https://t.me/MatricET';
-  static const String fallbackTelegramSupportLink = 'https://t.me/matericetbot';
+  static const String fallbackTelegramSupportLink = 'https://t.me/matricetbot';
   static const String fallbackTelegramLink = fallbackTelegramChannelLink;
   static const String fallbackPlayStoreUrl =
       'https://play.google.com/store/apps/details?id=$packageId';
@@ -88,7 +88,10 @@ Diagnostic Info (Please do not delete):
     String rawLink, {
     String unavailableMessage = 'Telegram link is not available.',
   }) async {
-    final cleanLink = rawLink.trim();
+    var cleanLink = rawLink.trim();
+    if (cleanLink.contains('matericetbot')) {
+      cleanLink = cleanLink.replaceAll('matericetbot', 'matricetbot');
+    }
 
     if (cleanLink.isEmpty) {
       ToastHelper.warning(unavailableMessage);

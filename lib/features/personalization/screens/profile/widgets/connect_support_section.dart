@@ -53,8 +53,12 @@ class ConnectSupportSection extends StatelessWidget {
           ),
           divider,
           Obx(() {
-            final telegramSupport =
+            var telegramSupport =
                 PaymentConfigService.instance.telegramSupportLinkValue;
+            if (telegramSupport.contains('matericetbot')) {
+              telegramSupport =
+                  telegramSupport.replaceAll('matericetbot', 'matricetbot');
+            }
             return AppListTile(
               icon: const Icon(
                 Icons.support_agent_rounded,

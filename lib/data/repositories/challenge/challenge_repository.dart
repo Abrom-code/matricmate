@@ -983,17 +983,44 @@ class ChallengeRepository {
       if (periodStart != null) {
         startDate = periodStart;
       } else if (period == 'week') {
-        startDate = now.subtract(Duration(days: now.weekday - 1));
-        startDate = DateTime(startDate.year, startDate.month, startDate.day);
+        final daysFromMon = (now.weekday - 1);
+        startDate = DateTime(now.year, now.month, now.day - daysFromMon);
       } else if (period == 'year') {
         startDate = DateTime(now.year, 1, 1);
       } else {
         startDate = DateTime(now.year, now.month, 1);
       }
 
+      // 1. Try RPC with a large limit to obtain exact dense rank
+      try {
+        final pStream =
+            (stream.isEmpty || stream == 'all' || stream == 'both') ? 'all' : stream;
+        final res = await _sb.rpc('rpc_get_period_leaderboard', params: {
+          'p_stream': pStream,
+          'p_period': period,
+          if (periodStart != null)
+            'p_period_start': periodStart.toIso8601String().split('T').first,
+          'p_limit': 1000,
+        }).timeout(AppTimeouts.sync);
+
+        if (res is List && res.isNotEmpty) {
+          for (final item in res) {
+            if (item is Map<String, dynamic> &&
+                item['user_id']?.toString() == userId) {
+              return ChallengeLeaderboardEntry.fromJson(item);
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint(
+            '[ChallengeRepo] rpc_get_period_leaderboard user standing check: $e');
+      }
+
+      // 2. Direct aggregation fallback
       final userRows = await _sb
           .from('challenge_attempts')
-          .select('score, total_time_seconds, time_spent_seconds, users(first_name, last_name)')
+          .select(
+              'score, total_time_seconds, time_spent_seconds, users(first_name, last_name)')
           .eq('user_id', userId)
           .eq('status', 'submitted')
           .gte('submitted_at', startDate.toIso8601String())
@@ -1011,17 +1038,70 @@ class ChallengeRepository {
         userTime += t;
       }
 
+      // Compute rank among participants in the period
+      int computedRank = 1;
+      try {
+        var query = _sb
+            .from('challenge_attempts')
+            .select('user_id, score, total_time_seconds, time_spent_seconds')
+            .eq('status', 'submitted')
+            .gte('submitted_at', startDate.toIso8601String());
+
+        if (stream.isNotEmpty && stream != 'all' && stream != 'both') {
+          query = query.ilike('stream', stream);
+        }
+
+        final allRows =
+            await query.limit(1000).timeout(AppTimeouts.sync);
+
+        final userAggregates = <String, Map<String, int>>{};
+        for (final r in allRows) {
+          final uid = r['user_id']?.toString() ?? '';
+          if (uid.isEmpty) continue;
+          final s = (r['score'] as num?)?.toInt() ?? 0;
+          final t = (r['total_time_seconds'] as num?)?.toInt() ??
+              (r['time_spent_seconds'] as num?)?.toInt() ??
+              0;
+
+          if (!userAggregates.containsKey(uid)) {
+            userAggregates[uid] = {'score': s, 'time': t};
+          } else {
+            final existing = userAggregates[uid]!;
+            existing['score'] = (existing['score'] ?? 0) + s;
+            existing['time'] = (existing['time'] ?? 0) + t;
+          }
+        }
+
+        int higherCount = 0;
+        for (final entry in userAggregates.entries) {
+          if (entry.key != userId) {
+            final otherScore = entry.value['score'] ?? 0;
+            final otherTime = entry.value['time'] ?? 0;
+            if (otherScore > userScore ||
+                (otherScore == userScore && otherTime < userTime)) {
+              higherCount++;
+            }
+          }
+        }
+        computedRank = higherCount + 1;
+      } catch (e) {
+        debugPrint(
+            '[ChallengeRepo] compute user period rank fallback error: $e');
+      }
+
       final user = (userRows.first['users'] as Map<String, dynamic>?) ?? {};
 
       return ChallengeLeaderboardEntry(
-        rank: 0,
+        rank: computedRank,
         userId: userId,
         firstName: user['first_name']?.toString() ?? 'Student',
         lastName: user['last_name']?.toString() ?? '',
         stream: stream,
         score: userScore,
         totalTimeSeconds: userTime,
+        correctCount: userScore,
         challengesTaken: userRows.length,
+        periodStart: startDate.toIso8601String().split('T').first,
       );
     } catch (_) {
       return null;

@@ -28,5 +28,5 @@ class AppTextStrings {
 
   // urls
   static const String telegramChannel = 'https://t.me/MatricET';
-  static const String telegramSupport = 'https://t.me/matericetbot';
+  static const String telegramSupport = 'https://t.me/matricetbot';
 }

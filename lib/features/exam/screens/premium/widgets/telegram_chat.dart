@@ -10,14 +10,14 @@ class TelegramChatButton extends StatelessWidget {
 
   static String get telegramUsername {
     final link = PaymentConfigService.instance.telegramSupportLinkValue;
-    if (link.isEmpty) return '@matericetbot';
+    if (link.isEmpty) return '@matricetbot';
     final clean = link
         .replaceAll(RegExp(r'https?:\/\/', caseSensitive: false), '')
         .replaceAll(RegExp(r't\.me\/', caseSensitive: false), '')
         .replaceAll(RegExp(r'telegram\.me\/', caseSensitive: false), '')
         .replaceAll('/', '')
         .trim();
-    if (clean.isEmpty) return '@matericetbot';
+    if (clean.isEmpty) return '@matricetbot';
     return clean.startsWith('@') ? clean : '@$clean';
   }
 
@@ -72,7 +72,7 @@ class TelegramChatButton extends StatelessWidget {
                     const SizedBox(height: 3),
                     Obx(() {
                       final _ = PaymentConfigService
-                          .instance.telegramSupportLink.value;
+                          .instance.telegramSupportLinkValue;
                       return Text.rich(
                         TextSpan(
                           children: [

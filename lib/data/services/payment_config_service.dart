@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -103,7 +104,7 @@ class PaymentConfigService {
   int get subscriptionPrice => planPrices['1_year'] ?? 200;
 
   /// Telegram support link (loaded from app_config 'telegram_support_link', falls back to hardcoded).
-  final telegramSupportLink = 'https://t.me/matericetbot'.obs;
+  final telegramSupportLink = 'https://t.me/matricetbot'.obs;
 
   /// Telegram community channel link (loaded from app_config 'telegram_channel_link', falls back to hardcoded).
   final telegramChannelLink = 'https://t.me/MatricET'.obs;
@@ -137,10 +138,19 @@ class PaymentConfigService {
         : 'https://abopia.github.io/matricmate/privacy_policy.html';
   }
 
+  /// Sanitizes any telegram bot link to ensure correct username spelling.
+  static String sanitizeTelegramLink(String val) {
+    var s = val.trim();
+    if (s.contains('matericetbot')) {
+      s = s.replaceAll('matericetbot', 'matricetbot');
+    }
+    return s;
+  }
+
   /// Effective Telegram support link (guaranteed non-empty).
   String get telegramSupportLinkValue {
-    final v = telegramSupportLink.value.trim();
-    return v.isNotEmpty ? v : 'https://t.me/matericetbot';
+    final v = sanitizeTelegramLink(telegramSupportLink.value);
+    return v.isNotEmpty ? v : 'https://t.me/matricetbot';
   }
 
   /// Effective Telegram community channel link (guaranteed non-empty).
@@ -189,6 +199,21 @@ class PaymentConfigService {
           '[PaymentConfig] row: key=${row['key']} value=${row['value']}',
         );
         _applyToState(row);
+
+        // Auto-heal typos stored in remote app_config if present
+        final k = row['key']?.toString() ?? '';
+        final v = row['value']?.toString() ?? '';
+        if ((k == 'telegram_support_link' || k == 'telegram_link') &&
+            v.contains('matericetbot')) {
+          final fixedVal = v.replaceAll('matericetbot', 'matricetbot');
+          unawaited(
+            Supabase.instance.client
+                .from('app_config')
+                .update({'value': fixedVal})
+                .eq('key', k)
+                .catchError((_) {}),
+          );
+        }
       }
       _rebuildMethods();
       debugPrint(
@@ -229,11 +254,11 @@ class PaymentConfigService {
 
       case 'telegram_support_link':
         _hasExplicitSupportLink = false;
-        telegramSupportLink.value = 'https://t.me/matericetbot';
+        telegramSupportLink.value = 'https://t.me/matricetbot';
 
       case 'telegram_link':
         if (!_hasExplicitSupportLink) {
-          telegramSupportLink.value = 'https://t.me/matericetbot';
+          telegramSupportLink.value = 'https://t.me/matricetbot';
         }
 
       case 'telegram_channel_link':
@@ -371,13 +396,13 @@ class PaymentConfigService {
       // Telegram support link
       case 'telegram_support_link':
         if (value.isNotEmpty) {
-          telegramSupportLink.value = value;
+          telegramSupportLink.value = sanitizeTelegramLink(value);
           _hasExplicitSupportLink = true;
         }
 
       case 'telegram_link':
         if (value.isNotEmpty && !_hasExplicitSupportLink) {
-          telegramSupportLink.value = value;
+          telegramSupportLink.value = sanitizeTelegramLink(value);
         }
 
       // Telegram community channel link

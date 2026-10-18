@@ -41,19 +41,23 @@ class UserRepository {
   }
 
   Future<UserModel?> fetchCurrentUserDetails() async {
-    final uid = _uid;
-    if (uid == null) return null;
+    try {
+      final uid = _uid;
+      if (uid == null) return null;
 
-    final data = await _supabase
-        .from('users')
-        .select()
-        .eq('id', uid)
-        .maybeSingle()
-        .timeout(AppTimeouts.query);
+      final data = await _supabase
+          .from('users')
+          .select()
+          .eq('id', uid)
+          .maybeSingle()
+          .timeout(AppTimeouts.query);
 
-    if (data == null) return null;
+      if (data == null) return null;
 
-    return UserModel.fromJson(data);
+      return UserModel.fromJson(data);
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> updateFullUserRecord(UserModel user) async {

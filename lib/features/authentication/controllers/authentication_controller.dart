@@ -54,13 +54,22 @@ class AuthenticationController extends GetxController
   void onReady() {
     WidgetsBinding.instance.addObserver(this);
     authUser = Rx<User?>(authRepo.currentUser);
-    authUser.bindStream(authRepo.userChanges);
+    authUser.bindStream(
+      authRepo.userChanges.handleError((e) {
+        debugPrint('[AuthController] auth stream caught error: $e');
+      }),
+    );
 
     // Validate session and refresh when connectivity is restored
     _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
       final isOnline = !results.contains(ConnectivityResult.none);
       if (isOnline && authRepo.currentUser != null) {
-        unawaited(UserController.instance.fetchUserRecord());
+        unawaited(
+          UserController.instance.fetchUserRecord().catchError((e) {
+            debugPrint('[AuthController] fetchUserRecord on reconnect error: $e');
+            return false;
+          }),
+        );
       }
     });
 

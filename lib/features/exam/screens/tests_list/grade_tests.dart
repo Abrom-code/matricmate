@@ -234,11 +234,19 @@ class _GradeTestsScreenState extends State<GradeTestsScreen> with RouteAware {
                     TestAccessHelper.handleTestTap(
                       test: test,
                       user: user,
+                      onQuestionsDownloaded: (hasQuestions, count) {
+                        ctrl.testHasQuestions[test.id] = hasQuestions;
+                        ctrl.testQuestionCounts[test.id] = count;
+                      },
                       onStart: () {
-                        if (!hasQn) {
+                        final currentHasQn =
+                            ctrl.testHasQuestions[test.id] ?? false;
+                        if (!currentHasQn) {
                           ToastHelper.info('No questions added yet!');
                           return;
                         }
+                        final updatedCount =
+                            ctrl.testQuestionCounts[test.id] ?? qnCount;
                         Get.to(
                           () => ReadyScreen(
                             qnCount: qnCount,

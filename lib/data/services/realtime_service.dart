@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/services/fcm_service.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
@@ -433,6 +436,13 @@ class RealtimeService {
         duration: const Duration(seconds: 4),
         snackPosition: SnackPosition.TOP,
       );
+
+      // Trigger background sync to immediately download newly unlocked premium content
+      if (Get.isRegistered<SyncingController>()) {
+        unawaited(
+          SyncingController.instance.syncAll(showUiLoading: false, force: true),
+        );
+      }
     } else if (updated.isPending) {
       Get.snackbar(
         '⏳ Payment Pending',

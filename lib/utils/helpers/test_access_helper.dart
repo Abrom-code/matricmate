@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:matricmate/common/widgets/loaders/full_screen_loader.dart';
+import 'package:matricmate/data/repositories/exam/test_repository.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/notes/models/note_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/helpers/new_tag_helper.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 /// Central access gatekeeper for tests across all 4 test types
 /// (chapter, grade, entrance, model) and subject notes.
@@ -48,26 +51,53 @@ class TestAccessHelper {
   }
 
   /// Handles user interaction when tapping a test tile:
-  /// - Invokes [onStart] if the user has access.
+  /// - Invokes [onStart] if the user has access and questions are locally available.
+  /// - If user has access but questions are missing locally (e.g. newly upgraded user),
+  ///   downloads them on demand before invoking [onStart].
   /// - Routes to payment verification screen if the user has a pending receipt.
   /// - Navigates directly to [Routes.premium] if the user is inactive.
-  static void handleTestTap({
+  static Future<void> handleTestTap({
     required TestModel test,
     required UserModel user,
     required VoidCallback onStart,
-  }) {
+    void Function(bool hasQuestions, int count)? onQuestionsDownloaded,
+  }) async {
     NewTagHelper.markTestOpened(test.id);
-    if (canAccess(test: test, user: user)) {
+    if (!canAccess(test: test, user: user)) {
+      if (user.isPending) {
+        Get.toNamed(Routes.paymentVerification);
+        return;
+      }
+      Get.toNamed(Routes.premium);
+      return;
+    }
+
+    // Check if questions are already present locally
+    final hasQn = await TestRepository().hasQns(test.id);
+    if (hasQn) {
       onStart();
       return;
     }
 
-    if (user.isPending) {
-      Get.toNamed(Routes.paymentVerification);
-      return;
-    }
+    // Questions not yet downloaded (e.g. newly upgraded user tapping before background sync finishes)
+    try {
+      AppFullScreenLoader.openLoadingDialog('Loading test questions...');
+      final count = await TestRepository().downloadTestQuestions(
+        test.id,
+        subjectId: test.subjectId,
+      );
+      AppFullScreenLoader.stopLoading();
 
-    Get.toNamed(Routes.premium);
+      if (count > 0) {
+        onQuestionsDownloaded?.call(true, count);
+        onStart();
+      } else {
+        ToastHelper.info('No questions added yet for this exam!');
+      }
+    } catch (_) {
+      AppFullScreenLoader.stopLoading();
+      ToastHelper.error('Could not load questions. Check your connection.');
+    }
   }
 
   /// Navigates to [Routes.premium] or redirects to [Routes.paymentVerification]

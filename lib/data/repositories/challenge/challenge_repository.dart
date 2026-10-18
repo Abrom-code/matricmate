@@ -190,15 +190,29 @@ class ChallengeRepository {
       final rawQuestions = res['questions'];
       final List<ChallengeQuestionModel> questions = [];
       if (rawQuestions is List) {
+        final parsed = <ChallengeQuestionModel>[];
+        final neededPassageIds = <dynamic>{};
+
         for (final item in rawQuestions) {
           if (item is Map<String, dynamic>) {
             final q = ChallengeQuestionModel.fromJson(item);
+            parsed.add(q);
             if (q.passageId != null && q.passage == null) {
-              final p = await getPassage(q.passageId);
-              questions.add(q.copyWith(passage: p));
-            } else {
-              questions.add(q);
+              neededPassageIds.add(q.passageId);
             }
+          }
+        }
+
+        // Fetch unique passages in parallel
+        if (neededPassageIds.isNotEmpty) {
+          await Future.wait(neededPassageIds.map((id) => getPassage(id)));
+        }
+
+        for (final q in parsed) {
+          if (q.passageId != null && q.passage == null) {
+            questions.add(q.copyWith(passage: _passageCache[q.passageId.toString()]));
+          } else {
+            questions.add(q);
           }
         }
       }
@@ -246,6 +260,19 @@ class ChallengeRepository {
     if (answers.isEmpty) return;
     try {
       await _checkConnectivity();
+
+      // 1. Try single batch RPC (1 HTTP request instead of N)
+      try {
+        await _sb.rpc('rpc_batch_submit_answers', params: {
+          'p_attempt_id': attemptId,
+          'p_answers': answers,
+        }).timeout(AppTimeouts.rpc);
+        return;
+      } catch (_) {
+        // Fall back to individual submission calls if RPC not yet deployed
+      }
+
+      // 2. Fallback: concurrent individual calls
       final futures = answers.entries.map((entry) {
         return _sb.rpc('rpc_submit_answer', params: {
           'p_attempt_id': attemptId,
@@ -363,11 +390,24 @@ class ChallengeRepository {
     }
 
     final list = <ChallengeQuestionModel>[];
+    final parsed = <ChallengeQuestionModel>[];
+    final neededPassageIds = <dynamic>{};
+
     for (final r in rows) {
       final q = ChallengeQuestionModel.fromJson(r as Map<String, dynamic>);
+      parsed.add(q);
       if (q.passageId != null && q.passage == null) {
-        final p = await getPassage(q.passageId);
-        list.add(q.copyWith(passage: p));
+        neededPassageIds.add(q.passageId);
+      }
+    }
+
+    if (neededPassageIds.isNotEmpty) {
+      await Future.wait(neededPassageIds.map((id) => getPassage(id)));
+    }
+
+    for (final q in parsed) {
+      if (q.passageId != null && q.passage == null) {
+        list.add(q.copyWith(passage: _passageCache[q.passageId.toString()]));
       } else {
         list.add(q);
       }

@@ -177,3 +177,77 @@ BEGIN
   RETURN v_result;
 END;
 $$;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- 4. increment_receipt_upload_count: Atomically increments upload count
+-- ─────────────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION increment_receipt_upload_count(p_user_id TEXT)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE users
+  SET receipt_upload_count = COALESCE(receipt_upload_count, 0) + 1
+  WHERE id = p_user_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION increment_receipt_upload_count TO authenticated;
+GRANT EXECUTE ON FUNCTION increment_receipt_upload_count TO anon;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- 5. rpc_batch_submit_answers: Submits all challenge answers in 1 call
+-- ─────────────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.rpc_batch_submit_answers(
+  p_attempt_id uuid,
+  p_answers jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_attempt record;
+  v_key text;
+  v_choice text;
+  v_question record;
+  v_is_correct boolean;
+  v_count integer := 0;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'not_authenticated';
+  END IF;
+
+  SELECT * INTO v_attempt FROM public.challenge_attempts WHERE id = p_attempt_id;
+  IF NOT FOUND OR v_attempt.status != 'in_progress' THEN
+    RAISE EXCEPTION 'invalid_or_completed_attempt';
+  END IF;
+
+  IF auth.uid() != v_attempt.user_id AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'unauthorized';
+  END IF;
+
+  FOR v_key, v_choice IN SELECT * FROM jsonb_each_text(p_answers)
+  LOOP
+    SELECT * INTO v_question FROM public.challenge_questions WHERE id = v_key::uuid;
+    IF FOUND THEN
+      v_is_correct := (trim(lower(coalesce(v_question.correct_choice, ''))) = trim(lower(coalesce(v_choice, ''))));
+      INSERT INTO public.challenge_answers (attempt_id, question_id, selected_choice, is_correct, answered_at)
+      VALUES (p_attempt_id, v_key::uuid, v_choice, v_is_correct, now())
+      ON CONFLICT (attempt_id, question_id)
+      DO UPDATE SET
+        selected_choice = EXCLUDED.selected_choice,
+        is_correct = EXCLUDED.is_correct,
+        answered_at = EXCLUDED.answered_at;
+      v_count := v_count + 1;
+    END IF;
+  END LOOP;
+
+  RETURN jsonb_build_object('success', true, 'saved', v_count);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_batch_submit_answers TO authenticated;
+

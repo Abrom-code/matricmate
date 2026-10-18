@@ -49,8 +49,10 @@ class EntranceExamsController extends GetxController {
         _testRepository.getLocalTests(subjectId: subjectId, type: 'model'),
       ]);
 
-      final entrance = results[0].map((e) => TestModel.fromMap(e)).toList();
-      final model = results[1].map((e) => TestModel.fromMap(e)).toList();
+      final entrance = results[0].map((e) => TestModel.fromMap(e)).toList()
+        ..sort((a, b) => b.title.compareTo(a.title));
+      final model = results[1].map((e) => TestModel.fromMap(e)).toList()
+        ..sort((a, b) => b.title.compareTo(a.title));
 
       entranceTests.assignAll(entrance);
       modelTests.assignAll(model);

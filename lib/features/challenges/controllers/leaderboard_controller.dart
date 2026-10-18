@@ -32,23 +32,16 @@ class LeaderboardController extends GetxController {
 
   static const _initialFetchLimit = 10;
 
-  List<ChallengeLeaderboardEntry> get displayedEntries =>
-      entries.take(displayLimit.value).toList();
+  final RxBool hasMore = false.obs;
+  final RxBool isLoadingMore = false.obs;
 
-  bool get hasMore => displayLimit.value < entries.length;
-  int get remainingCount => (entries.length - displayLimit.value).clamp(0, entries.length);
+  List<ChallengeLeaderboardEntry> get displayedEntries => entries.toList();
 
-  void loadMore() {
-    displayLimit.value += 10;
-    // If we've exhausted locally loaded entries, fetch more from server
-    if (displayLimit.value > entries.length) {
-      _fetchMore();
-    }
-  }
-
-  Future<void> _fetchMore() async {
+  Future<void> loadMore() async {
+    if (isLoadingMore.value || !hasMore.value) return;
     try {
-      final newLimit = entries.length + 20;
+      isLoadingMore.value = true;
+      final requestedLimit = entries.length + 10;
       List<ChallengeLeaderboardEntry> moreEntries;
 
       if (activeTab.value == 'challenge' && challengeId != null) {
@@ -59,7 +52,7 @@ class LeaderboardController extends GetxController {
         moreEntries = await _repo.fetchLeaderboard(
           challengeId: challengeId!,
           stream: filterStream,
-          limit: newLimit,
+          limit: requestedLimit,
         );
       } else {
         final period = activeTab.value == 'weekly'
@@ -70,14 +63,22 @@ class LeaderboardController extends GetxController {
         moreEntries = await _repo.fetchPeriodLeaderboard(
           stream: activeStream.value,
           period: period,
-          limit: newLimit,
+          limit: requestedLimit,
         );
       }
 
-      if (moreEntries.length > entries.length) {
+      if (moreEntries.length <= entries.length) {
+        hasMore.value = false;
+      } else {
+        if (moreEntries.length < requestedLimit) {
+          hasMore.value = false;
+        }
         entries.value = moreEntries;
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      isLoadingMore.value = false;
+    }
   }
 
   String get currentUserId => UserController.instance.user.value.id;
@@ -117,6 +118,8 @@ class LeaderboardController extends GetxController {
           limit: _initialFetchLimit,
         );
 
+        hasMore.value = entries.length >= _initialFetchLimit;
+
         // Fetch user standing separately if not in top results
         _userStanding.value = null;
         if (entries.every((e) => e.userId != currentUserId) && currentUserId.isNotEmpty) {
@@ -138,6 +141,8 @@ class LeaderboardController extends GetxController {
           period: period,
           limit: _initialFetchLimit,
         );
+
+        hasMore.value = entries.length >= _initialFetchLimit;
 
         // Fetch user period standing separately if not in top results
         _userStanding.value = null;

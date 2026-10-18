@@ -238,7 +238,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             ),
                           ),
                           Text(
-                            'Showing ${displayed.length} of ${_ctrl.entries.length}',
+                            'Top ${displayed.length}',
                             style: TextStyle(
                               fontSize: 11.5,
                               color: dark
@@ -259,7 +259,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     ],
 
                     // ── See More Button (Loads Next 10) ───────────────────
-                    if (_ctrl.hasMore) ...[
+                    if (_ctrl.hasMore.value) ...[
                       const SizedBox(height: AppSizes.spaceBtwItems),
                       Center(
                         child: OutlinedButton.icon(
@@ -269,9 +269,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               vertical: 10,
                             ),
                           ),
-                          onPressed: () => _ctrl.loadMore(),
-                          icon: const Icon(Icons.arrow_downward_rounded, size: 16),
-                          label: Text('See More (${_ctrl.remainingCount} left)'),
+                          onPressed: _ctrl.isLoadingMore.value
+                              ? null
+                              : () => _ctrl.loadMore(),
+                          icon: _ctrl.isLoadingMore.value
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.arrow_downward_rounded, size: 16),
+                          label: Text(
+                            _ctrl.isLoadingMore.value
+                                ? 'Loading...'
+                                : 'See More (Next 10)',
+                          ),
                         ),
                       ),
                     ],

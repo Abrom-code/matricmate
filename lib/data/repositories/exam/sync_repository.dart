@@ -9,6 +9,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -124,19 +125,28 @@ class SyncRepository {
         return;
       }
 
-      final testIds = tests.map<int>((t) => t['id'] as int).toList();
+      final isPremium = TestAccessHelper.isCurrentUserPremium;
+      final allowedTests = isPremium
+          ? tests
+          : tests.where((t) => TestAccessHelper.isTestFree(t)).toList();
+      final testIds = allowedTests.map<int>((t) => t['id'] as int).toList();
 
       // Step 2 — fetch questions (0.15 → 0.50)
-      final questionsData = await _withProgress(
-        supabase
-            .from('questions')
-            .select('*, question_sections(title)')
-            .inFilter('test_id', testIds)
-            .timeout(AppTimeouts.download),
-        0.15,
-        0.50,
-        (p) => onStep('Fetching questions…', p),
-      );
+      final List<dynamic> questionsData;
+      if (testIds.isEmpty) {
+        questionsData = [];
+      } else {
+        questionsData = await _withProgress(
+          supabase
+              .from('questions')
+              .select('*, question_sections(title)')
+              .inFilter('test_id', testIds)
+              .timeout(AppTimeouts.download),
+          0.15,
+          0.50,
+          (p) => onStep('Fetching questions…', p),
+        );
+      }
 
       final Set<int> passageIds = {};
       final Set<String> imgUrls = {};
@@ -238,53 +248,102 @@ class SyncRepository {
 
       final tests = await testsQuery.timeout(AppTimeouts.download);
 
+      final isPremium = TestAccessHelper.isCurrentUserPremium;
+
       // Fetch changed/new questions by delta or full scope
       List<dynamic> questionsData;
 
       if (sinceIso == null) {
-        // Full sync: fetch all questions for all these tests
-        final testIds = tests.map<int>((t) => t['id'] as int).toList();
-        if (testIds.isEmpty) return;
-        questionsData = await supabase
-            .from('questions')
-            .select('*, question_sections(title)')
-            .inFilter('test_id', testIds)
-            .timeout(AppTimeouts.download);
+        // Full sync: fetch all questions for allowed tests
+        final allowedTests = isPremium
+            ? tests
+            : tests.where((t) => TestAccessHelper.isTestFree(t)).toList();
+        final testIds = allowedTests.map<int>((t) => t['id'] as int).toList();
+        if (testIds.isEmpty) {
+          questionsData = [];
+        } else {
+          questionsData = await supabase
+              .from('questions')
+              .select('*, question_sections(title)')
+              .inFilter('test_id', testIds)
+              .timeout(AppTimeouts.download);
+        }
       } else {
         // Delta: fetch questions updated since last sync
         // Self-healing: identify any existing local entrance/model tests with 0 questions
+        final premiumFilter = isPremium
+            ? ''
+            : 'AND (t.is_premium = 0 OR t.is_premium IS NULL OR t.is_premium = \'false\') ';
         final emptyTestRows = await db.rawQuery(
           'SELECT t.id FROM tests t '
           'LEFT JOIN questions q ON t.id = q.test_id '
           'WHERE t.subject_id IN (${subjectIds.map((_) => '?').join(',')}) '
           'AND t.type IN (\'entrance\', \'model\') '
+          '$premiumFilter'
           'GROUP BY t.id HAVING COUNT(q.id) = 0',
           subjectIds,
         );
-        final emptyLocalTestIds = emptyTestRows.map((r) => r['id'] as int).toList();
-        final newTestIds = tests.map<int>((t) => t['id'] as int).toList();
-        final fullFetchTestIds = <int>{...newTestIds, ...emptyLocalTestIds}.toList();
+        final emptyLocalTestIds =
+            emptyTestRows.map((r) => r['id'] as int).toList();
+        final allowedNewTests = isPremium
+            ? tests
+            : tests.where((t) => TestAccessHelper.isTestFree(t)).toList();
+        final newTestIds =
+            allowedNewTests.map((t) => t['id'] as int).toList();
+        final fullFetchTestIds =
+            <int>{...newTestIds, ...emptyLocalTestIds}.toList();
 
         if (fullFetchTestIds.isEmpty) {
-          // No new tests and no locally empty tests — just check for edited questions
-          questionsData = await supabase
-              .from('questions')
-              .select('*, question_sections(title)')
-              .inFilter('subject_id', subjectIds)
-              .gt('updated_at', sinceIso)
-              .timeout(AppTimeouts.download);
+          // No new tests and no locally empty tests — check for edited questions
+          if (isPremium) {
+            questionsData = await supabase
+                .from('questions')
+                .select('*, question_sections(title)')
+                .inFilter('subject_id', subjectIds)
+                .gt('updated_at', sinceIso)
+                .timeout(AppTimeouts.download);
+          } else {
+            // For free users, only fetch edited questions belonging to free tests
+            final freeTests = await db.query(
+              'tests',
+              columns: ['id'],
+              where:
+                  'subject_id IN (${subjectIds.map((_) => '?').join(',')}) AND (is_premium = 0 OR is_premium IS NULL OR is_premium = \'false\')',
+              whereArgs: subjectIds,
+            );
+            final freeTestIds =
+                freeTests.map((r) => r['id'] as int).toList();
+            if (freeTestIds.isEmpty) {
+              questionsData = [];
+            } else {
+              questionsData = await supabase
+                  .from('questions')
+                  .select('*, question_sections(title)')
+                  .inFilter('test_id', freeTestIds)
+                  .gt('updated_at', sinceIso)
+                  .timeout(AppTimeouts.download);
+            }
+          }
         } else {
           // New/empty tests (full fetch, no timestamp filter) + edited questions (delta)
+          final editedQuery = isPremium
+              ? supabase
+                  .from('questions')
+                  .select('*, question_sections(title)')
+                  .inFilter('subject_id', subjectIds)
+                  .gt('updated_at', sinceIso)
+              : supabase
+                  .from('questions')
+                  .select('*, question_sections(title)')
+                  .inFilter('test_id', fullFetchTestIds)
+                  .gt('updated_at', sinceIso);
+
           final results = await Future.wait([
             supabase
                 .from('questions')
                 .select('*, question_sections(title)')
                 .inFilter('test_id', fullFetchTestIds),
-            supabase
-                .from('questions')
-                .select('*, question_sections(title)')
-                .inFilter('subject_id', subjectIds)
-                .gt('updated_at', sinceIso),
+            editedQuery,
           ]).timeout(AppTimeouts.download);
           // Merge and deduplicate by question id
           final Map<int, dynamic> merged = {};
@@ -380,11 +439,16 @@ class SyncRepository {
 
     if (table == 'questions') {
       // Fetch chapter/grade test questions by local test IDs
+      final isPremium = TestAccessHelper.isCurrentUserPremium;
+      final premiumFilter = isPremium
+          ? ''
+          : ' AND (is_premium = 0 OR is_premium IS NULL OR is_premium = \'false\')';
       final db = await _dbService.database;
       final testRows = await db.query(
         'tests',
         columns: ['id'],
-        where: 'subject_id IN (${ids.map((_) => '?').join(',')})',
+        where:
+            'subject_id IN (${ids.map((_) => '?').join(',')})$premiumFilter',
         whereArgs: ids,
       );
       if (testRows.isEmpty) return [];
@@ -414,14 +478,19 @@ class SyncRepository {
     DateTime? since,
   }) async {
     final sinceIso = since?.toUtc().toIso8601String();
+    final isPremium = TestAccessHelper.isCurrentUserPremium;
 
     // Full sync — combine local + new test IDs and fetch everything
     if (sinceIso == null) {
       final db = await _dbService.database;
+      final premiumFilter = isPremium
+          ? ''
+          : ' AND (is_premium = 0 OR is_premium IS NULL OR is_premium = \'false\')';
       final testRows = await db.query(
         'tests',
         columns: ['id'],
-        where: 'subject_id IN (${subjectIds.map((_) => '?').join(',')})',
+        where:
+            'subject_id IN (${subjectIds.map((_) => '?').join(',')})$premiumFilter',
         whereArgs: subjectIds,
       );
       final allTestIds = <int>{
@@ -441,19 +510,24 @@ class SyncRepository {
     final futures = <Future<List<Map<String, dynamic>>>>[];
 
     final db = await _dbService.database;
+    final premiumFilter = isPremium
+        ? ''
+        : ' AND (t.is_premium = 0 OR t.is_premium IS NULL OR t.is_premium = \'false\')';
 
     // Self-healing: find existing local tests that have 0 questions stored
     final emptyTestRows = await db.rawQuery(
       'SELECT t.id FROM tests t '
       'LEFT JOIN questions q ON t.id = q.test_id '
-      'WHERE t.subject_id IN (${subjectIds.map((_) => '?').join(',')}) '
+      'WHERE t.subject_id IN (${subjectIds.map((_) => '?').join(',')})$premiumFilter '
       'GROUP BY t.id HAVING COUNT(q.id) = 0',
       subjectIds,
     );
-    final emptyLocalTestIds = emptyTestRows.map((r) => r['id'] as int).toList();
+    final emptyLocalTestIds =
+        emptyTestRows.map((r) => r['id'] as int).toList();
 
     // Combine brand-new tests + locally-empty tests for full fetch
-    final fullFetchTestIds = <int>{...newTestIds, ...emptyLocalTestIds}.toList();
+    final fullFetchTestIds =
+        <int>{...newTestIds, ...emptyLocalTestIds}.toList();
 
     // Prong 1: ALL questions for new or locally-empty tests (no updated_at filter)
     if (fullFetchTestIds.isNotEmpty) {
@@ -467,13 +541,18 @@ class SyncRepository {
     }
 
     // Prong 2: Updated questions for already-local tests (delta filter)
+    final localPremiumFilter = isPremium
+        ? ''
+        : ' AND (is_premium = 0 OR is_premium IS NULL OR is_premium = \'false\')';
     final testRows = await db.query(
       'tests',
       columns: ['id'],
-      where: 'subject_id IN (${subjectIds.map((_) => '?').join(',')})',
+      where:
+          'subject_id IN (${subjectIds.map((_) => '?').join(',')})$localPremiumFilter',
       whereArgs: subjectIds,
     );
-    final existingTestIds = testRows.map((r) => r['id'].toString()).toList();
+    final existingTestIds =
+        testRows.map((r) => r['id'].toString()).toList();
     if (existingTestIds.isNotEmpty) {
       futures.add(
         supabase

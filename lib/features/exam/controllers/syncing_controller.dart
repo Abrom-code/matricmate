@@ -12,6 +12,7 @@ import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/local_storage/sync_prefs.dart';
 import 'package:matricmate/utils/network_manager/network_manager.dart';
@@ -270,7 +271,11 @@ class SyncingController extends GetxController {
         .map((e) => TestModel.fromJson(e))
         .toList();
 
-    final newTestIds = tests.map((t) => t.id).toList();
+    final isPremium = TestAccessHelper.isCurrentUserPremium;
+    final allowedNewTests = isPremium
+        ? tests
+        : tests.where((t) => !t.isPremium).toList();
+    final newTestIds = allowedNewTests.map((t) => t.id).toList();
 
     // 2. Fetch questions (aware of newTestIds) + chapters in parallel
     final futures = <Future>[

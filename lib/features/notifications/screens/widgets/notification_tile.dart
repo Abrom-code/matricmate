@@ -7,6 +7,7 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/screens/notification_detail_screen.dart';
+import 'package:matricmate/features/notifications/services/notification_link_parser.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/formatter/formatter.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -383,7 +384,7 @@ class NotificationTile extends StatelessWidget {
 
                     // Title
                     Text(
-                      notification.title,
+                      NotificationLinkParser.stripTags(notification.title),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -398,7 +399,7 @@ class NotificationTile extends StatelessWidget {
 
                     // Body clamped to 2 lines
                     Text(
-                      notification.body,
+                      NotificationLinkParser.stripTags(notification.body),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

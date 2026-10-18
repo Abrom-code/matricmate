@@ -10,6 +10,8 @@ import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
+import 'package:matricmate/features/notifications/screens/widgets/notification_body_text.dart';
+import 'package:matricmate/features/notifications/services/notification_link_parser.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -38,6 +40,12 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
   Future<void>? _challengeFetchFuture;
 
   AppNotification get notification => widget.notification;
+
+  NotificationLink? get _primaryLink =>
+      NotificationLinkParser.extractPrimaryLink(
+        notification.body,
+        payload: notification.payload,
+      );
 
   String get _paymentStatus => notification.payload['status']?.toString() ?? '';
 
@@ -404,7 +412,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
 
                   // Title
                   Text(
-                    notification.title,
+                    NotificationLinkParser.stripTags(notification.title),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -511,8 +519,9 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  SelectableText(
-                    notification.body,
+                  NotificationBodyText(
+                    text: notification.body,
+                    payload: notification.payload,
                     style: TextStyle(
                       fontSize: 14.5,
                       height: 1.6,
@@ -694,6 +703,51 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                             ),
                           ],
                         ),
+                ),
+              )
+            else if (_primaryLink != null)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () =>
+                      NotificationLinkParser.launchLink(_primaryLink!.url),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryLink!.isTelegram
+                        ? const Color(0xFF0284C7)
+                        : AppColors.primary,
+                    foregroundColor: Colors.white,
+                    side: BorderSide(
+                      color: _primaryLink!.isTelegram
+                          ? const Color(0xFF0284C7)
+                          : AppColors.primary,
+                      width: 1.5,
+                    ),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_primaryLink!.isTelegram)
+                        Transform.rotate(
+                          angle: -25 * (3.141592653589793 / 180),
+                          child: const Icon(Icons.send_rounded, size: 20),
+                        )
+                      else
+                        const Icon(Icons.open_in_new_rounded, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        _primaryLink!.actionButtonLabel,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 

@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/notifications/notification_repository.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
+import 'package:matricmate/features/notifications/services/notification_link_parser.dart';
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -420,8 +421,8 @@ class FcmService {
 
       await _localNotifications.show(
         id: notifId & 0x7FFFFFFF,
-        title: title,
-        body: body,
+        title: NotificationLinkParser.stripTags(title),
+        body: NotificationLinkParser.stripTags(body),
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             _channel.id,

@@ -2,7 +2,17 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
-const SUPPORT_CHAT_ID = Deno.env.get("SUPPORT_CHAT_ID");
+const SUPPORT_CHAT_ID_RAW = Deno.env.get("SUPPORT_CHAT_ID") ?? "";
+
+// Supports multiple comma-separated IDs (e.g. "12345678, 98765432, -100123456789")
+const SUPPORT_CHAT_IDS = SUPPORT_CHAT_ID_RAW
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
+
+const isSupportChat = (id: string | number) =>
+  SUPPORT_CHAT_IDS.includes(String(id));
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY =
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -24,6 +34,15 @@ async function sendTelegram(method: string, body: Record<string, unknown>) {
   });
 }
 
+async function broadcastToSupport(
+  method: string,
+  bodyBuilder: (supportChatId: string) => Record<string, unknown>,
+) {
+  return await Promise.allSettled(
+    SUPPORT_CHAT_IDS.map((id) => sendTelegram(method, bodyBuilder(id))),
+  );
+}
+
 Deno.serve(async (req) => {
   try {
     const update = await req.json();
@@ -43,7 +62,7 @@ Deno.serve(async (req) => {
     // MESSAGE FROM SUPPORT ADMIN → REPLY OR /ban COMMAND
     // ==================================================
 
-    if (String(chatId) === String(SUPPORT_CHAT_ID)) {
+    if (isSupportChat(chatId)) {
       const repliedMessage = message.reply_to_message;
 
       if (!repliedMessage) {
@@ -66,7 +85,7 @@ Deno.serve(async (req) => {
       if (trimmedText.startsWith("/ban")) {
         if (!supabase) {
           await sendTelegram("sendMessage", {
-            chat_id: SUPPORT_CHAT_ID,
+            chat_id: chatId,
             text: "⚠️ Supabase client is not initialized to record bans.",
             reply_parameters: { message_id: message.message_id },
           });
@@ -88,14 +107,14 @@ Deno.serve(async (req) => {
         if (error) {
           console.error("Error banning user:", error);
           await sendTelegram("sendMessage", {
-            chat_id: SUPPORT_CHAT_ID,
+            chat_id: chatId,
             text: `❌ Failed to ban user \`${userChatId}\`: ${error.message}`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
           });
         } else {
           await sendTelegram("sendMessage", {
-            chat_id: SUPPORT_CHAT_ID,
+            chat_id: chatId,
             text:
               `🚫 *User Banned Successfully*\n\n` +
               `• *User ID:* \`${userChatId}\`\n` +
@@ -112,7 +131,7 @@ Deno.serve(async (req) => {
       if (trimmedText.startsWith("/unban")) {
         if (!supabase) {
           await sendTelegram("sendMessage", {
-            chat_id: SUPPORT_CHAT_ID,
+            chat_id: chatId,
             text: "⚠️ Supabase client is not initialized to remove bans.",
             reply_parameters: { message_id: message.message_id },
           });
@@ -127,14 +146,14 @@ Deno.serve(async (req) => {
         if (error) {
           console.error("Error unbanning user:", error);
           await sendTelegram("sendMessage", {
-            chat_id: SUPPORT_CHAT_ID,
+            chat_id: chatId,
             text: `❌ Failed to unban user \`${userChatId}\`: ${error.message}`,
             parse_mode: "Markdown",
             reply_parameters: { message_id: message.message_id },
           });
         } else {
           await sendTelegram("sendMessage", {
-            chat_id: SUPPORT_CHAT_ID,
+            chat_id: chatId,
             text:
               `✅ *User Unbanned Successfully*\n\n` +
               `• *User ID:* \`${userChatId}\`\n` +
@@ -146,7 +165,7 @@ Deno.serve(async (req) => {
         return new Response("OK");
       }
 
-      // Text reply forwarding
+      // Text reply forwarding to user
       if (message.text) {
         await sendTelegram("sendMessage", {
           chat_id: userChatId,
@@ -156,7 +175,7 @@ Deno.serve(async (req) => {
         return new Response("OK");
       }
 
-      // Image reply forwarding
+      // Image reply forwarding to user
       if (message.photo) {
         const photo = message.photo[message.photo.length - 1];
 
@@ -224,21 +243,21 @@ Deno.serve(async (req) => {
     const routingInfo = `\n\nUser ID: ${chatId}`;
 
     // ==================================================
-    // TEXT MESSAGE
+    // TEXT MESSAGE → BROADCAST TO ALL SUPPORT IDS
     // ==================================================
 
     if (message.text) {
-      await sendTelegram("sendMessage", {
-        chat_id: SUPPORT_CHAT_ID,
+      await broadcastToSupport("sendMessage", (supportId) => ({
+        chat_id: supportId,
         text: `${userInfo}\n\n${message.text}${routingInfo}`,
         reply_parameters: {
           allow_sending_without_reply: true,
         },
-      });
+      }));
     }
 
     // ==================================================
-    // IMAGE MESSAGE
+    // IMAGE MESSAGE → BROADCAST TO ALL SUPPORT IDS
     // ==================================================
     else if (message.photo) {
       const photo = message.photo[message.photo.length - 1];
@@ -247,24 +266,24 @@ Deno.serve(async (req) => {
         ? `${userInfo}\n\n${message.caption}${routingInfo}`
         : `${userInfo}${routingInfo}`;
 
-      await sendTelegram("sendPhoto", {
-        chat_id: SUPPORT_CHAT_ID,
+      await broadcastToSupport("sendPhoto", (supportId) => ({
+        chat_id: supportId,
         photo: photo.file_id,
         caption,
-      });
+      }));
     }
 
     // ==================================================
-    // OTHER MESSAGE TYPES
+    // OTHER MESSAGE TYPES → BROADCAST TO ALL SUPPORT IDS
     // ==================================================
     else {
-      await sendTelegram("sendMessage", {
-        chat_id: SUPPORT_CHAT_ID,
+      await broadcastToSupport("sendMessage", (supportId) => ({
+        chat_id: supportId,
         text:
           `${userInfo}\n\n` +
           "📎 The user sent a message type that isn't currently supported." +
           routingInfo,
-      });
+      }));
     }
 
     // ==================================================

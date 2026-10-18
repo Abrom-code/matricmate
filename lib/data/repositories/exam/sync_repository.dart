@@ -102,50 +102,82 @@ class SyncRepository {
     try {
       final db = await _dbService.database;
 
-      // Step 1 — fetch tests (0.0 → 0.15)
-      var testsQuery = supabase.from('tests').select().eq('subject_id', subjectId).inFilter(
-        'type',
-        ['entrance', 'model'],
-      );
+      List tests = [];
+      List<dynamic> questionsData = [];
+      List<dynamic> passageData = [];
+      final isPremium = TestAccessHelper.isCurrentUserPremium;
       final bool isAdminUser = Get.isRegistered<UserController>() &&
           Get.find<UserController>().isAdmin.value;
-      if (!isAdminUser) {
-        testsQuery = testsQuery.eq('status', 'published');
+
+      bool rpcLoaded = false;
+      try {
+        onStep('Fetching entrance exams bundle…', 0.05);
+        final dynamic rpcBundle = await _withProgress(
+          supabase.rpc('rpc_download_entrance', params: {
+            'p_subject_id': subjectId,
+            'p_is_premium': isPremium,
+            'p_is_admin': isAdminUser,
+          }).timeout(AppTimeouts.download),
+          0.05,
+          0.65,
+          (p) => onStep('Downloading entrance content…', p),
+        );
+
+        if (rpcBundle is Map) {
+          tests = (rpcBundle['tests'] as List?) ?? [];
+          questionsData = (rpcBundle['questions'] as List?) ?? [];
+          passageData = (rpcBundle['passages'] as List?) ?? [];
+          rpcLoaded = true;
+        }
+      } catch (_) {
+        rpcLoaded = false;
       }
 
-      final tests = await _withProgress(
-        testsQuery.timeout(AppTimeouts.download),
-        0.0,
-        0.15,
-        (p) => onStep('Fetching tests…', p),
-      );
+      if (!rpcLoaded) {
+        // Step 1 — fetch tests (0.0 → 0.15)
+        var testsQuery = supabase.from('tests').select().eq('subject_id', subjectId).inFilter(
+          'type',
+          ['entrance', 'model'],
+        );
+        if (!isAdminUser) {
+          testsQuery = testsQuery.eq('status', 'published');
+        }
+
+        tests = await _withProgress(
+          testsQuery.timeout(AppTimeouts.download),
+          0.0,
+          0.15,
+          (p) => onStep('Fetching tests…', p),
+        );
+
+        if (tests.isEmpty) {
+          onStep('Done', 1.0);
+          return;
+        }
+
+        final allowedTests = isPremium
+            ? tests
+            : tests.where((t) => TestAccessHelper.isTestFree(t)).toList();
+        final testIds = allowedTests.map<int>((t) => t['id'] as int).toList();
+
+        // Step 2 — fetch questions (0.15 → 0.50)
+        if (testIds.isNotEmpty) {
+          questionsData = await _withProgress(
+            supabase
+                .from('questions')
+                .select('*, question_sections(title)')
+                .inFilter('test_id', testIds)
+                .timeout(AppTimeouts.download),
+            0.15,
+            0.50,
+            (p) => onStep('Fetching questions…', p),
+          );
+        }
+      }
 
       if (tests.isEmpty) {
         onStep('Done', 1.0);
         return;
-      }
-
-      final isPremium = TestAccessHelper.isCurrentUserPremium;
-      final allowedTests = isPremium
-          ? tests
-          : tests.where((t) => TestAccessHelper.isTestFree(t)).toList();
-      final testIds = allowedTests.map<int>((t) => t['id'] as int).toList();
-
-      // Step 2 — fetch questions (0.15 → 0.50)
-      final List<dynamic> questionsData;
-      if (testIds.isEmpty) {
-        questionsData = [];
-      } else {
-        questionsData = await _withProgress(
-          supabase
-              .from('questions')
-              .select('*, question_sections(title)')
-              .inFilter('test_id', testIds)
-              .timeout(AppTimeouts.download),
-          0.15,
-          0.50,
-          (p) => onStep('Fetching questions…', p),
-        );
       }
 
       final Set<int> passageIds = {};
@@ -164,9 +196,8 @@ class SyncRepository {
         }
       }
 
-      // Step 3 — fetch passages (0.50 → 0.65)
-      List<dynamic> passageData = [];
-      if (passageIds.isNotEmpty) {
+      // Step 3 — fetch passages (only if not loaded via RPC)
+      if (!rpcLoaded && passageIds.isNotEmpty) {
         passageData = await _withProgress(
           supabase
               .from('passages')

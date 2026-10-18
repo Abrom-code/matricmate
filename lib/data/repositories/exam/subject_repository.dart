@@ -43,59 +43,89 @@ class SubjectRepository {
     try {
       final db = await _dbService.database;
 
-      // Step 1 — Fetch chapters and tests in parallel (0.05 → 0.20)
-      onStep('Fetching chapters and tests…', 0.05);
-      final metaResults = await _withProgress(
-        Future.wait([
-          supabase.from('chapters').select().eq('subject_id', subjectId),
-          supabase.from('tests').select().eq('subject_id', subjectId),
-        ]).timeout(AppTimeouts.download),
-        0.05,
-        0.20,
-        (p) => onStep('Fetching subject data…', p),
-      );
-
-      final chapters = metaResults[0] as List;
-      final tests = metaResults[1] as List;
-
-      // Gate question & image fetching by user premium entitlement.
-      // Free users only download questions for free tests; premium tests are locked.
+      List chapters = [];
+      List tests = [];
+      List<dynamic> questionsData = [];
+      List<dynamic> passageData = [];
       final isPremium = TestAccessHelper.isCurrentUserPremium;
-      final allowedTests = isPremium
-          ? tests
-          : tests.where((t) => TestAccessHelper.isTestFree(t)).toList();
-      final testIds = allowedTests.map<int>((t) => t['id'] as int).toList();
 
-      // Step 2 — Fetch questions for ALL tests in parallel chunks (0.20 → 0.65)
-      final List<dynamic> questionsData = [];
-      if (testIds.isNotEmpty) {
-        final List<List<int>> chunks = [];
-        const chunkSize = 20;
-        for (var i = 0; i < testIds.length; i += chunkSize) {
-          chunks.add(
-            testIds.sublist(
-              i,
-              i + chunkSize > testIds.length ? testIds.length : i + chunkSize,
-            ),
-          );
-        }
-
-        final chunkResults = await _withProgress(
-          Future.wait(
-            chunks.map(
-              (chunk) => supabase
-                  .from('questions')
-                  .select('*, question_sections(title)')
-                  .inFilter('test_id', chunk),
-            ),
-          ).timeout(AppTimeouts.download),
-          0.20,
+      bool rpcLoaded = false;
+      try {
+        onStep('Fetching subject bundle…', 0.05);
+        final dynamic rpcBundle = await _withProgress(
+          supabase.rpc('rpc_download_subject', params: {
+            'p_subject_id': subjectId,
+            'p_is_premium': isPremium,
+          }).timeout(AppTimeouts.download),
+          0.05,
           0.65,
-          (p) => onStep('Fetching questions…', p),
+          (p) => onStep('Downloading subject content…', p),
         );
 
-        for (final list in chunkResults) {
-          questionsData.addAll(list as List);
+        if (rpcBundle is Map) {
+          chapters = (rpcBundle['chapters'] as List?) ?? [];
+          tests = (rpcBundle['tests'] as List?) ?? [];
+          questionsData = (rpcBundle['questions'] as List?) ?? [];
+          passageData = (rpcBundle['passages'] as List?) ?? [];
+          rpcLoaded = true;
+        }
+      } catch (_) {
+        rpcLoaded = false;
+      }
+
+      if (!rpcLoaded) {
+        // Step 1 — Fetch chapters and tests in parallel (0.05 → 0.20)
+        onStep('Fetching chapters and tests…', 0.05);
+        final metaResults = await _withProgress(
+          Future.wait([
+            supabase.from('chapters').select().eq('subject_id', subjectId),
+            supabase.from('tests').select().eq('subject_id', subjectId),
+          ]).timeout(AppTimeouts.download),
+          0.05,
+          0.20,
+          (p) => onStep('Fetching subject data…', p),
+        );
+
+        chapters = metaResults[0] as List;
+        tests = metaResults[1] as List;
+
+        // Gate question & image fetching by user premium entitlement.
+        // Free users only download questions for free tests; premium tests are locked.
+        final allowedTests = isPremium
+            ? tests
+            : tests.where((t) => TestAccessHelper.isTestFree(t)).toList();
+        final testIds = allowedTests.map<int>((t) => t['id'] as int).toList();
+
+        // Step 2 — Fetch questions for ALL tests in parallel chunks (0.20 → 0.65)
+        if (testIds.isNotEmpty) {
+          final List<List<int>> chunks = [];
+          const chunkSize = 20;
+          for (var i = 0; i < testIds.length; i += chunkSize) {
+            chunks.add(
+              testIds.sublist(
+                i,
+                i + chunkSize > testIds.length ? testIds.length : i + chunkSize,
+              ),
+            );
+          }
+
+          final chunkResults = await _withProgress(
+            Future.wait(
+              chunks.map(
+                (chunk) => supabase
+                    .from('questions')
+                    .select('*, question_sections(title)')
+                    .inFilter('test_id', chunk),
+              ),
+            ).timeout(AppTimeouts.download),
+            0.20,
+            0.65,
+            (p) => onStep('Fetching questions…', p),
+          );
+
+          for (final list in chunkResults) {
+            questionsData.addAll(list as List);
+          }
         }
       }
 
@@ -119,9 +149,8 @@ class SubjectRepository {
         }
       }
 
-      // Step 2 — Fetch passages if needed (0.60 → 0.72)
-      List<dynamic> passageData = [];
-      if (passageIds.isNotEmpty) {
+      // Fetch passages if needed (only if not already fetched via RPC)
+      if (!rpcLoaded && passageIds.isNotEmpty) {
         passageData = await _withProgress(
           supabase
               .from('passages')

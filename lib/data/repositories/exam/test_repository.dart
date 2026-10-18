@@ -115,14 +115,35 @@ class TestRepository {
       final existingCount = countResult.first['cnt'] as int? ?? 0;
       if (existingCount > 0) return existingCount;
 
-      // 2. Fetch questions from Supabase
-      final response = await _supabase
-          .from('questions')
-          .select('*, question_sections(title)')
-          .eq('test_id', testId)
-          .timeout(AppTimeouts.download);
+      List<dynamic> questionsData = [];
+      List<dynamic> passageData = [];
+      bool rpcLoaded = false;
 
-      final questionsData = List<Map<String, dynamic>>.from(response);
+      try {
+        final dynamic rpcBundle = await _supabase
+            .rpc('rpc_get_test_content', params: {'p_test_id': testId})
+            .timeout(AppTimeouts.download);
+
+        if (rpcBundle is Map) {
+          questionsData = (rpcBundle['questions'] as List?) ?? [];
+          passageData = (rpcBundle['passages'] as List?) ?? [];
+          rpcLoaded = true;
+        }
+      } catch (_) {
+        rpcLoaded = false;
+      }
+
+      if (!rpcLoaded) {
+        // 2. Fetch questions from Supabase (legacy fallback)
+        final response = await _supabase
+            .from('questions')
+            .select('*, question_sections(title)')
+            .eq('test_id', testId)
+            .timeout(AppTimeouts.download);
+
+        questionsData = List<Map<String, dynamic>>.from(response);
+      }
+
       if (questionsData.isEmpty) return 0;
 
       final Set<int> passageIds = {};
@@ -130,7 +151,7 @@ class TestRepository {
       final List<QuestionModel> questions = [];
 
       for (final q in questionsData) {
-        final map = Map<String, dynamic>.from(q);
+        final map = Map<String, dynamic>.from(q as Map);
         if (subjectId != null &&
             (map['subject_id'] == null || map['subject_id'] == 0)) {
           map['subject_id'] = subjectId;
@@ -147,9 +168,8 @@ class TestRepository {
         }
       }
 
-      // 3. Fetch passages if any
-      List<dynamic> passageData = [];
-      if (passageIds.isNotEmpty) {
+      // 3. Fetch passages if any (only if not loaded via RPC)
+      if (!rpcLoaded && passageIds.isNotEmpty) {
         passageData = await _supabase
             .from('passages')
             .select()

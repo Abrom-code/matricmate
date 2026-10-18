@@ -7,6 +7,7 @@ import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/test_access_helper.dart';
 import 'package:matricmate/utils/local_storage/sync_prefs.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -56,7 +57,14 @@ class SubjectRepository {
 
       final chapters = metaResults[0] as List;
       final tests = metaResults[1] as List;
-      final testIds = tests.map<int>((t) => t['id'] as int).toList();
+
+      // Gate question & image fetching by user premium entitlement.
+      // Free users only download questions for free tests; premium tests are locked.
+      final isPremium = TestAccessHelper.isCurrentUserPremium;
+      final allowedTests = isPremium
+          ? tests
+          : tests.where((t) => TestAccessHelper.isTestFree(t)).toList();
+      final testIds = allowedTests.map<int>((t) => t['id'] as int).toList();
 
       // Step 2 — Fetch questions for ALL tests in parallel chunks (0.20 → 0.65)
       final List<dynamic> questionsData = [];

@@ -75,32 +75,13 @@ class SyncingController extends GetxController {
       final syncStarted = DateTime.now().toUtc();
       final since = await SyncPrefs.lastSubjectSync(subjectId);
 
-      // 1. Sync chapter tests, questions, and passages for this subject
+      // 1. Sync chapter & grade tests, questions, and passages for this subject
       await _syncChapterContent([subjectId.toString()], since: since);
 
-      // 2. If subject has entrance tests downloaded, sync entrance tests as well
-      final db = await DatabaseService.instance.database;
-      final subjectRow = await db.query(
-        'subjects',
-        columns: ['is_entrance_downloaded'],
-        where: 'id = ?',
-        whereArgs: [subjectId],
-        limit: 1,
-      );
-      final isEntranceDownloaded = subjectRow.isNotEmpty &&
-          (subjectRow.first['is_entrance_downloaded'] == 1);
-
-      if (isEntranceDownloaded) {
-        await _syncRepository.downloadEntranceTests([subjectId], since: since);
-      }
-
-      // 3. Save sync timestamp
+      // 2. Save sync timestamp
       await SyncPrefs.saveSubjectSync(subjectId, syncStarted);
 
-      // 4. Refresh entrance/model exam counts
-      await SubjectsController.instance.refreshEntranceCountsFromRemote();
-
-      // 5. Reload ChapterController if active for this subject
+      // 3. Reload ChapterController if active for this subject
       if (activeChapterCtrl != null) {
         await activeChapterCtrl.loadSubjectChapters(subjectId);
       } else if (Get.isRegistered<ChapterController>()) {
@@ -110,7 +91,7 @@ class SyncingController extends GetxController {
         }
       }
 
-      // 6. Reload SubjectsController local subjects
+      // 4. Reload SubjectsController local subjects
       await SubjectsController.instance.loadLocalSubjects();
 
       if (showUiLoading) {
@@ -380,14 +361,27 @@ class SyncingController extends GetxController {
       await SyncPrefs.saveNotesSync(syncStarted);
 
       final localSubjects = await _subjectRepo.getLocalSubjects();
-      final downloadedIds = localSubjects
-          .where((s) => (s['is_downloaded'] ?? 0) == 1 || (s['is_entrance_downloaded'] ?? 0) == 1)
+      final chapterDownloadedIds = localSubjects
+          .where((s) => (s['is_downloaded'] ?? 0) == 1)
           .map((s) => s['id'].toString())
           .toList();
 
-      if (isValidUser && downloadedIds.isNotEmpty) {
-        await _syncChapterContent(downloadedIds, since: sinceChapters);
+      if (isValidUser && chapterDownloadedIds.isNotEmpty) {
+        await _syncChapterContent(chapterDownloadedIds, since: sinceChapters);
         await SyncPrefs.saveChaptersSync(syncStarted);
+      }
+
+      final entranceDownloadedIds = localSubjects
+          .where((s) => (s['is_entrance_downloaded'] ?? 0) == 1)
+          .map((s) => s['id'] as int)
+          .toList();
+
+      if (isValidUser && entranceDownloadedIds.isNotEmpty) {
+        final sinceEntrance = await SyncPrefs.lastEntranceSync();
+        await _syncRepository.downloadEntranceTests(
+          entranceDownloadedIds,
+          since: sinceEntrance,
+        );
         await SyncPrefs.saveEntranceSync(syncStarted);
       }
 
@@ -437,6 +431,7 @@ class SyncingController extends GetxController {
       'tests',
       downloadedIds,
       since: since,
+      typeFilter: ['chapter', 'grade'],
     );
 
     final tests = (testsData as List)

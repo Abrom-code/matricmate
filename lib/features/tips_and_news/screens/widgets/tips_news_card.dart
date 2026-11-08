@@ -239,7 +239,7 @@ class TipsNewsCard extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                // Main Content Row (Title + Snippet + optional Thumbnail)
+                // Main Content Row (Title + Source/Author + optional Thumbnail)
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -260,20 +260,28 @@ class TipsNewsCard extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 6),
-                          Text.rich(
-                            RichTextParser.parse(
-                              NotificationLinkParser.stripTags(item.content),
-                              TextStyle(
-                                fontSize: 12.5,
-                                color: dark
-                                    ? AppColors.white.withValues(alpha: 0.70)
-                                    : AppColors.textSecondary,
-                                height: 1.35,
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline_rounded,
+                                size: 13,
+                                color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                               ),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  item.author,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -285,14 +293,14 @@ class TipsNewsCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         child: Image.network(
                           item.imageUrl!,
-                          width: 68,
-                          height: 68,
+                          width: 58,
+                          height: 58,
                           fit: BoxFit.cover,
                           loadingBuilder: (ctx, child, progress) {
                             if (progress == null) return child;
                             return Container(
-                              width: 68,
-                              height: 68,
+                              width: 58,
+                              height: 58,
                               color: dark ? Colors.white10 : const Color(0xFFF1F5F9),
                               child: const Center(
                                 child: SizedBox(
@@ -307,32 +315,6 @@ class TipsNewsCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-                // Bottom Meta: Author
-                Row(
-                  children: [
-                    Icon(
-                      Icons.person_outline_rounded,
-                      size: 13,
-                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        item.author,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ],

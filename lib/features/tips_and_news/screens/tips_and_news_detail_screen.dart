@@ -184,6 +184,15 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
                     ),
                   ),
                 ],
+                const Spacer(),
+                Text(
+                  DateFormat('MMM dd, yyyy • h:mm a').format(item.createdAt),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
 
@@ -201,61 +210,7 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
               ),
             ),
 
-            const SizedBox(height: 14),
-
-            // Author and Date Row
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: dark ? AppColors.darkCard : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: isNews ? const Color(0xFF0284C7) : AppColors.primary,
-                    child: Text(
-                      item.author.isNotEmpty ? item.author[0].toUpperCase() : 'M',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.author,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: dark ? Colors.white : AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          DateFormat('MMMM dd, yyyy • h:mm a').format(item.createdAt),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
 
             // Cover Image (if available)
             if (item.imageUrl != null && item.imageUrl!.isNotEmpty) ...[
@@ -293,6 +248,61 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
                 color: dark
                     ? AppColors.white.withValues(alpha: 0.85)
                     : AppColors.darkerGrey,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Source Attribution at the end of the text
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: dark ? AppColors.darkCard : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: isNews ? const Color(0xFF0284C7) : AppColors.primary,
+                    child: Text(
+                      item.author.isNotEmpty ? item.author[0].toUpperCase() : 'M',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Source',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          item.author,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: dark ? Colors.white : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
 

@@ -1,8 +1,24 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/notifications/screens/widgets/notification_body_text.dart';
+import 'package:matricmate/features/tips_and_news/controllers/tips_and_news_controller.dart';
 import 'package:matricmate/features/tips_and_news/models/tips_and_news_model.dart';
+import 'package:matricmate/features/tips_and_news/screens/tips_and_news_detail_screen.dart';
+import 'package:matricmate/features/tips_and_news/screens/widgets/tips_news_card.dart';
+
+class FakeTipsAndNewsController extends GetxController
+    implements TipsAndNewsController {
+  @override
+  final RxList<TipsAndNewsModel> allItems = <TipsAndNewsModel>[].obs;
+
+  @override
+  Future<void> markAsRead(int id) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   group('TipsAndNewsModel Tests', () {
@@ -301,6 +317,85 @@ void main() {
       });
       expect(hasClickRecognizer, isTrue);
     });
+
+    testWidgets(
+      'TipsNewsCard renders tags, title, and source but does not render content snippet',
+      (tester) async {
+        final item = TipsAndNewsModel(
+          id: 1,
+          title: 'National Exam Registration Opens',
+          content:
+              'This is the long description that should not appear on the card.',
+          category: 'news',
+          author: 'Ministry of Education',
+          createdAt: DateTime.now(),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: TipsNewsCard(
+                item: item,
+                onTap: () {},
+              ),
+            ),
+          ),
+        );
+
+        // Category tag and title should be rendered
+        expect(find.text('News'), findsOneWidget);
+        expect(find.text('National Exam Registration Opens'), findsOneWidget);
+
+        // Source/author should be rendered
+        expect(find.text('Ministry of Education'), findsOneWidget);
+
+        // Description/content should NOT be rendered on main card
+        expect(
+          find.text(
+            'This is the long description that should not appear on the card.',
+          ),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'TipsAndNewsDetailScreen renders Source at the bottom after content',
+      (tester) async {
+        Get.reset();
+        final fakeCtrl = FakeTipsAndNewsController();
+        Get.put<TipsAndNewsController>(fakeCtrl);
+
+        final item = TipsAndNewsModel(
+          id: 1,
+          title: 'Study Routine Tips',
+          content: 'Main article content here.',
+          category: 'tip',
+          author: 'MatricMate Editorial Team',
+          createdAt: DateTime.now(),
+        );
+
+        await tester.pumpWidget(
+          GetMaterialApp(
+            home: TipsAndNewsDetailScreen(item: item),
+          ),
+        );
+
+        // Source label and author should be displayed
+        expect(find.text('Source'), findsOneWidget);
+        expect(find.text('MatricMate Editorial Team'), findsOneWidget);
+
+        // Verify Source box appears below the article body text
+        final contentFinder = find.text('Main article content here.');
+        final sourceFinder = find.text('Source');
+        expect(contentFinder, findsOneWidget);
+        expect(sourceFinder, findsOneWidget);
+
+        final contentY = tester.getBottomLeft(contentFinder).dy;
+        final sourceY = tester.getTopLeft(sourceFinder).dy;
+        expect(sourceY, greaterThan(contentY));
+      },
+    );
   });
 }
 

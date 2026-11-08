@@ -7,6 +7,7 @@ import 'package:matricmate/controllers/navigation_controller.dart';
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/features/personalization/screens/others/widgets/others_menu_card.dart';
+import 'package:matricmate/features/tips_and_news/controllers/tips_and_news_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -29,19 +30,31 @@ class _OthersScreenState extends State<OthersScreen> {
         ? Get.find<AnalyticsController>()
         : Get.put(AnalyticsController());
 
+    // Initialize TipsAndNewsController
+    TipsAndNewsController.instance.loadLocalData();
+
     // Instant load when screen is first displayed
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.loadAll();
+      TipsAndNewsController.instance.syncRemote();
     });
 
-    // Auto-reload whenever user navigates to the Others tab (index 3)
+    // Auto-reload whenever user navigates to the Others tab (index 2)
     if (Get.isRegistered<NavigationController>()) {
       _navWorker = ever(NavigationController.instance.selectedIdx, (index) {
-        if (index == 3) {
+        if (index == 2 || index == 3) {
           controller.loadAll();
+          TipsAndNewsController.instance.loadLocalData();
         }
       });
     }
+  }
+
+  Future<void> _refreshAll() async {
+    await Future.wait([
+      controller.loadAll(isManualRefresh: true),
+      TipsAndNewsController.instance.syncRemote(isManual: true),
+    ]);
   }
 
   @override
@@ -78,7 +91,7 @@ class _OthersScreenState extends State<OthersScreen> {
             child: Obx(
               () => ReactiveRefreshButton(
                 isRefreshing: controller.isRefreshing.value,
-                onRefresh: () => controller.loadAll(isManualRefresh: true),
+                onRefresh: _refreshAll,
                 tooltip: 'Refresh',
                 onSuccessMessage: 'Overview updated',
               ),
@@ -88,7 +101,7 @@ class _OthersScreenState extends State<OthersScreen> {
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: () => controller.loadAll(isManualRefresh: true),
+        onRefresh: _refreshAll,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
@@ -133,6 +146,22 @@ class _OthersScreenState extends State<OthersScreen> {
                 iconColor: const Color(0xFF10B981),
                 onTap: () => Get.toNamed(Routes.progressDetail),
               ),
+
+              const SizedBox(height: 12),
+
+              // ── 4. Tips & News Card ──────────────────────────────────────
+              Obx(() {
+                final hasUnread = TipsAndNewsController.instance.hasUnread;
+                return OthersMenuCard(
+                  title: 'Tips & News',
+                  description:
+                      'National exam news, study tips & preparation guides.',
+                  icon: Iconsax.lamp_charge_copy,
+                  iconColor: const Color(0xFF8B5CF6),
+                  showRedDot: hasUnread,
+                  onTap: () => Get.toNamed(Routes.tipsAndNews),
+                );
+              }),
             ],
           ),
         ),

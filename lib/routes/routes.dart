@@ -41,6 +41,7 @@ import 'package:matricmate/features/personalization/screens/others/screens/pilot
 import 'package:matricmate/features/personalization/screens/others/screens/pilot_exam_subjects_screen.dart';
 import 'package:matricmate/features/personalization/screens/others/screens/progress_detail_screen.dart';
 import 'package:matricmate/features/personalization/screens/others/screens/study_plan_detail_screen.dart';
+import 'package:matricmate/features/tips_and_news/screens/tips_and_news_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
 import 'package:matricmate/features/personalization/screens/update/change_password.dart';
 import 'package:matricmate/bindings/notes/notes_binding.dart';
@@ -152,6 +153,10 @@ class AppRoutes {
     GetPage(
       name: Routes.studyPlan,
       page: () => const StudyPlanDetailScreen(),
+    ),
+    GetPage(
+      name: Routes.tipsAndNews,
+      page: () => const TipsAndNewsScreen(),
     ),
 
     // profile

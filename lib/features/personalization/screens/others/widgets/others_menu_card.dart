@@ -15,6 +15,7 @@ class OthersMenuCard extends StatelessWidget {
     this.badgeColor,
     this.badgeTextColor,
     this.isBadgeComingSoon = false,
+    this.showRedDot = false,
   });
 
   final String title;
@@ -26,6 +27,7 @@ class OthersMenuCard extends StatelessWidget {
   final Color? badgeColor;
   final Color? badgeTextColor;
   final bool isBadgeComingSoon;
+  final bool showRedDot;
 
   @override
   Widget build(BuildContext context) {
@@ -62,20 +64,42 @@ class OthersMenuCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Icon Avatar
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: dark ? 0.2 : 0.1),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: iconColor.withValues(alpha: dark ? 0.35 : 0.2),
-                      width: 1,
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: dark ? 0.2 : 0.1),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: iconColor.withValues(alpha: dark ? 0.35 : 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(icon, color: iconColor, size: 24),
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Icon(icon, color: iconColor, size: 24),
-                  ),
+                    if (showRedDot)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          width: 11,
+                          height: 11,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: dark ? AppColors.darkCard : Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: 15),
 
@@ -97,6 +121,32 @@ class OthersMenuCard extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (showRedDot && badgeText == null) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEF4444).withValues(alpha: dark ? 0.2 : 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: const Text(
+                                'NEW',
+                                style: TextStyle(
+                                  color: Color(0xFFEF4444),
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
                           if (badgeText != null) ...[
                             const SizedBox(width: 8),
                             Container(

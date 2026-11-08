@@ -272,5 +272,32 @@ class DBschema {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_pilot_subjects ON pilot_exam_subjects(pilot_exam_id, stream)',
     );
+
+    // ── Tips & News Tables ──────────────────────────────────────────────────
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS tips_and_news (
+        id INTEGER PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        category TEXT NOT NULL,
+        image_url TEXT,
+        author TEXT,
+        audience TEXT,
+        is_pinned INTEGER DEFAULT 0,
+        created_at TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS tips_news_reads (
+        item_id INTEGER PRIMARY KEY,
+        read_at TEXT NOT NULL
+      );
+    ''');
+
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_tips_news_created ON tips_and_news(created_at DESC)',
+    );
   }
 }

@@ -45,3 +45,53 @@ CREATE POLICY "Allow admins full management of tips and news"
         )
     );
 
+-- Seed Initial Starter Tips & News
+INSERT INTO public.tips_and_news (title, content, category, author, audience, is_pinned, is_published)
+VALUES 
+(
+    '2019 E.C. National Exam Guidelines & Registration',
+    'Welcome to the 2019 E.C. academic year! Make sure to verify your student admission card details and selected stream (Natural or Social Science). Exam center guidelines, pilot simulator exams, and timetable updates will be announced right here.',
+    'news',
+    'MatricMate Team',
+    'both',
+    true,
+    true
+),
+(
+    'The 3-Pass Strategy for Multiple Choice Exams',
+    'Maximize your exam score with the 3-Pass Method:
+
+1. Pass 1 (First 30 minutes): Answer only the questions you know immediately (100% confidence). Skip anything that requires lengthy calculations.
+2. Pass 2 (Next 40 minutes): Tackle moderate problems that require 1–2 minutes of working.
+3. Pass 3 (Final 20 minutes): Review challenging questions, eliminate unlikely choices, and ensure no question is left blank.
+
+Practice this technique on our Pilot Exams and Chapter Tests!',
+    'tip',
+    'Academic Mentors',
+    'both',
+    false,
+    true
+),
+(
+    'Active Recall vs Passive Reading for Science & Social Subjects',
+    'Rereading textbooks gives an illusion of mastery. Instead, use Active Recall: after reading a chapter summary or note, close the reader and write down the key formulas, definitions, and concepts from memory. Then check what you missed.
+
+Studies show active recall boosts exam retention by over 50% compared to passive highlighting.',
+    'tip',
+    'Study Strategy Lead',
+    'both',
+    false,
+    true
+),
+(
+    'MatricMate Offline Mode & Sync Enhancements',
+    'Did you know all downloaded tests, chapter notes, and exam reviews are 100% accessible offline without using any mobile data? Whenever you have an internet connection, tap the Refresh button to automatically sync newly added questions and pilot exams.',
+    'news',
+    'Product Updates',
+    'both',
+    false,
+    true
+)
+ON CONFLICT DO NOTHING;
+
+

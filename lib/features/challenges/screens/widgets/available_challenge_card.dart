@@ -222,20 +222,31 @@ class AvailableChallengeCard extends StatelessWidget {
 
                 const Spacer(),
 
-                // Number of joins (right) or lock icon for free user on premium challenge
+                // Number of joins (right) or lock icon with 'joined' for free user on premium challenge
                 if (!canAccess && challenge.isPremium)
                   Tooltip(
                     message: 'Premium Challenge',
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(6),
                       onTap: () => ctrl.onChallengeTapped(challenge),
-                      child: const Padding(
-                        padding: EdgeInsets.all(2),
-                        child: Icon(
-                          Icons.lock_rounded,
-                          size: 16,
-                          color: AppColors.amber,
-                        ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_rounded,
+                            size: 15,
+                            color: AppColors.amber,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'joined',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   )

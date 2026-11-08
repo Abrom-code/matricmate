@@ -260,8 +260,9 @@ void main() {
       expect(find.text('10 joined'), findsNothing);
       expect(find.byIcon(Icons.people_outline_rounded), findsNothing);
 
-      // Lock icon should be shown instead
+      // Lock icon with 'joined' text should be shown instead
       expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
+      expect(find.text('joined'), findsOneWidget);
     },
   );
 

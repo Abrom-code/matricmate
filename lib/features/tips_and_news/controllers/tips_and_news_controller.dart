@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:matricmate/data/repositories/tips_and_news/tips_and_news_repository.dart';
-import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/features/tips_and_news/models/tips_and_news_model.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
@@ -101,12 +100,7 @@ class TipsAndNewsController extends GetxController {
     }
 
     try {
-      String? stream;
-      if (Get.isRegistered<UserController>()) {
-        stream = UserController.instance.user.value.stream;
-      }
-
-      final updated = await _repo.syncFromRemote(stream: stream);
+      final updated = await _repo.syncFromRemote();
       allItems.assignAll(updated);
       _lastSyncAt = DateTime.now();
 

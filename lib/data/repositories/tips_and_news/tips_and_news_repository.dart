@@ -12,25 +12,19 @@ class TipsAndNewsRepository {
   final SupabaseClient _sb = Supabase.instance.client;
 
   /// Syncs latest tips and news from Supabase and stores in local SQLite.
+  /// Not stream-based: all published tips and news are available to all students.
   /// Falls back silently to offline SQLite cache when disconnected.
-  Future<List<TipsAndNewsModel>> syncFromRemote({String? stream}) async {
+  Future<List<TipsAndNewsModel>> syncFromRemote() async {
     final isConnected = await NetworkManager.instance.isConnected();
     if (!isConnected) {
       return await getLocalItems();
     }
 
     try {
-      var query = _sb
+      final rows = await _sb
           .from('tips_and_news')
           .select()
-          .eq('is_published', true);
-
-      final cleanStream = stream?.trim().toLowerCase();
-      if (cleanStream != null && cleanStream.isNotEmpty && cleanStream != 'both') {
-        query = query.or('audience.eq.both,audience.eq.$cleanStream');
-      }
-
-      final rows = await query
+          .eq('is_published', true)
           .order('is_pinned', ascending: false)
           .order('created_at', ascending: false)
           .limit(100)

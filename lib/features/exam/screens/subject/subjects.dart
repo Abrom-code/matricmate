@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
-import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
 import 'package:matricmate/common/widgets/layout/grid_layout.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
@@ -72,15 +72,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
           );
         }),
         actions: [
-          Obx(() {
-            final syncing = syncController.refreshing.value;
-            return SyncIconButton(
-              isSyncing: syncing,
-              tooltip: 'Sync content',
-              onPressed: () => ctrl.syncAll(),
-            );
-          }),
-          const SizedBox(width: 4),
           Tooltip(
             message: 'Telegram Channel',
             child: InkWell(
@@ -120,7 +111,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               ),
             ),
           ),
-          const SizedBox(width: 2),
+          const SizedBox(width: 8),
         ],
       ),
       body: Obx(() {
@@ -140,8 +131,14 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
             RefreshIndicator(
               color: AppColors.primary,
               onRefresh: () async {
-                await syncController.syncAll(showUiLoading: false);
+                await ctrl.ensureSubjectsLoaded(forceRemote: true);
+                await ctrl.refreshEntranceCountsFromRemote();
                 await ctrl.loadPausedTests();
+                unawaited(
+                  UserController.instance
+                      .fetchUserRecord()
+                      .catchError((_) => false),
+                );
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),

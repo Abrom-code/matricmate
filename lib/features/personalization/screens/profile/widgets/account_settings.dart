@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/tiles/list_tile.dart';
 import 'package:matricmate/data/services/payment_config_service.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:matricmate/utils/themes/theme_controller.dart';
 
 class AccountSettings extends StatelessWidget {
@@ -110,6 +112,39 @@ class AccountSettings extends StatelessWidget {
                 ),
               ),
             ),
+            divider,
+            Obx(() {
+              final isSyncing = Get.find<SyncingController>().refreshing.value;
+              return AppListTile(
+                icon: const Icon(Icons.sync_rounded, size: 18),
+                title: 'Sync All Content',
+                subtitle: 'Check for updates across all subjects',
+                trailing: isSyncing
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        ),
+                      )
+                    : const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
+                onTap: isSyncing
+                    ? null
+                    : () async {
+                        final ok = await Get.find<SyncingController>()
+                            .syncAll(showUiLoading: true, force: true);
+                        if (ok) {
+                          ToastHelper.success('All content is up to date!');
+                        }
+                      },
+              );
+            }),
           ],
         ),
       );

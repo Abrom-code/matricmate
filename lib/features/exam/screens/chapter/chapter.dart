@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
 import 'package:matricmate/features/exam/controllers/grade_selection_controller.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/all_chapters_button.dart';
 import 'package:matricmate/features/exam/screens/chapter/widgets/chapter_tile.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
@@ -103,6 +105,21 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
             ),
           ],
         ),
+        actions: [
+          Obx(() {
+            final syncing =
+                SyncingController.instance.isSyncingSubject(subjectId);
+            return SyncIconButton(
+              isSyncing: syncing,
+              tooltip: 'Sync $title',
+              onPressed: () => SyncingController.instance.syncSingleSubject(
+                subjectId,
+                subjectName: title,
+              ),
+            );
+          }),
+          const SizedBox(width: 8),
+        ],
         bottom: isCommon
             ? null
             : PreferredSize(
@@ -183,44 +200,53 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
       final sections = controller.allSections;
 
       if (sections.isEmpty) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary
-                        .withValues(alpha: dark ? 0.15 : 0.08),
-                    shape: BoxShape.circle,
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () => SyncingController.instance.syncSingleSubject(
+            subjectId,
+            subjectName: title,
+            showUiLoading: false,
+          ),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 64.0),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary
+                          .withValues(alpha: dark ? 0.15 : 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      size: 40,
+                      color: AppColors.primary,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.menu_book_rounded,
-                    size: 40,
-                    color: AppColors.primary,
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No Sections Available',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'No Sections Available',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Sections and tests for this subject will appear once synced. Pull down to refresh.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.5,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Sections and tests for this subject will appear once synced.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12.5,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -228,9 +254,17 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
 
       final user = UserController.instance.user.value;
 
-      return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-        itemCount: sections.length,
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: () => SyncingController.instance.syncSingleSubject(
+          subjectId,
+          subjectName: title,
+          showUiLoading: false,
+        ),
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+          itemCount: sections.length,
         itemBuilder: (context, index) {
           final section = sections[index];
           final hasTests = controller.chapterHasTests[section.id] ?? false;
@@ -275,8 +309,9 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
             ),
           );
         },
-      );
-    });
+      ),
+    );
+  });
   }
 
   /// Standard graded chapters view with Grade tabs for Physics, Biology, Maths, etc.
@@ -301,44 +336,53 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
           final chapters = controller.getChaptersByGrade(grade);
 
           if (chapters.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary
-                            .withValues(alpha: dark ? 0.15 : 0.08),
-                        shape: BoxShape.circle,
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () => SyncingController.instance.syncSingleSubject(
+                subjectId,
+                subjectName: title,
+                showUiLoading: false,
+              ),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 64.0),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary
+                              .withValues(alpha: dark ? 0.15 : 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.menu_book_rounded,
+                          size: 40,
+                          color: AppColors.primary,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.menu_book_rounded,
-                        size: 40,
-                        color: AppColors.primary,
+                      const SizedBox(height: 16),
+                      Text(
+                        'No Chapters for Grade $grade',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No Chapters for Grade $grade',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Chapters and tests for this grade will appear once synced. Pull down to refresh.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12.5,
+                          height: 1.4,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Chapters and tests for this grade will appear once synced.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12.5,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -349,9 +393,17 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
           final isGradeLocked =
               (combinedGradeProgress?.isAllPremium ?? false) && !user.isActive;
 
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-            itemCount: chapters.length + 1,
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () => SyncingController.instance.syncSingleSubject(
+              subjectId,
+              subjectName: title,
+              showUiLoading: false,
+            ),
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+              itemCount: chapters.length + 1,
             itemBuilder: (context, chapterIndex) {
               // Top item: All Chapters Practice Test
               if (chapterIndex == 0) {
@@ -423,9 +475,10 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
                 ),
               );
             },
-          );
-        });
-      }),
-    );
+          ),
+        );
+      });
+    }),
+  );
   }
 }

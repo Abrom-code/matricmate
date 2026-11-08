@@ -396,6 +396,55 @@ void main() {
         expect(sourceY, greaterThan(contentY));
       },
     );
+
+    testWidgets(
+      'Tips & News supports rich explanation formatting: color, size, headings, and links',
+      (tester) async {
+        Get.reset();
+        final fakeCtrl = FakeTipsAndNewsController();
+        Get.put<TipsAndNewsController>(fakeCtrl);
+
+        final item = TipsAndNewsModel(
+          id: 99,
+          title: '[c=red]URGENT:[/c] [size=20]Registration Notice[/size]',
+          content:
+              '# Welcome\n\n'
+              'Here is [color=blue][b]essential info[/b][/color] with [size=18]custom size[/size].\n'
+              'Equation: \\(E=mc^2\\)\n'
+              'Click [a href="https://t.me/matric_et"]Telegram Group[/a] for updates.',
+          category: 'news',
+          author: 'MoE Desk',
+          createdAt: DateTime.now(),
+        );
+
+        // 1. Verify Card renders rich title correctly
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: TipsNewsCard(
+                item: item,
+                onTap: () {},
+              ),
+            ),
+          ),
+        );
+
+        expect(find.textContaining('URGENT:'), findsOneWidget);
+        expect(find.textContaining('Registration Notice'), findsOneWidget);
+
+        // 2. Verify Detail Screen renders rich content, math, and interactive links
+        await tester.pumpWidget(
+          GetMaterialApp(
+            home: TipsAndNewsDetailScreen(item: item),
+          ),
+        );
+
+        expect(find.textContaining('URGENT:'), findsOneWidget);
+        expect(find.textContaining('Registration Notice'), findsOneWidget);
+        expect(find.textContaining('essential info'), findsOneWidget);
+        expect(find.textContaining('Telegram Group'), findsOneWidget);
+      },
+    );
   });
 }
 

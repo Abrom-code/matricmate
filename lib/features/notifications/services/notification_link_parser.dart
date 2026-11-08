@@ -184,14 +184,42 @@ class NotificationLinkParser {
     text = text.replaceAll(RegExp(r'\\{1,2}[\[\]\(\)]'), '');
     text = text.replaceAll(r'$$', '').replaceAll(r'$', '');
 
-    // 6. Remove other BBCode tags like [b], [/b], [i], [u], [s], [bi], [sup], [sub], [h], [c=...]
-    text = text.replaceAll(RegExp(r'\[/?[a-zA-Z]+(?:=[^\]]+)?\]'), '');
+    // 6. Remove other BBCode tags like [b], [/b], [i], [u], [s], [bi], [sup], [sub], [h], [c=...], [h1]
+    text = text.replaceAll(RegExp(r'\[/?[a-zA-Z0-9]+(?:=[^\]]+)?\]'), '');
 
     // 7. Remove HTML tags
     text = text.replaceAll(RegExp(r'</?[a-zA-Z]+(?:[^>]*?)>'), '');
 
     // 8. Collapse whitespace
     text = text.replaceAll(RegExp(r'[ \t]+'), ' ');
+    return text.trim();
+  }
+
+  /// Strips only interactive link wrappers ([a]...[/a], <a...>...</a>, [text](url)) to their inner text,
+  /// preserving other BBCode formatting tags ([b], [color=...], [size=...]) and math intact.
+  static String stripLinksOnly(String rawText) {
+    if (rawText.isEmpty) return '';
+    var text = rawText;
+
+    // 1. Replace [a...]content[/a] with content (or label if piped)
+    text = text.replaceAllMapped(_bbcodeLinkRegex, (m) {
+      final inner = (m.group(4) ?? '').trim();
+      if (inner.contains('|')) {
+        return inner.split('|').first.trim();
+      }
+      return inner;
+    });
+
+    // 2. Replace <a...>content</a> with content
+    text = text.replaceAllMapped(_htmlLinkRegex, (m) {
+      return (m.group(2) ?? '').trim();
+    });
+
+    // 3. Replace [text](url) with text
+    text = text.replaceAllMapped(_markdownLinkRegex, (m) {
+      return (m.group(1) ?? '').trim();
+    });
+
     return text.trim();
   }
 
@@ -399,6 +427,23 @@ class NotificationLinkParser {
     List<NotificationTextSegment> out,
   ) {
     if (text.isEmpty) return;
+
+    // If text contains complex BBCode or LaTeX, do NOT split with regex so RichTextParser
+    // can process the complete tree with nested tags, colors, sizes, and math intact.
+    final lower = text.toLowerCase();
+    if (lower.contains('[c=') ||
+        lower.contains('[color=') ||
+        lower.contains('[size=') ||
+        lower.contains('[s=') ||
+        lower.contains('[bg=') ||
+        lower.contains('[h1]') ||
+        lower.contains('[h2]') ||
+        lower.contains('[h3]') ||
+        text.contains(r'$') ||
+        text.contains(r'\')) {
+      out.add(NotificationTextSegment(text: text));
+      return;
+    }
 
     final formatMatches = _inlineFormatRegex.allMatches(text).toList();
     if (formatMatches.isEmpty) {

@@ -249,7 +249,7 @@ class TipsNewsCard extends StatelessWidget {
                         children: [
                           Text.rich(
                             RichTextParser.parse(
-                              NotificationLinkParser.stripTags(item.title),
+                              NotificationLinkParser.stripLinksOnly(item.title),
                               TextStyle(
                                 fontSize: 15.5,
                                 fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,

@@ -310,6 +310,32 @@ x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
       expect(find.byType(Math), findsOneWidget);
       expect(find.byType(SingleChildScrollView), findsWidgets);
     });
+
+    testWidgets('23. Named colors, hex colors, font sizes, and headings formatting', (tester) async {
+      const text = '''
+[h1]Heading 1[/h1]
+[color=red]Red[/color] [c=blue]Blue[/c] [color="#0284C7"]Sky[/color]
+[size=20]Size 20[/size] [size=18px]Size 18[/size] [s=16]Size 16[/s]
+[bg=yellow]Highlight[/bg]
+[b][color=green][size=22]Combined Tag[/size][/color][/b]
+''';
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: QuestionContentRenderer(text: text),
+          ),
+        ),
+      );
+      expect(find.textContaining('Heading 1'), findsOneWidget);
+      expect(find.textContaining('Red'), findsOneWidget);
+      expect(find.textContaining('Blue'), findsOneWidget);
+      expect(find.textContaining('Sky'), findsOneWidget);
+      expect(find.textContaining('Size 20'), findsOneWidget);
+      expect(find.textContaining('Size 18'), findsOneWidget);
+      expect(find.textContaining('Size 16'), findsOneWidget);
+      expect(find.textContaining('Highlight'), findsOneWidget);
+      expect(find.textContaining('Combined Tag'), findsOneWidget);
+    });
   });
 }
 

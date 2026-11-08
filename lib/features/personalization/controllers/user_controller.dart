@@ -184,11 +184,12 @@ class UserController extends GetxController {
 
       if (freshUser == null) return false;
 
-      final uid = _authRepo.currentUser!.id;
+      final uid = _authRepo.currentUser?.id;
+      if (uid == null) return false;
 
       final deviceId = await DeviceService.getDeviceId();
 
-      final isAllowed = await _sessionService.validateSession(
+      final sessionResult = await _sessionService.validateSessionDetailed(
         uid,
         deviceId,
         email: freshUser.email,
@@ -196,7 +197,11 @@ class UserController extends GetxController {
 
       final isWhitelisted = SessionService.isWhitelistedTester(freshUser.email);
 
-      if (!isAllowed && !isWhitelisted) {
+      // ONLY block and log out if the backend explicitly confirmed that
+      // another device is bound to this account.
+      // Under low internet speed, timeouts, or offline errors (SessionValidationResult.error),
+      // we must NEVER terminate the user's session.
+      if (sessionResult == SessionValidationResult.blocked && !isWhitelisted) {
         if (!_blockHandled) {
           _blockHandled = true;
           SnackbarHelper.warning(
@@ -221,7 +226,7 @@ class UserController extends GetxController {
       // Save FCM token now that userId is confirmed
       unawaited(FcmService.instance.saveTokenForCurrentUser());
 
-      // Watch session — logout on device mismatch
+      // Watch session — logout on real-time device mismatch
       _sessionService.watchSession(
         uid: uid,
         currentDeviceId: deviceId,
@@ -236,7 +241,7 @@ class UserController extends GetxController {
         },
       );
 
-      return true;
+      return sessionResult == SessionValidationResult.allowed;
     } finally {
       userFetching.value = false;
     }

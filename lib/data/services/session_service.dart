@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:matricmate/data/services/device_service.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
@@ -71,6 +74,10 @@ class SessionService {
           }
         }
       } catch (rpcErr) {
+        if (rpcErr is TimeoutException || rpcErr is SocketException) {
+          // Fast-fail on network timeout or connection drop to avoid an extra 12s fallback delay
+          return SessionValidationResult.error;
+        }
         if (kDebugMode) {
           debugPrint('[SessionService] bind_user_device RPC failed, using fallback check: $rpcErr');
         }

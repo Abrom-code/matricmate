@@ -122,15 +122,15 @@ class SignupController extends GetxController {
 
       final deviceId = results[1] as String;
 
-      final isAllowed = await SessionService().validateSession(
+      final sessionResult = await SessionService().validateSessionDetailed(
         uid,
         deviceId,
         email: email.text.trim(),
       );
 
-      if (!isAllowed) {
+      if (sessionResult == SessionValidationResult.blocked) {
         await _authenticationRepository.logout();
-        ToastHelper.error('Failed to register device. Please try again.');
+        ToastHelper.error('This account is registered on another device.');
         return;
       }
 

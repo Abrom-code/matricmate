@@ -92,16 +92,17 @@ class AvailableChallengeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Subject Chip
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.teal.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.teal.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 180),
                     child: Text(
                       challenge.subjectName ?? 'Challenge',
                       maxLines: 1,

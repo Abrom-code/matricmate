@@ -15,7 +15,7 @@ class ReactiveRefreshButton extends StatefulWidget {
     this.size = 34,
     this.iconSize = 17,
     this.icon = Iconsax.refresh_copy,
-    this.color = AppColors.white,
+    this.color,
     this.backgroundColor,
     this.onSuccessMessage,
     this.counterClockwise = true,
@@ -45,10 +45,10 @@ class ReactiveRefreshButton extends StatefulWidget {
   /// The icon data to display and spin.
   final IconData icon;
 
-  /// Icon color.
-  final Color color;
+  /// Icon color. If null, adapts automatically to theme and AppBar IconTheme.
+  final Color? color;
 
-  /// Container background color. If null, uses a translucent white pill.
+  /// Container background color. If null, adapts to light/dark mode.
   final Color? backgroundColor;
 
   /// Optional feedback message displayed in a SnackBar on successful completion.
@@ -159,6 +159,17 @@ class _ReactiveRefreshButtonState extends State<ReactiveRefreshButton>
   Widget build(BuildContext context) {
     final spinning = widget.isRefreshing || _isLocalSpinning;
     final activeTooltip = spinning ? widget.tooltipRefreshing : widget.tooltip;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
+    final defaultIconColor = IconTheme.of(context).color ??
+        (dark ? AppColors.white : AppColors.textPrimary);
+    final iconColor = widget.color ?? defaultIconColor;
+
+    final defaultBgColor = dark
+        ? AppColors.white.withValues(alpha: spinning ? 0.28 : 0.15)
+        : (IconTheme.of(context).color ?? Colors.black)
+            .withValues(alpha: spinning ? 0.15 : 0.06);
+    final containerBg = widget.backgroundColor ?? defaultBgColor;
 
     return IconButton(
       tooltip: activeTooltip,
@@ -167,8 +178,7 @@ class _ReactiveRefreshButtonState extends State<ReactiveRefreshButton>
         width: widget.size,
         height: widget.size,
         decoration: BoxDecoration(
-          color: widget.backgroundColor ??
-              AppColors.white.withValues(alpha: spinning ? 0.28 : 0.15),
+          color: containerBg,
           shape: BoxShape.circle,
         ),
         child: Center(
@@ -181,7 +191,7 @@ class _ReactiveRefreshButtonState extends State<ReactiveRefreshButton>
             child: Icon(
               widget.icon,
               size: widget.iconSize,
-              color: widget.color,
+              color: iconColor,
             ),
           ),
         ),

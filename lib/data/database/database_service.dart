@@ -1256,28 +1256,55 @@ class DatabaseService extends GetxController {
   // ── Tips & News Helpers ───────────────────────────────────────────────────
 
   /// Upserts remote tips and news items into local SQLite cache.
+  /// Uses ON CONFLICT to update metadata while preserving existing local is_read status.
   Future<void> saveTipsAndNews(List<Map<String, dynamic>> items) async {
     if (items.isEmpty) return;
     final db = await database;
     try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_and_news (
+          id INTEGER PRIMARY KEY,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          category TEXT NOT NULL,
+          image_url TEXT,
+          author TEXT,
+          audience TEXT,
+          is_pinned INTEGER DEFAULT 0,
+          created_at TEXT NOT NULL,
+          is_read INTEGER DEFAULT 0
+        )
+      ''');
       await db.transaction((txn) async {
         final batch = txn.batch();
         for (final item in items) {
-          batch.insert(
-            'tips_and_news',
-            {
-              'id': item['id'],
-              'title': item['title'] ?? '',
-              'content': item['content'] ?? '',
-              'category': item['category'] ?? 'news',
-              'image_url': item['image_url'],
-              'author': item['author'] ?? 'MatricMate Team',
-              'audience': item['audience'] ?? 'both',
-              'is_pinned': (item['is_pinned'] == true || item['is_pinned'] == 1) ? 1 : 0,
-              'created_at': item['created_at']?.toString() ?? DateTime.now().toIso8601String(),
-              'is_read': (item['is_read'] == true || item['is_read'] == 1) ? 1 : 0,
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
+          batch.rawInsert(
+            '''
+            INSERT INTO tips_and_news (
+              id, title, content, category, image_url, author, audience, is_pinned, created_at, is_read
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              title = excluded.title,
+              content = excluded.content,
+              category = excluded.category,
+              image_url = excluded.image_url,
+              author = excluded.author,
+              audience = excluded.audience,
+              is_pinned = excluded.is_pinned,
+              created_at = excluded.created_at
+            ''',
+            [
+              item['id'],
+              item['title'] ?? '',
+              item['content'] ?? '',
+              item['category'] ?? 'news',
+              item['image_url'],
+              item['author'] ?? 'MatricMate Team',
+              item['audience'] ?? 'both',
+              (item['is_pinned'] == true || item['is_pinned'] == 1) ? 1 : 0,
+              item['created_at']?.toString() ?? DateTime.now().toIso8601String(),
+              (item['is_read'] == true || item['is_read'] == 1) ? 1 : 0,
+            ],
           );
         }
         await batch.commit(noResult: true);
@@ -1289,8 +1316,16 @@ class DatabaseService extends GetxController {
   Future<List<Map<String, dynamic>>> getTipsAndNews({String? category}) async {
     final db = await database;
     try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_reads (
+          item_id INTEGER PRIMARY KEY,
+          read_at TEXT NOT NULL
+        )
+      ''');
       String query = '''
-        SELECT t.*, 
+        SELECT 
+          t.id, t.title, t.content, t.category, t.image_url, 
+          t.author, t.audience, t.is_pinned, t.created_at,
           CASE WHEN r.item_id IS NOT NULL OR t.is_read = 1 THEN 1 ELSE 0 END AS is_read
         FROM tips_and_news t
         LEFT JOIN tips_news_reads r ON t.id = r.item_id
@@ -1312,6 +1347,12 @@ class DatabaseService extends GetxController {
   Future<void> markTipOrNewsRead(int id) async {
     final db = await database;
     try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_reads (
+          item_id INTEGER PRIMARY KEY,
+          read_at TEXT NOT NULL
+        )
+      ''');
       final now = DateTime.now().toIso8601String();
       await db.transaction((txn) async {
         await txn.insert(
@@ -1333,6 +1374,12 @@ class DatabaseService extends GetxController {
   Future<void> markAllTipsAndNewsRead() async {
     final db = await database;
     try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_reads (
+          item_id INTEGER PRIMARY KEY,
+          read_at TEXT NOT NULL
+        )
+      ''');
       final rows = await db.query('tips_and_news', columns: ['id']);
       final now = DateTime.now().toIso8601String();
       await db.transaction((txn) async {
@@ -1357,11 +1404,17 @@ class DatabaseService extends GetxController {
   Future<int> getUnreadTipsAndNewsCount() async {
     final db = await database;
     try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_reads (
+          item_id INTEGER PRIMARY KEY,
+          read_at TEXT NOT NULL
+        )
+      ''');
       final res = await db.rawQuery('''
         SELECT COUNT(*) as count 
         FROM tips_and_news t
         WHERE t.id NOT IN (SELECT item_id FROM tips_news_reads)
-          AND t.is_read = 0
+          AND (t.is_read IS NULL OR t.is_read = 0)
       ''');
       if (res.isNotEmpty && res.first['count'] != null) {
         return (res.first['count'] as num).toInt();

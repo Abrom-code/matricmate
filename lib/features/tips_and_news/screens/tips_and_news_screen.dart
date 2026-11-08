@@ -171,6 +171,10 @@ class _TipsAndNewsScreenState extends State<TipsAndNewsScreen> {
                         tooltip: 'Refresh',
                         onSuccessMessage: 'Tips & news updated',
                         counterClockwise: true,
+                        color: dark ? Colors.white : AppColors.textPrimary,
+                        backgroundColor: dark
+                            ? Colors.white.withValues(alpha: 0.12)
+                            : Colors.black.withValues(alpha: 0.05),
                       ),
                     ),
                   ),
@@ -295,10 +299,17 @@ class _TipsAndNewsScreenState extends State<TipsAndNewsScreen> {
                   itemBuilder: (context, index) {
                     final item = items[index];
                     return TipsNewsCard(
+                      key: ValueKey('tips_news_${item.id}_${item.isRead}'),
                       item: item,
-                      onTap: () => Get.to(
-                        () => TipsAndNewsDetailScreen(item: item),
-                      ),
+                      onTap: () async {
+                        controller.markAsRead(item.id);
+                        await Get.to(
+                          () => TipsAndNewsDetailScreen(
+                            item: item.copyWith(isRead: true),
+                          ),
+                        );
+                        controller.loadLocalData();
+                      },
                     );
                   },
                 );

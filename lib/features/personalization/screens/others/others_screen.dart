@@ -159,7 +159,10 @@ class _OthersScreenState extends State<OthersScreen> {
                   icon: Iconsax.lamp_charge_copy,
                   iconColor: const Color(0xFF8B5CF6),
                   showRedDot: hasUnread,
-                  onTap: () => Get.toNamed(Routes.tipsAndNews),
+                  onTap: () async {
+                    await Get.toNamed(Routes.tipsAndNews);
+                    TipsAndNewsController.instance.loadLocalData();
+                  },
                 );
               }),
             ],

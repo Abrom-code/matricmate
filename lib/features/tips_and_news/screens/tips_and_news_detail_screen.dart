@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
@@ -23,9 +22,7 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
   void initState() {
     super.initState();
     // Mark as read immediately on viewing
-    if (Get.isRegistered<TipsAndNewsController>()) {
-      TipsAndNewsController.instance.markAsRead(widget.item.id);
-    }
+    TipsAndNewsController.instance.markAsRead(widget.item.id);
   }
 
   void _shareContent() {

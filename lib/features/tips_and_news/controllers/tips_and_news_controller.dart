@@ -123,12 +123,14 @@ class TipsAndNewsController extends GetxController {
   /// Marks a single item as read locally.
   Future<void> markAsRead(int itemId) async {
     final idx = allItems.indexWhere((i) => i.id == itemId);
-    if (idx != -1 && !allItems[idx].isRead) {
-      allItems[idx] = allItems[idx].copyWith(isRead: true);
-      allItems.refresh();
-      unreadCount.value = (unreadCount.value - 1).clamp(0, 9999);
-      await _repo.markAsRead(itemId);
+    if (idx != -1) {
+      if (!allItems[idx].isRead) {
+        allItems[idx] = allItems[idx].copyWith(isRead: true);
+        allItems.refresh();
+        unreadCount.value = (unreadCount.value - 1).clamp(0, 9999);
+      }
     }
+    await _repo.markAsRead(itemId);
   }
 
   /// Marks all items as read locally.

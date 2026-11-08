@@ -26,6 +26,38 @@ class AppExplanationBox extends StatelessWidget {
   final ValueChanged<String> onLanguageChange;
   final String? explanationImageUrl;
 
+  static bool _isValidExplanation(String? text, {required bool isAmharic}) {
+    if (text == null) return false;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return false;
+    final lower = trimmed.toLowerCase();
+    if (isAmharic) {
+      if (lower.startsWith('no amharic explanation') ||
+          lower == 'no amharic' ||
+          lower == 'null' ||
+          lower == 'none' ||
+          lower == 'n/a' ||
+          lower.contains('የአማርኛ ማብራሪያ የለም') ||
+          lower.contains('ማብራሪያ የለም')) {
+        return false;
+      }
+    } else {
+      if (lower.startsWith('no english explanation') ||
+          lower.startsWith('no explanation') ||
+          lower == 'no english' ||
+          lower == 'null' ||
+          lower == 'none' ||
+          lower == 'n/a') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool get _hasEn => _isValidExplanation(explanationEn, isAmharic: false);
+  bool get _hasAm => _isValidExplanation(explanationAm, isAmharic: true);
+  bool get _hasBoth => _hasEn && _hasAm;
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
@@ -75,8 +107,8 @@ class AppExplanationBox extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      // language toggle when expanded
-                      if (expanded)
+                      // Show language toggle ONLY when expanded and BOTH explanations exist
+                      if (expanded && _hasBoth)
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: () {},
@@ -90,7 +122,9 @@ class AppExplanationBox extends StatelessWidget {
                         )
                       else
                         Icon(
-                          Icons.keyboard_arrow_down_rounded,
+                          expanded
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
                           color: AppColors.primary.withValues(alpha: 0.8),
                           size: 20,
                         ),
@@ -116,9 +150,16 @@ class AppExplanationBox extends StatelessWidget {
                         color: AppColors.primary.withValues(alpha: 0.15),
                       ),
                       Obx(() {
-                        final text = languageSelected.value == 'AM'
-                            ? explanationAm
-                            : explanationEn;
+                        final isAmSelected =
+                            languageSelected.value.trim().toUpperCase() == 'AM';
+                        final String text;
+                        if (_hasBoth) {
+                          text = isAmSelected ? explanationAm : explanationEn;
+                        } else if (_hasAm) {
+                          text = explanationAm;
+                        } else {
+                          text = explanationEn;
+                        }
                         final baseStyle = TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w400,
@@ -129,16 +170,25 @@ class AppExplanationBox extends StatelessWidget {
                               : AppColors.darkerGrey,
                         );
                         return GestureDetector(
-                          // Swipe left → Amharic, swipe right → English
-                          onHorizontalDragEnd: (details) {
-                            final dx = details.primaryVelocity ?? 0;
-                            if (dx < -200 && languageSelected.value != 'AM') {
-                              onLanguageChange('AM');
-                            } else if (dx > 200 &&
-                                languageSelected.value != 'EN') {
-                              onLanguageChange('EN');
-                            }
-                          },
+                          // Swipe left → Amharic, swipe right → English (only if both exist)
+                          onHorizontalDragEnd: _hasBoth
+                              ? (details) {
+                                  final dx = details.primaryVelocity ?? 0;
+                                  final isAm = languageSelected.value
+                                          .trim()
+                                          .toUpperCase() ==
+                                      'AM';
+                                  if (dx < -200 && !isAm) {
+                                    onLanguageChange(
+                                      languageSelected.value == 'en' ? 'am' : 'AM',
+                                    );
+                                  } else if (dx > 200 && isAm) {
+                                    onLanguageChange(
+                                      languageSelected.value == 'am' ? 'en' : 'EN',
+                                    );
+                                  }
+                                }
+                              : null,
                           behavior: HitTestBehavior.opaque,
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -218,9 +268,11 @@ class _LangToggle extends StatelessWidget {
   }
 
   Widget _pill(String label, String value) {
-    final isSelected = selected == value;
+    final isSelected =
+        selected.trim().toUpperCase() == value.trim().toUpperCase();
     return GestureDetector(
-      onTap: () => onTap(value),
+      onTap: () =>
+          onTap(selected == 'en' || selected == 'am' ? value.toLowerCase() : value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

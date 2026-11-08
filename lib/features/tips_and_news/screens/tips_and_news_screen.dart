@@ -20,6 +20,8 @@ class TipsAndNewsScreen extends StatefulWidget {
 class _TipsAndNewsScreenState extends State<TipsAndNewsScreen> {
   late final TipsAndNewsController controller;
   final TextEditingController _searchCtrl = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -27,8 +29,25 @@ class _TipsAndNewsScreenState extends State<TipsAndNewsScreen> {
     controller = TipsAndNewsController.instance;
   }
 
+  void _openSearch() {
+    setState(() => _isSearching = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _searchFocusNode.canRequestFocus) {
+        _searchFocusNode.requestFocus();
+      }
+    });
+  }
+
+  void _closeSearch() {
+    _searchFocusNode.unfocus();
+    _searchCtrl.clear();
+    controller.updateSearch('');
+    setState(() => _isSearching = false);
+  }
+
   @override
   void dispose() {
+    _searchFocusNode.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -37,187 +56,179 @@ class _TipsAndNewsScreenState extends State<TipsAndNewsScreen> {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
-    return Scaffold(
-      backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Tips & News',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Obx(() {
-              final total = controller.allItems.length;
-              final unread = controller.unreadCount.value;
-              String sub = '$total updates';
-              if (unread > 0) {
-                sub += ' • $unread unread';
-              }
-              return Text(
-                sub,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+    return PopScope(
+      canPop: !_isSearching,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_isSearching) {
+          _closeSearch();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          titleSpacing: _isSearching ? 0 : null,
+          leading: _isSearching
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, size: 22),
+                  tooltip: 'Close search',
+                  onPressed: _closeSearch,
+                )
+              : null,
+          title: _isSearching
+              ? TextField(
+                  focusNode: _searchFocusNode,
+                  controller: _searchCtrl,
+                  onChanged: controller.updateSearch,
+                  textInputAction: TextInputAction.search,
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w500,
+                    color: dark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Search tips & news...',
+                    hintStyle: TextStyle(
+                      fontSize: 14.5,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    isDense: true,
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Tips & News',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Obx(() {
+                      final total = controller.allItems.length;
+                      final unread = controller.unreadCount.value;
+                      String sub = '$total updates';
+                      if (unread > 0) {
+                        sub += ' • $unread unread';
+                      }
+                      return Text(
+                        sub,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                        ),
+                      );
+                    }),
+                  ],
                 ),
-              );
-            }),
-          ],
-        ),
-        actions: [
-          // Mark all read action (when unread items exist)
-          Obx(() {
-            if (controller.unreadCount.value == 0) {
-              return const SizedBox.shrink();
-            }
-            return IconButton(
-              icon: const Icon(Icons.done_all_rounded, size: 20),
-              tooltip: 'Mark all as read',
-              onPressed: () => controller.markAllAsRead(),
-            );
-          }),
-
-          // Refresh button
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Obx(
-              () => ReactiveRefreshButton(
-                isRefreshing: controller.isRefreshing.value,
-                onRefresh: () => controller.syncRemote(isManual: true),
-                tooltip: 'Refresh',
-                onSuccessMessage: 'Tips & news updated',
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: () => controller.syncRemote(isManual: true),
-        child: Column(
-          children: [
-            // ── Tab & Filter Header ─────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              color: dark ? AppColors.darkCard : Colors.white,
-              child: Column(
-                children: [
-                  // Tab Pills: All | News | Tips
+          actions: _isSearching
+              ? [
                   Obx(() {
-                    final current = controller.selectedTab.value;
-                    final total = controller.allItems.length;
-                    final news = controller.newsCount;
-                    final tips = controller.tipsCount;
+                    if (controller.searchQuery.value.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 20),
+                      tooltip: 'Clear search',
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        controller.updateSearch('');
+                      },
+                    );
+                  }),
+                  const SizedBox(width: 4),
+                ]
+              : [
+                  // Search button in AppBar
+                  IconButton(
+                    icon: const Icon(Iconsax.search_normal_1_copy, size: 20),
+                    tooltip: 'Search',
+                    onPressed: _openSearch,
+                  ),
 
-                    return Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: dark ? AppColors.dark : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          _buildTabItem(
-                            title: 'All',
-                            count: total,
-                            isSelected: current == TipsNewsTab.all,
-                            dark: dark,
-                            onTap: () => controller.selectTab(TipsNewsTab.all),
-                          ),
-                          _buildTabItem(
-                            title: 'News',
-                            count: news,
-                            isSelected: current == TipsNewsTab.news,
-                            dark: dark,
-                            onTap: () => controller.selectTab(TipsNewsTab.news),
-                          ),
-                          _buildTabItem(
-                            title: 'Tips',
-                            count: tips,
-                            isSelected: current == TipsNewsTab.tips,
-                            dark: dark,
-                            onTap: () => controller.selectTab(TipsNewsTab.tips),
-                          ),
-                        ],
-                      ),
+                  // Mark all read action (when unread items exist)
+                  Obx(() {
+                    if (controller.unreadCount.value == 0) {
+                      return const SizedBox.shrink();
+                    }
+                    return IconButton(
+                      icon: const Icon(Icons.done_all_rounded, size: 20),
+                      tooltip: 'Mark all as read',
+                      onPressed: () => controller.markAllAsRead(),
                     );
                   }),
 
-                  const SizedBox(height: 10),
-
-                  // Search Field
-                  TextField(
-                    controller: _searchCtrl,
-                    onChanged: controller.updateSearch,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      color: dark ? Colors.white : AppColors.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Search news, exam updates, tips...',
-                      hintStyle: TextStyle(
-                        fontSize: 13,
-                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                      ),
-                      prefixIcon: const Icon(
-                        Iconsax.search_normal_1_copy,
-                        size: 16,
-                      ),
-                      suffixIcon: Obx(() {
-                        if (controller.searchQuery.value.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        return IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 16),
-                          onPressed: () {
-                            _searchCtrl.clear();
-                            controller.updateSearch('');
-                          },
-                        );
-                      }),
-                      filled: true,
-                      fillColor: dark
-                          ? const Color(0xFF262626)
-                          : const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                          color: dark
-                              ? AppColors.darkBorder
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                          color: dark
-                              ? AppColors.darkBorder
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: AppColors.primary,
-                          width: 1.2,
-                        ),
+                  // Refresh button with right-to-left rotation
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Obx(
+                      () => ReactiveRefreshButton(
+                        isRefreshing: controller.isRefreshing.value,
+                        onRefresh: () => controller.syncRemote(isManual: true),
+                        tooltip: 'Refresh',
+                        onSuccessMessage: 'Tips & news updated',
+                        counterClockwise: true,
                       ),
                     ),
                   ),
                 ],
+        ),
+        body: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () => controller.syncRemote(isManual: true),
+          child: Column(
+            children: [
+              // ── Tab Header ──────────────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                color: dark ? AppColors.darkCard : Colors.white,
+                child: Obx(() {
+                  final current = controller.selectedTab.value;
+                  final total = controller.allItems.length;
+                  final news = controller.newsCount;
+                  final tips = controller.tipsCount;
+
+                  return Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: dark ? AppColors.dark : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildTabItem(
+                          title: 'All',
+                          count: total,
+                          isSelected: current == TipsNewsTab.all,
+                          dark: dark,
+                          onTap: () => controller.selectTab(TipsNewsTab.all),
+                        ),
+                        _buildTabItem(
+                          title: 'News',
+                          count: news,
+                          isSelected: current == TipsNewsTab.news,
+                          dark: dark,
+                          onTap: () => controller.selectTab(TipsNewsTab.news),
+                        ),
+                        _buildTabItem(
+                          title: 'Tips',
+                          count: tips,
+                          isSelected: current == TipsNewsTab.tips,
+                          dark: dark,
+                          onTap: () => controller.selectTab(TipsNewsTab.tips),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               ),
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            // ── Feed List View ──────────────────────────────────────────────
+              // ── Feed List View ──────────────────────────────────────────────
             Expanded(
               child: Obx(() {
                 if (controller.isLoading.value && controller.allItems.isEmpty) {
@@ -296,8 +307,9 @@ class _TipsAndNewsScreenState extends State<TipsAndNewsScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTabItem({
     required String title,

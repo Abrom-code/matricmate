@@ -18,10 +18,14 @@ class ReactiveRefreshButton extends StatefulWidget {
     this.color = AppColors.white,
     this.backgroundColor,
     this.onSuccessMessage,
+    this.counterClockwise = true,
   });
 
   /// Whether a refresh is currently running (e.g. from an RxBool observable).
   final bool isRefreshing;
+
+  /// Whether to spin counter-clockwise (right to left). Defaults to true.
+  final bool counterClockwise;
 
   /// Async callback invoked when the user taps the refresh button.
   final Future<void> Function() onRefresh;
@@ -171,7 +175,7 @@ class _ReactiveRefreshButtonState extends State<ReactiveRefreshButton>
           child: AnimatedBuilder(
             animation: _ctrl,
             builder: (_, child) => Transform.rotate(
-              angle: _ctrl.value * 2 * math.pi,
+              angle: (widget.counterClockwise ? -1 : 1) * _ctrl.value * 2 * math.pi,
               child: child,
             ),
             child: Icon(

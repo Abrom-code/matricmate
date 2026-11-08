@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:matricmate/features/tips_and_news/models/tips_and_news_model.dart';
-import 'package:matricmate/features/tips_and_news/controllers/tips_and_news_controller.dart';
 
 void main() {
   group('TipsAndNewsModel Tests', () {

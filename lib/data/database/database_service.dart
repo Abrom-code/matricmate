@@ -1295,7 +1295,7 @@ class DatabaseService extends GetxController {
         FROM tips_and_news t
         LEFT JOIN tips_news_reads r ON t.id = r.item_id
       ''';
-      List<dynamic> args = [];
+      final List<dynamic> args = [];
       if (category != null && category.isNotEmpty && category.toLowerCase() != 'all') {
         query += ' WHERE LOWER(t.category) = ? ';
         args.add(category.toLowerCase());

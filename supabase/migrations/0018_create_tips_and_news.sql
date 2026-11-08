@@ -26,24 +26,22 @@ CREATE INDEX IF NOT EXISTS idx_tips_and_news_audience
 -- Row Level Security
 ALTER TABLE public.tips_and_news ENABLE ROW LEVEL SECURITY;
 
--- Read policy: Authenticated users can read published items
+-- Read policy: Authenticated users can read published items (or admins can read all)
+DROP POLICY IF EXISTS "Allow authenticated read for published tips and news" ON public.tips_and_news;
 CREATE POLICY "Allow authenticated read for published tips and news"
     ON public.tips_and_news
     FOR SELECT
     TO authenticated
-    USING (is_published = true);
+    USING (is_published = true OR public.is_admin());
 
--- Write policy: Admins only
+-- Write policy: Admins only can insert, update, or delete
+DROP POLICY IF EXISTS "Allow admins full management of tips and news" ON public.tips_and_news;
 CREATE POLICY "Allow admins full management of tips and news"
     ON public.tips_and_news
     FOR ALL
     TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.users
-            WHERE users.id = auth.uid() AND users.role = 'admin'
-        )
-    );
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
 
 -- Seed Initial Starter Tips & News
 INSERT INTO public.tips_and_news (title, content, category, author, audience, is_pinned, is_published)

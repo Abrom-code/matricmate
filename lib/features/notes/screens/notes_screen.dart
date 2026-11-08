@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
@@ -10,6 +11,7 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/test_access_helper.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -106,6 +108,17 @@ class _NotesScreenState extends State<NotesScreen>
           ],
         ),
         actions: [
+          Obx(() {
+            final syncing = controller.isLoading.value;
+            return SyncIconButton(
+              isSyncing: syncing,
+              tooltip: 'Sync notes',
+              onPressed: () async {
+                await controller.loadSubjectNotes(forceRemote: true);
+                ToastHelper.success('${controller.title} notes updated!');
+              },
+            );
+          }),
           _buildAppBarAction(),
         ],
         bottom: isCommon

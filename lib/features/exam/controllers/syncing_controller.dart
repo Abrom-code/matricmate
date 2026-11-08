@@ -4,6 +4,7 @@ import 'package:matricmate/data/repositories/exam/subject_repository.dart';
 import 'package:matricmate/data/repositories/exam/sync_repository.dart';
 import 'package:matricmate/data/repositories/notes/notes_repository.dart';
 import 'package:matricmate/features/exam/controllers/chapter_controller.dart';
+import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/exam/models/chapter_model.dart';
 import 'package:matricmate/features/exam/models/passage_model.dart';
@@ -104,6 +105,72 @@ class SyncingController extends GetxController {
       if (showUiLoading) {
         final name = subjectName ?? 'Subject';
         ToastHelper.success('$name updated successfully!');
+      }
+
+      return true;
+    } catch (e) {
+      if (showUiLoading) {
+        AppExceptionHandler.handleResponse(e);
+      }
+      return false;
+    } finally {
+      syncingSubjectIds.remove(subjectId);
+    }
+  }
+
+  // ── Entrance & Model Exams Sync for a Single Subject ─────────────────────
+
+  Future<bool> syncEntranceExamsForSubject(
+    int subjectId, {
+    String? subjectName,
+    bool showUiLoading = true,
+  }) async {
+    if (syncingSubjectIds.contains(subjectId)) return true;
+
+    try {
+      syncingSubjectIds.add(subjectId);
+
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) {
+        if (showUiLoading) {
+          ToastHelper.warning('No Internet connection!');
+        }
+        return false;
+      }
+
+      final syncStarted = DateTime.now().toUtc();
+      final since = await SyncPrefs.lastSubjectEntranceSync(subjectId);
+
+      // Download/delta-sync entrance and model tests for this subject
+      await _syncRepository.downloadEntranceTests([subjectId], since: since);
+
+      // Mark subject as entrance downloaded in SQLite
+      final db = await DatabaseService.instance.database;
+      await db.update(
+        'subjects',
+        {'is_entrance_downloaded': 1},
+        where: 'id = ?',
+        whereArgs: [subjectId],
+      );
+
+      // Save timestamp
+      await SyncPrefs.saveSubjectEntranceSync(subjectId, syncStarted);
+
+      // Refresh remote counts and reload local subjects
+      await SubjectsController.instance.refreshEntranceCountsFromRemote();
+      await SubjectsController.instance.loadLocalSubjects();
+
+      // Reload EntranceExamsController if currently active for this subject
+      if (Get.isRegistered<EntranceExamsController>()) {
+        final entranceCtrl = EntranceExamsController.instance;
+        if (entranceCtrl.subjectId == subjectId) {
+          await entranceCtrl.loadAllExams(subjectId);
+        }
+      }
+
+      if (showUiLoading) {
+        final name = subjectName ?? 'Subject';
+        ToastHelper.success('$name exams updated!');
       }
 
       return true;

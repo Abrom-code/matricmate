@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
+import 'package:matricmate/features/exam/controllers/syncing_controller.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/widgets/test_tile.dart';
@@ -100,6 +102,22 @@ class _EntranceExamsScreenState extends State<EntranceExamsScreen>
             ),
           ],
         ),
+        actions: [
+          Obx(() {
+            final syncing =
+                SyncingController.instance.isSyncingSubject(ctrl.subjectId);
+            return SyncIconButton(
+              isSyncing: syncing,
+              tooltip: 'Sync $subject exams',
+              onPressed: () =>
+                  SyncingController.instance.syncEntranceExamsForSubject(
+                ctrl.subjectId,
+                subjectName: subject,
+              ),
+            );
+          }),
+          const SizedBox(width: 8),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
@@ -194,10 +212,12 @@ class _ExamList extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
+    final Widget content;
     if (tests.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
+      content = SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 64.0),
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -224,7 +244,7 @@ class _ExamList extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Check back soon or sync on the home screen to refresh.',
+                'Pull down to check for newly added exams.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textSecondary,
@@ -236,136 +256,146 @@ class _ExamList extends StatelessWidget {
           ),
         ),
       );
+    } else {
+      final user = UserController.instance.user.value;
+      final displayTests = TestAccessHelper.sortForUser(tests, user);
+
+      final isLandscape =
+          MediaQuery.orientationOf(context) == Orientation.landscape;
+
+      final list = ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
+        itemCount: displayTests.length + 1,
+        itemBuilder: (context, index) {
+          // Top count header
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12, left: 2, right: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '$label Papers',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 3.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(
+                        alpha: dark ? 0.2 : 0.1,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${displayTests.length} tests available',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final test = displayTests[index - 1];
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Obx(() {
+              final user = UserController.instance.user.value;
+              final canAccess = TestAccessHelper.canAccess(
+                test: test,
+                user: user,
+              );
+
+              // Subscribe to testResults so tile rebuilds reactively.
+              final _ = controller.testResults[test.id];
+
+              return TestTile(
+                testId: test.id,
+                icon: canAccess ? Iconsax.message_question_copy : Icons.lock,
+                iconColor: canAccess ? AppColors.primary : Colors.amber,
+                currentStep: controller.getCurrentStep(test.id),
+                maxStep: controller.getMaxStep(test.id),
+                correctAnswers: controller.getCorrectAnswers(test.id),
+                isInProgress: controller.isInProgress(test.id),
+                testName: test.title,
+                description: test.description,
+                questionCount:
+                    controller.testQuestionCounts[test.id] ?? test.questionCount,
+                timeMinutes: test.time,
+                isNew: test.isNew,
+                onTap: () {
+                  TestAccessHelper.handleTestTap(
+                    test: test,
+                    user: user,
+                    onQuestionsDownloaded: (hasQuestions, count) {
+                      controller.testHasQuestions[test.id] = hasQuestions;
+                      controller.testQuestionCounts[test.id] = count;
+                    },
+                    onStart: () {
+                      final currentHasQn =
+                          controller.testHasQuestions[test.id] ?? false;
+                      if (!currentHasQn) {
+                        ToastHelper.info('No questions added yet!');
+                        return;
+                      }
+                      final updatedCount =
+                          controller.testQuestionCounts[test.id] ??
+                          test.questionCount;
+                      Get.to(
+                        () => ReadyScreen(
+                          qnCount: updatedCount,
+                          time: test.time,
+                          testId: test.id,
+                          id: 2,
+                          examTitle: test.title,
+                          description: test.description,
+                          subjectName: controller.subjectName,
+                          draft: controller.isInProgress(test.id)
+                              ? controller.testResults[test.id]
+                              : null,
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            }),
+          );
+        },
+      );
+
+      content = isLandscape
+          ? Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: list,
+              ),
+            )
+          : list;
     }
 
-    final user = UserController.instance.user.value;
-    final displayTests = TestAccessHelper.sortForUser(tests, user);
-
-    final isLandscape =
-        MediaQuery.orientationOf(context) == Orientation.landscape;
-
-    final list = ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
-      itemCount: displayTests.length + 1,
-      itemBuilder: (context, index) {
-        // Top count header
-        if (index == 0) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12, left: 2, right: 2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$label Papers',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 3.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(
-                      alpha: dark ? 0.2 : 0.1,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${displayTests.length} tests available',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        final test = displayTests[index - 1];
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Obx(() {
-            final user = UserController.instance.user.value;
-            final canAccess = TestAccessHelper.canAccess(
-              test: test,
-              user: user,
-            );
-
-            // Subscribe to testResults so tile rebuilds reactively.
-            final _ = controller.testResults[test.id];
-
-            return TestTile(
-              testId: test.id,
-              icon: canAccess ? Iconsax.message_question_copy : Icons.lock,
-              iconColor: canAccess ? AppColors.primary : Colors.amber,
-              currentStep: controller.getCurrentStep(test.id),
-              maxStep: controller.getMaxStep(test.id),
-              correctAnswers: controller.getCorrectAnswers(test.id),
-              isInProgress: controller.isInProgress(test.id),
-              testName: test.title,
-              description: test.description,
-              questionCount:
-                  controller.testQuestionCounts[test.id] ?? test.questionCount,
-              timeMinutes: test.time,
-              isNew: test.isNew,
-              onTap: () {
-                TestAccessHelper.handleTestTap(
-                  test: test,
-                  user: user,
-                  onQuestionsDownloaded: (hasQuestions, count) {
-                    controller.testHasQuestions[test.id] = hasQuestions;
-                    controller.testQuestionCounts[test.id] = count;
-                  },
-                  onStart: () {
-                    final currentHasQn =
-                        controller.testHasQuestions[test.id] ?? false;
-                    if (!currentHasQn) {
-                      ToastHelper.info('No questions added yet!');
-                      return;
-                    }
-                    final updatedCount =
-                        controller.testQuestionCounts[test.id] ??
-                        test.questionCount;
-                    Get.to(
-                      () => ReadyScreen(
-                        qnCount: updatedCount,
-                        time: test.time,
-                        testId: test.id,
-                        id: 2,
-                        examTitle: test.title,
-                        description: test.description,
-                        subjectName: controller.subjectName,
-                        draft: controller.isInProgress(test.id)
-                            ? controller.testResults[test.id]
-                            : null,
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          }),
-        );
-      },
-    );
-
-    if (!isLandscape) return list;
-
-    // Landscape: constrain width so tiles don't stretch wall-to-wall.
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
-        child: list,
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () => SyncingController.instance.syncEntranceExamsForSubject(
+        controller.subjectId,
+        subjectName: controller.subjectName,
+        showUiLoading: false,
       ),
+      child: content,
     );
   }
 }

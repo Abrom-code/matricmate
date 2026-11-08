@@ -34,12 +34,6 @@ class TipsAndNewsModel {
   bool get isSaved => isUserPinned;
   bool get isAnyPinned => isPinned || isUserPinned;
 
-  int get readingTimeMinutes {
-    final words = content.trim().split(RegExp(r'\s+')).length;
-    final mins = (words / 140).ceil();
-    return mins < 1 ? 1 : mins;
-  }
-
   String get formattedDate {
     final now = DateTime.now();
     final diff = now.difference(createdAt);

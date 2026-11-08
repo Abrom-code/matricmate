@@ -28,7 +28,6 @@ void main() {
       expect(model.isPinned, isTrue);
       expect(model.isRead, isFalse);
       expect(model.author, equals('MoE Ethiopia'));
-      expect(model.readingTimeMinutes, equals(1));
 
       final backToJson = model.toJson();
       expect(backToJson['id'], equals(101));
@@ -36,7 +35,7 @@ void main() {
       expect(backToJson['is_pinned'], equals(1));
     });
 
-    test('Identifies tips correctly and calculates reading time', () {
+    test('Identifies tips correctly and formats date', () {
       final longContent = List.filled(300, 'study').join(' ');
       final model = TipsAndNewsModel(
         id: 102,
@@ -48,7 +47,6 @@ void main() {
 
       expect(model.isTip, isTrue);
       expect(model.isNews, isFalse);
-      expect(model.readingTimeMinutes, equals(3));
       expect(model.formattedDate, equals('3h ago'));
     });
 

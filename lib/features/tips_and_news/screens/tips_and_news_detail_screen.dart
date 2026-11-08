@@ -172,21 +172,6 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
                     ),
                   ),
                 ],
-                const Spacer(),
-                Icon(
-                  Icons.schedule_rounded,
-                  size: 14,
-                  color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${item.readingTimeMinutes} min read',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
               ],
             ),
 

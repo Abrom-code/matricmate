@@ -311,31 +311,15 @@ class TipsNewsCard extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                // Bottom Meta: Reading Time & Author
+                // Bottom Meta: Author
                 Row(
                   children: [
                     Icon(
-                      Icons.schedule_rounded,
+                      Icons.person_outline_rounded,
                       size: 13,
                       color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      '${item.readingTimeMinutes} min read',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      '•',
-                      style: TextStyle(
-                        color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         item.author,

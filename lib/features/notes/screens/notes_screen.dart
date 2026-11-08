@@ -41,6 +41,22 @@ class _NotesScreenState extends State<NotesScreen>
     _tabController.addListener(() {
       _currentTabIndex.value = _tabController.index;
     });
+
+    void autoFocusTabWithNotes() {
+      if (!mounted || _tabController.index != 0 || controller.subjectNotes.isEmpty) return;
+      if (controller.getNotesByGrade(9).isEmpty) {
+        for (int i = 0; i < _tabs.length; i++) {
+          final g = _tabs[i]['grade'] as int;
+          if (controller.getNotesByGrade(g).isNotEmpty) {
+            _tabController.animateTo(i);
+            break;
+          }
+        }
+      }
+    }
+
+    ever(controller.subjectNotes, (_) => autoFocusTabWithNotes());
+    WidgetsBinding.instance.addPostFrameCallback((_) => autoFocusTabWithNotes());
   }
 
   @override

@@ -61,6 +61,16 @@ class TipsAndNewsRepository {
     await _db.markAllTipsAndNewsRead();
   }
 
+  /// Toggles personal user pin in local SQLite (0ms, 0 network).
+  Future<bool> toggleUserPin(int id) async {
+    return await _db.toggleTipOrNewsUserPin(id);
+  }
+
+  /// Deletes tips or news items locally and persists tombstones so refresh never re-inserts them.
+  Future<void> deleteItems(List<int> ids) async {
+    await _db.deleteTipsAndNews(ids);
+  }
+
   /// Gets the count of unread items from local SQLite.
   Future<int> getUnreadCount() async {
     return await _db.getUnreadTipsAndNewsCount();

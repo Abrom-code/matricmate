@@ -319,6 +319,18 @@ class DatabaseService extends GetxController {
                 read_at TEXT NOT NULL
               )
             ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_user_pins (
+                item_id INTEGER PRIMARY KEY,
+                pinned_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_deletions (
+                item_id INTEGER PRIMARY KEY,
+                deleted_at TEXT NOT NULL
+              )
+            ''');
             await db.execute(
               'CREATE INDEX IF NOT EXISTS idx_tips_news_created ON tips_and_news(created_at DESC)',
             );
@@ -489,6 +501,18 @@ class DatabaseService extends GetxController {
               CREATE TABLE IF NOT EXISTS tips_news_reads (
                 item_id INTEGER PRIMARY KEY,
                 read_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_user_pins (
+                item_id INTEGER PRIMARY KEY,
+                pinned_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_deletions (
+                item_id INTEGER PRIMARY KEY,
+                deleted_at TEXT NOT NULL
               )
             ''');
           } catch (_) {}
@@ -1257,6 +1281,7 @@ class DatabaseService extends GetxController {
 
   /// Upserts remote tips and news items into local SQLite cache.
   /// Uses ON CONFLICT to update metadata while preserving existing local is_read status.
+  /// Skips any items deleted locally by the user so remote sync never re-inserts them.
   Future<void> saveTipsAndNews(List<Map<String, dynamic>> items) async {
     if (items.isEmpty) return;
     final db = await database;
@@ -1275,9 +1300,27 @@ class DatabaseService extends GetxController {
           is_read INTEGER DEFAULT 0
         )
       ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_deletions (
+          item_id INTEGER PRIMARY KEY,
+          deleted_at TEXT NOT NULL
+        )
+      ''');
+
+      final deletedRows = await db.query('tips_news_deletions', columns: ['item_id']);
+      final deletedSet = deletedRows
+          .map((r) => (r['item_id'] as num?)?.toInt())
+          .whereType<int>()
+          .toSet();
+
       await db.transaction((txn) async {
         final batch = txn.batch();
         for (final item in items) {
+          final rawId = (item['id'] as num?)?.toInt();
+          if (rawId == null || deletedSet.contains(rawId)) {
+            continue; // Skip items previously deleted by the user!
+          }
+
           batch.rawInsert(
             '''
             INSERT INTO tips_and_news (
@@ -1294,7 +1337,7 @@ class DatabaseService extends GetxController {
               created_at = excluded.created_at
             ''',
             [
-              item['id'],
+              rawId,
               item['title'] ?? '',
               item['content'] ?? '',
               item['category'] ?? 'news',
@@ -1312,7 +1355,8 @@ class DatabaseService extends GetxController {
     } catch (_) {}
   }
 
-  /// Retrieves cached tips and news joined with local read status.
+  /// Retrieves cached tips and news joined with local read and user-pinned status.
+  /// Excludes any items deleted locally by the user.
   Future<List<Map<String, dynamic>>> getTipsAndNews({String? category}) async {
     final db = await database;
     try {
@@ -1322,24 +1366,115 @@ class DatabaseService extends GetxController {
           read_at TEXT NOT NULL
         )
       ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_user_pins (
+          item_id INTEGER PRIMARY KEY,
+          pinned_at TEXT NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_deletions (
+          item_id INTEGER PRIMARY KEY,
+          deleted_at TEXT NOT NULL
+        )
+      ''');
       String query = '''
         SELECT 
           t.id, t.title, t.content, t.category, t.image_url, 
           t.author, t.audience, t.is_pinned, t.created_at,
-          CASE WHEN r.item_id IS NOT NULL OR t.is_read = 1 THEN 1 ELSE 0 END AS is_read
+          CASE WHEN r.item_id IS NOT NULL OR t.is_read = 1 THEN 1 ELSE 0 END AS is_read,
+          CASE WHEN up.item_id IS NOT NULL THEN 1 ELSE 0 END AS is_user_pinned
         FROM tips_and_news t
         LEFT JOIN tips_news_reads r ON t.id = r.item_id
+        LEFT JOIN tips_news_user_pins up ON t.id = up.item_id
+        WHERE t.id NOT IN (SELECT item_id FROM tips_news_deletions)
       ''';
       final List<dynamic> args = [];
       if (category != null && category.isNotEmpty && category.toLowerCase() != 'all') {
-        query += ' WHERE LOWER(t.category) = ? ';
+        query += ' AND LOWER(t.category) = ? ';
         args.add(category.toLowerCase());
       }
-      query += ' ORDER BY t.is_pinned DESC, t.created_at DESC';
+      query += ' ORDER BY (CASE WHEN t.is_pinned = 1 OR up.item_id IS NOT NULL THEN 1 ELSE 0 END) DESC, t.created_at DESC';
 
       return await db.rawQuery(query, args);
     } catch (_) {
       return [];
+    }
+  }
+
+  /// Deletes tips or news items locally and persists tombstones so remote refresh never re-inserts them.
+  Future<void> deleteTipsAndNews(List<int> ids) async {
+    if (ids.isEmpty) return;
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_deletions (
+          item_id INTEGER PRIMARY KEY,
+          deleted_at TEXT NOT NULL
+        )
+      ''');
+      final now = DateTime.now().toIso8601String();
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+        for (final id in ids) {
+          batch.insert(
+            'tips_news_deletions',
+            {'item_id': id, 'deleted_at': now},
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+          batch.delete(
+            'tips_and_news',
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+          batch.delete(
+            'tips_news_reads',
+            where: 'item_id = ?',
+            whereArgs: [id],
+          );
+          batch.delete(
+            'tips_news_user_pins',
+            where: 'item_id = ?',
+            whereArgs: [id],
+          );
+        }
+        await batch.commit(noResult: true);
+      });
+    } catch (_) {}
+  }
+
+  /// Toggles personal pin status for a tip or news item (0ms, 100% local SQLite).
+  /// Returns the new pinned state (true = pinned, false = unpinned).
+  Future<bool> toggleTipOrNewsUserPin(int id) async {
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_user_pins (
+          item_id INTEGER PRIMARY KEY,
+          pinned_at TEXT NOT NULL
+        )
+      ''');
+      final existing = await db.query(
+        'tips_news_user_pins',
+        where: 'item_id = ?',
+        whereArgs: [id],
+      );
+      if (existing.isNotEmpty) {
+        await db.delete(
+          'tips_news_user_pins',
+          where: 'item_id = ?',
+          whereArgs: [id],
+        );
+        return false;
+      } else {
+        await db.insert('tips_news_user_pins', {
+          'item_id': id,
+          'pinned_at': DateTime.now().toIso8601String(),
+        });
+        return true;
+      }
+    } catch (_) {
+      return false;
     }
   }
 
@@ -1410,10 +1545,17 @@ class DatabaseService extends GetxController {
           read_at TEXT NOT NULL
         )
       ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_deletions (
+          item_id INTEGER PRIMARY KEY,
+          deleted_at TEXT NOT NULL
+        )
+      ''');
       final res = await db.rawQuery('''
         SELECT COUNT(*) as count 
         FROM tips_and_news t
         WHERE t.id NOT IN (SELECT item_id FROM tips_news_reads)
+          AND t.id NOT IN (SELECT item_id FROM tips_news_deletions)
           AND (t.is_read IS NULL OR t.is_read = 0)
       ''');
       if (res.isNotEmpty && res.first['count'] != null) {

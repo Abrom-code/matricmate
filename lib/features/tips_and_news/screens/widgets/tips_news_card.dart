@@ -11,10 +11,18 @@ class TipsNewsCard extends StatelessWidget {
     super.key,
     required this.item,
     required this.onTap,
+    this.onPinToggle,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+    this.onLongPress,
   });
 
   final TipsAndNewsModel item;
   final VoidCallback onTap;
+  final VoidCallback? onPinToggle;
+  final bool isSelectionMode;
+  final bool isSelected;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +37,19 @@ class TipsNewsCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: dark ? AppColors.darkCard : Colors.white,
+        color: isSelected
+            ? (dark ? AppColors.primary.withValues(alpha: 0.12) : const Color(0xFFEFF6FF))
+            : (dark ? AppColors.darkCard : Colors.white),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: item.isPinned
-              ? AppColors.primary.withValues(alpha: 0.5)
-              : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
-          width: item.isPinned ? 1.5 : 1,
+          color: isSelected
+              ? AppColors.primary
+              : (item.isAnyPinned
+                  ? (item.isPinned
+                      ? AppColors.primary.withValues(alpha: 0.5)
+                      : const Color(0xFFF59E0B).withValues(alpha: 0.5))
+                  : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0))),
+          width: isSelected ? 1.8 : (item.isAnyPinned ? 1.5 : 1),
         ),
         boxShadow: [
           BoxShadow(
@@ -54,14 +68,40 @@ class TipsNewsCard extends StatelessWidget {
             HapticFeedback.lightImpact();
             onTap();
           },
+          onLongPress: () {
+            HapticFeedback.mediumImpact();
+            onLongPress?.call();
+          },
           child: Padding(
             padding: const EdgeInsets.all(15),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Meta Row: Category Badge + Pinned + Date + Unread Dot
+                // Top Meta Row: Checkbox (in selection mode) + Category Badge + Pinned + Date + Unread Dot
                 Row(
                   children: [
+                    if (isSelectionMode) ...[
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 20,
+                        height: 20,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected ? AppColors.primary : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (dark ? AppColors.darkGrey : const Color(0xFFCBD5E1)),
+                            width: 1.8,
+                          ),
+                        ),
+                        child: isSelected
+                            ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
+                            : null,
+                      ),
+                    ],
+
                     // Category Chip
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
@@ -116,6 +156,32 @@ class TipsNewsCard extends StatelessWidget {
                       ),
                     ],
 
+                    if (item.isUserPinned && !item.isPinned) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.bookmark_rounded, size: 11, color: Color(0xFFD97706)),
+                            SizedBox(width: 3),
+                            Text(
+                              'Saved',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFD97706),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     const Spacer(),
 
                     // Date
@@ -130,13 +196,40 @@ class TipsNewsCard extends StatelessWidget {
 
                     // Unread Red Dot
                     if (!item.isRead) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Container(
-                        width: 8.5,
-                        height: 8.5,
+                        width: 8,
+                        height: 8,
                         decoration: const BoxDecoration(
                           color: Color(0xFFEF4444),
                           shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+
+                    // Bookmark / User Save Button
+                    if (!isSelectionMode && onPinToggle != null) ...[
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message: item.isSaved ? 'Remove from saved' : 'Save',
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            onPinToggle!();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              item.isSaved
+                                  ? Icons.bookmark_rounded
+                                  : Icons.bookmark_border_rounded,
+                              size: 17,
+                              color: item.isSaved
+                                  ? const Color(0xFFF59E0B)
+                                  : (dark ? AppColors.darkGrey : const Color(0xFF94A3B8)),
+                            ),
+                          ),
                         ),
                       ),
                     ],

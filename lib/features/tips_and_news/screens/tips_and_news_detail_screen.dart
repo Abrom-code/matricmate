@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
@@ -32,6 +33,36 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
     );
   }
 
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete this update?'),
+        content: const Text(
+          'This update will be removed from your device and will not appear again even after refreshing.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFEF4444),
+            ),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await TipsAndNewsController.instance.deleteSingle(widget.item.id);
+      Get.back();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
@@ -52,10 +83,32 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         actions: [
+          Obx(() {
+            final match = TipsAndNewsController.instance.allItems
+                .firstWhereOrNull((i) => i.id == widget.item.id);
+            final isSaved = match?.isSaved ?? widget.item.isSaved;
+            return IconButton(
+              icon: Icon(
+                isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                size: 21,
+                color: isSaved
+                    ? const Color(0xFFF59E0B)
+                    : (dark ? Colors.white : AppColors.textPrimary),
+              ),
+              tooltip: isSaved ? 'Remove from saved' : 'Save',
+              onPressed: () =>
+                  TipsAndNewsController.instance.toggleSave(widget.item.id),
+            );
+          }),
           IconButton(
             icon: const Icon(Iconsax.share_copy, size: 20),
             tooltip: 'Share',
             onPressed: _shareContent,
+          ),
+          IconButton(
+            icon: const Icon(Iconsax.trash_copy, size: 20, color: Color(0xFFEF4444)),
+            tooltip: 'Delete',
+            onPressed: () => _confirmDelete(context),
           ),
           const SizedBox(width: 4),
         ],

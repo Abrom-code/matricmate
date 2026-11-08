@@ -10,6 +10,7 @@ class TipsAndNewsModel {
     this.author = 'MatricMate Team',
     this.audience = 'both',
     this.isPinned = false,
+    this.isUserPinned = false,
     this.isPublished = true,
     required this.createdAt,
     this.isRead = false,
@@ -23,12 +24,15 @@ class TipsAndNewsModel {
   final String author;
   final String audience;
   final bool isPinned;
+  final bool isUserPinned;
   final bool isPublished;
   final DateTime createdAt;
   final bool isRead;
 
   bool get isNews => category.toLowerCase().trim() == 'news';
   bool get isTip => category.toLowerCase().trim() == 'tip';
+  bool get isSaved => isUserPinned;
+  bool get isAnyPinned => isPinned || isUserPinned;
 
   int get readingTimeMinutes {
     final words = content.trim().split(RegExp(r'\s+')).length;
@@ -71,6 +75,7 @@ class TipsAndNewsModel {
       author: json['author']?.toString() ?? 'MatricMate Team',
       audience: json['audience']?.toString() ?? 'both',
       isPinned: json['is_pinned'] == true || json['is_pinned'] == 1,
+      isUserPinned: json['is_user_pinned'] == true || json['is_user_pinned'] == 1,
       isPublished: json['is_published'] == null || json['is_published'] == true || json['is_published'] == 1,
       createdAt: parseDate(json['created_at']),
       isRead: json['is_read'] == true || json['is_read'] == 1,
@@ -87,6 +92,7 @@ class TipsAndNewsModel {
       'author': author,
       'audience': audience,
       'is_pinned': isPinned ? 1 : 0,
+      'is_user_pinned': isUserPinned ? 1 : 0,
       'is_published': isPublished ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       'is_read': isRead ? 1 : 0,
@@ -102,6 +108,7 @@ class TipsAndNewsModel {
     String? author,
     String? audience,
     bool? isPinned,
+    bool? isUserPinned,
     bool? isPublished,
     DateTime? createdAt,
     bool? isRead,
@@ -115,6 +122,7 @@ class TipsAndNewsModel {
       author: author ?? this.author,
       audience: audience ?? this.audience,
       isPinned: isPinned ?? this.isPinned,
+      isUserPinned: isUserPinned ?? this.isUserPinned,
       isPublished: isPublished ?? this.isPublished,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,

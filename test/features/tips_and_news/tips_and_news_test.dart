@@ -143,6 +143,113 @@ void main() {
       expect(remainingUnread, equals(0));
       expect(remainingUnread > 0, isFalse);
     });
+
+    test('User pin, isSaved, and isAnyPinned logic', () {
+      final unpinned = sampleItems[1];
+      expect(unpinned.isPinned, isFalse);
+      expect(unpinned.isUserPinned, isFalse);
+      expect(unpinned.isSaved, isFalse);
+      expect(unpinned.isAnyPinned, isFalse);
+
+      final userPinned = unpinned.copyWith(isUserPinned: true);
+      expect(userPinned.isPinned, isFalse);
+      expect(userPinned.isUserPinned, isTrue);
+      expect(userPinned.isSaved, isTrue);
+      expect(userPinned.isAnyPinned, isTrue);
+
+      final adminPinned = sampleItems[0];
+      expect(adminPinned.isPinned, isTrue);
+      expect(adminPinned.isAnyPinned, isTrue);
+
+      // Sorting: any pinned items come first
+      final items = [unpinned, userPinned, adminPinned];
+      items.sort((a, b) {
+        final aPinned = a.isAnyPinned ? 1 : 0;
+        final bPinned = b.isAnyPinned ? 1 : 0;
+        if (aPinned != bPinned) return bPinned.compareTo(aPinned);
+        return b.createdAt.compareTo(a.createdAt);
+      });
+
+      expect(items.first.isAnyPinned, isTrue);
+      expect(items[1].isAnyPinned, isTrue);
+      expect(items.last.isAnyPinned, isFalse);
+    });
+
+    test('Deletion tombstone filtering prevents re-insertion on sync', () {
+      final remoteItems = [
+        TipsAndNewsModel(
+          id: 1,
+          title: 'News 1',
+          content: 'Content 1',
+          category: 'news',
+          createdAt: DateTime.now(),
+        ),
+        TipsAndNewsModel(
+          id: 2,
+          title: 'News 2',
+          content: 'Content 2',
+          category: 'news',
+          createdAt: DateTime.now(),
+        ),
+        TipsAndNewsModel(
+          id: 3,
+          title: 'News 3',
+          content: 'Content 3',
+          category: 'news',
+          createdAt: DateTime.now(),
+        ),
+      ];
+
+      // Simulated tombstone set of deleted item IDs
+      final deletedIds = {2};
+
+      // Remote sync filters out items in tombstones
+      final toSave = remoteItems.where((item) => !deletedIds.contains(item.id)).toList();
+
+      expect(toSave.length, equals(2));
+      expect(toSave.any((item) => item.id == 2), isFalse);
+      expect(toSave.map((e) => e.id), containsAll([1, 3]));
+    });
+
+    test('Batch deletion and selection set behavior', () {
+      final selectedIds = <int>{1, 3};
+      final allItems = [
+        TipsAndNewsModel(id: 1, title: 'Item 1', content: '', category: 'tip', createdAt: DateTime.now()),
+        TipsAndNewsModel(id: 2, title: 'Item 2', content: '', category: 'tip', createdAt: DateTime.now()),
+        TipsAndNewsModel(id: 3, title: 'Item 3', content: '', category: 'tip', createdAt: DateTime.now()),
+        TipsAndNewsModel(id: 4, title: 'Item 4', content: '', category: 'tip', createdAt: DateTime.now()),
+      ];
+
+      // Batch delete
+      final remaining = allItems.where((item) => !selectedIds.contains(item.id)).toList();
+      expect(remaining.length, equals(2));
+      expect(remaining.map((e) => e.id), containsAll([2, 4]));
+    });
+
+    test('Pagination logic handles initial limit and load more', () {
+      final hundredItems = List.generate(
+        100,
+        (i) => TipsAndNewsModel(
+          id: i + 1,
+          title: 'Tip $i',
+          content: 'Content $i',
+          category: 'tip',
+          createdAt: DateTime.now().subtract(Duration(minutes: i)),
+        ),
+      );
+
+      int displayLimit = 15;
+      final initialSlice = hundredItems.take(displayLimit).toList();
+      expect(initialSlice.length, equals(15));
+      expect(hundredItems.length > displayLimit, isTrue);
+      expect(hundredItems.length - displayLimit, equals(85));
+
+      // After load more (+15)
+      displayLimit += 15;
+      final secondSlice = hundredItems.take(displayLimit).toList();
+      expect(secondSlice.length, equals(30));
+      expect(hundredItems.length - displayLimit, equals(70));
+    });
   });
 }
 

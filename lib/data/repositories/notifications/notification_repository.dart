@@ -51,72 +51,63 @@ class NotificationRepository {
 
       final String? sinceIso = effectiveSince?.toUtc().toIso8601String();
 
-      // Fetch personal, broadcast, and read receipts in parallel
-      final readsQuery = _supabase
-          .from('notification_reads')
-          .select('notification_id')
-          .eq('user_id', userId);
-
-      final List<dynamic> notifFutures;
-      if (sinceIso != null) {
-        notifFutures = await Future.wait([
-          _supabase
-              .from('notifications')
-              .select()
-              .eq('user_id', userId)
-              .gte('created_at', sinceIso)
-              .order('created_at', ascending: false)
-              .limit(100),
-          _supabase
-              .from('notifications')
-              .select()
-              .isFilter('user_id', null)
-              .gte('created_at', sinceIso)
-              .order('created_at', ascending: false)
-              .limit(100),
-          readsQuery,
-        ]).timeout(AppTimeouts.sync);
-      } else {
-        notifFutures = await Future.wait([
-          _supabase
-              .from('notifications')
-              .select()
-              .eq('user_id', userId)
-              .order('created_at', ascending: false)
-              .limit(100),
-          _supabase
-              .from('notifications')
-              .select()
-              .isFilter('user_id', null)
-              .order('created_at', ascending: false)
-              .limit(100),
-          readsQuery,
-        ]).timeout(AppTimeouts.sync);
-      }
-
-      // Remote dismissals fetch (may fail if table doesn't exist yet)
-      List<Map<String, dynamic>> remoteDismissals = [];
+      // 1. Fetch personal and broadcast notifications in ONE single consolidated query
+      List<Map<String, dynamic>> rawRows;
       try {
-        final raw = await _supabase
-            .from('notification_dismissals')
-            .select('notification_id')
-            .eq('user_id', userId)
-            .timeout(AppTimeouts.bestEffort);
-        remoteDismissals = List<Map<String, dynamic>>.from(raw as List);
-      } catch (_) {
-        // Table doesn't exist on Supabase yet — local SQLite handles dismissals.
-      }
+        var query = _supabase
+            .from('notifications')
+            .select()
+            .or('user_id.eq.$userId,user_id.is.null');
 
-      final personalRows = List<Map<String, dynamic>>.from(
-        notifFutures[0] as List,
-      );
-      final allBroadcasts = List<Map<String, dynamic>>.from(
-        notifFutures[1] as List,
-      );
-      final readRows = List<Map<String, dynamic>>.from(notifFutures[2] as List);
+        if (sinceIso != null) {
+          query = query.gte('created_at', sinceIso);
+        }
+
+        final response = await query
+            .order('created_at', ascending: false)
+            .limit(100)
+            .timeout(AppTimeouts.sync);
+        rawRows = List<Map<String, dynamic>>.from(response as List);
+      } catch (e) {
+        debugPrint('[Notifications] Combined query failed, falling back to parallel: $e');
+        final results = await Future.wait([
+          sinceIso != null
+              ? _supabase
+                  .from('notifications')
+                  .select()
+                  .eq('user_id', userId)
+                  .gte('created_at', sinceIso)
+                  .order('created_at', ascending: false)
+                  .limit(100)
+              : _supabase
+                  .from('notifications')
+                  .select()
+                  .eq('user_id', userId)
+                  .order('created_at', ascending: false)
+                  .limit(100),
+          sinceIso != null
+              ? _supabase
+                  .from('notifications')
+                  .select()
+                  .isFilter('user_id', null)
+                  .gte('created_at', sinceIso)
+                  .order('created_at', ascending: false)
+                  .limit(100)
+              : _supabase
+                  .from('notifications')
+                  .select()
+                  .isFilter('user_id', null)
+                  .order('created_at', ascending: false)
+                  .limit(100),
+        ]).timeout(AppTimeouts.sync);
+        rawRows = [
+          ...List<Map<String, dynamic>>.from(results[0] as List),
+          ...List<Map<String, dynamic>>.from(results[1] as List),
+        ];
+      }
 
       // Filter broadcasts: keep global or stream-matching (case-insensitive)
-      final broadcastRows = allBroadcasts.where((r) {
+      final broadcastRows = rawRows.where((r) {
         final ts = r['target_stream']?.toString() ?? '';
         if (ts.isEmpty) return true;
         return userStream.isNotEmpty &&
@@ -126,7 +117,7 @@ class NotificationRepository {
       // Merge + deduplicate by id, sort newest first
       final seen = <dynamic>{};
       final rows = <Map<String, dynamic>>[];
-      for (final r in [...personalRows, ...broadcastRows]) {
+      for (final r in broadcastRows) {
         if (seen.add(r['id'])) rows.add(r);
       }
       rows.sort((a, b) {
@@ -138,12 +129,10 @@ class NotificationRepository {
       });
 
       debugPrint(
-        '[Notifications] fetched ${rows.length} total '
-        '(${personalRows.length} personal + ${broadcastRows.length} broadcast), '
-        '${readRows.length} reads',
+        '[Notifications] fetched ${rows.length} notifications via single consolidated request',
       );
 
-      // Load dismissed IDs from local + remote
+      // Load dismissed IDs from local SQLite
       final localDismissedRows = await db.query(
         'notification_dismissals',
         columns: ['notification_id'],
@@ -152,11 +141,6 @@ class NotificationRepository {
       );
       final dismissedIds = <int>{
         for (final r in localDismissedRows)
-          if (r['notification_id'] != null)
-            (r['notification_id'] is int
-                ? r['notification_id'] as int
-                : int.tryParse(r['notification_id'].toString()) ?? -1),
-        for (final r in remoteDismissals)
           if (r['notification_id'] != null)
             (r['notification_id'] is int
                 ? r['notification_id'] as int
@@ -173,16 +157,22 @@ class NotificationRepository {
         );
       }
 
-      // Build read-id set
-      final readIds = <int>{
-        for (final r in readRows)
-          if (r['notification_id'] != null)
-            (r['notification_id'] is int
-                ? r['notification_id'] as int
-                : int.tryParse(r['notification_id'].toString()) ?? -1),
+      // Query which notifications are already marked read in local SQLite
+      final existingLocalRows = await db.query(
+        'notifications',
+        columns: ['id', 'is_read'],
+        where: 'user_id = ? OR user_id = \'\'',
+        whereArgs: [userId],
+      );
+      final localReadIds = <int>{
+        for (final r in existingLocalRows)
+          if ((r['is_read'] as num?)?.toInt() == 1)
+            (r['id'] is int
+                ? r['id'] as int
+                : int.tryParse(r['id'].toString()) ?? -1),
       }..remove(-1);
 
-      // Upsert into local SQLite — skip dismissed rows entirely.
+      // Upsert into local SQLite — preserve local is_read status; skip dismissed rows entirely.
       int skipped = 0;
       final batch = db.batch();
       for (final row in rows) {
@@ -197,7 +187,8 @@ class NotificationRepository {
         }
         final map = AppNotification.fromMap(row).toMap();
         map['user_id'] = userId; // ensure local rows always have userId
-        map['is_read'] = readIds.contains(id) ? 1 : 0;
+        // Preserves read state locally on this device; newly arrived remote notifications are unread (0)
+        map['is_read'] = localReadIds.contains(id) ? 1 : 0;
         batch.insert(
           'notifications',
           map,
@@ -235,9 +226,9 @@ class NotificationRepository {
     return result.first['cnt'] as int? ?? 0;
   }
 
-  /// Marks a notification as read locally and records it in `notification_reads`.
+  /// Marks a notification as read locally in SQLite.
+  /// Zero network overhead — UI updates immediately (0ms).
   Future<void> markRead(int notificationId) async {
-    // 1. Update local SQLite immediately — UI reads from here.
     final db = await _db.database;
     await db.update(
       'notifications',
@@ -245,52 +236,18 @@ class NotificationRepository {
       where: 'id = ?',
       whereArgs: [notificationId],
     );
-
-    // Insert into notification_reads (idempotent via PK)
-    final uid = _currentUid;
-    if (uid == null) return;
-    try {
-      await _supabase.from('notification_reads').upsert({
-        'notification_id': notificationId,
-        'user_id': uid,
-      }, onConflict: 'notification_id,user_id').timeout(AppTimeouts.bestEffort);
-    } catch (_) {
-      // Best-effort — local state is already updated.
-    }
   }
 
-  /// Marks all notifications as read for this user.
+  /// Marks all notifications as read for this user locally in SQLite.
+  /// Zero network overhead — UI updates immediately (0ms).
   Future<void> markAllRead(String userId) async {
     final db = await _db.database;
-
-    // 1. Collect unread IDs before updating — needed for the remote upsert.
-    final unread = await db.query(
-      'notifications',
-      columns: ['id'],
-      where: 'user_id = ? AND is_read = 0',
-      whereArgs: [userId],
-    );
-
-    // 2. Mark all as read locally.
     await db.update(
       'notifications',
       {'is_read': 1},
-      where: 'user_id = ?',
+      where: 'user_id = ? OR user_id = \'\'',
       whereArgs: [userId],
     );
-
-    // 3. Bulk-upsert into notification_reads.
-    if (unread.isNotEmpty) {
-      try {
-        final rows = unread
-            .map((r) => {'notification_id': r['id'], 'user_id': userId})
-            .toList();
-        await _supabase
-            .from('notification_reads')
-            .upsert(rows, onConflict: 'notification_id,user_id')
-            .timeout(AppTimeouts.bestEffort);
-      } catch (_) {}
-    }
   }
 
   /// Inserts a notification locally for immediate UI update.
@@ -305,8 +262,8 @@ class NotificationRepository {
 
   /// Atomic bulk delete and dismissal recording for [items].
   ///
-  /// Guarantees that local SQLite deletes rows and records dismissals immediately
-  /// (<5ms) before initiating background server sync.
+  /// Local SQLite deletes rows and records dismissals immediately (<5ms).
+  /// Personal notifications are cleaned up from Supabase via a single best-effort call.
   Future<void> deleteNotifications(
     String userId,
     List<AppNotification> items,
@@ -339,30 +296,8 @@ class NotificationRepository {
       }
     });
 
-    // 2. Mark as read on Supabase so it can NEVER resurrect as unread on remote sync
+    // 2. Best-effort server cleanup: delete personal notifications owned by this user
     try {
-      final readRows = ids
-          .map((id) => {'notification_id': id, 'user_id': effectiveUid})
-          .toList();
-      await _supabase
-          .from('notification_reads')
-          .upsert(readRows, onConflict: 'notification_id,user_id')
-          .timeout(AppTimeouts.bestEffort);
-    } catch (_) {}
-
-    // 3. Server update (best-effort batch calls)
-    try {
-      final dismissalRows = ids
-          .map((id) => {'notification_id': id, 'user_id': effectiveUid})
-          .toList();
-      await _supabase
-          .from('notification_dismissals')
-          .upsert(dismissalRows, onConflict: 'notification_id,user_id')
-          .timeout(AppTimeouts.bestEffort);
-    } catch (_) {}
-
-    try {
-      // Best effort: also delete personal notifications owned by this user
       await _supabase
           .from('notifications')
           .delete()
@@ -417,30 +352,9 @@ class NotificationRepository {
       }
     });
 
-    // 3. Mark all as read on Supabase so they NEVER trigger unread badge on remote sync
+    // 3. Best-effort server cleanup: delete personal notifications owned by this user
     if (effectiveUid.isNotEmpty && allIds.isNotEmpty) {
       try {
-        final readRows = allIds
-            .map((id) => {'notification_id': id, 'user_id': effectiveUid})
-            .toList();
-        await _supabase
-            .from('notification_reads')
-            .upsert(readRows, onConflict: 'notification_id,user_id')
-            .timeout(AppTimeouts.bestEffort);
-      } catch (_) {}
-
-      try {
-        final dismissalRows = allIds
-            .map((id) => {'notification_id': id, 'user_id': effectiveUid})
-            .toList();
-        await _supabase
-            .from('notification_dismissals')
-            .upsert(dismissalRows, onConflict: 'notification_id,user_id')
-            .timeout(AppTimeouts.bestEffort);
-      } catch (_) {}
-
-      try {
-        // Also delete personal notifications owned by this user
         await _supabase
             .from('notifications')
             .delete()
@@ -462,7 +376,7 @@ class NotificationRepository {
 
     final ids = items.map((e) => e.id).toList();
 
-    // 1. Remove from local notification_dismissals & re-insert to notifications
+    // Restore rows and remove dismissals locally in a single atomic transaction
     await db.transaction((txn) async {
       final placeholders = List.filled(ids.length, '?').join(',');
       await txn.delete(
@@ -480,16 +394,6 @@ class NotificationRepository {
         );
       }
     });
-
-    // 2. Remove dismissals from server
-    try {
-      await _supabase
-          .from('notification_dismissals')
-          .delete()
-          .inFilter('notification_id', ids)
-          .eq('user_id', effectiveUid)
-          .timeout(AppTimeouts.bestEffort);
-    } catch (_) {}
   }
 
   Future<void> saveFcmToken(String userId, String token) async {

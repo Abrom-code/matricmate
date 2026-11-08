@@ -116,8 +116,8 @@ class AccountSettings extends StatelessWidget {
             Obx(() {
               final isSyncing = Get.find<SyncingController>().refreshing.value;
               return AppListTile(
-                icon: const Icon(Icons.sync_rounded, size: 18),
-                title: 'Sync All Content',
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                title: 'Refresh',
                 subtitle: 'Check for updates across all subjects',
                 trailing: isSyncing
                     ? const SizedBox(

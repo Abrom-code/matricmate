@@ -81,10 +81,12 @@ void main() {
     expect(liveFinder, findsOneWidget);
 
     final liveRect = tester.getRect(liveFinder);
+    final cardRect = tester.getRect(find.byType(AvailableChallengeCard));
     final headerRowRect = tester.getRect(find.byType(Row).first);
 
     // Live tag must be aligned to the top-right of the card and header row
     expect(liveRect.right, closeTo(headerRowRect.right, 1.0));
+    expect(liveRect.right, lessThanOrEqualTo(cardRect.right));
     expect(liveRect.top, closeTo(headerRowRect.top, 5.0));
   });
 }

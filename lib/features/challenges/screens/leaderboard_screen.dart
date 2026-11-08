@@ -7,6 +7,7 @@ import 'package:matricmate/features/challenges/screens/widgets/leaderboard_entry
 import 'package:matricmate/features/challenges/screens/widgets/leaderboard_podium.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class LeaderboardScreen extends StatefulWidget {
@@ -36,6 +37,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   void initState() {
     super.initState();
+    if (ChallengeAccessHelper.isFreeUser) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ChallengeAccessHelper.openPremiumSheet(replace: true);
+        }
+      });
+      return;
+    }
     _ctrl = Get.put(
       LeaderboardController(
         challengeId: widget.challengeId,
@@ -53,6 +62,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (ChallengeAccessHelper.isFreeUser) {
+      return const Scaffold(body: Center(child: AppCircularLoading()));
+    }
+
     final dark = AppHelperFunctions.isDark(context);
 
     return Scaffold(
@@ -69,8 +82,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
             Obx(() {
               final stream = _ctrl.activeStream.value;
-              final label =
-                  stream == 'social' ? 'Social Stream' : 'Natural Stream';
+              final label = stream == 'social'
+                  ? 'Social Stream'
+                  : 'Natural Stream';
               return Text(
                 '$label • Top Performers',
                 maxLines: 1,
@@ -108,8 +122,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           // ── Period Tabs (This Challenge / This Week / This Month) ────────
           Container(
             width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.md,
+              vertical: 8,
+            ),
             decoration: BoxDecoration(
               color: dark ? AppColors.darkCard : AppColors.white,
               border: Border(
@@ -162,7 +178,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           Expanded(
             child: Obx(() {
               if (_ctrl.isLoading.value) {
-                return const AppCircularLoading(title: 'Computing standings...');
+                return const AppCircularLoading(
+                  title: 'Computing standings...',
+                );
               }
 
               if (_ctrl.entries.isEmpty) {
@@ -173,8 +191,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     builder: (context, constraints) => SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       child: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(minHeight: constraints.maxHeight),
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -274,12 +293,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
             final hasRank = myEntry != null && myEntry.rank > 0;
             final rankStr = hasRank ? '#${myEntry.rank}' : '--';
-            final scoreVal = myEntry != null ? myEntry.score : (widget.userScore ?? 0);
+            final scoreVal = myEntry != null
+                ? myEntry.score
+                : (widget.userScore ?? 0);
             final timeVal = myEntry != null
                 ? myEntry.formattedTime
                 : (widget.userTimeSeconds != null
-                    ? '${widget.userTimeSeconds! ~/ 60}m ${widget.userTimeSeconds! % 60}s'
-                    : '--');
+                      ? '${widget.userTimeSeconds! ~/ 60}m ${widget.userTimeSeconds! % 60}s'
+                      : '--');
 
             final streamStr = myEntry?.stream.isNotEmpty == true
                 ? myEntry!.stream
@@ -287,7 +308,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             final isNat = streamStr.toLowerCase().contains('nat');
 
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.md,
+                vertical: 12,
+              ),
               decoration: BoxDecoration(
                 color: dark ? AppColors.darkCard : AppColors.white,
                 border: Border(
@@ -309,27 +333,36 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: hasRank
                             ? AppColors.primary.withValues(alpha: 0.15)
                             : (dark
-                                ? AppColors.darkContainer
-                                : AppColors.grey.withValues(alpha: 0.2)),
+                                  ? AppColors.darkContainer
+                                  : AppColors.grey.withValues(alpha: 0.2)),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         children: [
                           Icon(
-                            hasRank ? Icons.star_rounded : Icons.star_border_rounded,
+                            hasRank
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
                             size: 16,
-                            color: hasRank ? AppColors.primary : AppColors.textSecondary,
+                            color: hasRank
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             rankStr,
                             style: TextStyle(
-                              color: hasRank ? AppColors.primary : AppColors.textSecondary,
+                              color: hasRank
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
                               fontWeight: FontWeight.w900,
                               fontSize: 14,
                             ),
@@ -361,10 +394,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                     vertical: 1,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: (isNat
-                                            ? const Color(0xFF0284C7)
-                                            : const Color(0xFF0EA5E9))
-                                        .withValues(alpha: 0.12),
+                                    color:
+                                        (isNat
+                                                ? const Color(0xFF0284C7)
+                                                : const Color(0xFF0EA5E9))
+                                            .withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -394,13 +428,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: hasRank
                             ? AppColors.primary
                             : (dark
-                                ? AppColors.darkContainer
-                                : AppColors.grey.withValues(alpha: 0.3)),
+                                  ? AppColors.darkContainer
+                                  : AppColors.grey.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -408,7 +445,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         style: TextStyle(
                           color: hasRank
                               ? Colors.white
-                              : (dark ? Colors.white70 : AppColors.textSecondary),
+                              : (dark
+                                    ? Colors.white70
+                                    : AppColors.textSecondary),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                         ),

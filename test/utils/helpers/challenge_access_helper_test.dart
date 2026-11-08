@@ -1,7 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
+
+class FakeUserController extends GetxController implements UserController {
+  @override
+  final Rx<UserModel> user = UserModel.empty().obs;
+
+  @override
+  final RxBool isAdmin = false.obs;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   group('LeaderboardChallengeModel isPremium parsing', () {
@@ -243,6 +256,58 @@ void main() {
     test('preserves original order for active users', () {
       final sorted = ChallengeAccessHelper.sortForUser([c1, c2, c3], activeUser);
       expect(sorted.map((c) => c.id).toList(), equals(['1', '2', '3']));
+    });
+  });
+
+  group('ChallengeAccessHelper.isFreeUser', () {
+    late FakeUserController fakeUserCtrl;
+
+    setUp(() {
+      Get.reset();
+      fakeUserCtrl = Get.put<UserController>(FakeUserController()) as FakeUserController;
+    });
+
+    tearDown(() {
+      Get.reset();
+    });
+
+    test('returns true for inactive user who is not admin', () {
+      fakeUserCtrl.user.value = UserModel(
+        id: 'u1',
+        email: 'free@test.com',
+        firstName: 'Test',
+        lastName: 'User',
+        stream: 'natural',
+        status: 'inactive',
+      );
+      fakeUserCtrl.isAdmin.value = false;
+      expect(ChallengeAccessHelper.isFreeUser, isTrue);
+    });
+
+    test('returns false for active user', () {
+      fakeUserCtrl.user.value = UserModel(
+        id: 'u2',
+        email: 'pro@test.com',
+        firstName: 'Pro',
+        lastName: 'User',
+        stream: 'natural',
+        status: 'active',
+      );
+      fakeUserCtrl.isAdmin.value = false;
+      expect(ChallengeAccessHelper.isFreeUser, isFalse);
+    });
+
+    test('returns false for admin even if inactive', () {
+      fakeUserCtrl.user.value = UserModel(
+        id: 'u3',
+        email: 'admin@test.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        stream: 'natural',
+        status: 'inactive',
+      );
+      fakeUserCtrl.isAdmin.value = true;
+      expect(ChallengeAccessHelper.isFreeUser, isFalse);
     });
   });
 }

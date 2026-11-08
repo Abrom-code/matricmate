@@ -7,7 +7,6 @@ import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/notifications/controllers/notifications_controller.dart';
 import 'package:matricmate/features/notifications/models/notification_model.dart';
 import 'package:matricmate/features/notifications/screens/widgets/notification_body_text.dart';
@@ -15,6 +14,7 @@ import 'package:matricmate/features/notifications/services/notification_link_par
 import 'package:matricmate/features/notifications/services/notification_navigator.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -198,13 +198,11 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
               notification.payload['id']?.toString() ??
               _loadedChallenge?.id;
           if (challengeId != null && challengeId.isNotEmpty) {
-            Get.to(
-              () => LeaderboardScreen(
-                challengeId: challengeId,
-                challengeTitle: _loadedChallenge?.title ?? notification.title,
-                audience: _loadedChallenge?.audience ??
-                    notification.payload['audience']?.toString(),
-              ),
+            ChallengeAccessHelper.openLeaderboard(
+              challengeId: challengeId,
+              challengeTitle: _loadedChallenge?.title ?? notification.title,
+              audience: _loadedChallenge?.audience ??
+                  notification.payload['audience']?.toString(),
             );
             return;
           }

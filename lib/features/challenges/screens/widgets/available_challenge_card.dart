@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
@@ -328,12 +328,10 @@ class AvailableChallengeCard extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(6),
-                    onTap: () => Get.to(
-                      () => LeaderboardScreen(
-                        challengeId: challenge.id,
-                        challengeTitle: challenge.title,
-                        audience: challenge.audience,
-                      ),
+                    onTap: () => ChallengeAccessHelper.openLeaderboard(
+                      challengeId: challenge.id,
+                      challengeTitle: challenge.title,
+                      audience: challenge.audience,
                     ),
                     child: const Padding(
                       padding: EdgeInsets.symmetric(
@@ -457,12 +455,10 @@ class AvailableChallengeCard extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(6),
-                    onTap: () => Get.to(
-                      () => LeaderboardScreen(
-                        challengeId: challenge.id,
-                        challengeTitle: challenge.title,
-                        audience: challenge.audience,
-                      ),
+                    onTap: () => ChallengeAccessHelper.openLeaderboard(
+                      challengeId: challenge.id,
+                      challengeTitle: challenge.title,
+                      audience: challenge.audience,
                     ),
                     child: const Padding(
                       padding: EdgeInsets.symmetric(
@@ -539,12 +535,10 @@ class AvailableChallengeCard extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(6),
-                  onTap: () => Get.to(
-                    () => LeaderboardScreen(
-                      challengeId: challenge.id,
-                      challengeTitle: challenge.title,
-                      audience: challenge.audience,
-                    ),
+                  onTap: () => ChallengeAccessHelper.openLeaderboard(
+                    challengeId: challenge.id,
+                    challengeTitle: challenge.title,
+                    audience: challenge.audience,
                   ),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(

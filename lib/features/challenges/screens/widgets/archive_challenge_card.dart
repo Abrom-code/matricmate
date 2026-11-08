@@ -7,10 +7,10 @@ import 'package:matricmate/features/challenges/controllers/challenge_archive_con
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ArchiveChallengeCard extends StatelessWidget {
@@ -240,12 +240,10 @@ class ArchiveChallengeCard extends StatelessWidget {
                     foregroundColor: AppColors.amber,
                     visualDensity: VisualDensity.compact,
                   ),
-                  onPressed: () => Get.to(
-                    () => LeaderboardScreen(
-                      challengeId: challenge.id,
-                      challengeTitle: challenge.title,
-                      audience: challenge.audience,
-                    ),
+                  onPressed: () => ChallengeAccessHelper.openLeaderboard(
+                    challengeId: challenge.id,
+                    challengeTitle: challenge.title,
+                    audience: challenge.audience,
                   ),
                   icon: const Icon(
                     Icons.leaderboard_rounded,

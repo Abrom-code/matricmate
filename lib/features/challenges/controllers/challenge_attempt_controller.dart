@@ -13,9 +13,9 @@ import 'package:matricmate/features/challenges/models/challenge_question_model.d
 import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ChallengeAttemptController extends GetxController
@@ -501,14 +501,13 @@ class ChallengeAttemptController extends GetxController
         ToastHelper.success(
           'Attempt submitted! Question review will be unlocked once this challenge closes.',
         );
-        Get.off(
-          () => LeaderboardScreen(
-            challengeId: challengeId,
-            challengeTitle: title,
-            audience: audience,
-            userScore: score,
-            userTimeSeconds: _timeSpentSeconds,
-          ),
+        ChallengeAccessHelper.openLeaderboard(
+          challengeId: challengeId,
+          challengeTitle: title,
+          audience: audience,
+          userScore: score,
+          userTimeSeconds: _timeSpentSeconds,
+          replace: true,
         );
       } else {
         Get.off(

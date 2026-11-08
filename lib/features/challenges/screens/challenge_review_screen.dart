@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
 import 'package:matricmate/features/challenges/screens/widgets/review_stat_badge.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ChallengeReviewScreen extends StatefulWidget {
@@ -105,8 +104,9 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
     }
 
     final total = _reviewQuestions.length;
-    final accuracyPercent =
-        total > 0 ? ((correctCount / total) * 100).toStringAsFixed(0) : '0';
+    final accuracyPercent = total > 0
+        ? ((correctCount / total) * 100).toStringAsFixed(0)
+        : '0';
 
     String formattedTime = '--';
     if (widget.timeSpentSeconds != null && widget.timeSpentSeconds! > 0) {
@@ -246,7 +246,9 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                 color: dark ? AppColors.darkCard : AppColors.white,
                 border: Border(
                   top: BorderSide(
-                    color: dark ? AppColors.darkBorder : AppColors.borderPrimary,
+                    color: dark
+                        ? AppColors.darkBorder
+                        : AppColors.borderPrimary,
                   ),
                 ),
               ),
@@ -266,14 +268,12 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                         ),
                       ),
                     ),
-                    onPressed: () => Get.to(
-                      () => LeaderboardScreen(
-                        challengeId: widget.challengeId,
-                        challengeTitle: widget.title,
-                        audience: widget.audience,
-                        userScore: correctCount,
-                        userTimeSeconds: widget.timeSpentSeconds,
-                      ),
+                    onPressed: () => ChallengeAccessHelper.openLeaderboard(
+                      challengeId: widget.challengeId,
+                      challengeTitle: widget.title,
+                      audience: widget.audience,
+                      userScore: correctCount,
+                      userTimeSeconds: widget.timeSpentSeconds,
                     ),
                     icon: const Icon(Icons.leaderboard_rounded, size: 18),
                     label: const Text(

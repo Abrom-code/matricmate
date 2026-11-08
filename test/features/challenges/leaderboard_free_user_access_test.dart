@@ -8,6 +8,7 @@ import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/available_challenge_card.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 
 class FakeUserController extends GetxController implements UserController {
   @override
@@ -26,7 +27,11 @@ class FakeChallengeHomeController extends GetxController
   final Rx<DateTime> now = DateTime.now().obs;
 
   @override
-  bool canAccess(LeaderboardChallengeModel challenge) => true;
+  bool canAccess(LeaderboardChallengeModel challenge) =>
+      ChallengeAccessHelper.canAccess(
+        challenge: challenge,
+        user: UserController.instance.user.value,
+      );
 
   @override
   bool isChallengeCompleted(LeaderboardChallengeModel challenge) => false;
@@ -36,6 +41,15 @@ class FakeChallengeHomeController extends GetxController
 
   @override
   int getParticipantCount(String challengeId) => 10;
+
+  @override
+  void onChallengeTapped(LeaderboardChallengeModel challenge) {
+    ChallengeAccessHelper.handleChallengeTap(
+      challenge: challenge,
+      user: UserController.instance.user.value,
+      onAccessible: () {},
+    );
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -201,4 +215,148 @@ void main() {
       expect(find.text('Premium Screen'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'replaces number of joined with small lock icon for free user and premium challenge',
+    (tester) async {
+      fakeUserCtrl.user.value = UserModel(
+        id: 'u_free',
+        email: 'free@test.com',
+        firstName: 'Free',
+        lastName: 'User',
+        stream: 'natural',
+        status: 'inactive',
+      );
+      fakeUserCtrl.isAdmin.value = false;
+
+      final premiumChallenge = LeaderboardChallengeModel(
+        id: 'c_prem',
+        setId: 's_prem',
+        subjectId: 1,
+        audience: 'both',
+        title: 'Premium SAT Challenge',
+        status: 'live',
+        subjectName: 'SAT',
+        durationSeconds: 1800,
+        createdAt: DateTime.now(),
+        startsAt: DateTime.now().subtract(const Duration(hours: 1)),
+        endsAt: DateTime.now().add(const Duration(hours: 20)),
+        isPremium: true,
+      );
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          home: Scaffold(
+            body: AvailableChallengeCard(
+              challenge: premiumChallenge,
+              ctrl: fakeHomeCtrl,
+              dark: false,
+            ),
+          ),
+        ),
+      );
+
+      // Number of joineds should NOT be shown
+      expect(find.text('10 joined'), findsNothing);
+      expect(find.byIcon(Icons.people_outline_rounded), findsNothing);
+
+      // Lock icon should be shown instead
+      expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'shows number of joined for active user on premium challenge',
+    (tester) async {
+      fakeUserCtrl.user.value = UserModel(
+        id: 'u_pro',
+        email: 'pro@test.com',
+        firstName: 'Pro',
+        lastName: 'User',
+        stream: 'natural',
+        status: 'active',
+      );
+      fakeUserCtrl.isAdmin.value = false;
+
+      final premiumChallenge = LeaderboardChallengeModel(
+        id: 'c_prem',
+        setId: 's_prem',
+        subjectId: 1,
+        audience: 'both',
+        title: 'Premium SAT Challenge',
+        status: 'live',
+        subjectName: 'SAT',
+        durationSeconds: 1800,
+        createdAt: DateTime.now(),
+        startsAt: DateTime.now().subtract(const Duration(hours: 1)),
+        endsAt: DateTime.now().add(const Duration(hours: 20)),
+        isPremium: true,
+      );
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          home: Scaffold(
+            body: AvailableChallengeCard(
+              challenge: premiumChallenge,
+              ctrl: fakeHomeCtrl,
+              dark: false,
+            ),
+          ),
+        ),
+      );
+
+      // Number of joineds should be displayed
+      expect(find.text('10 joined'), findsOneWidget);
+      expect(find.byIcon(Icons.people_outline_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.lock_rounded), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'shows number of joined for free user on free challenge',
+    (tester) async {
+      fakeUserCtrl.user.value = UserModel(
+        id: 'u_free',
+        email: 'free@test.com',
+        firstName: 'Free',
+        lastName: 'User',
+        stream: 'natural',
+        status: 'inactive',
+      );
+      fakeUserCtrl.isAdmin.value = false;
+
+      final freeChallenge = LeaderboardChallengeModel(
+        id: 'c_free',
+        setId: 's_free',
+        subjectId: 1,
+        audience: 'both',
+        title: 'Free SAT Challenge',
+        status: 'live',
+        subjectName: 'SAT',
+        durationSeconds: 1800,
+        createdAt: DateTime.now(),
+        startsAt: DateTime.now().subtract(const Duration(hours: 1)),
+        endsAt: DateTime.now().add(const Duration(hours: 20)),
+        isPremium: false,
+      );
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          home: Scaffold(
+            body: AvailableChallengeCard(
+              challenge: freeChallenge,
+              ctrl: fakeHomeCtrl,
+              dark: false,
+            ),
+          ),
+        ),
+      );
+
+      // Number of joineds should be displayed for free challenge
+      expect(find.text('10 joined'), findsOneWidget);
+      expect(find.byIcon(Icons.people_outline_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.lock_rounded), findsNothing);
+    },
+  );
 }
+

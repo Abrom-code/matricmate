@@ -164,7 +164,10 @@ class TipsAndNewsController extends GetxController {
   }
 
   /// Remote delta sync
-  Future<void> syncRemote({bool isManual = false}) async {
+  Future<void> syncRemote({
+    bool isManual = false,
+    bool showToast = false,
+  }) async {
     final now = DateTime.now();
     if (!isManual && now.difference(_lastSyncAt) < _syncCooldown) {
       return;
@@ -184,11 +187,11 @@ class TipsAndNewsController extends GetxController {
       final count = await _repo.getUnreadCount();
       unreadCount.value = count;
 
-      if (isManual) {
+      if (showToast) {
         ToastHelper.success('Updated tips & news');
       }
     } catch (_) {
-      if (isManual) {
+      if (showToast) {
         ToastHelper.warning('Could not refresh. Showing offline content.');
       }
     } finally {

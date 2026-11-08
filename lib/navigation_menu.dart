@@ -40,7 +40,7 @@ class NavigationMenu extends StatelessWidget {
   }
 }
 
-// ── Floating pill nav bar ────────────────────────────────────────────────────
+// ── Floating pill nav bar (Telegram-style vertical layout) ────────────────────
 
 class _FloatingNavBar extends StatelessWidget {
   const _FloatingNavBar({
@@ -76,14 +76,14 @@ class _FloatingNavBar extends StatelessWidget {
         top: 8,
       ),
       child: Container(
-        height: 60,
+        height: 64,
         width: pillWidth,
         decoration: BoxDecoration(
           color: dark ? const Color(0xFF1E1E1E) : AppColors.white,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: dark ? 0.40 : 0.12),
+              color: Colors.black.withValues(alpha: dark ? 0.40 : 0.10),
               blurRadius: 20,
               spreadRadius: -4,
               offset: const Offset(0, 6),
@@ -91,19 +91,20 @@ class _FloatingNavBar extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(_items.length, (i) {
             final selected = i == selectedIndex;
             final isOthers = _items[i].label == 'Others';
-            return _NavButton(
-              item: _items[i],
-              selected: selected,
-              showBadge: isOthers && hasOthersBadge,
-              dark: dark,
-              onTap: () {
-                HapticFeedback.lightImpact();
-                onTap(i);
-              },
+            return Expanded(
+              child: _NavButton(
+                item: _items[i],
+                selected: selected,
+                showBadge: isOthers && hasOthersBadge,
+                dark: dark,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onTap(i);
+                },
+              ),
             );
           }),
         ),
@@ -131,51 +132,36 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badgeBorderColor = selected
-        ? (dark
-            ? Color.alphaBlend(
-                AppColors.primary.withValues(alpha: 0.15),
-                const Color(0xFF1E1E1E),
-              )
-            : Color.alphaBlend(
-                AppColors.primary.withValues(alpha: 0.12),
-                AppColors.white,
-              ))
-        : (dark ? const Color(0xFF1E1E1E) : AppColors.white);
+    final activeColor = AppColors.primary;
+    final inactiveColor = dark ? Colors.white54 : AppColors.darkGrey;
+    final color = selected ? activeColor : inactiveColor;
+    final barBgColor = dark ? const Color(0xFF1E1E1E) : AppColors.white;
 
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(
-          horizontal: selected ? 14 : 10,
-          vertical: 8,
-        ),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.12)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: Row(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(
-                  item.icon,
-                  size: 20,
-                  color: selected
-                      ? AppColors.primary
-                      : (dark ? Colors.white54 : AppColors.darkGrey),
+                AnimatedScale(
+                  scale: selected ? 1.08 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  child: Icon(
+                    item.icon,
+                    size: 22,
+                    color: color,
+                  ),
                 ),
                 if (showBadge)
                   Positioned(
                     top: -2,
-                    right: -2,
+                    right: -3,
                     child: Container(
                       width: 8,
                       height: 8,
@@ -183,7 +169,7 @@ class _NavButton extends StatelessWidget {
                         color: const Color(0xFFEF4444),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: badgeBorderColor,
+                          color: barBgColor,
                           width: 1.5,
                         ),
                       ),
@@ -191,22 +177,21 @@ class _NavButton extends StatelessWidget {
                   ),
               ],
             ),
-            AnimatedSize(
+            const SizedBox(height: 3),
+            AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              child: selected
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Text(
-                        item.label,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: color,
+                letterSpacing: -0.1,
+              ),
+              child: Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

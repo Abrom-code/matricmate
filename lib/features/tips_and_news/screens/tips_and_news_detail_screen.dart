@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
 import 'package:matricmate/features/tips_and_news/controllers/tips_and_news_controller.dart';
 import 'package:matricmate/features/tips_and_news/models/tips_and_news_model.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -141,10 +142,10 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
 
             const SizedBox(height: 16),
 
-            // Article Title
-            SelectableText(
-              item.title,
-              style: TextStyle(
+            // Article Title (supports BBCode, bold, color tags as used on explanations)
+            QuestionContentRenderer(
+              text: item.title,
+              baseStyle: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: dark ? Colors.white : AppColors.textPrimary,
@@ -234,14 +235,17 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
               const SizedBox(height: 18),
             ],
 
-            // Article Body Content
-            SelectableText(
-              item.content,
-              style: TextStyle(
-                fontSize: 15,
+            // Article Body Content (Unified explanation formatting: font color, LaTeX, tables, BBCode, markup)
+            QuestionContentRenderer(
+              text: item.content,
+              baseStyle: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
                 height: 1.65,
-                color: dark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                 letterSpacing: 0.1,
+                color: dark
+                    ? AppColors.white.withValues(alpha: 0.85)
+                    : AppColors.darkerGrey,
               ),
             ),
 

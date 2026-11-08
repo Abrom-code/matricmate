@@ -4,6 +4,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/features/tips_and_news/models/tips_and_news_model.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/rich_text_parser.dart';
 
 class TipsNewsCard extends StatelessWidget {
   const TipsNewsCard({
@@ -152,27 +153,33 @@ class TipsNewsCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            item.title,
+                          Text.rich(
+                            RichTextParser.parse(
+                              item.title,
+                              TextStyle(
+                                fontSize: 15.5,
+                                fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
+                                color: dark ? Colors.white : AppColors.textPrimary,
+                                height: 1.3,
+                              ),
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
-                              color: dark ? Colors.white : AppColors.textPrimary,
-                              height: 1.3,
-                            ),
                           ),
                           const SizedBox(height: 6),
-                          Text(
-                            item.content.replaceAll(RegExp(r'[#*_`>~]'), '').trim(),
+                          Text.rich(
+                            RichTextParser.parse(
+                              item.content,
+                              TextStyle(
+                                fontSize: 12.5,
+                                color: dark
+                                    ? AppColors.white.withValues(alpha: 0.70)
+                                    : AppColors.textSecondary,
+                                height: 1.35,
+                              ),
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                              height: 1.35,
-                            ),
                           ),
                         ],
                       ),

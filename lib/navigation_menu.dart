@@ -66,27 +66,27 @@ class _FloatingNavBar extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
-    final pillWidth = screenWidth > 480 ? 420.0 : screenWidth - 32.0;
+    final pillWidth = screenWidth > 480 ? 400.0 : screenWidth - 32.0;
 
     return Padding(
       padding: EdgeInsets.only(
         left: (screenWidth - pillWidth) / 2,
         right: (screenWidth - pillWidth) / 2,
-        bottom: bottomInset + 10,
-        top: 8,
+        bottom: bottomInset + 8,
+        top: 6,
       ),
       child: Container(
-        height: 64,
+        height: 54,
         width: pillWidth,
         decoration: BoxDecoration(
           color: dark ? const Color(0xFF1E1E1E) : AppColors.white,
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(27),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: dark ? 0.40 : 0.10),
-              blurRadius: 20,
+              color: Colors.black.withValues(alpha: dark ? 0.35 : 0.09),
+              blurRadius: 16,
               spreadRadius: -4,
-              offset: const Offset(0, 6),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -149,43 +149,44 @@ class _NavButton extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 AnimatedScale(
-                  scale: selected ? 1.08 : 1.0,
+                  scale: selected ? 1.06 : 1.0,
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeOutCubic,
                   child: Icon(
                     item.icon,
-                    size: 22,
+                    size: 19,
                     color: color,
                   ),
                 ),
                 if (showBadge)
                   Positioned(
                     top: -2,
-                    right: -3,
+                    right: -2.5,
                     child: Container(
-                      width: 8,
-                      height: 8,
+                      width: 7.5,
+                      height: 7.5,
                       decoration: BoxDecoration(
                         color: const Color(0xFFEF4444),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: barBgColor,
-                          width: 1.5,
+                          width: 1.2,
                         ),
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2.5),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 10.0,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 color: color,
-                letterSpacing: -0.1,
+                letterSpacing: -0.15,
+                height: 1.15,
               ),
               child: Text(
                 item.label,

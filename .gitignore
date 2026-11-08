@@ -96,3 +96,6 @@ node_modules/
 # Coverage
 # ------------------------------
 coverage/
+
+# GetStorage test artifacts
+GetStorage.*

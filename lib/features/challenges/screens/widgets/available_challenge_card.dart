@@ -89,6 +89,7 @@ class AvailableChallengeCard extends StatelessWidget {
           children: [
             // ── 1. Header Row (Subject Chip & Status Indicator) ─────────
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Subject Chip
                 Flexible(
@@ -114,61 +115,71 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ),
 
-
                 const Spacer(),
 
                 if (isDone) ...[
                   // Double check completed icon
                   const Tooltip(
                     message: 'Completed',
-                    child: Icon(
-                      Icons.done_all_rounded,
-                      size: 19,
-                      color: AppColors.primary,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.done_all_rounded,
+                        size: 19,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                 ],
 
                 // Status Indicator (Live / Upcoming / Draft)
-                if (challenge.isDraft) ...[
-                  const Icon(Icons.build_circle_outlined, size: 14, color: Colors.amber),
-                  const SizedBox(width: 5),
-                  const Text(
-                    'Draft Mode',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.amber,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (challenge.isDraft) ...[
+                        const Icon(Icons.build_circle_outlined, size: 14, color: Colors.amber),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'Draft Mode',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.amber,
+                          ),
+                        ),
+                      ] else if (isLive) ...[
+                        const Icon(Icons.circle, size: 8, color: Color(0xFFE24B4A)),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'Live',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFE24B4A),
+                          ),
+                        ),
+                      ] else ...[
+                        const Icon(
+                          Icons.access_time_rounded,
+                          size: 13,
+                          color: Color(0xFF378ADD),
+                        ),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'Upcoming',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF378ADD),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ] else if (isLive) ...[
-                  const Icon(Icons.circle, size: 8, color: Color(0xFFE24B4A)),
-                  const SizedBox(width: 5),
-                  const Text(
-                    'Live',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFE24B4A),
-                    ),
-                  ),
-                ] else ...[
-                  const Icon(
-                    Icons.access_time_rounded,
-                    size: 13,
-                    color: Color(0xFF378ADD),
-                  ),
-                  const SizedBox(width: 5),
-                  const Text(
-                    'Upcoming',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF378ADD),
-                    ),
-                  ),
-                ],
+                ),
               ],
             ),
 

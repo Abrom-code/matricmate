@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
@@ -7,6 +8,16 @@ import 'package:matricmate/features/exam/models/subject_model.dart';
 import 'package:matricmate/features/exam/models/test_model.dart';
 
 void main() {
+  setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/path_provider'),
+      (MethodCall methodCall) async {
+        return '.';
+      },
+    );
+  });
   group('SubjectModel entrance exam state', () {
     test('round-trips download state and cached entrance/model counts', () {
       final subject = SubjectModel(
@@ -120,12 +131,12 @@ void main() {
       expect(exam.isNew, isTrue);
     });
 
-    test('does not label entrance exams older than two days as new', () {
+    test('does not label entrance exams older than seven days as new', () {
       final exam = TestModel(
         id: 41,
         subjectId: 7,
         questionCount: 100,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
+        createdAt: DateTime.now().subtract(const Duration(days: 8)),
         type: 'entrance',
         title: '2023 Physics 4',
         time: 120,

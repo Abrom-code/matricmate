@@ -8,6 +8,7 @@ import 'package:matricmate/features/personalization/screens/profile/widgets/acco
 import 'package:matricmate/features/personalization/screens/profile/widgets/connect_support_section.dart';
 import 'package:matricmate/features/personalization/screens/profile/widgets/legal_about_section.dart';
 import 'package:matricmate/features/personalization/screens/profile/widgets/profile_section.dart';
+import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -25,6 +26,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Get.put(ProfileController());
     // Reflect the current Firebase verification state on the settings row.
     UserController.instance.syncEmailVerified();
+    // Load cached update status with 0 network calls (only checks on refresh)
+    ProfileActionsHelper.loadCachedUpdateInfo();
+  }
+
+  Future<void> _refreshProfile() async {
+    await Future.wait([
+      UserController.instance.fetchUserRecord().catchError((_) => false),
+      ProfileActionsHelper.refreshUpdateStatus(null, showDialog: false),
+    ]);
   }
 
   @override
@@ -58,110 +68,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final checking = UserController.instance.isCheckingPayment.value;
         final isLandscape =
             MediaQuery.orientationOf(context) == Orientation.landscape;
-        final content = SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
-              MediaQuery.paddingOf(context).bottom + 100,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Profile card — has its own internal Obx
-                const ProfileSection(),
-                const SizedBox(height: 20),
+        final content = RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: _refreshProfile,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                MediaQuery.paddingOf(context).bottom + 100,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Profile card — has its own internal Obx
+                  const ProfileSection(),
+                  const SizedBox(height: 20),
 
-                // Account settings
-                Text(
-                  'ACCOUNT SETTINGS',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.1,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const AccountSettings(),
-                const SizedBox(height: 20),
-
-                // Connect & support
-                Text(
-                  'CONNECT & SUPPORT',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.1,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const ConnectSupportSection(),
-                const SizedBox(height: 20),
-
-                // About
-                Text(
-                  'ABOUT MATRICET',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.1,
-                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const LegalAboutSection(),
-                const SizedBox(height: 24),
-
-                // Log out
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton(
-                    onPressed: () => AppDialogBoxes.showLogoutDialog(
-                      context: context,
-                      onLogout: () => userController.logOut(),
+                  // Account settings
+                  Text(
+                    'ACCOUNT SETTINGS',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                     ),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      backgroundColor: const Color(0xFFEF4444)
-                          .withValues(alpha: dark ? 0.12 : 0.04),
-                      side: BorderSide(
-                        color: const Color(0xFFEF4444)
-                            .withValues(alpha: dark ? 0.3 : 0.25),
-                        width: 1.2,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                  ),
+                  const SizedBox(height: 10),
+                  const AccountSettings(),
+                  const SizedBox(height: 20),
+
+                  // Connect & support
+                  Text(
+                    'CONNECT & SUPPORT',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.logout_rounded,
-                          size: 18,
-                          color: Color(0xFFEF4444),
+                  ),
+                  const SizedBox(height: 10),
+                  const ConnectSupportSection(),
+                  const SizedBox(height: 20),
+
+                  // About
+                  Text(
+                    'ABOUT MATRICET',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                      color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const LegalAboutSection(),
+                  const SizedBox(height: 24),
+
+                  // Log out
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () => AppDialogBoxes.showLogoutDialog(
+                        context: context,
+                        onLogout: () => userController.logOut(),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        backgroundColor: const Color(0xFFEF4444)
+                            .withValues(alpha: dark ? 0.12 : 0.04),
+                        side: BorderSide(
+                          color: const Color(0xFFEF4444)
+                              .withValues(alpha: dark ? 0.3 : 0.25),
+                          width: 1.2,
                         ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Log Out',
-                          style: TextStyle(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.logout_rounded,
+                            size: 18,
                             color: Color(0xFFEF4444),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.5,
-                            height: 1.0,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 8),
+                          Text(
+                            'Log Out',
+                            style: TextStyle(
+                              color: Color(0xFFEF4444),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14.5,
+                              height: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

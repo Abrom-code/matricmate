@@ -10,6 +10,7 @@ import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,8 +18,8 @@ class ProfileActionsHelper {
   ProfileActionsHelper._();
 
   static const String appName = 'MatricET';
-  static const String appVersion = '1.0.8';
-  static const String appBuildNumber = '9';
+  static const String appVersion = '1.0.9';
+  static const String appBuildNumber = '10';
   static const String packageId = 'com.abopia.matricet';
   static const String fallbackSupportEmail = 'abopiatech@gmail.com';
   static const String fallbackTelegramChannelLink = 'https://t.me/MatricET';
@@ -373,6 +374,56 @@ Diagnostic Info (Please do not delete):
   /// Observable indicating whether an update check is currently in flight.
   static final isCheckingUpdate = false.obs;
 
+  /// Observable indicating whether a newer version is available.
+  static final hasUpdateAvailable = false.obs;
+
+  /// Target version details if an update is available.
+  static final availableVersion = ''.obs;
+  static final availableBuild = 0.obs;
+  static final availableNotes = ''.obs;
+  static final availableUrl = ''.obs;
+  static final isForceUpdate = false.obs;
+
+  static const _keyHasUpdate = 'cached_has_update_available';
+  static const _keyAvailableVersion = 'cached_available_version';
+  static const _keyAvailableBuild = 'cached_available_build';
+  static const _keyAvailableNotes = 'cached_available_notes';
+  static const _keyAvailableUrl = 'cached_available_url';
+  static const _keyIsForceUpdate = 'cached_is_force_update';
+
+  /// Loads cached update info from local storage without making any network request.
+  /// Called on screen init to keep Supabase requests at 0 until explicit refresh.
+  static Future<void> loadCachedUpdateInfo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasUpdate = prefs.getBool(_keyHasUpdate) ?? false;
+      final ver = prefs.getString(_keyAvailableVersion) ?? '';
+      final bld = prefs.getInt(_keyAvailableBuild) ?? 0;
+
+      // Invalidate cache if current app version is already >= cached available version
+      if (hasUpdate && ver.isNotEmpty) {
+        final cmp = compareVersions(ver, appVersion);
+        final currentBuild = int.tryParse(appBuildNumber) ?? 0;
+        final newerBuild = cmp == 0 && bld > currentBuild;
+        if (cmp <= 0 && !newerBuild) {
+          hasUpdateAvailable.value = false;
+          await prefs.setBool(_keyHasUpdate, false);
+          return;
+        }
+      }
+
+      hasUpdateAvailable.value = hasUpdate;
+      availableVersion.value = ver;
+      availableBuild.value = bld;
+      availableNotes.value = prefs.getString(_keyAvailableNotes) ?? '';
+      availableUrl.value =
+          prefs.getString(_keyAvailableUrl) ?? fallbackPlayStoreUrl;
+      isForceUpdate.value = prefs.getBool(_keyIsForceUpdate) ?? false;
+    } catch (e) {
+      debugPrint('[ProfileActionsHelper] loadCachedUpdateInfo error: $e');
+    }
+  }
+
   /// Semantic version comparator.
   /// Returns a positive number if [v1] is newer than [v2],
   /// negative if older, and 0 if equal.
@@ -399,52 +450,54 @@ Diagnostic Info (Please do not delete):
     return 0;
   }
 
-  /// Checks Supabase `app_config` for the latest app version and build.
-  /// Shows an update dialog if a newer version is available, or an up-to-date dialog otherwise.
-  static Future<void> checkForUpdates(BuildContext context) async {
+  /// Queries Supabase `app_config` ONLY on explicit user refresh (pull-to-refresh
+  /// or clicking "Check for Updates"). Saves result locally to prevent extra requests.
+  static Future<void> refreshUpdateStatus(
+    BuildContext? context, {
+    bool showDialog = false,
+  }) async {
     if (isCheckingUpdate.value) return;
     isCheckingUpdate.value = true;
 
     try {
+      bool updateCheckEnabled = true;
+      bool forceUpdate = false;
       String latestVersion = appVersion;
       int latestBuild = int.tryParse(appBuildNumber) ?? 0;
       String updateNotes = '';
       String updateUrl = fallbackPlayStoreUrl;
 
-      try {
-        final rows = await Supabase.instance.client
-            .from('app_config')
-            .select('key, value')
-            .timeout(const Duration(seconds: 5));
+      final rows = await Supabase.instance.client
+          .from('app_config')
+          .select('key, value')
+          .timeout(const Duration(seconds: 6));
 
-        for (final row in rows) {
-          final k = row['key']?.toString().toLowerCase().trim() ?? '';
-          final v = row['value']?.toString().trim() ?? '';
-          if (v.isEmpty || v == 'EMPTY') continue;
+      for (final row in rows) {
+        final k = row['key']?.toString().toLowerCase().trim() ?? '';
+        final v = row['value']?.toString().trim() ?? '';
+        if (v.isEmpty || v == 'EMPTY') continue;
 
-          if (k == 'latest_version' ||
-              k == 'latest_app_version' ||
-              k == 'app_version') {
-            latestVersion = v;
-          } else if (k == 'latest_build' || k == 'latest_app_build') {
-            final parsed = int.tryParse(v);
-            if (parsed != null) latestBuild = parsed;
-          } else if (k == 'update_notes' ||
-              k == 'app_update_notes' ||
-              k == 'changelog') {
-            updateNotes = v;
-          } else if (k == 'update_url' ||
-              k == 'app_update_url' ||
-              k == 'play_store_url') {
-            updateUrl = v;
-          }
+        if (k == 'update_check_enabled' || k == 'app_update_enabled') {
+          updateCheckEnabled = v.toLowerCase() != 'false';
+        } else if (k == 'force_update' || k == 'is_force_update') {
+          forceUpdate = v.toLowerCase() == 'true';
+        } else if (k == 'latest_version' ||
+            k == 'latest_app_version' ||
+            k == 'app_version') {
+          latestVersion = v;
+        } else if (k == 'latest_build' || k == 'latest_app_build') {
+          final parsed = int.tryParse(v);
+          if (parsed != null) latestBuild = parsed;
+        } else if (k == 'update_notes' ||
+            k == 'app_update_notes' ||
+            k == 'changelog') {
+          updateNotes = v;
+        } else if (k == 'update_url' ||
+            k == 'app_update_url' ||
+            k == 'play_store_url') {
+          updateUrl = v;
         }
-      } catch (e) {
-        debugPrint('[ProfileActionsHelper] check updates config fetch: $e');
       }
-
-      // Small visual pause so the user sees the network check completed
-      await Future.delayed(const Duration(milliseconds: 500));
 
       final int currentBuild = int.tryParse(appBuildNumber) ?? 0;
       final int versionComparison = compareVersions(latestVersion, appVersion);
@@ -452,44 +505,68 @@ Diagnostic Info (Please do not delete):
       final bool hasNewerBuild =
           versionComparison == 0 && latestBuild > currentBuild;
 
-      if (!context.mounted) return;
+      final bool isUpdateActive =
+          updateCheckEnabled && (hasNewerVersion || hasNewerBuild);
 
-      if (hasNewerVersion || hasNewerBuild) {
-        AppDialogBoxes.showUpdateAvailableDialog(
-          context: context,
-          currentVersion: appVersion,
-          latestVersion: latestVersion,
-          releaseNotes: updateNotes.isNotEmpty ? updateNotes : null,
-          onUpdate: () async {
-            final uri =
-                Uri.tryParse(updateUrl) ?? Uri.parse(fallbackPlayStoreUrl);
-            try {
-              final launched = await launchUrl(
-                uri,
-                mode: LaunchMode.externalApplication,
-              );
-              if (!launched) {
+      hasUpdateAvailable.value = isUpdateActive;
+      availableVersion.value = latestVersion;
+      availableBuild.value = latestBuild;
+      availableNotes.value = updateNotes;
+      availableUrl.value = updateUrl;
+      isForceUpdate.value = forceUpdate;
+
+      // Persist to local storage so subsequent screen views cost 0 network requests
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_keyHasUpdate, isUpdateActive);
+        await prefs.setString(_keyAvailableVersion, latestVersion);
+        await prefs.setInt(_keyAvailableBuild, latestBuild);
+        await prefs.setString(_keyAvailableNotes, updateNotes);
+        await prefs.setString(_keyAvailableUrl, updateUrl);
+        await prefs.setBool(_keyIsForceUpdate, forceUpdate);
+      } catch (_) {}
+
+      if (showDialog && context != null && context.mounted) {
+        if (isUpdateActive) {
+          AppDialogBoxes.showUpdateAvailableDialog(
+            context: context,
+            currentVersion: appVersion,
+            latestVersion: latestVersion,
+            releaseNotes: updateNotes.isNotEmpty ? updateNotes : null,
+            onUpdate: () async {
+              final uri =
+                  Uri.tryParse(updateUrl) ?? Uri.parse(fallbackPlayStoreUrl);
+              try {
+                final launched = await launchUrl(
+                  uri,
+                  mode: LaunchMode.externalApplication,
+                );
+                if (!launched) await rateApp();
+              } catch (_) {
                 await rateApp();
               }
-            } catch (_) {
-              await rateApp();
-            }
-          },
-        );
-      } else {
-        AppDialogBoxes.showUpToDateDialog(
-          context: context,
-          currentVersion: appVersion,
-          buildNumber: appBuildNumber,
-        );
+            },
+          );
+        } else {
+          AppDialogBoxes.showUpToDateDialog(
+            context: context,
+            currentVersion: appVersion,
+            buildNumber: appBuildNumber,
+          );
+        }
       }
     } catch (e) {
-      if (context.mounted) {
+      debugPrint('[ProfileActionsHelper] refreshUpdateStatus error: $e');
+      if (showDialog && context != null && context.mounted) {
         ToastHelper.error('Could not check for updates. Please try again.');
       }
     } finally {
       isCheckingUpdate.value = false;
     }
   }
+
+  /// Backward-compatible alias for explicit check via button tap
+  static Future<void> checkForUpdates(BuildContext context) =>
+      refreshUpdateStatus(context, showDialog: true);
 }
 

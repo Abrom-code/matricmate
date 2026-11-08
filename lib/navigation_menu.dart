@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
+import 'package:matricmate/features/tips_and_news/controllers/tips_and_news_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -20,10 +21,14 @@ class NavigationMenu extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: Obx(
-        () => _FloatingNavBar(
-          selectedIndex: controller.selectedIdx.value,
-          onTap: controller.changePage,
-        ),
+        () {
+          final tipsController = TipsAndNewsController.instance;
+          return _FloatingNavBar(
+            selectedIndex: controller.selectedIdx.value,
+            hasOthersBadge: tipsController.hasUnread,
+            onTap: controller.changePage,
+          );
+        },
       ),
       body: PageView(
         controller: controller.pageController,
@@ -38,10 +43,15 @@ class NavigationMenu extends StatelessWidget {
 // ── Floating pill nav bar ────────────────────────────────────────────────────
 
 class _FloatingNavBar extends StatelessWidget {
-  const _FloatingNavBar({required this.selectedIndex, required this.onTap});
+  const _FloatingNavBar({
+    required this.selectedIndex,
+    required this.onTap,
+    this.hasOthersBadge = false,
+  });
 
   final int selectedIndex;
   final void Function(int) onTap;
+  final bool hasOthersBadge;
 
   static const _items = [
     _NavItem(icon: Iconsax.book_1_copy, label: 'Practice'),
@@ -84,9 +94,11 @@ class _FloatingNavBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(_items.length, (i) {
             final selected = i == selectedIndex;
+            final isOthers = _items[i].label == 'Others';
             return _NavButton(
               item: _items[i],
               selected: selected,
+              showBadge: isOthers && hasOthersBadge,
               dark: dark,
               onTap: () {
                 HapticFeedback.lightImpact();
@@ -108,15 +120,29 @@ class _NavButton extends StatelessWidget {
     required this.selected,
     required this.dark,
     required this.onTap,
+    this.showBadge = false,
   });
 
   final _NavItem item;
   final bool selected;
   final bool dark;
   final VoidCallback onTap;
+  final bool showBadge;
 
   @override
   Widget build(BuildContext context) {
+    final badgeBorderColor = selected
+        ? (dark
+            ? Color.alphaBlend(
+                AppColors.primary.withValues(alpha: 0.15),
+                const Color(0xFF1E1E1E),
+              )
+            : Color.alphaBlend(
+                AppColors.primary.withValues(alpha: 0.12),
+                AppColors.white,
+              ))
+        : (dark ? const Color(0xFF1E1E1E) : AppColors.white);
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -136,12 +162,34 @@ class _NavButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              item.icon,
-              size: 20,
-              color: selected
-                  ? AppColors.primary
-                  : (dark ? Colors.white54 : AppColors.darkGrey),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  item.icon,
+                  size: 20,
+                  color: selected
+                      ? AppColors.primary
+                      : (dark ? Colors.white54 : AppColors.darkGrey),
+                ),
+                if (showBadge)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: badgeBorderColor,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             AnimatedSize(
               duration: const Duration(milliseconds: 200),

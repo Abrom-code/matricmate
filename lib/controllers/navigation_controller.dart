@@ -9,6 +9,7 @@ import 'package:matricmate/features/notifications/controllers/notifications_cont
 import 'package:matricmate/features/personalization/controllers/analytics_controller.dart';
 import 'package:matricmate/features/personalization/screens/others/others_screen.dart';
 import 'package:matricmate/features/personalization/screens/profile/profile.dart';
+import 'package:matricmate/features/tips_and_news/controllers/tips_and_news_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 
 class NavigationController extends GetxController {
@@ -39,6 +40,8 @@ class NavigationController extends GetxController {
     if (!Get.isRegistered<AnalyticsController>()) {
       Get.lazyPut<AnalyticsController>(() => AnalyticsController(), fenix: true);
     }
+    // Eagerly initialize TipsAndNewsController so unread badge state is available immediately.
+    TipsAndNewsController.instance;
 
     pages = [
       const _KeepAlivePage(child: SubjectsScreen()),
@@ -105,12 +108,15 @@ class NavigationController extends GetxController {
         );
       }
     }
-    if (index == 2 && Get.isRegistered<AnalyticsController>()) {
-      final now = DateTime.now();
-      if (now.difference(_lastAnalyticsLoad) > _analyticsCooldown) {
-        _lastAnalyticsLoad = now;
-        unawaited(AnalyticsController.instance.loadAll());
+    if (index == 2) {
+      if (Get.isRegistered<AnalyticsController>()) {
+        final now = DateTime.now();
+        if (now.difference(_lastAnalyticsLoad) > _analyticsCooldown) {
+          _lastAnalyticsLoad = now;
+          unawaited(AnalyticsController.instance.loadAll());
+        }
       }
+      unawaited(TipsAndNewsController.instance.loadLocalData());
     }
   }
 

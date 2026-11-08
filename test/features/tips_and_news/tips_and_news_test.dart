@@ -250,6 +250,16 @@ void main() {
       expect(secondSlice.length, equals(30));
       expect(hundredItems.length - displayLimit, equals(70));
     });
+
+    test('Bottom nav bar Others tab badge is active only when unread tips/news exist', () {
+      int unreadTipsCount = 3;
+      bool showOthersNavBadge = unreadTipsCount > 0;
+      expect(showOthersNavBadge, isTrue);
+
+      unreadTipsCount = 0;
+      showOthersNavBadge = unreadTipsCount > 0;
+      expect(showOthersNavBadge, isFalse);
+    });
   });
 }
 

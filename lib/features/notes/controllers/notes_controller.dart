@@ -20,6 +20,7 @@ class NotesController extends GetxController {
 
   final RxList<NoteModel> subjectNotes = <NoteModel>[].obs;
   final RxBool isLoading = false.obs;
+  final RxBool isSyncing = false.obs;
 
   // Individual download progress: noteId -> progress (0.0 to 1.0)
   final RxMap<int, double> downloadProgress = <int, double>{}.obs;
@@ -56,14 +57,16 @@ class NotesController extends GetxController {
   }
 
   bool _isLoadingRemoteNotes = false;
-  DateTime? _lastNotesRemoteSyncAt;
-  static const Duration _notesRefreshCooldown = Duration(seconds: 15);
 
   /// Loads notes from local SQLite first (offline-first).
   /// Remote sync is only performed on user pull-to-refresh ([forceRemote] = true)
   /// or when local cache is empty on first open.
   Future<void> loadSubjectNotes({bool forceRemote = false}) async {
     try {
+      if (forceRemote) {
+        isSyncing.value = true;
+      }
+
       // 1. Paint immediately from local SQLite (zero-delay offline first)
       final local = await _repo.getLocalNotes(subjectId);
       final validated = _validateLocalFiles(local);
@@ -78,14 +81,6 @@ class NotesController extends GetxController {
       // Concurrency guard: avoid launching parallel remote syncs for the same subject notes
       if (_isLoadingRemoteNotes) {
         return;
-      }
-
-      // Throttle remote fetch if pulled within cooldown window
-      if (forceRemote && _lastNotesRemoteSyncAt != null) {
-        final elapsed = DateTime.now().difference(_lastNotesRemoteSyncAt!);
-        if (elapsed < _notesRefreshCooldown) {
-          return;
-        }
       }
 
       // Check internet connectivity before attempting any remote fetch
@@ -114,7 +109,6 @@ class NotesController extends GetxController {
           final updated = await _repo.getLocalNotes(subjectId);
           subjectNotes.assignAll(_validateLocalFiles(updated));
         }
-        _lastNotesRemoteSyncAt = DateTime.now();
       } finally {
         _isLoadingRemoteNotes = false;
       }
@@ -123,6 +117,7 @@ class NotesController extends GetxController {
         AppExceptionHandler.handleResponse(e);
       }
     } finally {
+      isSyncing.value = false;
       isLoading.value = false;
     }
   }

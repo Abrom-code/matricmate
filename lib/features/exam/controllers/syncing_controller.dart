@@ -52,6 +52,15 @@ class SyncingController extends GetxController {
   }) async {
     if (syncingSubjectIds.contains(subjectId)) return true;
 
+    ChapterController? activeChapterCtrl;
+    if (Get.isRegistered<ChapterController>()) {
+      final ctrl = ChapterController.instance;
+      if (ctrl.subjectId == subjectId) {
+        activeChapterCtrl = ctrl;
+        activeChapterCtrl.isSyncing.value = true;
+      }
+    }
+
     try {
       syncingSubjectIds.add(subjectId);
 
@@ -92,7 +101,9 @@ class SyncingController extends GetxController {
       await SubjectsController.instance.refreshEntranceCountsFromRemote();
 
       // 5. Reload ChapterController if active for this subject
-      if (Get.isRegistered<ChapterController>()) {
+      if (activeChapterCtrl != null) {
+        await activeChapterCtrl.loadSubjectChapters(subjectId);
+      } else if (Get.isRegistered<ChapterController>()) {
         final chapterCtrl = ChapterController.instance;
         if (chapterCtrl.subjectId == subjectId) {
           await chapterCtrl.loadSubjectChapters(subjectId);
@@ -114,6 +125,7 @@ class SyncingController extends GetxController {
       }
       return false;
     } finally {
+      activeChapterCtrl?.isSyncing.value = false;
       syncingSubjectIds.remove(subjectId);
     }
   }
@@ -126,6 +138,15 @@ class SyncingController extends GetxController {
     bool showUiLoading = true,
   }) async {
     if (syncingSubjectIds.contains(subjectId)) return true;
+
+    EntranceExamsController? activeEntranceCtrl;
+    if (Get.isRegistered<EntranceExamsController>()) {
+      final ctrl = EntranceExamsController.instance;
+      if (ctrl.subjectId == subjectId) {
+        activeEntranceCtrl = ctrl;
+        activeEntranceCtrl.isSyncing.value = true;
+      }
+    }
 
     try {
       syncingSubjectIds.add(subjectId);
@@ -161,7 +182,9 @@ class SyncingController extends GetxController {
       await SubjectsController.instance.loadLocalSubjects();
 
       // Reload EntranceExamsController if currently active for this subject
-      if (Get.isRegistered<EntranceExamsController>()) {
+      if (activeEntranceCtrl != null) {
+        await activeEntranceCtrl.loadAllExams(subjectId);
+      } else if (Get.isRegistered<EntranceExamsController>()) {
         final entranceCtrl = EntranceExamsController.instance;
         if (entranceCtrl.subjectId == subjectId) {
           await entranceCtrl.loadAllExams(subjectId);
@@ -180,6 +203,7 @@ class SyncingController extends GetxController {
       }
       return false;
     } finally {
+      activeEntranceCtrl?.isSyncing.value = false;
       syncingSubjectIds.remove(subjectId);
     }
   }

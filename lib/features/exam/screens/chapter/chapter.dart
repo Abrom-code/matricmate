@@ -107,7 +107,7 @@ class _ChapterScreenState extends State<ChapterScreen> with RouteAware {
         ),
         actions: [
           Obx(() {
-            final syncing =
+            final syncing = controller.isSyncing.value ||
                 SyncingController.instance.isSyncingSubject(subjectId);
             return SyncIconButton(
               isSyncing: syncing,

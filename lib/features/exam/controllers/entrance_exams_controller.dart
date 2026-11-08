@@ -21,6 +21,7 @@ class EntranceExamsController extends GetxController {
   final RxMap<int, int> testQuestionCounts = <int, int>{}.obs;
 
   final RxBool isLoading = false.obs;
+  final RxBool isSyncing = false.obs;
 
   late String subjectName;
   late int subjectId;

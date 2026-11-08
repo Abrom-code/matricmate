@@ -11,7 +11,6 @@ import 'package:matricmate/features/personalization/controllers/user_controller.
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/test_access_helper.dart';
-import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -109,14 +108,11 @@ class _NotesScreenState extends State<NotesScreen>
         ),
         actions: [
           Obx(() {
-            final syncing = controller.isLoading.value;
+            final syncing = controller.isSyncing.value;
             return SyncIconButton(
               isSyncing: syncing,
               tooltip: 'Sync notes',
-              onPressed: () async {
-                await controller.loadSubjectNotes(forceRemote: true);
-                ToastHelper.success('${controller.title} notes updated!');
-              },
+              onPressed: () => controller.loadSubjectNotes(forceRemote: true),
             );
           }),
           _buildAppBarAction(),

@@ -104,7 +104,7 @@ class _EntranceExamsScreenState extends State<EntranceExamsScreen>
         ),
         actions: [
           Obx(() {
-            final syncing =
+            final syncing = ctrl.isSyncing.value ||
                 SyncingController.instance.isSyncingSubject(ctrl.subjectId);
             return SyncIconButton(
               isSyncing: syncing,

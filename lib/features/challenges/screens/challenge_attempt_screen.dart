@@ -52,7 +52,11 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
 
   @override
   void dispose() {
+    _ctrl.pauseTimer();
     _scrollCtrl.dispose();
+    Get.delete<ChallengeAttemptController>(
+      tag: 'challenge_attempt_${widget.challengeId}',
+    );
     super.dispose();
   }
 
@@ -103,7 +107,7 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
           builder: (_) => AlertDialog(
             title: const Text('Exit Live Challenge?'),
             content: const Text(
-              'The timer will continue running in the background. Are you sure you want to exit?',
+              'Are you sure you want to exit?',
             ),
             actions: [
               TextButton(
@@ -112,6 +116,7 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
               ),
               TextButton(
                 onPressed: () {
+                  _ctrl.pauseTimer();
                   Navigator.pop(context);
                   Navigator.pop(context);
                 },

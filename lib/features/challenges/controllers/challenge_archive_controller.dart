@@ -434,16 +434,36 @@ class ChallengeArchiveController extends GetxController {
       final scores = await _db.getChallengePracticeScores();
       practiceScores.assignAll(scores);
 
+      // Restore local in-progress challenge IDs from SharedPreferences
+      final localInProg = <String>{};
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final inProgKeys =
+            prefs.getKeys().where((k) => k.startsWith('challenge_in_progress_'));
+        for (final k in inProgKeys) {
+          if (prefs.getBool(k) == true) {
+            final cid = k.substring('challenge_in_progress_'.length);
+            if (cid.isNotEmpty &&
+                !attemptedIds.contains(cid) &&
+                !deleted.contains(cid)) {
+              localInProg.add(cid);
+            }
+          }
+        }
+      } catch (_) {}
+      inProgressIds.assignAll(localInProg);
+
       if (checkOnline && !isOffline.value) {
         final userId = UserController.instance.user.value.id.isNotEmpty
             ? UserController.instance.user.value.id
             : (Supabase.instance.client.auth.currentUser?.id ?? '');
         if (userId.isNotEmpty) {
-          final online = await _repo.fetchUserSubmittedChallengeIds(userId);
-          attemptedIds.addAll(online.difference(deleted));
+          final result = await _repo.fetchUserChallengeAttemptIds(userId);
+          final submitted = result['submitted'] ?? <String>{};
+          final inProg = result['inProgress'] ?? <String>{};
 
-          final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
-          inProgressIds.assignAll(inProg.difference(deleted));
+          attemptedIds.addAll(submitted.difference(deleted));
+          inProgressIds.addAll(inProg.difference(deleted));
           inProgressIds.removeAll(attemptedIds);
         }
       }
@@ -468,10 +488,16 @@ class ChallengeArchiveController extends GetxController {
 
   void markInProgress(String challengeId) {
     inProgressIds.add(challengeId);
+    SharedPreferences.getInstance()
+        .then((p) => p.setBool('challenge_in_progress_$challengeId', true))
+        .catchError((_) => false);
   }
 
   void clearInProgress(String challengeId) {
     inProgressIds.remove(challengeId);
+    SharedPreferences.getInstance()
+        .then((p) => p.remove('challenge_in_progress_$challengeId'))
+        .catchError((_) => false);
   }
 
   void markAttemptedOrPracticed(String challengeId) {

@@ -62,6 +62,8 @@ class AvailableChallengeCard extends StatelessWidget {
           : (challenge.durationSeconds / 60).round();
 
       final isDone = ctrl.isChallengeCompleted(challenge);
+      final inProgress = ctrl.isInProgress(challenge.id) ||
+          (challenge.setId.isNotEmpty && ctrl.isInProgress(challenge.setId));
 
       return Container(
         decoration: BoxDecoration(
@@ -500,7 +502,9 @@ class AvailableChallengeCard extends StatelessWidget {
                         ? (challenge.canReviewQuestions
                             ? Icons.visibility_outlined
                             : Icons.lock_clock_outlined)
-                        : Icons.arrow_forward_rounded,
+                        : (inProgress
+                            ? Icons.play_arrow_rounded
+                            : Icons.arrow_forward_rounded),
                     size: 16,
                     color: Colors.white,
                   ),
@@ -509,7 +513,7 @@ class AvailableChallengeCard extends StatelessWidget {
                         ? (challenge.canReviewQuestions
                             ? 'Review'
                             : 'Review when closed')
-                        : 'Start challenge',
+                        : (inProgress ? 'Resume' : 'Start challenge'),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

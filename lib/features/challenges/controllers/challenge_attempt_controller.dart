@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,7 +31,7 @@ class ChallengeAttemptController extends GetxController
       durationSeconds = durationMinutes * 60;
     }
     startedAt = DateTime.now();
-    _syncTimerWithWallClock();
+    _updateRemainingSeconds();
   }
 
   final String challengeId;
@@ -55,6 +56,7 @@ class ChallengeAttemptController extends GetxController
   final remainingSeconds = 0.obs;
   Timer? _timer;
   int _timeSpentSeconds = 0;
+  bool _isPaused = false;
 
   // ── Passage States ──────────────────────────────────────────────────────────
   final isFullScreenPassage = false.obs;
@@ -98,14 +100,18 @@ class ChallengeAttemptController extends GetxController
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timer?.cancel();
+    pauseTimer();
     super.onClose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _syncTimerWithWallClock();
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      pauseTimer();
+    } else if (state == AppLifecycleState.resumed) {
+      resumeTimer();
     }
   }
 
@@ -124,12 +130,7 @@ class ChallengeAttemptController extends GetxController
       endsAt = data['ends_at'];
       questions.value = data['questions'] ?? [];
 
-      if (Get.isRegistered<ChallengeHomeController>()) {
-        ChallengeHomeController.instance.markInProgress(challengeId);
-      }
-      if (Get.isRegistered<ChallengeArchiveController>()) {
-        ChallengeArchiveController.instance.markInProgress(challengeId);
-      }
+      _markStatusInProgress();
 
       // Restore existing answers if resuming an ongoing attempt
       try {
@@ -147,6 +148,39 @@ class ChallengeAttemptController extends GetxController
         }
       } catch (_) {}
 
+      // Restore from local SQLite practice result if local had any answers
+      try {
+        final localResult =
+            await DatabaseService.instance.getChallengePracticeResult(challengeId);
+        if (localResult != null && localResult['user_answers'] != null) {
+          final rawAns = localResult['user_answers'];
+          final map = rawAns is String ? jsonDecode(rawAns) : rawAns;
+          if (map is Map) {
+            for (final e in map.entries) {
+              if (e.key != null && e.value != null) {
+                userAnswers.putIfAbsent(e.key.toString(), () => e.value.toString());
+              }
+            }
+          }
+        }
+      } catch (_) {}
+
+      // Restore active time spent if resuming
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final savedTime = prefs.getInt('challenge_time_spent_$challengeId');
+        if (savedTime != null && savedTime > 0) {
+          _timeSpentSeconds = savedTime;
+        } else {
+          final localResult =
+              await DatabaseService.instance.getChallengePracticeResult(challengeId);
+          if (localResult != null && localResult['time_spent_seconds'] != null) {
+            final t = (localResult['time_spent_seconds'] as num?)?.toInt() ?? 0;
+            if (t > 0) _timeSpentSeconds = t;
+          }
+        }
+      } catch (_) {}
+
       // Restore last question position where user left off
       try {
         final prefs = await SharedPreferences.getInstance();
@@ -160,12 +194,13 @@ class ChallengeAttemptController extends GetxController
           if (firstUnanswered != -1) {
             currentIndex.value = firstUnanswered;
           } else {
-            currentIndex.value = (questions.length - 1).clamp(0, questions.length - 1);
+            currentIndex.value =
+                (questions.length - 1).clamp(0, questions.length - 1);
           }
         }
       } catch (_) {}
 
-      _syncTimerWithWallClock();
+      _updateRemainingSeconds();
       _startTimer();
     } catch (e) {
       Get.back();
@@ -214,39 +249,99 @@ class ChallengeAttemptController extends GetxController
     }
   }
 
-  void _syncTimerWithWallClock() {
-    if (startedAt == null) return;
-    final now = DateTime.now();
-    final elapsed = now.difference(startedAt!).inSeconds;
-    _timeSpentSeconds = elapsed;
+  void _updateRemainingSeconds() {
+    int remaining = durationSeconds - _timeSpentSeconds;
 
-    // 1. Standard remaining time based on challenge duration (e.g., 30 mins)
-    final allowedByDuration = durationSeconds - elapsed;
-
-    // 2. Hard cutoff: clamp to challenge window closing time (endsAt, e.g., 4:00 PM)
-    int allowed = allowedByDuration;
+    // Hard cutoff: clamp to challenge window closing time (endsAt, e.g., 4:00 PM)
     if (endsAt != null) {
-      final secondsUntilClose = endsAt!.difference(now).inSeconds;
-      if (secondsUntilClose < allowed) {
-        allowed = secondsUntilClose;
+      final secondsUntilClose = endsAt!.difference(DateTime.now()).inSeconds;
+      if (secondsUntilClose < remaining) {
+        remaining = secondsUntilClose;
       }
     }
 
-    if (allowed <= 0) {
+    if (remaining <= 0) {
       remainingSeconds.value = 0;
       _timer?.cancel();
       _onTimeExpired();
     } else {
-      remainingSeconds.value = allowed;
+      remainingSeconds.value = remaining;
     }
   }
 
   void _startTimer() {
     _timer?.cancel();
-    _syncTimerWithWallClock();
+    _isPaused = false;
+    _updateRemainingSeconds();
+
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _syncTimerWithWallClock();
+      if (_isPaused || isSubmitting.value) return;
+
+      _timeSpentSeconds++;
+      _updateRemainingSeconds();
+
+      // Periodically persist active time spent every 5 seconds to ensure zero data loss
+      if (_timeSpentSeconds % 5 == 0) {
+        _saveActiveTimeSpent();
+      }
     });
+  }
+
+  /// Pauses time counting when the user leaves the challenge or background the app.
+  void pauseTimer() {
+    if (_isPaused) return;
+    _isPaused = true;
+    _timer?.cancel();
+    _timer = null;
+    _saveActiveTimeSpent();
+    _markStatusInProgress();
+  }
+
+  /// Resumes time counting when the user returns to the challenge.
+  void resumeTimer() {
+    if (isSubmitting.value) return;
+    _isPaused = false;
+    _startTimer();
+  }
+
+  void _markStatusInProgress() {
+    if (Get.isRegistered<ChallengeHomeController>()) {
+      ChallengeHomeController.instance.markInProgress(challengeId);
+    }
+    if (Get.isRegistered<ChallengeArchiveController>()) {
+      ChallengeArchiveController.instance.markInProgress(challengeId);
+    }
+  }
+
+  Future<void> _saveActiveTimeSpent() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('challenge_time_spent_$challengeId', _timeSpentSeconds);
+      await prefs.setBool('challenge_in_progress_$challengeId', true);
+
+      await DatabaseService.instance.saveChallengePracticeResult(
+        challengeId: challengeId,
+        score: 0,
+        totalQuestions: totalQuestions,
+        userAnswers: Map<String, String>.from(userAnswers),
+        timeSpentSeconds: _timeSpentSeconds,
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _clearChallengeProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('challenge_time_spent_$challengeId');
+      await prefs.remove('challenge_in_progress_$challengeId');
+      await prefs.remove('last_q_index_$challengeId');
+    } catch (_) {}
+    if (Get.isRegistered<ChallengeHomeController>()) {
+      ChallengeHomeController.instance.clearInProgress(challengeId);
+    }
+    if (Get.isRegistered<ChallengeArchiveController>()) {
+      ChallengeArchiveController.instance.clearInProgress(challengeId);
+    }
   }
 
   void _onTimeExpired() {
@@ -268,18 +363,12 @@ class ChallengeAttemptController extends GetxController
     } catch (_) {}
   }
 
-  Future<void> _clearLastQuestionIndex() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('last_q_index_$challengeId');
-    } catch (_) {}
-  }
-
   void selectChoice(String questionId, String choice) {
     if (userAnswers[questionId] == choice) return;
 
     userAnswers[questionId] = choice;
     _saveLastQuestionIndex(currentIndex.value);
+    _saveActiveTimeSpent();
 
     // Save locally to SQLite immediately — zero network latency, 100% crash/offline safe
     DatabaseService.instance.saveChallengePracticeResult(
@@ -317,7 +406,7 @@ class ChallengeAttemptController extends GetxController
 
     isSubmitting.value = true;
     _timer?.cancel();
-    _clearLastQuestionIndex();
+    await _clearChallengeProgress();
 
     AppFullScreenLoader.openLoadingDialog(
       isAutoExpire

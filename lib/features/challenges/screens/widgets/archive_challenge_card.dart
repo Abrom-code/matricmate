@@ -436,7 +436,8 @@ class ArchiveChallengeCard extends StatelessWidget {
                       ),
                     );
                   }
-                  final inProgress = ctrl.isInProgress(challenge.id);
+                  final inProgress = ctrl.isInProgress(challenge.id) ||
+                      (challenge.setId.isNotEmpty && ctrl.isInProgress(challenge.setId));
                   return SizedBox(
                     width: 150,
                     height: 44,
@@ -468,7 +469,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                         color: const Color(0xFF04342C),
                       ),
                       label: Text(
-                        inProgress ? 'Continue' : 'Start',
+                        inProgress ? 'Resume' : 'Start',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

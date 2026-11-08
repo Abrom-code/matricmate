@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
@@ -9,7 +10,7 @@ import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
-class ChallengePracticeController extends GetxController {
+class ChallengePracticeController extends GetxController with WidgetsBindingObserver {
   ChallengePracticeController({
     required this.challengeId,
     required this.title,
@@ -59,14 +60,27 @@ class ChallengePracticeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     stopwatch.start();
     loadQuestions();
   }
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     stopwatch.stop();
     super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      if (stopwatch.isRunning) stopwatch.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      if (!stopwatch.isRunning) stopwatch.start();
+    }
   }
 
   Future<void> loadQuestions() async {

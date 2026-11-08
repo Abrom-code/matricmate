@@ -109,6 +109,10 @@ class NotesController extends GetxController {
           final updated = await _repo.getLocalNotes(subjectId);
           subjectNotes.assignAll(_validateLocalFiles(updated));
         }
+
+        if (forceRemote) {
+          ToastHelper.success('$title notes updated!');
+        }
       } finally {
         _isLoadingRemoteNotes = false;
       }

@@ -87,7 +87,7 @@ class NotesRepository {
           .select()
           .eq('subject_id', subjectId)
           .order('chapter_number', ascending: true)
-          .timeout(AppTimeouts.query);
+          .timeout(AppTimeouts.sync);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
@@ -103,7 +103,7 @@ class NotesRepository {
       }
       final response = await query
           .order('chapter_number', ascending: true)
-          .timeout(AppTimeouts.query);
+          .timeout(AppTimeouts.sync);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];

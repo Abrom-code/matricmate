@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:matricmate/common/widgets/exam/question_content_renderer.dart';
+import 'package:matricmate/features/notifications/screens/widgets/notification_body_text.dart';
 import 'package:matricmate/features/tips_and_news/controllers/tips_and_news_controller.dart';
 import 'package:matricmate/features/tips_and_news/models/tips_and_news_model.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
+import 'package:matricmate/utils/helpers/toast_helper.dart';
 import 'package:share_plus/share_plus.dart';
 
 class TipsAndNewsDetailScreen extends StatefulWidget {
@@ -101,6 +103,16 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
             );
           }),
           IconButton(
+            icon: const Icon(Iconsax.copy_copy, size: 20),
+            tooltip: 'Copy text',
+            onPressed: () {
+              Clipboard.setData(ClipboardData(
+                text: '${widget.item.title}\n\n${widget.item.content}',
+              ));
+              ToastHelper.success('Copied to clipboard');
+            },
+          ),
+          IconButton(
             icon: const Icon(Iconsax.share_copy, size: 20),
             tooltip: 'Share',
             onPressed: _shareContent,
@@ -177,10 +189,10 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
 
             const SizedBox(height: 16),
 
-            // Article Title (supports BBCode, bold, color tags as used on explanations)
-            QuestionContentRenderer(
+            // Article Title (Selectable, copyable, supports BBCode & Markdown formatting)
+            NotificationBodyText(
               text: item.title,
-              baseStyle: TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: dark ? Colors.white : AppColors.textPrimary,
@@ -270,10 +282,10 @@ class _TipsAndNewsDetailScreenState extends State<TipsAndNewsDetailScreen> {
               const SizedBox(height: 18),
             ],
 
-            // Article Body Content (Unified explanation formatting: font color, LaTeX, tables, BBCode, markup)
-            QuestionContentRenderer(
+            // Article Body Content (Selectable, copyable, interactive clickable links, LaTeX, tables, BBCode)
+            NotificationBodyText(
               text: item.content,
-              baseStyle: TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
                 height: 1.65,

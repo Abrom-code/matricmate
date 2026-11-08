@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:matricmate/features/notifications/services/notification_link_parser.dart';
 import 'package:matricmate/features/tips_and_news/models/tips_and_news_model.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -248,7 +249,7 @@ class TipsNewsCard extends StatelessWidget {
                         children: [
                           Text.rich(
                             RichTextParser.parse(
-                              item.title,
+                              NotificationLinkParser.stripTags(item.title),
                               TextStyle(
                                 fontSize: 15.5,
                                 fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
@@ -262,7 +263,7 @@ class TipsNewsCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text.rich(
                             RichTextParser.parse(
-                              item.content,
+                              NotificationLinkParser.stripTags(item.content),
                               TextStyle(
                                 fontSize: 12.5,
                                 color: dark

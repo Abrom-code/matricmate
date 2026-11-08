@@ -1,4 +1,7 @@
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:matricmate/features/notifications/screens/widgets/notification_body_text.dart';
 import 'package:matricmate/features/tips_and_news/models/tips_and_news_model.dart';
 
 void main() {
@@ -257,6 +260,46 @@ void main() {
       unreadTipsCount = 0;
       showOthersNavBadge = unreadTipsCount > 0;
       expect(showOthersNavBadge, isFalse);
+    });
+
+    testWidgets('Tips and news body text is selectable and links are clickable', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: NotificationBodyText(
+              text: 'Visit [a href="https://t.me/matric_et"]Official Telegram[/a] for updates.',
+            ),
+          ),
+        ),
+      );
+
+      // Verify SelectionArea exists so text is selectable and copyable
+      expect(find.byType(SelectionArea), findsOneWidget);
+      expect(find.textContaining('Official Telegram'), findsOneWidget);
+
+      // Verify link has gesture recognizer to navigate
+      final richTextFinder = find.byType(RichText);
+      expect(richTextFinder, findsWidgets);
+
+      RichText? linkRichText;
+      for (final el in richTextFinder.evaluate()) {
+        final w = el.widget as RichText;
+        if (w.text.toPlainText().contains('Official Telegram')) {
+          linkRichText = w;
+          break;
+        }
+      }
+      expect(linkRichText, isNotNull);
+      final span = linkRichText!.text as TextSpan;
+      bool hasClickRecognizer = false;
+      span.visitChildren((child) {
+        if (child is TextSpan && child.recognizer is TapGestureRecognizer) {
+          hasClickRecognizer = true;
+          return false;
+        }
+        return true;
+      });
+      expect(hasClickRecognizer, isTrue);
     });
   });
 }

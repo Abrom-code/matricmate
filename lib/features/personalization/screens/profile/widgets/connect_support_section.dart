@@ -77,21 +77,9 @@ class ConnectSupportSection extends StatelessWidget {
           }),
           divider,
           const AppListTile(
-            icon: Icon(Iconsax.star_1_copy, color: Color(0xFFF59E0B), size: 18),
-            title: 'Rate the App',
-            subtitle: 'Support us on Google Play',
-            trailing: Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textSecondary,
-              size: 20,
-            ),
-            onTap: ProfileActionsHelper.rateApp,
-          ),
-          divider,
-          const AppListTile(
             icon: Icon(Iconsax.share_copy, color: Color(0xFF10B981), size: 18),
             title: 'Share with Friends',
-            subtitle: 'Invite your fiends to practice',
+            subtitle: 'Invite your friends to practice',
             trailing: Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textSecondary,

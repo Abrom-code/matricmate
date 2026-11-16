@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
@@ -34,7 +34,6 @@ class ChallengeArchiveController extends GetxController {
 
   final _repo = ChallengeRepository();
   final _db = DatabaseService.instance;
-  final _sb = Supabase.instance.client;
 
   final isLoading = false.obs;
   final isManualRefreshing = false.obs;
@@ -46,8 +45,6 @@ class ChallengeArchiveController extends GetxController {
   final inProgressIds = <String>{}.obs;
   final deletedChallengeIds = <String>{}.obs;
   final isOffline = false.obs;
-
-  RealtimeChannel? _realtimeChannel;
 
   bool get isPremium => UserController.instance.user.value.isActive;
   String get userStream => UserController.instance.user.value.stream.toLowerCase().trim();
@@ -96,14 +93,11 @@ class ChallengeArchiveController extends GetxController {
     return challenges.where((c) => c.subjectId == subjId).length;
   }
 
-  Timer? _realtimeDebounceTimer;
-
   @override
   void onInit() {
     super.onInit();
     _preloadLocalArchivedChallenges();
     loadArchive();
-    _startRealtime();
 
     String lastUserId = UserController.instance.user.value.id;
     String lastUserStream = UserController.instance.user.value.stream;
@@ -123,40 +117,7 @@ class ChallengeArchiveController extends GetxController {
 
   @override
   void onClose() {
-    _realtimeDebounceTimer?.cancel();
-    if (_realtimeChannel != null) {
-      _sb.removeChannel(_realtimeChannel!);
-      _realtimeChannel = null;
-    }
     super.onClose();
-  }
-
-  void _startRealtime() {
-    if (_realtimeChannel != null) {
-      _sb.removeChannel(_realtimeChannel!);
-    }
-    final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
-    _realtimeChannel = _sb
-        .channel('public:challenge_archive_$tag')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'leaderboard_challenges',
-          callback: (payload) {
-            debugPrint(
-              '[Realtime] Archive challenge changed: ${payload.eventType}',
-            );
-            _realtimeDebounceTimer?.cancel();
-            _realtimeDebounceTimer = Timer(const Duration(seconds: 3), () {
-              loadArchive(isManual: false);
-            });
-          },
-        )
-        .subscribe((status, [error]) {
-          debugPrint(
-            '[Realtime] Archive channel status: $status ${error ?? ''}',
-          );
-        });
   }
 
   Future<void> _preloadLocalArchivedChallenges() async {

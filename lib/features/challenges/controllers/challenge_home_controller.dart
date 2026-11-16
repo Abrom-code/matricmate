@@ -203,7 +203,7 @@ class ChallengeHomeController extends GetxController {
     if (_realtimeChannel != null) {
       _sb.removeChannel(_realtimeChannel!);
     }
-    // Only listen to leaderboard_challenges status transitions (live/closed)
+    // Listen to leaderboard_challenges changes with debouncing and change inspection
     _realtimeChannel = _sb
         .channel('public:leaderboard_challenges')
         .onPostgresChanges(
@@ -211,9 +211,25 @@ class ChallengeHomeController extends GetxController {
           schema: 'public',
           table: 'leaderboard_challenges',
           callback: (payload) {
+            // Ignore updates if key challenge display fields did not change
+            if (payload.eventType == PostgresChangeEvent.update) {
+              final oldRec = payload.oldRecord;
+              final newRec = payload.newRecord;
+              if (oldRec.isNotEmpty && newRec.isNotEmpty) {
+                final statusSame = oldRec['status'] == newRec['status'];
+                final titleSame = oldRec['title'] == newRec['title'];
+                final startsSame = oldRec['starts_at'] == newRec['starts_at'];
+                final endsSame = oldRec['ends_at'] == newRec['ends_at'];
+                final isPremSame = oldRec['is_premium'] == newRec['is_premium'];
+                if (statusSame && titleSame && startsSame && endsSame && isPremSame) {
+                  return;
+                }
+              }
+            }
+
             debugPrint('[Realtime] Challenge changed: ${payload.eventType}');
             _realtimeDebounceTimer?.cancel();
-            _realtimeDebounceTimer = Timer(const Duration(seconds: 3), () {
+            _realtimeDebounceTimer = Timer(const Duration(seconds: 5), () {
               loadAllChallenges(showLoading: false);
             });
           },

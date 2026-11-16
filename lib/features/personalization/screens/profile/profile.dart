@@ -32,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _refreshProfile() async {
     await Future.wait([
-      UserController.instance.fetchUserRecord().catchError((_) => false),
+      UserController.instance.fetchUserRecord(force: true).catchError((_) => false),
       ProfileActionsHelper.refreshUpdateStatus(null, showDialog: false),
     ]);
   }

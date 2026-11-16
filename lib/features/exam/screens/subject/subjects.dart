@@ -132,11 +132,11 @@ class _SubjectsScreenState extends State<SubjectsScreen> with RouteAware {
               color: AppColors.primary,
               onRefresh: () async {
                 await ctrl.ensureSubjectsLoaded(forceRemote: true);
-                await ctrl.refreshEntranceCountsFromRemote();
+                await ctrl.refreshEntranceCountsFromRemote(force: true);
                 await ctrl.loadPausedTests();
                 unawaited(
                   UserController.instance
-                      .fetchUserRecord()
+                      .fetchUserRecord(force: true)
                       .catchError((_) => false),
                 );
               },

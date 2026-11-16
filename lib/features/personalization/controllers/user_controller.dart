@@ -170,13 +170,48 @@ class UserController extends GetxController {
     try {
       isLoggingOut.value = true;
       _blockHandled = false; // reset so next login can show blocked message
+      _lastSuccessfulFetchUser = null;
+      _inFlightFetchUser = null;
       await AuthenticationController.instance.logout();
     } finally {
       isLoggingOut.value = false;
     }
   }
 
-  Future<bool> fetchUserRecord() async {
+  Future<bool>? _inFlightFetchUser;
+  DateTime? _lastSuccessfulFetchUser;
+  static const Duration _fetchThrottleDuration = Duration(seconds: 15);
+
+  /// Fetches the user record from Supabase and validates session.
+  /// Deduplicates parallel calls (attaches to in-flight future) and
+  /// throttles repeated calls within 15 seconds unless [force] is true.
+  Future<bool> fetchUserRecord({bool force = false}) async {
+    // 1. If a fetch is currently in progress, join that exact request
+    if (_inFlightFetchUser != null) {
+      return _inFlightFetchUser!;
+    }
+
+    // 2. If fetched recently and not forced, return cached status immediately
+    if (!force && _lastSuccessfulFetchUser != null) {
+      final elapsed = DateTime.now().difference(_lastSuccessfulFetchUser!);
+      if (elapsed < _fetchThrottleDuration && user.value.id.isNotEmpty) {
+        return true;
+      }
+    }
+
+    _inFlightFetchUser = _executeFetchUserRecord();
+    try {
+      final ok = await _inFlightFetchUser!;
+      if (ok) {
+        _lastSuccessfulFetchUser = DateTime.now();
+      }
+      return ok;
+    } finally {
+      _inFlightFetchUser = null;
+    }
+  }
+
+  Future<bool> _executeFetchUserRecord() async {
     try {
       userFetching.value = true;
 
@@ -250,7 +285,7 @@ class UserController extends GetxController {
   Future<void> checkPaymentStatus() async {
     try {
       isCheckingPayment.value = true;
-      await fetchUserRecord();
+      await fetchUserRecord(force: true);
       final current = user.value;
 
       if (current.isActive) {

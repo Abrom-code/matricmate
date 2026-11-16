@@ -3,6 +3,8 @@ import 'package:matricmate/data/services/payment_config_service.dart';
 import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('PaymentConfigService Telegram Links Tests', () {
     final service = PaymentConfigService.instance;
 

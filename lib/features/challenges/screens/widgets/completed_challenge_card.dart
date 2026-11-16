@@ -286,7 +286,7 @@ class CompletedChallengeCard extends StatelessWidget {
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: AppColors.teal),
                       elevation: 0,
-                      padding: EdgeInsets.zero,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -299,7 +299,7 @@ class CompletedChallengeCard extends StatelessWidget {
                         ? const SizedBox.shrink()
                         : const Icon(
                             Icons.download_rounded,
-                            size: 15,
+                            size: 16,
                             color: Colors.white,
                           ),
                     label: isBusy
@@ -307,7 +307,9 @@ class CompletedChallengeCard extends StatelessWidget {
                             color: Colors.white,
                           )
                         : const Text(
-                            'Download to Practice & Review',
+                            'Download',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,

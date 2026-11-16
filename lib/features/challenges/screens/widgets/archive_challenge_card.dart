@@ -298,7 +298,9 @@ class ArchiveChallengeCard extends StatelessWidget {
                       label: isBusy
                           ? const AppCircularButtonLoading(color: Colors.white)
                           : const Text(
-                              'Download to Practice & Review',
+                              'Download',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,

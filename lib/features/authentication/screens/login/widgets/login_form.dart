@@ -446,8 +446,6 @@ class LoginForm extends GetView<LoginController> {
               ),
             ),
           ),
-
-          const SizedBox(height: 24),
         ],
       ),
     );

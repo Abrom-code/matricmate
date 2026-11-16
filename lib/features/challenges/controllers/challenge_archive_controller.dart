@@ -764,6 +764,7 @@ class ChallengeArchiveController extends GetxController {
               score: (localPractice['score'] as num?)?.toInt() ?? 0,
               timeSpentSeconds:
                   (localPractice['time_spent_seconds'] as num?)?.toInt() ?? 0,
+              isLive: challenge.isLive,
             ),
           );
           return;
@@ -831,6 +832,7 @@ class ChallengeArchiveController extends GetxController {
                 userAnswers: userAnswers,
                 score: attempt.score,
                 timeSpentSeconds: attempt.totalTimeSeconds,
+                isLive: challenge.isLive,
               ),
             );
             return;

@@ -97,7 +97,9 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              _ctrl.submitAttempt();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _ctrl.submitAttempt();
+              });
             },
             child: const Text('Submit Now'),
           ),
@@ -479,18 +481,14 @@ class _QuestionGridSheet extends StatelessWidget {
               }),
             ),
             const SizedBox(height: AppSizes.lg),
-            Obx(
-              () => FilledButton(
-                onPressed: controller.isSubmitting.value
-                    ? null
-                    : () {
-                        Navigator.pop(context);
-                        controller.submitAttempt();
-                      },
-                child: controller.isSubmitting.value
-                    ? const AppCircularButtonLoading(color: Colors.white)
-                    : const Text('Finish & Submit Attempt'),
-              ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  controller.submitAttempt();
+                });
+              },
+              child: const Text('Finish & Submit Attempt'),
             ),
           ],
         ),

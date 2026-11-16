@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -189,19 +190,24 @@ class ChallengePracticeController extends GetxController with WidgetsBindingObse
       }
     }
 
+    // Ensure any transition is cleanly settled before mutating reactive controllers
+    await Future.delayed(const Duration(milliseconds: 100));
+
     // Notify controllers of completion and downloaded availability
-    if (Get.isRegistered<ChallengeHomeController>()) {
-      final hCtrl = ChallengeHomeController.instance;
-      hCtrl.markAttemptedOrPracticed(challengeId);
-      hCtrl.downloadedIds.add(challengeId);
-      hCtrl.refreshAttemptStates();
-    }
-    if (Get.isRegistered<ChallengeArchiveController>()) {
-      final aCtrl = ChallengeArchiveController.instance;
-      aCtrl.markAttemptedOrPracticed(challengeId);
-      aCtrl.downloadedIds.add(challengeId);
-      aCtrl.refreshAttemptStates();
-    }
+    try {
+      if (Get.isRegistered<ChallengeHomeController>()) {
+        final hCtrl = ChallengeHomeController.instance;
+        hCtrl.markAttemptedOrPracticed(challengeId);
+        hCtrl.downloadedIds.add(challengeId);
+        unawaited(hCtrl.refreshAttemptStates());
+      }
+      if (Get.isRegistered<ChallengeArchiveController>()) {
+        final aCtrl = ChallengeArchiveController.instance;
+        aCtrl.markAttemptedOrPracticed(challengeId);
+        aCtrl.downloadedIds.add(challengeId);
+        unawaited(aCtrl.refreshAttemptStates());
+      }
+    } catch (_) {}
 
     // Navigate to Review Screen
     Get.off(
@@ -212,6 +218,8 @@ class ChallengePracticeController extends GetxController with WidgetsBindingObse
         userAnswers: userAnswers,
         score: correctCount,
         timeSpentSeconds: elapsedSeconds,
+        isRedo: false,
+        isLive: false,
       ),
     );
   }

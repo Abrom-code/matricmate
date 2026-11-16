@@ -389,7 +389,9 @@ class ChallengeAttemptController extends GetxController
       Get.back();
     }
     ToastHelper.warning('Time is up! Submitting your attempt...');
-    submitAttempt(isAutoExpire: true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      submitAttempt(isAutoExpire: true);
+    });
   }
 
   Future<void> _saveLastQuestionIndex(int index) async {
@@ -442,6 +444,10 @@ class ChallengeAttemptController extends GetxController
   Future<void> submitAttempt({bool isAutoExpire = false}) async {
     if (isSubmitting.value || (!isRedo && attemptId == null)) return;
 
+    // Ensure any ongoing dialog/modal pop route transition has settled
+    await WidgetsBinding.instance.endOfFrame;
+    if (isSubmitting.value) return;
+
     isSubmitting.value = true;
     _timer?.cancel();
     await _clearChallengeProgress();
@@ -482,6 +488,8 @@ class ChallengeAttemptController extends GetxController
         } catch (_) {}
 
         AppFullScreenLoader.stopLoading();
+        await Future.delayed(const Duration(milliseconds: 100));
+        await WidgetsBinding.instance.endOfFrame;
 
         Get.off(
           () => ChallengeReviewScreen(
@@ -493,6 +501,7 @@ class ChallengeAttemptController extends GetxController
             challengeId: challengeId,
             audience: audience,
             isRedo: true,
+            isLive: false,
           ),
         );
         return;
@@ -562,22 +571,32 @@ class ChallengeAttemptController extends GetxController
             });
           }
         }
+      } catch (_) {}
 
+      AppFullScreenLoader.stopLoading();
+      await Future.delayed(const Duration(milliseconds: 100));
+      await WidgetsBinding.instance.endOfFrame;
+
+      try {
         if (Get.isRegistered<ChallengeHomeController>()) {
           final hCtrl = ChallengeHomeController.instance;
           hCtrl.markAttemptedOrPracticed(challengeId);
           hCtrl.downloadedIds.add(challengeId);
-          hCtrl.refreshAttemptStates();
+          unawaited(hCtrl.refreshAttemptStates());
         }
         if (Get.isRegistered<ChallengeArchiveController>()) {
           final aCtrl = ChallengeArchiveController.instance;
           aCtrl.markAttemptedOrPracticed(challengeId);
           aCtrl.downloadedIds.add(challengeId);
-          aCtrl.refreshAttemptStates();
+          unawaited(aCtrl.refreshAttemptStates());
         }
       } catch (_) {}
 
-      AppFullScreenLoader.stopLoading();
+      final isChallengeLive = !isRedo &&
+          ((endsAt != null && DateTime.now().isBefore(endsAt!)) ||
+              (Get.isRegistered<ChallengeHomeController>() &&
+                  ChallengeHomeController.instance.availableChallenges
+                      .any((c) => c.id == challengeId && c.isLive)));
 
       // 4. Show completion feedback and transition to review screen or leaderboard
       if (reviewQuestions.isEmpty) {
@@ -602,11 +621,14 @@ class ChallengeAttemptController extends GetxController
             timeSpentSeconds: _timeSpentSeconds,
             challengeId: challengeId,
             audience: audience,
+            isLive: isChallengeLive,
           ),
         );
       }
     } catch (e) {
       AppFullScreenLoader.stopLoading();
+      await Future.delayed(const Duration(milliseconds: 100));
+      await WidgetsBinding.instance.endOfFrame;
       final msg = e.toString().toLowerCase();
       if (msg.contains('already_submitted')) {
         Get.off(
@@ -618,6 +640,7 @@ class ChallengeAttemptController extends GetxController
             timeSpentSeconds: _timeSpentSeconds,
             challengeId: challengeId,
             audience: audience,
+            isLive: !isRedo,
           ),
         );
       } else if (isAutoExpire || remainingSeconds.value <= 0) {
@@ -636,7 +659,9 @@ class ChallengeAttemptController extends GetxController
           confirm: FilledButton.icon(
             onPressed: () {
               if (Get.isDialogOpen ?? false) Get.back();
-              submitAttempt(isAutoExpire: isAutoExpire);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                submitAttempt(isAutoExpire: isAutoExpire);
+              });
             },
             icon: const Icon(Icons.refresh_rounded, size: 16),
             label: const Text('Retry Submission'),

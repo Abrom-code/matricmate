@@ -15,23 +15,57 @@ class LoginScreen extends GetView<LoginController> {
 
     return Scaffold(
       backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            12,
-            20,
-            MediaQuery.paddingOf(context).bottom + 24,
+      body: Stack(
+        children: [
+          // Ambient soft decorative glows for depth
+          Positioned(
+            top: -50,
+            right: -50,
+            child: IgnorePointer(
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: dark ? 0.10 : 0.06),
+                ),
+              ),
+            ),
           ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppDetail(),
-              SizedBox(height: 24),
-              LoginForm(),
-            ],
+          Positioned(
+            top: 180,
+            left: -60,
+            child: IgnorePointer(
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.blueAccent.withValues(alpha: dark ? 0.06 : 0.03),
+                ),
+              ),
+            ),
           ),
-        ),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                MediaQuery.paddingOf(context).bottom + 24,
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppDetail(),
+                  SizedBox(height: 24),
+                  LoginForm(),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

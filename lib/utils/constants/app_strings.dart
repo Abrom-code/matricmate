@@ -16,7 +16,7 @@ class AppTextStrings {
   static const String resendLogin = 'Resend login';
 
   // -- Authentication Headings Text
-  static const String loginTitle = 'Welcome back.';
+  static const String loginTitle = 'Login';
   static const String loginSubTitle =
       'Explore limitless study resources and seamless learning for matric success.';
   static const String forgetPasswordTitle = 'Forgot password';

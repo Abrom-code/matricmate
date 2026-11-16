@@ -131,6 +131,7 @@ class SignupForm extends GetView<SignupController> {
                   onTapOutside: (_) => FocusScope.of(context).unfocus(),
                   decoration: InputDecoration(
                     labelText: 'Email Address',
+                    hintText: 'e.g. abebe@gmail.com',
                     labelStyle: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w500,
@@ -205,6 +206,7 @@ class SignupForm extends GetView<SignupController> {
                     ),
                     decoration: InputDecoration(
                       labelText: 'Password',
+                      hintText: 'At least 6 characters',
                       labelStyle: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w500,
@@ -296,6 +298,7 @@ class SignupForm extends GetView<SignupController> {
                     ),
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
+                      hintText: 'Re-enter your password',
                       labelStyle: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w500,

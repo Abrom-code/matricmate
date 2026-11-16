@@ -61,7 +61,7 @@ class LoginForm extends GetView<LoginController> {
                   validator: (value) => AppValidator.validateEmail(value),
                   decoration: InputDecoration(
                     labelText: 'Email Address',
-                    hintText: 'student@example.com',
+                    hintText: 'e.g. abebe@gmail.com',
                     labelStyle: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w500,

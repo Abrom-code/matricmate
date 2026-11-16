@@ -407,19 +407,19 @@ class LoginForm extends GetView<LoginController> {
 
           const SizedBox(height: 16),
 
-          // ── Support Bot Link ───────────────────────────────────────
+          // ── Contact Us Support Link ───────────────────────────────
           Center(
             child: InkWell(
               onTap: ProfileActionsHelper.openTelegramSupport,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 22,
-                      height: 22,
+                      width: 20,
+                      height: 20,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
@@ -429,12 +429,12 @@ class LoginForm extends GetView<LoginController> {
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
-                        child: Icon(Icons.send_rounded, size: 10, color: Colors.white),
+                        child: Icon(Icons.send_rounded, size: 9, color: Colors.white),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Text(
-                      'Need help? Contact support',
+                      'Contact Us',
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,

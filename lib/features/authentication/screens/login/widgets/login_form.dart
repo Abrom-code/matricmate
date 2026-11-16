@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
+import 'package:matricmate/features/authentication/screens/login/widgets/login_header.dart';
 import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
@@ -21,9 +22,9 @@ class LoginForm extends GetView<LoginController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ── Credentials Card ───────────────────────────────────────
+          // ── Credentials Card (Form Box) ────────────────────────────
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
             decoration: BoxDecoration(
               color: dark ? AppColors.darkCard : Colors.white,
               borderRadius: BorderRadius.circular(22),
@@ -40,8 +41,13 @@ class LoginForm extends GetView<LoginController> {
               ],
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Logo & 'Login' Title inside the form box
+                const AppDetail(),
+
+                const SizedBox(height: 22),
+
                 // Email Field
                 TextFormField(
                   controller: controller.email,

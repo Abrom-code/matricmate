@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
 import 'package:matricmate/features/authentication/screens/login/widgets/login_form.dart';
-import 'package:matricmate/features/authentication/screens/login/widgets/login_header.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -51,18 +50,11 @@ class LoginScreen extends GetView<LoginController> {
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 20,
-                16,
+                24,
                 20,
                 MediaQuery.paddingOf(context).bottom + 24,
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  AppDetail(),
-                  SizedBox(height: 24),
-                  LoginForm(),
-                ],
-              ),
+              child: const LoginForm(),
             ),
           ),
         ],

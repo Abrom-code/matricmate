@@ -279,34 +279,39 @@ class ArchiveChallengeCard extends StatelessWidget {
                   return SizedBox(
                     width: double.infinity,
                     height: 44,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.teal,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Material(
+                      color: isBusy
+                          ? AppColors.teal.withValues(alpha: 0.6)
+                          : AppColors.teal,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: isBusy ? null : () => ctrl.downloadChallenge(challenge),
+                        child: Center(
+                          child: isBusy
+                              ? const AppCircularButtonLoading(color: Colors.white)
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.download_rounded,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Download',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
-                      onPressed: isBusy ? null : () => ctrl.downloadChallenge(challenge),
-                      icon: isBusy
-                          ? const SizedBox.shrink()
-                          : const Icon(
-                              Icons.download_rounded,
-                              size: 15,
-                              color: Colors.white,
-                            ),
-                      label: isBusy
-                          ? const AppCircularButtonLoading(color: Colors.white)
-                          : const Text(
-                              'Download',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
                     ),
                   );
                 }
@@ -490,40 +495,43 @@ class ArchiveChallengeCard extends StatelessWidget {
                     return SizedBox(
                       width: 150,
                       height: 44,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.teal,
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: AppColors.teal),
-                          elevation: 0,
-                          padding: EdgeInsets.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      child: Material(
+                        color: isBusy
+                            ? AppColors.teal.withValues(alpha: 0.6)
+                            : AppColors.teal,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: isBusy
+                              ? null
+                              : () => ctrl.downloadChallenge(challenge),
+                          child: Center(
+                            child: isBusy
+                                ? const AppCircularButtonLoading(
+                                    color: Colors.white,
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.download_rounded,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Download',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
-                        onPressed: isBusy
-                            ? null
-                            : () => ctrl.downloadChallenge(challenge),
-                        icon: isBusy
-                            ? const SizedBox.shrink()
-                            : const Icon(
-                                Icons.download_rounded,
-                                size: 15,
-                                color: Colors.white,
-                              ),
-                        label: isBusy
-                            ? const AppCircularButtonLoading(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                'Download',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
                       ),
                     );
                   }
@@ -678,40 +686,43 @@ class ArchiveChallengeCard extends StatelessWidget {
                   return SizedBox(
                     width: 150,
                     height: 44,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.teal,
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: AppColors.teal),
-                        elevation: 0,
-                        padding: EdgeInsets.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Material(
+                      color: isBusy
+                          ? AppColors.teal.withValues(alpha: 0.6)
+                          : AppColors.teal,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: isBusy
+                            ? null
+                            : () => ctrl.downloadChallenge(challenge),
+                        child: Center(
+                          child: isBusy
+                              ? const AppCircularButtonLoading(
+                                  color: Colors.white,
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.download_rounded,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Download',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
-                      onPressed: isBusy
-                          ? null
-                          : () => ctrl.downloadChallenge(challenge),
-                      icon: isBusy
-                          ? const SizedBox.shrink()
-                          : const Icon(
-                              Icons.download_rounded,
-                              size: 15,
-                              color: Colors.white,
-                            ),
-                      label: isBusy
-                          ? const AppCircularButtonLoading(
-                              color: Colors.white,
-                            )
-                          : const Text(
-                              'Download',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
                     ),
                   );
                 }

@@ -134,7 +134,7 @@ class ResetPasswordController extends GetxController {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Your password has been updated successfully. You can now sign in with your new password.',
+                  'Your password has been updated successfully. You can now login with your new password.',
                   style: TextStyle(
                     fontSize: 13.5,
                     color: AppColors.textSecondary,

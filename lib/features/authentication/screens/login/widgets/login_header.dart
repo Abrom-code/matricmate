@@ -39,7 +39,7 @@ class AppDetail extends StatelessWidget {
 
         // Subtitle
         Text(
-          'Sign in to access tests, study practice, and exam tracking.',
+          'Login to access tests, study practice, and exam tracking.',
           style: TextStyle(
             fontSize: 14,
             height: 1.45,

@@ -424,7 +424,7 @@ class SignupForm extends GetView<SignupController> {
 
           const SizedBox(height: 20),
 
-          // ── Create Account Button ──────────────────────────────────
+          // ── Register Button ────────────────────────────────────────
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -447,7 +447,7 @@ class SignupForm extends GetView<SignupController> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Create Account',
+                            'Register',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -479,7 +479,7 @@ class SignupForm extends GetView<SignupController> {
                 TextButton(
                   onPressed: () => Get.offNamed(Routes.signIn),
                   child: const Text(
-                    'Sign In',
+                    'Login',
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800,

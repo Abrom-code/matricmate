@@ -270,7 +270,7 @@ class LoginForm extends GetView<LoginController> {
 
           const SizedBox(height: 22),
 
-          // ── Sign In Button ─────────────────────────────────────────
+          // ── Login Button ───────────────────────────────────────────
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -293,7 +293,7 @@ class LoginForm extends GetView<LoginController> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Sign In',
+                            'Login',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -325,7 +325,7 @@ class LoginForm extends GetView<LoginController> {
                 TextButton(
                   onPressed: () => Get.offNamed(Routes.signup),
                   child: const Text(
-                    'Sign Up',
+                    'Register',
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800,

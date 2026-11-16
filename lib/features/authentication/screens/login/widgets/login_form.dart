@@ -43,7 +43,7 @@ class LoginForm extends GetView<LoginController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Logo & 'Login' Title inside the form box
+                // 'Login' Title inside the form box
                 const AppDetail(),
 
                 const SizedBox(height: 22),

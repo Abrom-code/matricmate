@@ -20,7 +20,7 @@ class AppExplanationBox extends StatelessWidget {
 
   final String explanationEn;
   final String explanationAm;
-  final bool expanded;
+  final bool? expanded;
   final VoidCallback onToggle;
   final RxString languageSelected;
   final ValueChanged<String> onLanguageChange;
@@ -61,6 +61,7 @@ class AppExplanationBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
+    final isExpanded = expanded == true;
 
     // In dark mode: Warm amber/gold theme (fits lightbulb, high contrast, replaces murky teal)
     // In light mode: Clean soft teal theme
@@ -112,7 +113,7 @@ class AppExplanationBox extends StatelessWidget {
                   Row(
                     children: [
                       // Show language toggle ONLY when expanded and BOTH explanations exist
-                      if (expanded && _hasBoth)
+                      if (isExpanded && _hasBoth)
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: () {},
@@ -127,7 +128,7 @@ class AppExplanationBox extends StatelessWidget {
                         )
                       else
                         Icon(
-                          expanded
+                          isExpanded
                               ? Icons.keyboard_arrow_up_rounded
                               : Icons.keyboard_arrow_down_rounded,
                           color: accentColor.withValues(alpha: 0.85),
@@ -146,7 +147,7 @@ class AppExplanationBox extends StatelessWidget {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
-            child: expanded
+            child: isExpanded
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

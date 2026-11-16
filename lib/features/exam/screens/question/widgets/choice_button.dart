@@ -20,7 +20,7 @@ class ChoiceButton extends StatelessWidget {
   final int questionId;
   final int correctIndex;
   final VoidCallback? onTap;
-  final bool isChecked;
+  final bool? isChecked;
   final int selectedIndex;
 
   @override
@@ -28,6 +28,7 @@ class ChoiceButton extends StatelessWidget {
     final dark = AppHelperFunctions.isDark(context);
     final isSelected = selectedIndex == index;
     final isCorrect = index == correctIndex;
+    final checked = isChecked == true;
 
     Color bgColor;
     Color borderColor;
@@ -35,7 +36,7 @@ class ChoiceButton extends StatelessWidget {
     Color badgeBorderColor;
     Color badgeTextColor;
 
-    if (isChecked) {
+    if (checked) {
       if (isCorrect) {
         bgColor = const Color(0xFF10B981).withValues(alpha: dark ? 0.14 : 0.07);
         borderColor = const Color(0xFF10B981);
@@ -99,7 +100,7 @@ class ChoiceButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: borderColor,
-                width: isSelected || (isChecked && (isCorrect || isSelected))
+                width: isSelected || (checked && (isCorrect || isSelected))
                     ? 1.8
                     : 1.2,
               ),
@@ -153,7 +154,7 @@ class ChoiceButton extends StatelessWidget {
                 ),
 
                 // Outcome Icon
-                if (isChecked) ...[
+                if (checked) ...[
                   const SizedBox(width: 8),
                   if (isCorrect)
                     const Padding(

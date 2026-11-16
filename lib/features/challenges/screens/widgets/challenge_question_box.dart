@@ -32,10 +32,10 @@ class ChallengeQuestionBox extends StatefulWidget {
   final int totalQuestions;
   final String? selectedChoice;
   final ValueChanged<String>? onSelectChoice;
-  final bool isChecked;
-  final bool showExplanation;
-  final bool initialExplanationExpanded;
-  final bool showInlinePassage;
+  final bool? isChecked;
+  final bool? showExplanation;
+  final bool? initialExplanationExpanded;
+  final bool? showInlinePassage;
 
   @override
   State<ChallengeQuestionBox> createState() => _ChallengeQuestionBoxState();
@@ -49,13 +49,14 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
   @override
   void initState() {
     super.initState();
-    _explanationExpanded = widget.initialExplanationExpanded;
+    _explanationExpanded = widget.initialExplanationExpanded == true;
   }
 
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
     final q = widget.question;
+    final isChecked = widget.isChecked == true;
 
     // Determine correct option index
     int correctIndex = -1;
@@ -77,8 +78,8 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
       }
     }
 
-    final isCorrect = widget.isChecked && selectedIndex != -1 && (selectedIndex == correctIndex || widget.selectedChoice == q.correctChoice);
-    final isSkipped = widget.isChecked && (widget.selectedChoice == null || widget.selectedChoice!.isEmpty || selectedIndex == -1);
+    final isCorrect = isChecked && selectedIndex != -1 && (selectedIndex == correctIndex || widget.selectedChoice == q.correctChoice);
+    final isSkipped = isChecked && (widget.selectedChoice == null || widget.selectedChoice!.isEmpty || selectedIndex == -1);
 
     return Container(
       width: double.infinity,
@@ -120,7 +121,7 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
                   ),
                 ),
               ),
-              if (widget.isChecked) ...[
+              if (isChecked) ...[
                 if (isSkipped)
                   const CorrectCheckButton(
                     color: Color(0xFFF59E0B),
@@ -150,7 +151,7 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
           ),
 
           // ── Optional Inline Passage Accordion ──────────────────────
-          if (widget.showInlinePassage && (q.passage != null || q.passageId != null)) ...[
+          if (widget.showInlinePassage == true && (q.passage != null || q.passageId != null)) ...[
             _InlinePassageSection(
               dark: dark,
               title: q.passage?.title,
@@ -182,7 +183,7 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
               questionId: q.id.hashCode,
               correctIndex: correctIndex,
               selectedIndex: selectedIndex,
-              isChecked: widget.isChecked,
+              isChecked: isChecked,
               onTap: widget.onSelectChoice != null
                   ? () => widget.onSelectChoice!(q.choices[idx])
                   : null,
@@ -190,7 +191,7 @@ class _ChallengeQuestionBoxState extends State<ChallengeQuestionBox> {
           ],
 
           // ── Explanation Box ────────────────────────────────────────
-          if (widget.showExplanation && q.hasExplanation) ...[
+          if (widget.showExplanation == true && q.hasExplanation) ...[
             const SizedBox(height: AppSizes.spaceBtwItems),
             AppExplanationBox(
               explanationEn: q.explanationEn.isNotEmpty ? q.explanationEn : q.explanation,

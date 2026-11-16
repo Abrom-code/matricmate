@@ -36,8 +36,8 @@ class ChallengeReviewScreen extends StatefulWidget {
   final int? timeSpentSeconds;
   final String? challengeId;
   final String? audience;
-  final bool isRedo;
-  final bool isLive;
+  final bool? isRedo;
+  final bool? isLive;
 
   @override
   State<ChallengeReviewScreen> createState() => _ChallengeReviewScreenState();
@@ -50,10 +50,15 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
   bool _isLoadingStanding = false;
 
   bool get _isLive {
-    if (widget.isLive) return true;
+    if (widget.isLive == true) return true;
     if (widget.challengeId != null && Get.isRegistered<ChallengeHomeController>()) {
-      return ChallengeHomeController.instance.availableChallenges
-          .any((c) => c.id == widget.challengeId && c.isLive);
+      try {
+        final homeCtrl = ChallengeHomeController.instance;
+        return homeCtrl.availableChallenges
+            .any((c) => c.id == widget.challengeId && c.isLive == true);
+      } catch (_) {
+        return false;
+      }
     }
     return false;
   }
@@ -69,6 +74,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
   }
 
   Future<void> _loadStanding() async {
+    if (!Get.isRegistered<UserController>()) return;
     final uid = UserController.instance.user.value.id;
     if (uid.isEmpty || widget.challengeId == null) return;
     setState(() => _isLoadingStanding = true);
@@ -91,6 +97,9 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
   }
 
   Future<void> _loadPassagesIfNeeded() async {
+    if (!_reviewQuestions.any((q) => q.passageId != null && q.passage == null)) {
+      return;
+    }
     final repo = ChallengeRepository();
     bool updated = false;
     final updatedList = <ChallengeQuestionModel>[];
@@ -376,7 +385,9 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                               ),
                               icon: const Icon(Icons.replay_rounded, size: 18),
                               label: Text(
-                                widget.isRedo ? 'Redo Again' : 'Redo Challenge',
+                                (widget.isRedo == true)
+                                    ? 'Redo Again'
+                                    : 'Redo Challenge',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13.5,

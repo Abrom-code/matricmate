@@ -408,4 +408,15 @@ class NotificationRepository {
       // Non-fatal — token refresh will retry on next app open.
     }
   }
+
+  /// Clears FCM token on logout to prevent personal pushes to this device.
+  Future<void> clearFcmToken(String userId) async {
+    try {
+      await _supabase
+          .from('users')
+          .update({'fcm_token': null})
+          .eq('id', userId)
+          .timeout(AppTimeouts.bestEffort);
+    } catch (_) {}
+  }
 }

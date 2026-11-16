@@ -54,13 +54,22 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     ),
   );
 
+  // If FCM message already has a notification payload, Android system automatically
+  // displays it using the default channel in AndroidManifest.xml. Showing it manually
+  // would create a duplicate banner.
+  if (message.notification != null) {
+    return;
+  }
+
   final type = message.data['type']?.toString() ?? '';
   if (type == 'challenge_closed') {
     return;
   }
 
-  final title = message.data['title']?.toString();
-  final body = message.data['body']?.toString();
+  final rawTitle = message.data['title']?.toString();
+  final rawBody = message.data['body']?.toString();
+  final title = rawTitle != null ? NotificationLinkParser.stripTags(rawTitle) : null;
+  final body = rawBody != null ? NotificationLinkParser.stripTags(rawBody) : null;
 
   final notifIdStr = message.data['notification_id']?.toString();
   final int notifId = (notifIdStr != null && int.tryParse(notifIdStr) != null)
@@ -245,9 +254,14 @@ class FcmService {
       },
     );
 
-    // Register/refresh token for personal and stream-based pushes
-    final token = await _messaging.getToken();
-    await _saveTokenIfLoggedIn(token);
+    // Register/refresh token for personal and stream-based pushes (network-safe)
+    String? token;
+    try {
+      token = await _messaging.getToken();
+      await _saveTokenIfLoggedIn(token);
+    } catch (e) {
+      debugPrint('[FcmService] initial getToken notice: $e');
+    }
     _messaging.onTokenRefresh.listen(_saveTokenIfLoggedIn);
 
     // Subscribe to FCM topics for broadcast delivery
@@ -538,9 +552,13 @@ class FcmService {
     });
   }
 
-  /// Unsubscribes from all topics on logout.
+  /// Unsubscribes from all topics and clears token from backend on logout.
   Future<void> unsubscribeAll() async {
     try {
+      final userId = UserController.instance.user.value.id;
+      if (userId.isNotEmpty) {
+        await _repo.clearFcmToken(userId);
+      }
       await Future.wait([
         _messaging.unsubscribeFromTopic('all_users').catchError((_) {}),
         _messaging.unsubscribeFromTopic('natural').catchError((_) {}),

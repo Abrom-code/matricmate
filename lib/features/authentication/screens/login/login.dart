@@ -51,12 +51,12 @@ class LoginScreen extends GetView<LoginController> {
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 20,
-                12,
+                16,
                 20,
                 MediaQuery.paddingOf(context).bottom + 24,
               ),
               child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   AppDetail(),
                   SizedBox(height: 24),

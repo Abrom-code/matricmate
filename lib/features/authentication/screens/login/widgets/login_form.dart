@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/login_controller.dart';
+import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -18,7 +19,7 @@ class LoginForm extends GetView<LoginController> {
     return Form(
       key: controller.loginFormkey,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // ── Credentials Card ───────────────────────────────────────
           Container(
@@ -343,7 +344,7 @@ class LoginForm extends GetView<LoginController> {
             ),
           ),
 
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
 
           // ── Switch to Register Footer ──────────────────────────────
           Center(
@@ -394,6 +395,48 @@ class LoginForm extends GetView<LoginController> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // ── Support Bot Link ───────────────────────────────────────
+          Center(
+            child: InkWell(
+              onTap: ProfileActionsHelper.openTelegramSupport,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.send_rounded, size: 10, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Need help? Contact support',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

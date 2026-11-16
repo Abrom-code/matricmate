@@ -49,13 +49,12 @@ class NetworkManager extends GetxController {
     }
   }
 
-  /// Performs internet reachability check using parallel raw IP socket probes.
-  /// Probes HTTPS (443) and HTTP (80) ports on major public DNS providers.
-  /// Port 53 (DNS) is avoided because many ISPs/carriers block raw TCP to it.
-  /// Completes as soon as ANY probe succeeds, or after all fail (~2500ms).
+  /// Performs internet reachability check using parallel DNS and socket probes.
+  /// Runs carrier-friendly DNS lookups (works across proxies, VPNs, mobile NATs)
+  /// alongside raw IP socket probes. Completes as soon as ANY probe succeeds.
   Future<bool> _checkInternetReachability() async {
     final completer = Completer<bool>();
-    int pending = 4;
+    int pending = 6;
 
     void onProbeDone(bool success) {
       if (success) {
@@ -68,13 +67,27 @@ class NetworkManager extends GetxController {
       }
     }
 
-    // Probe HTTPS/HTTP ports on Google & Cloudflare DNS IPs
+    // 1. Standard DNS lookups (carrier-friendly, fast ~50ms, works through firewalls/proxies)
+    _dnsProbe('google.com').then(onProbeDone);
+    _dnsProbe('cloudflare.com').then(onProbeDone);
+
+    // 2. Parallel IP socket probes
     _rawProbe('8.8.8.8', 443).then(onProbeDone);
     _rawProbe('1.1.1.1', 443).then(onProbeDone);
     _rawProbe('8.8.4.4', 443).then(onProbeDone);
     _rawProbe('1.0.0.1', 80).then(onProbeDone);
 
     return completer.future;
+  }
+
+  Future<bool> _dnsProbe(String host) async {
+    try {
+      final lookup = await InternetAddress.lookup(host)
+          .timeout(const Duration(milliseconds: 2500));
+      return lookup.isNotEmpty && lookup[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> _rawProbe(String host, int port) async {

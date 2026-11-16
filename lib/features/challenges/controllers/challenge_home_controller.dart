@@ -17,6 +17,7 @@ import 'package:matricmate/features/challenges/controllers/challenge_archive_con
 import 'package:matricmate/features/exam/controllers/subjects_controller.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
@@ -395,10 +396,10 @@ class ChallengeHomeController extends GetxController {
     isRefreshing.value = true;
     final stopwatch = Stopwatch()..start();
     try {
-      // 1. Fast Internet Reachability Check with 3-second timeout
+      // 1. Internet Reachability Check (DNS + socket probes with generous timeout)
       final hasNet = await NetworkManager.instance
           .isConnected(force: isManual)
-          .timeout(const Duration(seconds: 3), onTimeout: () => false);
+          .timeout(const Duration(seconds: 8), onTimeout: () => false);
       if (!hasNet) {
         if (isManual && stopwatch.elapsedMilliseconds < 500) {
           await Future.delayed(
@@ -406,7 +407,13 @@ class ChallengeHomeController extends GetxController {
           );
         }
         isOffline.value = true;
-        availableChallenges.clear();
+        if (availableChallenges.isEmpty) {
+          final cached = await _getCachedChallenges();
+          if (cached.isNotEmpty) {
+            final avail = cached.where((c) => !c.isClosed && !c.isArchived).toList();
+            availableChallenges.assignAll(avail);
+          }
+        }
         final local = await _loadLocalChallenges();
         completedChallenges.assignAll(local);
         await refreshDownloadStates();
@@ -427,11 +434,11 @@ class ChallengeHomeController extends GetxController {
       final deleted = await _db.getDeletedChallengeIds();
       deletedChallengeIds.assignAll(deleted);
 
-      // Fetch all published challenges from Supabase in one roundtrip with timeout
+      // Fetch all published challenges from Supabase in one roundtrip with query timeout
       final isAdmin = UserController.instance.isAdmin.value;
       final allPublished = await _repo
           .fetchAllChallenges(stream: userStream, isAdmin: isAdmin)
-          .timeout(const Duration(seconds: 4));
+          .timeout(AppTimeouts.query);
 
       final validFiltered = allPublished.where((c) {
         if (deleted.contains(c.id) || (c.setId.isNotEmpty && deleted.contains(c.setId))) {
@@ -482,7 +489,7 @@ class ChallengeHomeController extends GetxController {
         final challengeIds = validFiltered.map((c) => c.id).toList();
         final counts = await _repo
             .fetchParticipantCounts(challengeIds: challengeIds)
-            .timeout(const Duration(seconds: 3));
+            .timeout(AppTimeouts.query);
         participantCounts.assignAll(counts);
       } catch (_) {}
 
@@ -500,9 +507,17 @@ class ChallengeHomeController extends GetxController {
         );
       }
       isOffline.value = true;
-      availableChallenges.clear();
+      if (availableChallenges.isEmpty) {
+        final cached = await _getCachedChallenges();
+        if (cached.isNotEmpty) {
+          final avail = cached.where((c) => !c.isClosed && !c.isArchived).toList();
+          availableChallenges.assignAll(avail);
+        }
+      }
       final local = await _loadLocalChallenges();
-      completedChallenges.assignAll(local);
+      if (local.isNotEmpty || completedChallenges.isEmpty) {
+        completedChallenges.assignAll(local);
+      }
       await refreshDownloadStates();
       await refreshAttemptStates(checkOnline: false);
 

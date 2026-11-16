@@ -15,8 +15,8 @@ class ChallengeRepository {
   final _sb = Supabase.instance.client;
 
   Future<void> _checkConnectivity() async {
-    final connected = await NetworkManager.instance.isConnected();
-    if (!connected) {
+    final hasInterface = await NetworkManager.instance.hasNetworkInterface();
+    if (!hasInterface) {
       throw const AppFailure(
         title: 'No Connection',
         message: 'Challenges require an active internet connection.',

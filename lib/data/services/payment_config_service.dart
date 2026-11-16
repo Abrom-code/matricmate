@@ -531,22 +531,21 @@ class PaymentConfigService {
                 e['account']?.toString().isNotEmpty == true &&
                 e['key']?.toString().isNotEmpty == true,
           )
-          .map(
-            (e) {
-              final configuredHolder = e['holder']?.toString().trim();
-              final holder = (configuredHolder != null && configuredHolder.isNotEmpty)
-                  ? configuredHolder
-                  : defaultAccountHolder;
+          .map((e) {
+            final configuredHolder = e['holder']?.toString().trim();
+            final holder =
+                (configuredHolder != null && configuredHolder.isNotEmpty)
+                ? configuredHolder
+                : defaultAccountHolder;
 
-              return PaymentConfig(
-                key: e['key']?.toString() ?? '',
-                label: e['label']?.toString() ?? e['key']?.toString() ?? '',
-                account: e['account']?.toString() ?? '',
-                holder: holder,
-                icon: Icons.account_balance_wallet_outlined,
-              );
-            },
-          )
+            return PaymentConfig(
+              key: e['key']?.toString() ?? '',
+              label: e['label']?.toString() ?? e['key']?.toString() ?? '',
+              account: e['account']?.toString() ?? '',
+              holder: holder,
+              icon: Icons.account_balance_wallet_outlined,
+            );
+          })
           .toList();
     } catch (_) {
       return [];
@@ -574,4 +573,3 @@ class _BuiltIn {
 
 /// Alias for [PaymentConfigService] providing dynamic app configuration.
 typedef AppConfigService = PaymentConfigService;
-

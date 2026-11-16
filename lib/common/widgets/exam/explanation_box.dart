@@ -62,18 +62,22 @@ class AppExplanationBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
 
-    // Tinted teal background — signals "explanation" without being loud
+    // In dark mode: Warm amber/gold theme (fits lightbulb, high contrast, replaces murky teal)
+    // In light mode: Clean soft teal theme
+    final accentColor = dark ? const Color(0xFFFBBF24) : AppColors.primary;
     final bgColor = dark
-        ? AppColors.primary.withValues(alpha: 0.10)
-        : AppColors.primary.withValues(alpha: 0.06);
-    final borderColor = AppColors.primary.withValues(alpha: dark ? 0.30 : 0.25);
+        ? const Color(0xFF231F17)
+        : AppColors.primary.withValues(alpha: 0.05);
+    final borderColor = dark
+        ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
+        : AppColors.primary.withValues(alpha: 0.25);
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: bgColor.withValues(alpha: .06),
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: borderColor, width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,9 +93,9 @@ class AppExplanationBox extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.lightbulb_outline_rounded,
-                        color: AppColors.primary,
+                        color: accentColor,
                         size: 16,
                       ),
                       const SizedBox(width: 6),
@@ -100,7 +104,7 @@ class AppExplanationBox extends StatelessWidget {
                         style: Theme.of(context).textTheme.labelSmall!.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                          color: accentColor,
                         ),
                       ),
                     ],
@@ -116,6 +120,7 @@ class AppExplanationBox extends StatelessWidget {
                             () => _LangToggle(
                               selected: languageSelected.value,
                               dark: dark,
+                              accentColor: accentColor,
                               onTap: onLanguageChange,
                             ),
                           ),
@@ -125,7 +130,7 @@ class AppExplanationBox extends StatelessWidget {
                           expanded
                               ? Icons.keyboard_arrow_up_rounded
                               : Icons.keyboard_arrow_down_rounded,
-                          color: AppColors.primary.withValues(alpha: 0.8),
+                          color: accentColor.withValues(alpha: 0.85),
                           size: 20,
                         ),
                       const SizedBox(width: 4),
@@ -147,7 +152,9 @@ class AppExplanationBox extends StatelessWidget {
                     children: [
                       Divider(
                         height: 1,
-                        color: AppColors.primary.withValues(alpha: 0.15),
+                        color: dark
+                            ? const Color(0xFFF59E0B).withValues(alpha: 0.20)
+                            : AppColors.primary.withValues(alpha: 0.15),
                       ),
                       Obx(() {
                         final isAmSelected =
@@ -166,7 +173,7 @@ class AppExplanationBox extends StatelessWidget {
                           height: 1.65,
                           letterSpacing: 0.1,
                           color: dark
-                              ? AppColors.white.withValues(alpha: 0.85)
+                              ? AppColors.white.withValues(alpha: 0.90)
                               : AppColors.darkerGrey,
                         );
                         return GestureDetector(
@@ -215,9 +222,7 @@ class AppExplanationBox extends StatelessWidget {
                                     child: Icon(
                                       Icons.keyboard_arrow_up_rounded,
                                       size: 20,
-                                      color: AppColors.primary.withValues(
-                                        alpha: 0.8,
-                                      ),
+                                      color: accentColor.withValues(alpha: 0.85),
                                     ),
                                   ),
                                 ),
@@ -243,11 +248,13 @@ class _LangToggle extends StatelessWidget {
   const _LangToggle({
     required this.selected,
     required this.dark,
+    required this.accentColor,
     required this.onTap,
   });
 
   final String selected;
   final bool dark;
+  final Color accentColor;
   final ValueChanged<String> onTap;
 
   @override
@@ -256,7 +263,7 @@ class _LangToggle extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: dark
-            ? AppColors.primary.withValues(alpha: 0.18)
+            ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
             : AppColors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(30),
       ),
@@ -279,8 +286,8 @@ class _LangToggle extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? dark
-                    ? AppColors.primary.withValues(alpha: 0.35)
-                    : AppColors.primary.withValues(alpha: 0.18)
+                  ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
+                  : AppColors.primary.withValues(alpha: 0.18)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
@@ -289,10 +296,10 @@ class _LangToggle extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             color: isSelected
-                ? AppColors.primary
+                ? accentColor
                 : dark
-                ? AppColors.primary.withValues(alpha: 0.6)
-                : AppColors.primary.withValues(alpha: 0.55),
+                    ? accentColor.withValues(alpha: 0.65)
+                    : accentColor.withValues(alpha: 0.55),
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/features/exam/controllers/pilot_exam_controller.dart';
 import 'package:matricmate/features/exam/controllers/review_controller.dart';
+import 'package:matricmate/features/exam/models/pilot_exam_model.dart';
 import 'package:matricmate/features/exam/screens/result/widgets/review_qn_container.dart';
+import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -18,6 +21,17 @@ class TestReviewScreen extends GetView<ReviewController> {
     final answeredCount = result.selectedAnswers.length;
     final wrongQns = answeredCount > correctQns ? answeredCount - correctQns : 0;
     final skippedQns = totalQns > answeredCount ? totalQns - answeredCount : 0;
+
+    PilotExamSubjectModel? pilotSubject;
+    if (Get.isRegistered<PilotExamController>()) {
+      final pilotCtrl = Get.find<PilotExamController>();
+      for (final s in pilotCtrl.examSubjects) {
+        if (s.testId == result.testId) {
+          pilotSubject = s;
+          break;
+        }
+      }
+    }
 
     return Scaffold(
       backgroundColor: dark ? AppColors.dark : const Color(0xFFF8FAFC),
@@ -188,37 +202,116 @@ class TestReviewScreen extends GetView<ReviewController> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Get.back();
-                Get.back();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+          child: pilotSubject != null
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 15,
+                        ),
+                        label: const Text(
+                          'Back',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          final subject = pilotSubject!;
+                          final user = UserController.instance.user.value;
+                          AppHelperFunctions.showAppDialog(
+                            context,
+                            'Redo ${subject.subjectName}?',
+                            'This will reset your previous score and allow you to retake the exam from question 1 with a fresh timer.',
+                            () async {
+                              Navigator.of(context, rootNavigator: true).pop();
+                              Get.back(); // Dismiss review screen
+                              await PilotExamController.instance.redoSubjectExam(
+                                subject,
+                                user,
+                              );
+                            },
+                            okText: 'Redo Exam',
+                            cancelText: 'Cancel',
+                            icon: Icons.refresh_rounded,
+                            iconColor: AppColors.primary,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          size: 18,
+                        ),
+                        label: const Text(
+                          'Redo Exam',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Get.back();
+                      Get.back();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 15,
+                      color: AppColors.white,
+                    ),
+                    label: const Text(
+                      'Back to Tests',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 15,
-                color: AppColors.white,
-              ),
-              label: const Text(
-                'Back to Tests',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );

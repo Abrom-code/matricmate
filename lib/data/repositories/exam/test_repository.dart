@@ -76,6 +76,15 @@ class TestRepository {
     }
   }
 
+  /// Deletes a saved result row for a test and user.
+  Future<int> deleteTestResult(int testId, String userId) async {
+    try {
+      return await _dbService.deleteResult(testId, userId);
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
   /// Verifies and publishes a draft test to make it available to all students (Admin only).
   Future<bool> verifyAndPublishTest(int testId) async {
     try {

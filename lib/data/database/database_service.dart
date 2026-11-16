@@ -948,6 +948,20 @@ class DatabaseService extends GetxController {
     }
   }
 
+  /// Deletes a test result row matching on (user_id, test_id).
+  Future<int> deleteResult(int testId, String userId) async {
+    try {
+      final db = await database;
+      return await db.delete(
+        'results',
+        where: 'test_id = ? AND user_id = ?',
+        whereArgs: [testId, userId],
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Returns all in-progress drafts for the current user with test/subject info.
   Future<List<Map<String, dynamic>>> loadAllInProgressResults() async {
     try {

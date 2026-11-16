@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/models/challenge_question_model.dart';
+import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_question_box.dart';
 import 'package:matricmate/features/challenges/screens/widgets/review_stat_badge.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
-import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ChallengeReviewScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class ChallengeReviewScreen extends StatefulWidget {
     this.timeSpentSeconds,
     this.challengeId,
     this.audience,
+    this.isRedo = false,
   });
 
   final String title;
@@ -29,6 +31,7 @@ class ChallengeReviewScreen extends StatefulWidget {
   final int? timeSpentSeconds;
   final String? challengeId;
   final String? audience;
+  final bool isRedo;
 
   @override
   State<ChallengeReviewScreen> createState() => _ChallengeReviewScreenState();
@@ -238,7 +241,7 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                   ),
           ),
 
-          // ── Bottom Action Button (See Standings) ────────────────
+          // ── Bottom Action Button (Redo / Done) ────────────────
           if (widget.challengeId != null)
             Container(
               padding: const EdgeInsets.all(AppSizes.md),
@@ -253,37 +256,56 @@ class _ChallengeReviewScreenState extends State<ChallengeReviewScreen> {
                 ),
               ),
               child: SafeArea(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: ChallengeColors.bronze,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(
-                          color: ChallengeColors.bronze,
-                          width: 1.5,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => Get.back(),
+                        child: const Text(
+                          'Done',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.5,
+                          ),
                         ),
                       ),
                     ),
-                    onPressed: () => ChallengeAccessHelper.openLeaderboard(
-                      challengeId: widget.challengeId,
-                      challengeTitle: widget.title,
-                      audience: widget.audience,
-                      userScore: correctCount,
-                      userTimeSeconds: widget.timeSpentSeconds,
-                    ),
-                    icon: const Icon(Icons.leaderboard_rounded, size: 18),
-                    label: const Text(
-                      'See Leaderboard',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13.5,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: AppColors.teal,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => Get.off(
+                          () => ChallengeAttemptScreen(
+                            challengeId: widget.challengeId!,
+                            title: widget.title,
+                            audience: widget.audience,
+                            isRedo: true,
+                          ),
+                        ),
+                        icon: const Icon(Icons.replay_rounded, size: 18),
+                        label: Text(
+                          widget.isRedo ? 'Redo Again' : 'Redo Challenge',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.5,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

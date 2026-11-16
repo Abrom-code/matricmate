@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
@@ -507,84 +508,155 @@ class AvailableChallengeCard extends StatelessWidget {
                 ),
               ],
             ] else if (isLive) ...[
-              SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDone
-                        ? AppColors.primary
-                        : const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: EdgeInsets.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              if (isDone) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 46,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () {
+                            if (!challenge.canReviewQuestions) {
+                              ToastHelper.info(
+                                'Question review will be unlocked once this challenge closes.',
+                              );
+                              return;
+                            }
+                            ctrl.openCompletedChallenge(challenge);
+                          },
+                          icon: Icon(
+                            challenge.canReviewQuestions
+                                ? Icons.visibility_outlined
+                                : Icons.lock_clock_outlined,
+                            size: 16,
+                          ),
+                          label: Text(
+                            challenge.canReviewQuestions
+                                ? 'Review'
+                                : 'Review when closed',
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  onPressed: isDone
-                      ? () {
-                          if (!challenge.canReviewQuestions) {
-                            ToastHelper.info(
-                              'Question review will be unlocked once this challenge closes.',
-                            );
-                            return;
-                          }
-                          ctrl.openCompletedChallenge(challenge);
-                        }
-                      : () => ctrl.onChallengeTapped(challenge),
-                  icon: Icon(
-                    isDone
-                        ? (challenge.canReviewQuestions
-                            ? Icons.visibility_outlined
-                            : Icons.lock_clock_outlined)
-                        : (inProgress
-                            ? Icons.play_arrow_rounded
-                            : Icons.arrow_forward_rounded),
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    isDone
-                        ? (challenge.canReviewQuestions
-                            ? 'Review'
-                            : 'Review when closed')
-                        : (inProgress ? 'Resume' : 'Start challenge'),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 46,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.teal,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () => Get.to(
+                            () => ChallengeAttemptScreen(
+                              challengeId: challenge.id,
+                              title: challenge.title,
+                              audience: challenge.audience,
+                              durationMinutes: challenge.durationMinutes,
+                              setId: challenge.setId,
+                              isRedo: true,
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.replay_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            'Redo',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => ctrl.onChallengeTapped(challenge),
+                    icon: Icon(
+                      inProgress
+                          ? Icons.play_arrow_rounded
+                          : Icons.arrow_forward_rounded,
+                      size: 16,
                       color: Colors.white,
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(6),
-                  onTap: () => ChallengeAccessHelper.openLeaderboard(
-                    challengeId: challenge.id,
-                    challengeTitle: challenge.title,
-                    audience: challenge.audience,
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 2,
-                      horizontal: 4,
-                    ),
-                    child: Text(
-                      'View rankings →',
-                      style: TextStyle(
-                        color: AppColors.amber,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
+                    label: Text(
+                      inProgress ? 'Resume' : 'Start challenge',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => ChallengeAccessHelper.openLeaderboard(
+                      challengeId: challenge.id,
+                      challengeTitle: challenge.title,
+                      audience: challenge.audience,
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 2,
+                        horizontal: 4,
+                      ),
+                      child: Text(
+                        'View rankings →',
+                        style: TextStyle(
+                          color: AppColors.amber,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ] else ...[
               SizedBox(
                 width: double.infinity,

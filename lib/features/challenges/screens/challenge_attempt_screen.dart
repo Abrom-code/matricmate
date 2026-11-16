@@ -19,6 +19,8 @@ class ChallengeAttemptScreen extends StatefulWidget {
     this.audience,
     this.endsAt,
     this.durationMinutes,
+    this.setId,
+    this.isRedo = false,
   });
 
   final String challengeId;
@@ -26,6 +28,8 @@ class ChallengeAttemptScreen extends StatefulWidget {
   final String? audience;
   final DateTime? endsAt;
   final int? durationMinutes;
+  final String? setId;
+  final bool isRedo;
 
   @override
   State<ChallengeAttemptScreen> createState() => _ChallengeAttemptScreenState();
@@ -45,8 +49,12 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
         audience: widget.audience,
         endsAt: widget.endsAt,
         durationMinutes: widget.durationMinutes,
+        setId: widget.setId,
+        isRedo: widget.isRedo,
       ),
-      tag: 'challenge_attempt_${widget.challengeId}',
+      tag: widget.isRedo
+          ? 'challenge_redo_${widget.challengeId}'
+          : 'challenge_attempt_${widget.challengeId}',
     );
   }
 
@@ -55,7 +63,9 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
     _ctrl.pauseTimer();
     _scrollCtrl.dispose();
     Get.delete<ChallengeAttemptController>(
-      tag: 'challenge_attempt_${widget.challengeId}',
+      tag: widget.isRedo
+          ? 'challenge_redo_${widget.challengeId}'
+          : 'challenge_attempt_${widget.challengeId}',
     );
     super.dispose();
   }
@@ -73,9 +83,11 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Submit Challenge Attempt?'),
+        title: Text(widget.isRedo ? 'Submit Redo Attempt?' : 'Submit Challenge Attempt?'),
         content: Text(
-          'You have answered ${_ctrl.answeredCount} of ${_ctrl.totalQuestions} questions.\n\nOnce submitted, your final score and time will be locked and ranked on the leaderboard.',
+          widget.isRedo
+              ? 'You have answered ${_ctrl.answeredCount} of ${_ctrl.totalQuestions} questions.\n\nReady to complete your redo session and check your score?'
+              : 'You have answered ${_ctrl.answeredCount} of ${_ctrl.totalQuestions} questions.\n\nOnce submitted, your final score and time will be locked and ranked on the leaderboard.',
         ),
         actions: [
           TextButton(
@@ -105,9 +117,11 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
         showDialog(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('Exit Live Challenge?'),
-            content: const Text(
-              'Are you sure you want to exit?',
+            title: Text(widget.isRedo ? 'Exit Redo Challenge?' : 'Exit Live Challenge?'),
+            content: Text(
+              widget.isRedo
+                  ? 'Are you sure you want to exit? Your answers for this redo attempt will not be saved.'
+                  : 'Are you sure you want to exit?',
             ),
             actions: [
               TextButton(
@@ -133,7 +147,7 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
         appBar: AppBar(
           titleSpacing: 0,
           title: Text(
-            widget.title,
+            widget.isRedo ? 'Redo: ${widget.title}' : widget.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -340,18 +354,18 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
                               : () => _confirmSubmit(context),
                           child: _ctrl.isSubmitting.value
                               ? const AppCircularButtonLoading(color: Colors.white)
-                              : const Row(
+                              : Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Iconsax.tick_circle_copy,
                                       size: 16,
                                       color: Colors.white,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Text(
-                                      'Submit Attempt',
-                                      style: TextStyle(
+                                      widget.isRedo ? 'Submit Redo' : 'Submit Attempt',
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),

@@ -25,6 +25,8 @@ class ChallengeAttemptController extends GetxController
     required this.title,
     this.audience,
     this.endsAt,
+    this.setId,
+    this.isRedo = false,
     int? durationMinutes,
   }) {
     if (durationMinutes != null && durationMinutes > 0) {
@@ -37,6 +39,8 @@ class ChallengeAttemptController extends GetxController
   final String challengeId;
   final String title;
   final String? audience;
+  final String? setId;
+  final bool isRedo;
 
   final _repo = ChallengeRepository();
 
@@ -118,6 +122,35 @@ class ChallengeAttemptController extends GetxController
   Future<void> startChallenge() async {
     isLoading.value = true;
     try {
+      if (isRedo) {
+        List<ChallengeQuestionModel> loaded = [];
+        final rows = await DatabaseService.instance.getDownloadedChallengeQuestions(
+          challengeId,
+          setId: setId,
+        );
+        if (rows.isNotEmpty) {
+          loaded = rows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
+        } else {
+          loaded = await _repo.fetchQuestionsForReview(challengeId, setId: setId);
+        }
+
+        final fullList = <ChallengeQuestionModel>[];
+        for (final q in loaded) {
+          if (q.passageId != null && q.passage == null) {
+            final p = await _repo.getPassage(q.passageId);
+            fullList.add(q.copyWith(passage: p));
+          } else {
+            fullList.add(q);
+          }
+        }
+        questions.value = fullList;
+        userAnswers.clear();
+        _timeSpentSeconds = 0;
+        currentIndex.value = 0;
+        _startTimer();
+        return;
+      }
+
       final userId = UserController.instance.user.value.id;
       final data = await _repo.startAttempt(
         challengeId: challengeId,
@@ -252,8 +285,8 @@ class ChallengeAttemptController extends GetxController
   void _updateRemainingSeconds() {
     int remaining = durationSeconds - _timeSpentSeconds;
 
-    // Hard cutoff: clamp to challenge window closing time (endsAt, e.g., 4:00 PM)
-    if (endsAt != null) {
+    // Hard cutoff: clamp to challenge window closing time (endsAt, e.g., 4:00 PM) for live attempts
+    if (!isRedo && endsAt != null) {
       final secondsUntilClose = endsAt!.difference(DateTime.now()).inSeconds;
       if (secondsUntilClose < remaining) {
         remaining = secondsUntilClose;
@@ -305,6 +338,7 @@ class ChallengeAttemptController extends GetxController
   }
 
   void _markStatusInProgress() {
+    if (isRedo) return;
     if (Get.isRegistered<ChallengeHomeController>()) {
       ChallengeHomeController.instance.markInProgress(challengeId);
     }
@@ -314,6 +348,7 @@ class ChallengeAttemptController extends GetxController
   }
 
   Future<void> _saveActiveTimeSpent() async {
+    if (isRedo) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('challenge_time_spent_$challengeId', _timeSpentSeconds);
@@ -330,6 +365,7 @@ class ChallengeAttemptController extends GetxController
   }
 
   Future<void> _clearChallengeProgress() async {
+    if (isRedo) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('challenge_time_spent_$challengeId');
@@ -367,17 +403,19 @@ class ChallengeAttemptController extends GetxController
     if (userAnswers[questionId] == choice) return;
 
     userAnswers[questionId] = choice;
-    _saveLastQuestionIndex(currentIndex.value);
-    _saveActiveTimeSpent();
+    if (!isRedo) {
+      _saveLastQuestionIndex(currentIndex.value);
+      _saveActiveTimeSpent();
 
-    // Save locally to SQLite immediately — zero network latency, 100% crash/offline safe
-    DatabaseService.instance.saveChallengePracticeResult(
-      challengeId: challengeId,
-      score: 0,
-      totalQuestions: totalQuestions,
-      userAnswers: Map<String, String>.from(userAnswers),
-      timeSpentSeconds: _timeSpentSeconds,
-    ).catchError((_) {});
+      // Save locally to SQLite immediately — zero network latency, 100% crash/offline safe
+      DatabaseService.instance.saveChallengePracticeResult(
+        challengeId: challengeId,
+        score: 0,
+        totalQuestions: totalQuestions,
+        userAnswers: Map<String, String>.from(userAnswers),
+        timeSpentSeconds: _timeSpentSeconds,
+      ).catchError((_) {});
+    }
   }
 
   void nextQuestion() {
@@ -402,7 +440,7 @@ class ChallengeAttemptController extends GetxController
   }
 
   Future<void> submitAttempt({bool isAutoExpire = false}) async {
-    if (isSubmitting.value || attemptId == null) return;
+    if (isSubmitting.value || (!isRedo && attemptId == null)) return;
 
     isSubmitting.value = true;
     _timer?.cancel();
@@ -411,10 +449,55 @@ class ChallengeAttemptController extends GetxController
     AppFullScreenLoader.openLoadingDialog(
       isAutoExpire
           ? 'Time is up! Submitting attempt...'
-          : 'Submitting challenge attempt...',
+          : (isRedo ? 'Calculating redo results...' : 'Submitting challenge attempt...'),
     );
 
     try {
+      if (isRedo) {
+        int correctCount = 0;
+        for (final q in questions) {
+          final ans = userAnswers[q.id];
+          if (ans != null && ans.isNotEmpty) {
+            final parsedIdx = int.tryParse(q.correctChoice);
+            if (parsedIdx != null && parsedIdx >= 0 && parsedIdx < q.choices.length) {
+              final sIdx = int.tryParse(ans);
+              if (sIdx == parsedIdx || ans == q.choices[parsedIdx]) {
+                correctCount++;
+                continue;
+              }
+            }
+            if (ans == q.correctChoice) correctCount++;
+          }
+        }
+
+        try {
+          final db = DatabaseService.instance;
+          await db.saveChallengePracticeResult(
+            challengeId: challengeId,
+            score: correctCount,
+            totalQuestions: totalQuestions,
+            userAnswers: Map<String, String>.from(userAnswers),
+            timeSpentSeconds: _timeSpentSeconds,
+          );
+        } catch (_) {}
+
+        AppFullScreenLoader.stopLoading();
+
+        Get.off(
+          () => ChallengeReviewScreen(
+            title: title,
+            questions: questions.toList(),
+            userAnswers: Map<String, String>.from(userAnswers),
+            score: correctCount,
+            timeSpentSeconds: _timeSpentSeconds,
+            challengeId: challengeId,
+            audience: audience,
+            isRedo: true,
+          ),
+        );
+        return;
+      }
+
       // 0. Pre-save answers locally to SQLite to ensure zero data loss
       try {
         final db = DatabaseService.instance;

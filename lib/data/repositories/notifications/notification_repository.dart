@@ -206,13 +206,14 @@ class NotificationRepository {
     }
   }
 
-  Future<List<AppNotification>> getLocal(String userId) async {
+  Future<List<AppNotification>> getLocal(String userId, {int limit = 100}) async {
     final db = await _db.database;
     final rows = await db.query(
       'notifications',
       where: 'user_id = ?',
       whereArgs: [userId],
       orderBy: 'created_at DESC',
+      limit: limit,
     );
     return rows.map((r) => AppNotification.fromMap(r)).toList();
   }

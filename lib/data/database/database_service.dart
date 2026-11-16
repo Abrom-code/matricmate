@@ -549,10 +549,11 @@ class DatabaseService extends GetxController {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getQuestions() async {
+  @Deprecated('Use getQuestionsByIds or getQuestionsByTest to prevent OOM')
+  Future<List<Map<String, dynamic>>> getQuestions({int limit = 100}) async {
     try {
       final db = await database;
-      return await db.query('questions');
+      return await db.query('questions', limit: limit);
     } catch (e) {
       rethrow;
     }
@@ -648,14 +649,16 @@ class DatabaseService extends GetxController {
   }
 
   // Get subject questions
+  @Deprecated('Use getQuestionsByTest to prevent OOM from loading thousands of questions')
   Future<List<Map<String, dynamic>>> getAllSubjectQuestions(
-    String subject,
-  ) async {
+    String subject, {
+    int limit = 100,
+  }) async {
     try {
       final db = await database;
       return await db.rawQuery(
-        'SELECT * FROM questions WHERE subject_id = (SELECT id FROM subjects WHERE name = ?)',
-        [subject],
+        'SELECT * FROM questions WHERE subject_id = (SELECT id FROM subjects WHERE name = ?) LIMIT ?',
+        [subject, limit],
       );
     } catch (e) {
       rethrow;
@@ -1387,7 +1390,10 @@ class DatabaseService extends GetxController {
 
   /// Retrieves cached tips and news joined with local read and user-pinned status.
   /// Excludes any items deleted locally by the user.
-  Future<List<Map<String, dynamic>>> getTipsAndNews({String? category}) async {
+  Future<List<Map<String, dynamic>>> getTipsAndNews({
+    String? category,
+    int limit = 50,
+  }) async {
     final db = await database;
     try {
       await db.execute('''
@@ -1425,6 +1431,8 @@ class DatabaseService extends GetxController {
         args.add(category.toLowerCase());
       }
       query += ' ORDER BY (CASE WHEN t.is_pinned = 1 OR up.item_id IS NOT NULL THEN 1 ELSE 0 END) DESC, t.created_at DESC';
+      query += ' LIMIT ?';
+      args.add(limit);
 
       return await db.rawQuery(query, args);
     } catch (_) {

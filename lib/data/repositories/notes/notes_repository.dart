@@ -175,18 +175,35 @@ class NotesRepository {
             .toSet();
 
         if (remoteIds.isNotEmpty) {
-          final List<NoteModel> localNotes = subjectId != null
-              ? await getLocalNotes(subjectId)
-              : await getAllLocalNotes();
+          // Fetch only minimal columns to avoid loading large descriptions/URLs across SQLite bridge
+          final List<Map<String, dynamic>> localNoteRows = await db.query(
+            'notes',
+            columns: ['id', 'is_downloaded', 'local_file_path'],
+            where: subjectId != null ? 'subject_id = ?' : null,
+            whereArgs: subjectId != null ? [subjectId] : null,
+          );
 
-          for (final local in localNotes) {
+          final idsToDelete = <int>[];
+          for (final local in localNoteRows) {
+            final isDownloaded = (local['is_downloaded'] as num?)?.toInt() == 1;
+            final localFilePath = local['local_file_path'] as String?;
             // NEVER prune a note that the user has already downloaded to their device!
-            if (local.isDownloaded && local.localFilePath != null) {
+            if (isDownloaded && localFilePath != null && localFilePath.isNotEmpty) {
               continue;
             }
-            if (!remoteIds.contains(local.id)) {
-              await db.delete('notes', where: 'id = ?', whereArgs: [local.id]);
+            final localId = (local['id'] as num?)?.toInt();
+            if (localId != null && !remoteIds.contains(localId)) {
+              idsToDelete.add(localId);
             }
+          }
+
+          if (idsToDelete.isNotEmpty) {
+            final placeholders = idsToDelete.map((_) => '?').join(',');
+            await db.delete(
+              'notes',
+              where: 'id IN ($placeholders)',
+              whereArgs: idsToDelete,
+            );
           }
         }
       }

@@ -46,11 +46,10 @@ class BookmarkRepository {
 
   Future<List<Map<String, dynamic>>> getQns({List<int>? ids}) async {
     try {
-      if (ids != null) {
-        if (ids.isEmpty) return [];
+      if (ids != null && ids.isNotEmpty) {
         return await _dbService.getQuestionsByIds(ids);
       }
-      return await _dbService.getQuestions();
+      return [];
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

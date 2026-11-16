@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
@@ -63,17 +62,19 @@ class ProfileController extends GetxController {
       final userId = await _getUserId();
       if (userId.isEmpty) return 0.0;
       final rows = await db.rawQuery(
-        'SELECT correctAnswers, testQuestions FROM results WHERE user_id = ?',
+        '''
+        SELECT r.correctAnswers, COALESCE(NULLIF(t.question_count, 0), 1) as total_questions
+        FROM results r
+        LEFT JOIN tests t ON r.test_id = t.id
+        WHERE r.user_id = ?
+        ''',
         [userId],
       );
       int correct = 0;
       int total = 0;
       for (final row in rows) {
         correct += (row['correctAnswers'] as int? ?? 0);
-        try {
-          final list = jsonDecode(row['testQuestions'] as String) as List;
-          total += list.length;
-        } catch (_) {}
+        total += (row['total_questions'] as num?)?.toInt() ?? 1;
       }
       return total > 0 ? correct / total * 100 : 0.0;
     } catch (_) {

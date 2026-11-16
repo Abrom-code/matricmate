@@ -101,24 +101,9 @@ class AppDeviceUtils {
 
   static bool isAndroid() => Platform.isAndroid;
 
-  static const MethodChannel _securityChannel =
-      MethodChannel('com.abopia.matricmate/security');
-
-  /// Blocks screenshots and screen recordings across the app (Android FLAG_SECURE).
-  static Future<void> enableScreenshotBlocking() async {
-    try {
-      if (Platform.isAndroid) {
-        await _securityChannel.invokeMethod('enableSecure');
-      }
-    } catch (_) {}
-  }
+  /// Screenshot blocking removed per user request.
+  static Future<void> enableScreenshotBlocking() async {}
 
   /// Allows screenshots and screen recordings.
-  static Future<void> disableScreenshotBlocking() async {
-    try {
-      if (Platform.isAndroid) {
-        await _securityChannel.invokeMethod('disableSecure');
-      }
-    } catch (_) {}
-  }
+  static Future<void> disableScreenshotBlocking() async {}
 }

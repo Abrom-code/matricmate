@@ -558,6 +558,38 @@ class DatabaseService extends GetxController {
     }
   }
 
+  /// Returns only questions matching the given [ids], preventing OOM from full-table dumps.
+  Future<List<Map<String, dynamic>>> getQuestionsByIds(List<int> ids) async {
+    if (ids.isEmpty) return [];
+    try {
+      final db = await database;
+      final placeholders = ids.map((_) => '?').join(',');
+      return await db.query(
+        'questions',
+        where: 'id IN ($placeholders)',
+        whereArgs: ids,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Returns only bookmarked questions for [userId] via SQL JOIN,
+  /// avoiding loading thousands of unbookmarked questions into memory.
+  Future<List<Map<String, dynamic>>> getBookmarkedQuestions(String userId) async {
+    try {
+      final db = await database;
+      return await db.rawQuery('''
+        SELECT q.* FROM questions q
+        INNER JOIN bookmarks b ON q.id = b.question_id
+        WHERE b.user_id = ?
+        ORDER BY b.saved_at DESC
+      ''', [userId]);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getDownloadedSubjects() async {
     try {
       final db = await database;
@@ -812,12 +844,11 @@ class DatabaseService extends GetxController {
     try {
       final db = await database;
       final userId = UserController.instance.user.value.id;
-      final result = await db.query(
-        'results',
-        where: 'user_id = ?',
-        whereArgs: [userId],
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as cnt FROM results WHERE user_id = ?',
+        [userId],
       );
-      return result.length;
+      return result.first['cnt'] as int? ?? 0;
     } catch (e) {
       rethrow;
     }
@@ -826,12 +857,11 @@ class DatabaseService extends GetxController {
   Future<int> getETestNumbers(int subjectId, String type) async {
     try {
       final db = await database;
-      final result = await db.query(
-        'tests',
-        where: 'type = ? AND subject_id = ?',
-        whereArgs: [type, subjectId],
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as cnt FROM tests WHERE type = ? AND subject_id = ?',
+        [type, subjectId],
       );
-      return result.length;
+      return result.first['cnt'] as int? ?? 0;
     } catch (e) {
       rethrow;
     }

@@ -52,6 +52,9 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
   @override
   void dispose() {
     _scrollCtrl.dispose();
+    Get.delete<ChallengePracticeController>(
+      tag: 'practice_${widget.challengeId}',
+    );
     super.dispose();
   }
 

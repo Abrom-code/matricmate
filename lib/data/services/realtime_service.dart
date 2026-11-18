@@ -49,6 +49,10 @@ class RealtimeService {
   /// Stop and clean up all Realtime channels.
   Future<void> stop() async {
     try {
+      _onDeviceChanged = null;
+      _currentDeviceId = null;
+      _watchedUserId = null;
+
       final channels = [
         _questionsChannel,
         _userChannel,
@@ -379,13 +383,50 @@ class RealtimeService {
     }
   }
 
-  // ── User channel ─────────────────────────────────────────────────────────
+  // ── Unified User & Session Channel ───────────────────────────────────────
+  String? _watchedUserId;
+  String? _currentDeviceId;
+  void Function()? _onDeviceChanged;
+
+  /// Registers single-device session watching, multiplexed onto the user channel.
+  void registerSessionWatch({
+    required String userId,
+    required String currentDeviceId,
+    required void Function() onDeviceChanged,
+  }) {
+    if (userId.isEmpty) return;
+    _watchedUserId = userId;
+    _currentDeviceId = currentDeviceId;
+    _onDeviceChanged = onDeviceChanged;
+
+    // If channel is already started, re-subscribe so both table listeners are active
+    if (_userChannel != null) {
+      _startUserChannel(userId);
+    }
+  }
+
+  /// Cancels the session watch callback.
+  void cancelSessionWatch() {
+    _onDeviceChanged = null;
+    _currentDeviceId = null;
+  }
 
   void _startUserChannel(String userId) {
     if (userId.isEmpty) return;
 
-    _userChannel = _supabase
-        .channel('user_status_$userId')
+    if (_userChannel != null) {
+      _supabase.removeChannel(_userChannel!);
+      _userChannel = null;
+    }
+
+    if (_watchedUserId != null && _watchedUserId != userId) {
+      _onDeviceChanged = null;
+      _currentDeviceId = null;
+    }
+    _watchedUserId = userId;
+
+    var channel = _supabase
+        .channel('user_sync_$userId')
         .onPostgresChanges(
           event: PostgresChangeEvent.update,
           schema: 'public',
@@ -396,13 +437,48 @@ class RealtimeService {
             value: userId,
           ),
           callback: (payload) => _onUserChanged(payload),
-        )
-        .subscribe((status, [error]) {
-          debugPrint(
-            '[Realtime] user: $status'
-            '${error != null ? ' — $error' : ''}',
-          );
-        });
+        );
+
+    // Multiplex user_sessions onto the same channel if session watch is active
+    if (_onDeviceChanged != null) {
+      channel = channel.onPostgresChanges(
+        event: PostgresChangeEvent.update,
+        schema: 'public',
+        table: 'user_sessions',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'user_id',
+          value: userId,
+        ),
+        callback: (payload) => _onSessionChanged(payload),
+      );
+    }
+
+    _userChannel = channel.subscribe((status, [error]) {
+      debugPrint(
+        '[Realtime] user & session sync: $status'
+        '${error != null ? ' — $error' : ''}',
+      );
+    });
+  }
+
+  void _onSessionChanged(PostgresChangePayload payload) {
+    try {
+      final record = payload.newRecord;
+      if (record.isEmpty) return;
+
+      final newDeviceId = record['device_id'] as String?;
+      if (newDeviceId != null &&
+          _currentDeviceId != null &&
+          newDeviceId != _currentDeviceId) {
+        debugPrint(
+          '[Realtime] remote device change detected: remote=$newDeviceId, local=$_currentDeviceId',
+        );
+        _onDeviceChanged?.call();
+      }
+    } catch (e) {
+      debugPrint('[Realtime] error handling session change: $e');
+    }
   }
 
   Future<void> _onUserChanged(PostgresChangePayload payload) async {

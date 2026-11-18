@@ -39,6 +39,7 @@ class Routes {
   static const pilotExam = '/pilot-exam';
   static const pilotExamSubjects = '/pilot-exam-subjects';
   static const studyPlan = '/study-plan';
+  static const tipsAndNews = '/tips-and-news';
 
   // nav
   static const navigationMenu = '/navigation-menu';

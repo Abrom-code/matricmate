@@ -10,7 +10,6 @@ import 'package:matricmate/data/repositories/challenge/challenge_repository.dart
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_attempt_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/exam/controllers/chapter_test_controller.dart';
 import 'package:matricmate/features/exam/controllers/entrance_exams_controller.dart';
 import 'package:matricmate/features/exam/controllers/exam_selection_controller.dart';
@@ -21,6 +20,7 @@ import 'package:matricmate/features/exam/screens/ready/ready.dart';
 import 'package:matricmate/features/exam/screens/tests_list/chapter_test.dart';
 import 'package:matricmate/features/exam/screens/tests_list/grade_tests.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 /// Handles deep-linking from notifications directly to the target test or challenge.
@@ -121,20 +121,20 @@ class NotificationTestOpener {
       }
 
       // 4. Status Checks:
-      // If closed, archived, or reward notification -> redirect directly to LeaderboardScreen!
+      // If closed, archived, or reward notification -> redirect directly to LeaderboardScreen if completed within 3 days
       if (challenge.isClosed ||
           challenge.isArchived ||
           data['type'] == 'challenge_reward' ||
           data['status'] == 'closed' ||
           data['status'] == 'archived') {
-        Get.to(
-          () => LeaderboardScreen(
+        if (challenge.shouldShowLeaderboard) {
+          ChallengeAccessHelper.openLeaderboard(
             challengeId: challenge.id,
             challengeTitle: challenge.title,
             audience: challenge.audience,
-          ),
-        );
-        return;
+          );
+          return;
+        }
       }
 
       // Navigate to Challenges tab (Tab 1 in BottomNavigationBar)

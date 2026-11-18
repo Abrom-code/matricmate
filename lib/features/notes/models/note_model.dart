@@ -96,6 +96,12 @@ class NoteModel {
   }
 
   factory NoteModel.fromMap(Map<String, dynamic> map) {
+    int? parseInt(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toInt();
+      return int.tryParse(v.toString());
+    }
+
     final rawKey = map['file_key']?.toString();
     final rawUrl = map['file_url']?.toString();
     final key = (rawKey != null && rawKey.trim().isNotEmpty)
@@ -109,26 +115,26 @@ class NoteModel {
     }
 
     return NoteModel(
-      id: (map['id'] as num?)?.toInt() ?? 0,
-      subjectId: (map['subject_id'] as num?)?.toInt() ?? 0,
-      chapterId: (map['chapter_id'] as num?)?.toInt(),
-      grade: (map['grade'] as num?)?.toInt() ?? 9,
-      chapterNumber: (map['chapter_number'] as num?)?.toInt() ?? 1,
+      id: parseInt(map['id']) ?? 0,
+      subjectId: parseInt(map['subject_id']) ?? 0,
+      chapterId: parseInt(map['chapter_id']),
+      grade: parseInt(map['grade']) ?? 9,
+      chapterNumber: parseInt(map['chapter_number']) ?? 1,
       title: map['title']?.toString() ?? '',
       description: map['description']?.toString(),
       fileKey: key,
       fileUrl: rawUrl,
       fileType: map['file_type']?.toString() ?? 'pdf',
-      fileSizeBytes: (map['file_size_bytes'] as num?)?.toInt() ??
-          (map['file_size'] as num?)?.toInt() ??
+      fileSizeBytes: parseInt(map['file_size_bytes']) ??
+          parseInt(map['file_size']) ??
           0,
-      pageCount: (map['page_count'] as num?)?.toInt() ?? 0,
+      pageCount: parseInt(map['page_count']) ?? 0,
       isPremium: map['is_premium'] == null
           ? true
           : (map['is_premium'] == true ||
               map['is_premium'] == 1 ||
               map['is_premium'] == '1'),
-      orderIndex: (map['order_index'] as num?)?.toInt() ?? 0,
+      orderIndex: parseInt(map['order_index']) ?? 0,
       localFilePath: map['local_file_path']?.toString(),
       isDownloaded: map['is_downloaded'] == 1 ||
           map['is_downloaded'] == true ||
@@ -138,7 +144,7 @@ class NoteModel {
           map['is_completed'] == true ||
           map['is_completed'] == '1',
       completedAt: map['completed_at']?.toString(),
-      userRating: (map['user_rating'] as num?)?.toInt() ?? 0,
+      userRating: parseInt(map['user_rating']) ?? 0,
       createdAt: parsedCreatedAt,
     );
   }

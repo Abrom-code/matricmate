@@ -10,13 +10,13 @@ class AppTextStrings {
   static const String phoneNo = 'Phone Number';
   static const String rememberMe = 'Remember Me';
   static const String forgetPassword = 'Forget Password';
-  static const String signIn = 'Sign In';
-  static const String createAccount = 'Create Account';
+  static const String signIn = 'Login';
+  static const String createAccount = 'Register';
   static const String resendEmail = 'Resend Email';
   static const String resendLogin = 'Resend login';
 
   // -- Authentication Headings Text
-  static const String loginTitle = 'Welcome back.';
+  static const String loginTitle = 'Login';
   static const String loginSubTitle =
       'Explore limitless study resources and seamless learning for matric success.';
   static const String forgetPasswordTitle = 'Forgot password';

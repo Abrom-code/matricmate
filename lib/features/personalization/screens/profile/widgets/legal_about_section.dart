@@ -59,30 +59,84 @@ class LegalAboutSection extends StatelessWidget {
           divider,
           Obx(() {
             final isChecking = ProfileActionsHelper.isCheckingUpdate.value;
+            final hasUpdate = ProfileActionsHelper.hasUpdateAvailable.value;
+            final newVersion = ProfileActionsHelper.availableVersion.value;
+
+            String subtitleText;
+            if (isChecking) {
+              subtitleText = 'Checking for latest version...';
+            } else if (hasUpdate && newVersion.isNotEmpty) {
+              subtitleText = 'Update available! Tap to install v$newVersion';
+            } else {
+              subtitleText =
+                  'Current: v${ProfileActionsHelper.appVersion} • Tap to check';
+            }
+
+            Widget trailingWidget;
+            if (isChecking) {
+              trailingWidget = const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              );
+            } else if (hasUpdate) {
+              trailingWidget = Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B)
+                      .withValues(alpha: dark ? 0.22 : 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFF59E0B)
+                        .withValues(alpha: dark ? 0.45 : 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF59E0B),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      newVersion.isNotEmpty ? 'v$newVersion' : 'New',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: dark
+                            ? const Color(0xFFFBBF24)
+                            : const Color(0xFFD97706),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              trailingWidget = const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+                size: 20,
+              );
+            }
+
             return AppListTile(
-              icon: const Icon(
+              icon: Icon(
                 Icons.system_update_rounded,
-                color: AppColors.primary,
+                color: hasUpdate ? const Color(0xFFF59E0B) : AppColors.primary,
                 size: 19,
               ),
               title: 'Check for Updates',
-              subtitle: isChecking
-                  ? 'Checking for latest version...'
-                  : 'Current: v${ProfileActionsHelper.appVersion} • Tap to check',
-              trailing: isChecking
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.chevron_right_rounded,
-                      color: AppColors.textSecondary,
-                      size: 20,
-                    ),
+              subtitle: subtitleText,
+              trailing: trailingWidget,
               onTap: isChecking
                   ? null
                   : () => ProfileActionsHelper.checkForUpdates(context),

@@ -6,7 +6,6 @@ import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/screens/challenge_archive_screen.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/challenges/screens/widgets/available_challenge_card.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_empty_states.dart';
 import 'package:matricmate/features/challenges/screens/widgets/challenge_subject_nav_card.dart';
@@ -14,6 +13,7 @@ import 'package:matricmate/features/challenges/screens/widgets/completed_challen
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/constants/sizes.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
 class ChallengeHomeScreen extends StatefulWidget {
@@ -85,7 +85,7 @@ class _ChallengeHomeScreenState extends State<ChallengeHomeScreen>
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => Get.to(() => const LeaderboardScreen()),
+                    onTap: () => ChallengeAccessHelper.openLeaderboard(),
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       padding: const EdgeInsets.symmetric(

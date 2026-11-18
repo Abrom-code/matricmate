@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ── PaymentConfig
@@ -39,8 +40,49 @@ class PaymentConfig {
 class PaymentConfigService {
   PaymentConfigService._() {
     _rebuildMethods();
+    unawaited(_loadFromCache());
   }
   static final instance = PaymentConfigService._();
+
+  static const _kCacheKey = 'cached_app_config_rows';
+  static const _kLastFetchKey = 'cached_app_config_last_fetch_ms';
+  static const Duration _cacheTtl = Duration(hours: 12);
+
+  Future<void> _loadFromCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_kCacheKey);
+      if (raw != null && raw.isNotEmpty) {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          for (final item in decoded) {
+            if (item is Map) {
+              _applyToState(Map<String, dynamic>.from(item));
+            }
+          }
+          _rebuildMethods();
+          isLoaded.value = true;
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveToCache(List rows) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kCacheKey, jsonEncode(rows));
+      await prefs.setInt(_kLastFetchKey, DateTime.now().millisecondsSinceEpoch);
+    } catch (_) {}
+  }
+
+  Future<int?> _getLastFetchMs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getInt(_kLastFetchKey);
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Hardcoded account numbers per requirement:
   /// - Telebirr: 0960586811
@@ -179,6 +221,17 @@ class PaymentConfigService {
   Future<void> load({bool force = false}) async {
     if (isLoading.value && !force) return;
 
+    // If cache is valid and not forced, skip network call
+    if (!force && isLoaded.value) {
+      final lastMs = await _getLastFetchMs();
+      if (lastMs != null) {
+        final elapsed = DateTime.now().millisecondsSinceEpoch - lastMs;
+        if (elapsed < _cacheTtl.inMilliseconds) {
+          return;
+        }
+      }
+    }
+
     isLoading.value = true;
     hasError.value = false;
 
@@ -220,12 +273,18 @@ class PaymentConfigService {
         '[PaymentConfig] methods built: ${methods.map((m) => '${m.label}(${m.account})').toList()}',
       );
       debugPrint('[PaymentConfig] dynamic plan prices: $planPrices');
+      await _saveToCache(rows);
       isLoaded.value = true;
       hasError.value = false;
     } catch (e, st) {
       // Log failure for debugging
       debugPrint('[PaymentConfig] load() failed: $e\n$st');
-      hasError.value = true;
+      // If cached methods already exist, do not break the UI
+      if (methods.isNotEmpty) {
+        hasError.value = false;
+      } else {
+        hasError.value = true;
+      }
     } finally {
       isLoading.value = false;
     }
@@ -472,22 +531,21 @@ class PaymentConfigService {
                 e['account']?.toString().isNotEmpty == true &&
                 e['key']?.toString().isNotEmpty == true,
           )
-          .map(
-            (e) {
-              final configuredHolder = e['holder']?.toString().trim();
-              final holder = (configuredHolder != null && configuredHolder.isNotEmpty)
-                  ? configuredHolder
-                  : defaultAccountHolder;
+          .map((e) {
+            final configuredHolder = e['holder']?.toString().trim();
+            final holder =
+                (configuredHolder != null && configuredHolder.isNotEmpty)
+                ? configuredHolder
+                : defaultAccountHolder;
 
-              return PaymentConfig(
-                key: e['key']?.toString() ?? '',
-                label: e['label']?.toString() ?? e['key']?.toString() ?? '',
-                account: e['account']?.toString() ?? '',
-                holder: holder,
-                icon: Icons.account_balance_wallet_outlined,
-              );
-            },
-          )
+            return PaymentConfig(
+              key: e['key']?.toString() ?? '',
+              label: e['label']?.toString() ?? e['key']?.toString() ?? '',
+              account: e['account']?.toString() ?? '',
+              holder: holder,
+              icon: Icons.account_balance_wallet_outlined,
+            );
+          })
           .toList();
     } catch (_) {
       return [];
@@ -515,4 +573,3 @@ class _BuiltIn {
 
 /// Alias for [PaymentConfigService] providing dynamic app configuration.
 typedef AppConfigService = PaymentConfigService;
-

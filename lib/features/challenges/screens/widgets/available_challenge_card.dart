@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/challenges/controllers/challenge_home_controller.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
+import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
@@ -62,6 +63,8 @@ class AvailableChallengeCard extends StatelessWidget {
           : (challenge.durationSeconds / 60).round();
 
       final isDone = ctrl.isChallengeCompleted(challenge);
+      final inProgress = ctrl.isInProgress(challenge.id) ||
+          (challenge.setId.isNotEmpty && ctrl.isInProgress(challenge.setId));
 
       return Container(
         decoration: BoxDecoration(
@@ -87,18 +90,20 @@ class AvailableChallengeCard extends StatelessWidget {
           children: [
             // ── 1. Header Row (Subject Chip & Status Indicator) ─────────
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Subject Chip
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.teal.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.teal.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 180),
                     child: Text(
                       challenge.subjectName ?? 'Challenge',
                       maxLines: 1,
@@ -112,61 +117,71 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ),
 
-
                 const Spacer(),
 
                 if (isDone) ...[
                   // Double check completed icon
                   const Tooltip(
                     message: 'Completed',
-                    child: Icon(
-                      Icons.done_all_rounded,
-                      size: 19,
-                      color: AppColors.primary,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.done_all_rounded,
+                        size: 19,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                 ],
 
                 // Status Indicator (Live / Upcoming / Draft)
-                if (challenge.isDraft) ...[
-                  const Icon(Icons.build_circle_outlined, size: 14, color: Colors.amber),
-                  const SizedBox(width: 5),
-                  const Text(
-                    'Draft Mode',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.amber,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (challenge.isDraft) ...[
+                        const Icon(Icons.build_circle_outlined, size: 14, color: Colors.amber),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'Draft Mode',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.amber,
+                          ),
+                        ),
+                      ] else if (isLive) ...[
+                        const Icon(Icons.circle, size: 8, color: Color(0xFFE24B4A)),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'Live',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFE24B4A),
+                          ),
+                        ),
+                      ] else ...[
+                        const Icon(
+                          Icons.access_time_rounded,
+                          size: 13,
+                          color: Color(0xFF378ADD),
+                        ),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'Upcoming',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF378ADD),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ] else if (isLive) ...[
-                  const Icon(Icons.circle, size: 8, color: Color(0xFFE24B4A)),
-                  const SizedBox(width: 5),
-                  const Text(
-                    'Live',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFE24B4A),
-                    ),
-                  ),
-                ] else ...[
-                  const Icon(
-                    Icons.access_time_rounded,
-                    size: 13,
-                    color: Color(0xFF378ADD),
-                  ),
-                  const SizedBox(width: 5),
-                  const Text(
-                    'Upcoming',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF378ADD),
-                    ),
-                  ),
-                ],
+                ),
               ],
             ),
 
@@ -208,21 +223,50 @@ class AvailableChallengeCard extends StatelessWidget {
 
                 const Spacer(),
 
-                // Number of joins (right)
-                const Icon(
-                  Icons.people_outline_rounded,
-                  size: 15,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '${ctrl.getParticipantCount(challenge.id)} joined',
-                  style: const TextStyle(
-                    fontSize: 13,
+                // Number of joins (right) or lock icon with 'joined' for free user on premium challenge
+                if (!canAccess && challenge.isPremium)
+                  Tooltip(
+                    message: 'Premium Challenge',
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () => ctrl.onChallengeTapped(challenge),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_rounded,
+                            size: 15,
+                            color: AppColors.amber,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'joined',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else ...[
+                  const Icon(
+                    Icons.people_outline_rounded,
+                    size: 15,
                     color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
                   ),
-                ),
+                  const SizedBox(width: 5),
+                  Text(
+                    '${ctrl.getParticipantCount(challenge.id)} joined',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ],
             ),
 
@@ -308,18 +352,16 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isLive) ...[
+              if (isLive && challenge.shouldShowLeaderboard) ...[
                 const SizedBox(height: 10),
                 Align(
                   alignment: Alignment.centerRight,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(6),
-                    onTap: () => Get.to(
-                      () => LeaderboardScreen(
-                        challengeId: challenge.id,
-                        challengeTitle: challenge.title,
-                        audience: challenge.audience,
-                      ),
+                    onTap: () => ChallengeAccessHelper.openLeaderboard(
+                      challengeId: challenge.id,
+                      challengeTitle: challenge.title,
+                      audience: challenge.audience,
                     ),
                     child: const Padding(
                       padding: EdgeInsets.symmetric(
@@ -437,18 +479,16 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (isLive) ...[
+              if (isLive && challenge.shouldShowLeaderboard) ...[
                 const SizedBox(height: 10),
                 Align(
                   alignment: Alignment.centerRight,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(6),
-                    onTap: () => Get.to(
-                      () => LeaderboardScreen(
-                        challengeId: challenge.id,
-                        challengeTitle: challenge.title,
-                        audience: challenge.audience,
-                      ),
+                    onTap: () => ChallengeAccessHelper.openLeaderboard(
+                      challengeId: challenge.id,
+                      challengeTitle: challenge.title,
+                      audience: challenge.audience,
                     ),
                     child: const Padding(
                       padding: EdgeInsets.symmetric(
@@ -468,84 +508,157 @@ class AvailableChallengeCard extends StatelessWidget {
                 ),
               ],
             ] else if (isLive) ...[
-              SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDone
-                        ? AppColors.primary
-                        : const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: EdgeInsets.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              if (isDone) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 46,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () {
+                            if (!challenge.canReviewQuestions) {
+                              ToastHelper.info(
+                                'Question review will be unlocked once this challenge closes.',
+                              );
+                              return;
+                            }
+                            ctrl.openCompletedChallenge(challenge);
+                          },
+                          icon: Icon(
+                            challenge.canReviewQuestions
+                                ? Icons.visibility_outlined
+                                : Icons.lock_clock_outlined,
+                            size: 16,
+                          ),
+                          label: Text(
+                            challenge.canReviewQuestions
+                                ? 'Review'
+                                : 'Review when closed',
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  onPressed: isDone
-                      ? () {
-                          if (!challenge.canReviewQuestions) {
-                            ToastHelper.info(
-                              'Question review will be unlocked once this challenge closes.',
-                            );
-                            return;
-                          }
-                          ctrl.openCompletedChallenge(challenge);
-                        }
-                      : () => ctrl.onChallengeTapped(challenge),
-                  icon: Icon(
-                    isDone
-                        ? (challenge.canReviewQuestions
-                            ? Icons.visibility_outlined
-                            : Icons.lock_clock_outlined)
-                        : Icons.arrow_forward_rounded,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    isDone
-                        ? (challenge.canReviewQuestions
-                            ? 'Review'
-                            : 'Review when closed')
-                        : 'Start challenge',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 46,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.teal,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () => Get.to(
+                            () => ChallengeAttemptScreen(
+                              challengeId: challenge.id,
+                              title: challenge.title,
+                              audience: challenge.audience,
+                              durationMinutes: challenge.durationMinutes,
+                              setId: challenge.setId,
+                              isRedo: true,
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.replay_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            'Redo',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => ctrl.onChallengeTapped(challenge),
+                    icon: Icon(
+                      inProgress
+                          ? Icons.play_arrow_rounded
+                          : Icons.arrow_forward_rounded,
+                      size: 16,
                       color: Colors.white,
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(6),
-                  onTap: () => Get.to(
-                    () => LeaderboardScreen(
-                      challengeId: challenge.id,
-                      challengeTitle: challenge.title,
-                      audience: challenge.audience,
-                    ),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 2,
-                      horizontal: 4,
-                    ),
-                    child: Text(
-                      'View rankings →',
-                      style: TextStyle(
-                        color: AppColors.amber,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
+                    label: Text(
+                      inProgress ? 'Resume' : 'Start challenge',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
+              if (challenge.shouldShowLeaderboard) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => ChallengeAccessHelper.openLeaderboard(
+                      challengeId: challenge.id,
+                      challengeTitle: challenge.title,
+                      audience: challenge.audience,
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 2,
+                        horizontal: 4,
+                      ),
+                      child: Text(
+                        'View rankings →',
+                        style: TextStyle(
+                          color: AppColors.amber,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ] else ...[
               SizedBox(
                 width: double.infinity,

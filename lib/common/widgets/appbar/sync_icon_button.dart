@@ -56,8 +56,16 @@ class _SyncIconButtonState extends State<SyncIconButton>
     if (widget.isSyncing && !oldWidget.isSyncing) {
       _ctrl.repeat();
     } else if (!widget.isSyncing && oldWidget.isSyncing) {
-      _ctrl.stop();
-      _ctrl.reset();
+      if (_ctrl.isAnimating) {
+        _ctrl.forward().then((_) {
+          if (!mounted) return;
+          if (!widget.isSyncing) {
+            _ctrl.reset();
+          }
+        });
+      } else {
+        _ctrl.reset();
+      }
     }
   }
 

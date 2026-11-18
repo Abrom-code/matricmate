@@ -253,8 +253,35 @@ class SubjectsController extends GetxController {
     }
   }
 
+  Future<void>? _inFlightEntranceCounts;
+  DateTime? _lastEntranceCountsFetch;
+  static const Duration _entranceCountsThrottle = Duration(minutes: 10);
+
   /// Refreshes entrance/model counts from remote and persists to SQLite.
-  Future<void> refreshEntranceCountsFromRemote() async {
+  /// Throttled to at most once per 10 minutes unless [force] is true.
+  /// Deduplicates concurrent callers to a single in-flight request.
+  Future<void> refreshEntranceCountsFromRemote({bool force = false}) async {
+    if (_inFlightEntranceCounts != null) {
+      return _inFlightEntranceCounts!;
+    }
+
+    if (!force && _lastEntranceCountsFetch != null) {
+      final elapsed = DateTime.now().difference(_lastEntranceCountsFetch!);
+      if (elapsed < _entranceCountsThrottle) {
+        return;
+      }
+    }
+
+    _inFlightEntranceCounts = _doRefreshEntranceCounts();
+    try {
+      await _inFlightEntranceCounts;
+      _lastEntranceCountsFetch = DateTime.now();
+    } finally {
+      _inFlightEntranceCounts = null;
+    }
+  }
+
+  Future<void> _doRefreshEntranceCounts() async {
     try {
       final current = subjects.toList();
       if (current.isEmpty) return;

@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/forgot_password_controller.dart';
+import 'package:matricmate/features/personalization/utils/profile_actions_helper.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -186,6 +188,101 @@ class ForgetPasswordScreen extends GetView<ForgotPasswordController> {
                               Icon(Icons.arrow_forward_rounded, size: 18),
                             ],
                           ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Register Link Footer ──────────────────────────────────
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: dark ? AppColors.darkCard : AppColors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: dark ? 0.15 : 0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Don't have an account?",
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => Get.offNamed(Routes.signup),
+                        borderRadius: BorderRadius.circular(6),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text(
+                            'Register',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Contact Us Support Link ───────────────────────────────
+              Center(
+                child: InkWell(
+                  onTap: ProfileActionsHelper.openTelegramSupport,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.send_rounded, size: 9, color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Contact Us',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

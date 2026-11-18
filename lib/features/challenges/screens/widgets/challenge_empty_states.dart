@@ -82,7 +82,7 @@ class ChallengeOfflineState extends StatefulWidget {
     this.rxRefreshing,
     this.icon = Icons.wifi_off_rounded,
     this.description,
-    this.timeout = const Duration(seconds: 4),
+    this.timeout = const Duration(seconds: 12),
   });
 
   final bool dark;

@@ -189,8 +189,18 @@ class _NotificationBodyTextState extends State<NotificationBodyText> {
           );
         }
       } else {
-        // Parse question & explanation formatting (LaTeX math, bold, color, sub/sup, etc.)
-        final richSpan = RichTextParser.parse(seg.text, baseStyle);
+        // Parse question & explanation formatting (LaTeX math, bold, color, size, sub/sup, etc.)
+        var segStyle = baseStyle;
+        if (seg.isBold) segStyle = segStyle.copyWith(fontWeight: FontWeight.w900);
+        if (seg.isItalic) segStyle = segStyle.copyWith(fontStyle: FontStyle.italic);
+        if (seg.isUnderline) {
+          segStyle = segStyle.copyWith(
+            decoration: segStyle.decoration == null || segStyle.decoration == TextDecoration.none
+                ? TextDecoration.underline
+                : TextDecoration.combine([segStyle.decoration!, TextDecoration.underline]),
+          );
+        }
+        final richSpan = RichTextParser.parse(seg.text, segStyle);
         spans.add(richSpan);
       }
     }

@@ -87,23 +87,23 @@ class NotesRepository {
           .select()
           .eq('subject_id', subjectId)
           .order('chapter_number', ascending: true)
-          .timeout(AppTimeouts.query);
+          .timeout(AppTimeouts.sync);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }
   }
 
-  /// Fetches all remote notes across all subjects from Supabase (optionally delta sync).
+  /// Fetches all remote notes across all subjects from Supabase.
+  /// Notes metadata is compact (<20KB across all subjects), so we fetch all active notes
+  /// to ensure newly added notes or updated file keys/titles are never skipped.
   Future<List<Map<String, dynamic>>> fetchAllRemoteNotes({DateTime? since}) async {
     try {
-      var query = _supabase.from('notes').select();
-      if (since != null) {
-        query = query.gte('updated_at', since.toIso8601String());
-      }
-      final response = await query
+      final response = await _supabase
+          .from('notes')
+          .select()
           .order('chapter_number', ascending: true)
-          .timeout(AppTimeouts.query);
+          .timeout(AppTimeouts.sync);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];
@@ -159,28 +159,51 @@ class NotesRepository {
       // An empty list means network failed or remote returned nothing.
       if (notesData.isEmpty) return;
 
+      int? parseInt(dynamic val) {
+        if (val == null) return null;
+        if (val is num) return val.toInt();
+        return int.tryParse(val.toString());
+      }
+
       final db = await _dbService.database;
 
       // Clean up notes deleted from remote ONLY when remote provided a non-empty list of IDs
       if (pruneDeleted) {
         final remoteIds = notesData
-            .map((e) => (e['id'] as num?)?.toInt() ?? 0)
+            .map((e) => parseInt(e['id']) ?? 0)
             .where((id) => id > 0)
             .toSet();
 
         if (remoteIds.isNotEmpty) {
-          final List<NoteModel> localNotes = subjectId != null
-              ? await getLocalNotes(subjectId)
-              : await getAllLocalNotes();
+          // Fetch only minimal columns to avoid loading large descriptions/URLs across SQLite bridge
+          final List<Map<String, dynamic>> localNoteRows = await db.query(
+            'notes',
+            columns: ['id', 'is_downloaded', 'local_file_path'],
+            where: subjectId != null ? 'subject_id = ?' : null,
+            whereArgs: subjectId != null ? [subjectId] : null,
+          );
 
-          for (final local in localNotes) {
+          final idsToDelete = <int>[];
+          for (final local in localNoteRows) {
+            final isDownloaded = (local['is_downloaded'] as num?)?.toInt() == 1;
+            final localFilePath = local['local_file_path'] as String?;
             // NEVER prune a note that the user has already downloaded to their device!
-            if (local.isDownloaded && local.localFilePath != null) {
+            if (isDownloaded && localFilePath != null && localFilePath.isNotEmpty) {
               continue;
             }
-            if (!remoteIds.contains(local.id)) {
-              await db.delete('notes', where: 'id = ?', whereArgs: [local.id]);
+            final localId = (local['id'] as num?)?.toInt();
+            if (localId != null && !remoteIds.contains(localId)) {
+              idsToDelete.add(localId);
             }
+          }
+
+          if (idsToDelete.isNotEmpty) {
+            final placeholders = idsToDelete.map((_) => '?').join(',');
+            await db.delete(
+              'notes',
+              where: 'id IN ($placeholders)',
+              whereArgs: idsToDelete,
+            );
           }
         }
       }
@@ -188,7 +211,7 @@ class NotesRepository {
       final batch = db.batch();
 
       for (final raw in notesData) {
-        final id = (raw['id'] as num?)?.toInt() ?? 0;
+        final id = parseInt(raw['id']) ?? 0;
         if (id == 0) continue;
 
         final map = Map<String, dynamic>.from(raw);
@@ -202,6 +225,9 @@ class NotesRepository {
         final fileKey = (rawKey != null && rawKey.trim().isNotEmpty)
             ? rawKey.trim()
             : (rawUrl?.trim() ?? '');
+
+        final resolvedSubjectId = parseInt(map['subject_id']) ?? subjectId ?? 0;
+        if (resolvedSubjectId == 0) continue;
 
         // Check if existing record has download, completion and creation status
         final existing = await db.query(
@@ -266,17 +292,17 @@ class NotesRepository {
           'notes',
           {
             'id': id,
-            'subject_id': map['subject_id'],
-            'chapter_id': map['chapter_id'],
-            'grade': map['grade'] ?? 9,
-            'chapter_number': map['chapter_number'] ?? 1,
-            'title': map['title'] ?? '',
-            'description': map['description'],
+            'subject_id': resolvedSubjectId,
+            'chapter_id': parseInt(map['chapter_id']),
+            'grade': parseInt(map['grade']) ?? 9,
+            'chapter_number': parseInt(map['chapter_number']) ?? 1,
+            'title': map['title']?.toString() ?? '',
+            'description': map['description']?.toString(),
             'file_key': fileKey,
-            'file_url': map['file_url'] ?? fileKey,
-            'file_type': map['file_type'] ?? 'pdf',
-            'file_size_bytes': map['file_size_bytes'] ?? 0,
-            'page_count': map['page_count'] ?? 0,
+            'file_url': map['file_url']?.toString() ?? fileKey,
+            'file_type': map['file_type']?.toString() ?? 'pdf',
+            'file_size_bytes': parseInt(map['file_size_bytes']) ?? 0,
+            'page_count': parseInt(map['page_count']) ?? 0,
             'is_premium': (map['is_premium'] == null)
                 ? 1
                 : (map['is_premium'] == true ||
@@ -284,14 +310,14 @@ class NotesRepository {
                         map['is_premium'] == '1')
                     ? 1
                     : 0,
-            'order_index': map['order_index'] ?? 0,
-            'local_file_path': map['local_file_path'],
-            'is_downloaded': map['is_downloaded'] ?? 0,
-            'downloaded_at': map['downloaded_at'],
-            'is_completed': map['is_completed'] ?? 0,
-            'completed_at': map['completed_at'],
-            'user_rating': map['user_rating'] ?? 0,
-            'created_at': map['created_at'],
+            'order_index': parseInt(map['order_index']) ?? 0,
+            'local_file_path': map['local_file_path']?.toString(),
+            'is_downloaded': parseInt(map['is_downloaded']) ?? 0,
+            'downloaded_at': map['downloaded_at']?.toString(),
+            'is_completed': parseInt(map['is_completed']) ?? 0,
+            'completed_at': map['completed_at']?.toString(),
+            'user_rating': parseInt(map['user_rating']) ?? 0,
+            'created_at': map['created_at']?.toString(),
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );

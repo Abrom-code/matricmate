@@ -96,3 +96,8 @@ node_modules/
 # Coverage
 # ------------------------------
 coverage/
+
+# GetStorage test artifacts
+GetStorage.*
+# Widget Preview related
+.widget_preview/

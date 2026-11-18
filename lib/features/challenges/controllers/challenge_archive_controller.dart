@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
@@ -34,7 +35,6 @@ class ChallengeArchiveController extends GetxController {
 
   final _repo = ChallengeRepository();
   final _db = DatabaseService.instance;
-  final _sb = Supabase.instance.client;
 
   final isLoading = false.obs;
   final isManualRefreshing = false.obs;
@@ -47,10 +47,9 @@ class ChallengeArchiveController extends GetxController {
   final deletedChallengeIds = <String>{}.obs;
   final isOffline = false.obs;
 
-  RealtimeChannel? _realtimeChannel;
-
   bool get isPremium => UserController.instance.user.value.isActive;
-  String get userStream => UserController.instance.user.value.stream.toLowerCase().trim();
+  String get userStream =>
+      UserController.instance.user.value.stream.toLowerCase().trim();
 
   bool canAccess(LeaderboardChallengeModel challenge) =>
       ChallengeAccessHelper.canAccess(
@@ -74,8 +73,12 @@ class ChallengeArchiveController extends GetxController {
 
   String get selectedSubjectTitle {
     if (selectedSubjectId.value == null) return 'All Challenges';
-    final subj = studentSubjects.firstWhereOrNull((s) => s.id == selectedSubjectId.value);
-    return subj != null ? '${subj.name} Challenges' : (subjectTitle ?? 'Challenges');
+    final subj = studentSubjects.firstWhereOrNull(
+      (s) => s.id == selectedSubjectId.value,
+    );
+    return subj != null
+        ? '${subj.name} Challenges'
+        : (subjectTitle ?? 'Challenges');
   }
 
   List<LeaderboardChallengeModel> get displayedChallenges {
@@ -96,14 +99,11 @@ class ChallengeArchiveController extends GetxController {
     return challenges.where((c) => c.subjectId == subjId).length;
   }
 
-  Timer? _realtimeDebounceTimer;
-
   @override
   void onInit() {
     super.onInit();
     _preloadLocalArchivedChallenges();
     loadArchive();
-    _startRealtime();
 
     String lastUserId = UserController.instance.user.value.id;
     String lastUserStream = UserController.instance.user.value.stream;
@@ -123,40 +123,7 @@ class ChallengeArchiveController extends GetxController {
 
   @override
   void onClose() {
-    _realtimeDebounceTimer?.cancel();
-    if (_realtimeChannel != null) {
-      _sb.removeChannel(_realtimeChannel!);
-      _realtimeChannel = null;
-    }
     super.onClose();
-  }
-
-  void _startRealtime() {
-    if (_realtimeChannel != null) {
-      _sb.removeChannel(_realtimeChannel!);
-    }
-    final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
-    _realtimeChannel = _sb
-        .channel('public:challenge_archive_$tag')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'leaderboard_challenges',
-          callback: (payload) {
-            debugPrint(
-              '[Realtime] Archive challenge changed: ${payload.eventType}',
-            );
-            _realtimeDebounceTimer?.cancel();
-            _realtimeDebounceTimer = Timer(const Duration(seconds: 3), () {
-              loadArchive(isManual: false);
-            });
-          },
-        )
-        .subscribe((status, [error]) {
-          debugPrint(
-            '[Realtime] Archive channel status: $status ${error ?? ''}',
-          );
-        });
   }
 
   Future<void> _preloadLocalArchivedChallenges() async {
@@ -168,7 +135,9 @@ class ChallengeArchiveController extends GetxController {
     }
   }
 
-  Future<void> _saveCachedArchiveChallenges(List<LeaderboardChallengeModel> list) async {
+  Future<void> _saveCachedArchiveChallenges(
+    List<LeaderboardChallengeModel> list,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final tag = subjectId != null ? 'archive_$subjectId' : 'archive_all';
@@ -204,7 +173,10 @@ class ChallengeArchiveController extends GetxController {
       if (str == null || str.isEmpty) return [];
       final List decoded = jsonDecode(str);
       final list = decoded
-          .map((j) => LeaderboardChallengeModel.fromJson(j as Map<String, dynamic>))
+          .map(
+            (j) =>
+                LeaderboardChallengeModel.fromJson(j as Map<String, dynamic>),
+          )
           .toList();
       if (subjectId != null) {
         return list.where((c) => c.subjectId == subjectId).toList();
@@ -229,17 +201,23 @@ class ChallengeArchiveController extends GetxController {
       // 1. Load previously cached challenges from SharedPreferences
       final cachedList = await _getCachedArchiveChallenges();
       for (final c in cachedList) {
-        if (deleted.contains(c.id) || (c.setId.isNotEmpty && deleted.contains(c.setId))) continue;
+        if (deleted.contains(c.id) ||
+            (c.setId.isNotEmpty && deleted.contains(c.setId)))
+          continue;
         if (!c.isClosed && !c.isArchived) continue;
 
         final aud = c.audience.toLowerCase().trim();
-        final matchesAud = userStream.isEmpty || aud == 'both' || aud == userStream;
+        final matchesAud =
+            userStream.isEmpty || aud == 'both' || aud == userStream;
         if (!matchesAud) continue;
 
         if (subjectsList.isNotEmpty && userStream.isNotEmpty) {
-          final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
+          final subj = subjectsList.firstWhereOrNull(
+            (s) => s.id == c.subjectId,
+          );
           if (subj != null) {
-            final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+            final matchesSubj =
+                subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
             if (!matchesSubj) continue;
           }
         }
@@ -255,13 +233,15 @@ class ChallengeArchiveController extends GetxController {
         final title = r['title']?.toString() ?? 'Challenge Set';
         final aud = (r['audience']?.toString() ?? 'both').toLowerCase().trim();
 
-        final matchesAud = userStream.isEmpty || aud == 'both' || aud == userStream;
+        final matchesAud =
+            userStream.isEmpty || aud == 'both' || aud == userStream;
         if (!matchesAud) continue;
 
         if (subjectsList.isNotEmpty && userStream.isNotEmpty) {
           final subj = subjectsList.firstWhereOrNull((s) => s.id == sId);
           if (subj != null) {
-            final matchesSubj = subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+            final matchesSubj =
+                subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
             if (!matchesSubj) continue;
           }
         }
@@ -284,9 +264,15 @@ class ChallengeArchiveController extends GetxController {
           setId: cId,
           title: title,
           subjectId: sId,
-          subjectName: subjName ?? challengeMap[cId]?.subjectName ?? subjectTitle ?? 'Subject',
+          subjectName:
+              subjName ??
+              challengeMap[cId]?.subjectName ??
+              subjectTitle ??
+              'Subject',
           audience: aud,
-          questionCount: qRows.isNotEmpty ? qRows.length : (challengeMap[cId]?.questionCount ?? 0),
+          questionCount: qRows.isNotEmpty
+              ? qRows.length
+              : (challengeMap[cId]?.questionCount ?? 0),
           status: 'closed',
           createdAt: DateTime.now(),
           isPremium: isPrem,
@@ -299,7 +285,10 @@ class ChallengeArchiveController extends GetxController {
     }
   }
 
-  Future<void> loadArchive({bool showLoading = true, bool isManual = false}) async {
+  Future<void> loadArchive({
+    bool showLoading = true,
+    bool isManual = false,
+  }) async {
     if (isManual) {
       isManualRefreshing.value = true;
     } else if (showLoading) {
@@ -307,10 +296,10 @@ class ChallengeArchiveController extends GetxController {
     }
     final stopwatch = Stopwatch()..start();
     try {
-      // 1. Fast Internet Reachability Check with 3-second timeout
+      // 1. Internet Reachability Check (DNS + socket probes with generous timeout)
       final hasNet = await NetworkManager.instance
           .isConnected(force: isManual)
-          .timeout(const Duration(seconds: 3), onTimeout: () => false);
+          .timeout(const Duration(seconds: 8), onTimeout: () => false);
       if (!hasNet) {
         if (isManual && stopwatch.elapsedMilliseconds < 500) {
           await Future.delayed(
@@ -337,7 +326,7 @@ class ChallengeArchiveController extends GetxController {
       // Fetch all challenges across subjects for student stream so tabs work seamlessly with timeout
       final list = await _repo
           .fetchAllSubjectChallenges(stream: userStream)
-          .timeout(const Duration(seconds: 4));
+          .timeout(AppTimeouts.query);
       final isNatural = userStream == 'natural';
 
       final subjectsList = Get.isRegistered<SubjectsController>()
@@ -345,17 +334,22 @@ class ChallengeArchiveController extends GetxController {
           : [];
 
       final filtered = list.where((c) {
-        if (deleted.contains(c.id) || (c.setId.isNotEmpty && deleted.contains(c.setId))) {
+        if (deleted.contains(c.id) ||
+            (c.setId.isNotEmpty && deleted.contains(c.setId))) {
           return false;
         }
         final aud = c.audience.toLowerCase().trim();
-        final matchesAudience = aud == 'both' || aud == userStream || userStream.isEmpty;
+        final matchesAudience =
+            aud == 'both' || aud == userStream || userStream.isEmpty;
         if (!matchesAudience) return false;
 
         if (subjectsList.isNotEmpty) {
-          final subj = subjectsList.firstWhereOrNull((s) => s.id == c.subjectId);
+          final subj = subjectsList.firstWhereOrNull(
+            (s) => s.id == c.subjectId,
+          );
           if (subj != null) {
-            return subj.isCommon || (isNatural ? subj.isNatural : !subj.isNatural);
+            return subj.isCommon ||
+                (isNatural ? subj.isNatural : !subj.isNatural);
           }
         }
         return true;
@@ -387,7 +381,9 @@ class ChallengeArchiveController extends GetxController {
 
       if (isManual) {
         if (e is TimeoutException) {
-          ToastHelper.warning('Refresh timed out. Please check your connection.');
+          ToastHelper.warning(
+            'Refresh timed out. Please check your connection.',
+          );
         } else {
           ToastHelper.warning('No internet connection. Showing offline data.');
         }
@@ -434,16 +430,37 @@ class ChallengeArchiveController extends GetxController {
       final scores = await _db.getChallengePracticeScores();
       practiceScores.assignAll(scores);
 
+      // Restore local in-progress challenge IDs from SharedPreferences
+      final localInProg = <String>{};
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final inProgKeys = prefs.getKeys().where(
+          (k) => k.startsWith('challenge_in_progress_'),
+        );
+        for (final k in inProgKeys) {
+          if (prefs.getBool(k) == true) {
+            final cid = k.substring('challenge_in_progress_'.length);
+            if (cid.isNotEmpty &&
+                !attemptedIds.contains(cid) &&
+                !deleted.contains(cid)) {
+              localInProg.add(cid);
+            }
+          }
+        }
+      } catch (_) {}
+      inProgressIds.assignAll(localInProg);
+
       if (checkOnline && !isOffline.value) {
         final userId = UserController.instance.user.value.id.isNotEmpty
             ? UserController.instance.user.value.id
             : (Supabase.instance.client.auth.currentUser?.id ?? '');
         if (userId.isNotEmpty) {
-          final online = await _repo.fetchUserSubmittedChallengeIds(userId);
-          attemptedIds.addAll(online.difference(deleted));
+          final result = await _repo.fetchUserChallengeAttemptIds(userId);
+          final submitted = result['submitted'] ?? <String>{};
+          final inProg = result['inProgress'] ?? <String>{};
 
-          final inProg = await _repo.fetchUserInProgressChallengeIds(userId);
-          inProgressIds.assignAll(inProg.difference(deleted));
+          attemptedIds.addAll(submitted.difference(deleted));
+          inProgressIds.addAll(inProg.difference(deleted));
           inProgressIds.removeAll(attemptedIds);
         }
       }
@@ -457,6 +474,7 @@ class ChallengeArchiveController extends GetxController {
     }
     return false;
   }
+
   bool isAttemptedOrPracticed(String challengeId, {String? setId}) {
     if (attemptedIds.contains(challengeId)) return true;
     if (setId != null && setId.isNotEmpty && attemptedIds.contains(setId)) {
@@ -464,14 +482,21 @@ class ChallengeArchiveController extends GetxController {
     }
     return false;
   }
+
   bool isInProgress(String challengeId) => inProgressIds.contains(challengeId);
 
   void markInProgress(String challengeId) {
     inProgressIds.add(challengeId);
+    SharedPreferences.getInstance()
+        .then((p) => p.setBool('challenge_in_progress_$challengeId', true))
+        .catchError((_) => false);
   }
 
   void clearInProgress(String challengeId) {
     inProgressIds.remove(challengeId);
+    SharedPreferences.getInstance()
+        .then((p) => p.remove('challenge_in_progress_$challengeId'))
+        .catchError((_) => false);
   }
 
   void markAttemptedOrPracticed(String challengeId) {
@@ -506,7 +531,8 @@ class ChallengeArchiveController extends GetxController {
       if (Get.isRegistered<ChallengeHomeController>()) {
         final hCtrl = Get.find<ChallengeHomeController>();
         hCtrl.downloadedIds.add(challenge.id);
-        if (challenge.setId.isNotEmpty) hCtrl.downloadedIds.add(challenge.setId);
+        if (challenge.setId.isNotEmpty)
+          hCtrl.downloadedIds.add(challenge.setId);
         hCtrl.downloadedIds.refresh();
       }
       ToastHelper.success('Downloaded for offline practice!');
@@ -517,11 +543,17 @@ class ChallengeArchiveController extends GetxController {
     }
   }
 
-  Future<void> confirmDeleteDownload(BuildContext context, LeaderboardChallengeModel challenge) async {
+  Future<void> confirmDeleteDownload(
+    BuildContext context,
+    LeaderboardChallengeModel challenge,
+  ) async {
     await showChallengeManageSheet(context, challenge);
   }
 
-  Future<void> showChallengeManageSheet(BuildContext context, LeaderboardChallengeModel challenge) async {
+  Future<void> showChallengeManageSheet(
+    BuildContext context,
+    LeaderboardChallengeModel challenge,
+  ) async {
     final isDown = isDownloaded(challenge.id);
 
     await ChallengeManageSheet.show(
@@ -534,7 +566,9 @@ class ChallengeArchiveController extends GetxController {
     );
   }
 
-  Future<void> removeChallengeDownload(LeaderboardChallengeModel challenge) async {
+  Future<void> removeChallengeDownload(
+    LeaderboardChallengeModel challenge,
+  ) async {
     try {
       await _db.deleteDownloadedChallenge(
         challenge.id,
@@ -548,7 +582,8 @@ class ChallengeArchiveController extends GetxController {
       if (Get.isRegistered<ChallengeHomeController>()) {
         final hCtrl = Get.find<ChallengeHomeController>();
         hCtrl.downloadedIds.remove(challenge.id);
-        if (challenge.setId.isNotEmpty) hCtrl.downloadedIds.remove(challenge.setId);
+        if (challenge.setId.isNotEmpty)
+          hCtrl.downloadedIds.remove(challenge.setId);
         hCtrl.downloadedIds.refresh();
       }
 
@@ -559,7 +594,10 @@ class ChallengeArchiveController extends GetxController {
     }
   }
 
-  Future<void> hideChallenge(BuildContext context, LeaderboardChallengeModel challenge) async {
+  Future<void> hideChallenge(
+    BuildContext context,
+    LeaderboardChallengeModel challenge,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -606,7 +644,8 @@ class ChallengeArchiveController extends GetxController {
         (c) =>
             c.id == challenge.id ||
             c.setId == challenge.id ||
-            (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+            (challenge.setId.isNotEmpty &&
+                (c.id == challenge.setId || c.setId == challenge.setId)),
       );
 
       // 4. Update cached SharedPreferences
@@ -616,7 +655,8 @@ class ChallengeArchiveController extends GetxController {
             (c) =>
                 c.id != challenge.id &&
                 c.setId != challenge.id &&
-                (challenge.setId.isEmpty || (c.id != challenge.setId && c.setId != challenge.setId)),
+                (challenge.setId.isEmpty ||
+                    (c.id != challenge.setId && c.setId != challenge.setId)),
           )
           .toList();
       await _saveCachedArchiveChallenges(updatedCache);
@@ -625,7 +665,8 @@ class ChallengeArchiveController extends GetxController {
       if (Get.isRegistered<ChallengeHomeController>()) {
         final hCtrl = Get.find<ChallengeHomeController>();
         hCtrl.deletedChallengeIds.add(challenge.id);
-        if (challenge.setId.isNotEmpty) hCtrl.deletedChallengeIds.add(challenge.setId);
+        if (challenge.setId.isNotEmpty)
+          hCtrl.deletedChallengeIds.add(challenge.setId);
         hCtrl.downloadedIds.remove(challenge.id);
         hCtrl.downloadedIds.remove(challenge.setId);
         hCtrl.attemptedIds.remove(challenge.id);
@@ -636,13 +677,15 @@ class ChallengeArchiveController extends GetxController {
           (c) =>
               c.id == challenge.id ||
               c.setId == challenge.id ||
-              (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+              (challenge.setId.isNotEmpty &&
+                  (c.id == challenge.setId || c.setId == challenge.setId)),
         );
         hCtrl.completedChallenges.removeWhere(
           (c) =>
               c.id == challenge.id ||
               c.setId == challenge.id ||
-              (challenge.setId.isNotEmpty && (c.id == challenge.setId || c.setId == challenge.setId)),
+              (challenge.setId.isNotEmpty &&
+                  (c.id == challenge.setId || c.setId == challenge.setId)),
         );
       }
 
@@ -652,7 +695,9 @@ class ChallengeArchiveController extends GetxController {
     }
   }
 
-  Future<void> openCompletedChallenge(LeaderboardChallengeModel challenge) async {
+  Future<void> openCompletedChallenge(
+    LeaderboardChallengeModel challenge,
+  ) async {
     if (!challenge.canReviewQuestions) {
       ToastHelper.info(
         'Question review will be unlocked once this challenge closes.',
@@ -667,7 +712,10 @@ class ChallengeArchiveController extends GetxController {
           : (Supabase.instance.client.auth.currentUser?.id ?? '');
 
       // 1. Check local practice results first (fastest & offline)
-      final localPractice = await _db.getChallengePracticeResult(challenge.id, setId: challenge.setId);
+      final localPractice = await _db.getChallengePracticeResult(
+        challenge.id,
+        setId: challenge.setId,
+      );
       if (localPractice != null) {
         final answersStr = localPractice['user_answers']?.toString() ?? '{}';
         Map<String, String> userAnswers = {};
@@ -677,12 +725,20 @@ class ChallengeArchiveController extends GetxController {
         } catch (_) {}
 
         List<ChallengeQuestionModel> questions = [];
-        final localRows = await _db.getDownloadedChallengeQuestions(challenge.id, setId: challenge.setId);
+        final localRows = await _db.getDownloadedChallengeQuestions(
+          challenge.id,
+          setId: challenge.setId,
+        );
         if (localRows.isNotEmpty) {
-          questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
+          questions = localRows
+              .map((r) => ChallengeQuestionModel.fromJson(r))
+              .toList();
         } else {
           try {
-            questions = await _repo.fetchQuestionsForReview(challenge.id, setId: challenge.setId);
+            questions = await _repo.fetchQuestionsForReview(
+              challenge.id,
+              setId: challenge.setId,
+            );
             if (questions.isNotEmpty) {
               await _db.insertDownloadedChallengeBundle({
                 'id': challenge.id,
@@ -706,7 +762,9 @@ class ChallengeArchiveController extends GetxController {
               questions: questions,
               userAnswers: userAnswers,
               score: (localPractice['score'] as num?)?.toInt() ?? 0,
-              timeSpentSeconds: (localPractice['time_spent_seconds'] as num?)?.toInt() ?? 0,
+              timeSpentSeconds:
+                  (localPractice['time_spent_seconds'] as num?)?.toInt() ?? 0,
+              isLive: challenge.isLive,
             ),
           );
           return;
@@ -722,14 +780,23 @@ class ChallengeArchiveController extends GetxController {
 
         if (attemptData != null) {
           final attempt = attemptData['attempt'] as ChallengeAttemptModel;
-          final userAnswers = attemptData['user_answers'] as Map<String, String>;
+          final userAnswers =
+              attemptData['user_answers'] as Map<String, String>;
 
           List<ChallengeQuestionModel> questions = [];
-          final localRows = await _db.getDownloadedChallengeQuestions(challenge.id, setId: challenge.setId);
+          final localRows = await _db.getDownloadedChallengeQuestions(
+            challenge.id,
+            setId: challenge.setId,
+          );
           if (localRows.isNotEmpty) {
-            questions = localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
+            questions = localRows
+                .map((r) => ChallengeQuestionModel.fromJson(r))
+                .toList();
           } else {
-            questions = await _repo.fetchQuestionsForReview(challenge.id, setId: challenge.setId);
+            questions = await _repo.fetchQuestionsForReview(
+              challenge.id,
+              setId: challenge.setId,
+            );
           }
 
           if (questions.isNotEmpty) {
@@ -765,6 +832,7 @@ class ChallengeArchiveController extends GetxController {
                 userAnswers: userAnswers,
                 score: attempt.score,
                 timeSpentSeconds: attempt.totalTimeSeconds,
+                isLive: challenge.isLive,
               ),
             );
             return;

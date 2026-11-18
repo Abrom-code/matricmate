@@ -205,6 +205,9 @@ class AuthenticationController extends GetxController
   /// Runs after navigation — never blocks the UI.
   Future<void> _backgroundRefresh() async {
     try {
+      // Always initialize FCM so message listeners and cold-launch handlers are active
+      unawaited(FcmService.instance.init());
+
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) return;
 
@@ -226,9 +229,6 @@ class AuthenticationController extends GetxController
       unawaited(
         NotificationsController.instance.loadNotifications(syncRemote: true),
       );
-
-      // Initialise FCM after UserController.user is populated
-      unawaited(FcmService.instance.init());
 
       // Periodic session check (12h gap)
       await _periodicSessionCheck();

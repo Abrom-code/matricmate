@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/controllers/navigation_controller.dart';
+import 'package:matricmate/features/tips_and_news/controllers/tips_and_news_controller.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
 
@@ -20,10 +21,14 @@ class NavigationMenu extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: Obx(
-        () => _FloatingNavBar(
-          selectedIndex: controller.selectedIdx.value,
-          onTap: controller.changePage,
-        ),
+        () {
+          final tipsController = TipsAndNewsController.instance;
+          return _FloatingNavBar(
+            selectedIndex: controller.selectedIdx.value,
+            hasOthersBadge: tipsController.hasUnread,
+            onTap: controller.changePage,
+          );
+        },
       ),
       body: PageView(
         controller: controller.pageController,
@@ -35,13 +40,18 @@ class NavigationMenu extends StatelessWidget {
   }
 }
 
-// ── Floating pill nav bar ────────────────────────────────────────────────────
+// ── Floating pill nav bar (Telegram-style vertical layout) ────────────────────
 
 class _FloatingNavBar extends StatelessWidget {
-  const _FloatingNavBar({required this.selectedIndex, required this.onTap});
+  const _FloatingNavBar({
+    required this.selectedIndex,
+    required this.onTap,
+    this.hasOthersBadge = false,
+  });
 
   final int selectedIndex;
   final void Function(int) onTap;
+  final bool hasOthersBadge;
 
   static const _items = [
     _NavItem(icon: Iconsax.book_1_copy, label: 'Practice'),
@@ -56,42 +66,45 @@ class _FloatingNavBar extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
-    final pillWidth = screenWidth > 480 ? 420.0 : screenWidth - 32.0;
+    final pillWidth = screenWidth > 480 ? 400.0 : screenWidth - 32.0;
 
     return Padding(
       padding: EdgeInsets.only(
         left: (screenWidth - pillWidth) / 2,
         right: (screenWidth - pillWidth) / 2,
-        bottom: bottomInset + 10,
-        top: 8,
+        bottom: bottomInset + 8,
+        top: 6,
       ),
       child: Container(
-        height: 60,
+        height: 54,
         width: pillWidth,
         decoration: BoxDecoration(
           color: dark ? const Color(0xFF1E1E1E) : AppColors.white,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(27),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: dark ? 0.40 : 0.12),
-              blurRadius: 20,
+              color: Colors.black.withValues(alpha: dark ? 0.35 : 0.09),
+              blurRadius: 16,
               spreadRadius: -4,
-              offset: const Offset(0, 6),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(_items.length, (i) {
             final selected = i == selectedIndex;
-            return _NavButton(
-              item: _items[i],
-              selected: selected,
-              dark: dark,
-              onTap: () {
-                HapticFeedback.lightImpact();
-                onTap(i);
-              },
+            final isOthers = _items[i].label == 'Others';
+            return Expanded(
+              child: _NavButton(
+                item: _items[i],
+                selected: selected,
+                showBadge: isOthers && hasOthersBadge,
+                dark: dark,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onTap(i);
+                },
+              ),
             );
           }),
         ),
@@ -108,57 +121,78 @@ class _NavButton extends StatelessWidget {
     required this.selected,
     required this.dark,
     required this.onTap,
+    this.showBadge = false,
   });
 
   final _NavItem item;
   final bool selected;
   final bool dark;
   final VoidCallback onTap;
+  final bool showBadge;
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = AppColors.primary;
+    final inactiveColor = dark ? Colors.white54 : AppColors.darkGrey;
+    final color = selected ? activeColor : inactiveColor;
+    final barBgColor = dark ? const Color(0xFF1E1E1E) : AppColors.white;
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(
-          horizontal: selected ? 14 : 10,
-          vertical: 8,
-        ),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.12)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: Row(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              item.icon,
-              size: 20,
-              color: selected
-                  ? AppColors.primary
-                  : (dark ? Colors.white54 : AppColors.darkGrey),
-            ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              child: selected
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Text(
-                        item.label,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedScale(
+                  scale: selected ? 1.06 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  child: Icon(
+                    item.icon,
+                    size: 19,
+                    color: color,
+                  ),
+                ),
+                if (showBadge)
+                  Positioned(
+                    top: -2,
+                    right: -2.5,
+                    child: Container(
+                      width: 7.5,
+                      height: 7.5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: barBgColor,
+                          width: 1.2,
                         ),
                       ),
-                    )
-                  : const SizedBox.shrink(),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 2.5),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              style: TextStyle(
+                fontSize: 10.0,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: color,
+                letterSpacing: -0.15,
+                height: 1.15,
+              ),
+              child: Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

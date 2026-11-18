@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/user/user_repository.dart';
@@ -537,7 +536,7 @@ class AnalyticsController extends GetxController {
 
       final rows = await db.rawQuery(
         '''
-        SELECT r.correctAnswers, r.testQuestions
+        SELECT r.correctAnswers, COALESCE(NULLIF(t.question_count, 0), 1) AS total_questions
         FROM results r
         JOIN tests t ON r.test_id = t.id
         JOIN subjects s ON t.subject_id = s.id
@@ -551,11 +550,7 @@ class AnalyticsController extends GetxController {
 
       for (final row in rows) {
         final c = row['correctAnswers'] as int? ?? 0;
-        int tot = 1;
-        try {
-          final list = jsonDecode(row['testQuestions'] as String) as List;
-          tot = list.isNotEmpty ? list.length : 1;
-        } catch (_) {}
+        final tot = (row['total_questions'] as num?)?.toInt() ?? 1;
         if (!_passesScoreFilter(c, tot)) continue;
         correct += c;
         total += tot;
@@ -575,7 +570,7 @@ class AnalyticsController extends GetxController {
 
       final rows = await db.rawQuery(
         '''
-        SELECT r.correctAnswers, r.testQuestions
+        SELECT r.correctAnswers, COALESCE(NULLIF(t.question_count, 0), 1) AS total_questions
         FROM results r
         JOIN tests t ON r.test_id = t.id
         JOIN subjects s ON t.subject_id = s.id
@@ -591,11 +586,7 @@ class AnalyticsController extends GetxController {
       for (int i = 0; i < reversed.length; i++) {
         final row = reversed[i];
         final correct = row['correctAnswers'] as int? ?? 0;
-        int total = 1;
-        try {
-          final list = jsonDecode(row['testQuestions'] as String) as List;
-          total = list.isNotEmpty ? list.length : 1;
-        } catch (_) {}
+        final total = (row['total_questions'] as num?)?.toInt() ?? 1;
         if (!_passesScoreFilter(correct, total)) continue;
         points.add(TrendPoint(index: i, score: correct / total * 100));
       }
@@ -612,7 +603,8 @@ class AnalyticsController extends GetxController {
 
       final rows = await db.rawQuery(
         '''
-        SELECT s.id as subject_id, s.name, r.correctAnswers, r.testQuestions
+        SELECT s.id as subject_id, s.name, r.correctAnswers,
+               COALESCE(NULLIF(t.question_count, 0), 1) AS total_questions
         FROM results r
         JOIN tests t ON r.test_id = t.id
         JOIN subjects s ON t.subject_id = s.id
@@ -626,11 +618,7 @@ class AnalyticsController extends GetxController {
         final name = row['name'] as String;
         final subId = (row['subject_id'] as num?)?.toInt() ?? 0;
         final correct = row['correctAnswers'] as int? ?? 0;
-        int total = 1;
-        try {
-          final list = jsonDecode(row['testQuestions'] as String) as List;
-          total = list.isNotEmpty ? list.length : 1;
-        } catch (_) {}
+        final total = (row['total_questions'] as num?)?.toInt() ?? 1;
         if (!_passesScoreFilter(correct, total)) continue;
         bySubject.putIfAbsent(name, () => [0, 0, 0, subId]);
         bySubject[name]![0] += correct;
@@ -681,7 +669,8 @@ class AnalyticsController extends GetxController {
 
       final rows = await db.rawQuery(
         '''
-        SELECT t.type, r.correctAnswers, r.testQuestions
+        SELECT t.type, r.correctAnswers,
+               COALESCE(NULLIF(t.question_count, 0), 1) AS total_questions
         FROM results r
         JOIN tests t ON r.test_id = t.id
         JOIN subjects s ON t.subject_id = s.id
@@ -693,11 +682,7 @@ class AnalyticsController extends GetxController {
       final Map<String, int> counts = {};
       for (final row in rows) {
         final correct = row['correctAnswers'] as int? ?? 0;
-        int total = 1;
-        try {
-          final list = jsonDecode(row['testQuestions'] as String) as List;
-          total = list.isNotEmpty ? list.length : 1;
-        } catch (_) {}
+        final total = (row['total_questions'] as num?)?.toInt() ?? 1;
         if (!_passesScoreFilter(correct, total)) continue;
         final type = (row['type'] as String?) ?? 'unknown';
         counts[type] = (counts[type] ?? 0) + 1;
@@ -758,7 +743,7 @@ class AnalyticsController extends GetxController {
       final rows = await db.rawQuery(
         '''
         SELECT c.id as chapter_id, c.title, c.grade, s.id as subject_id, s.name as subject_name,
-               r.correctAnswers, r.testQuestions
+               r.correctAnswers, COALESCE(NULLIF(t.question_count, 0), 1) AS total_questions
         FROM chapters c
         LEFT JOIN tests t ON t.chapter_id = c.id
         LEFT JOIN subjects s ON t.subject_id = s.id
@@ -777,11 +762,7 @@ class AnalyticsController extends GetxController {
         final correct = row['correctAnswers'] as int?;
         double? score;
         if (correct != null) {
-          int total = 1;
-          try {
-            final list = jsonDecode(row['testQuestions'] as String) as List;
-            total = list.isNotEmpty ? list.length : 1;
-          } catch (_) {}
+          final total = (row['total_questions'] as num?)?.toInt() ?? 1;
           score = correct / total * 100;
         }
         return ChapterStat(
@@ -928,7 +909,7 @@ class AnalyticsController extends GetxController {
           s.id as subject_id,
           s.name as subject_name,
           r.correctAnswers,
-          r.testQuestions,
+          COALESCE(NULLIF(t.question_count, 0), 1) AS total_questions,
           n.id as note_id,
           n.is_completed as note_completed
         FROM results r
@@ -946,11 +927,7 @@ class AnalyticsController extends GetxController {
         final chId = (r['chapter_id'] as num?)?.toInt();
         if (chId == null) continue;
         final correct = (r['correctAnswers'] as num?)?.toInt() ?? 0;
-        int total = 1;
-        try {
-          final list = jsonDecode(r['testQuestions'] as String) as List;
-          total = list.isNotEmpty ? list.length : 1;
-        } catch (_) {}
+        final total = (r['total_questions'] as num?)?.toInt() ?? 1;
 
         aggMap.putIfAbsent(chId, () => []);
         aggMap[chId]!.add(_ChapterScoreAgg(
@@ -1084,7 +1061,10 @@ class AnalyticsController extends GetxController {
         )
       ''');
 
-      final rows = await db.query('local_challenge_practice');
+      final rows = await db.query(
+        'local_challenge_practice',
+        columns: ['score', 'total_questions', 'time_spent_seconds', 'completed_at'],
+      );
 
       final now = DateTime.now();
       final oneWeekAgo = now.subtract(const Duration(days: 7));

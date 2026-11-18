@@ -27,7 +27,7 @@ class SignupScreen extends StatelessWidget {
 
               // Title
               Text(
-                'Create Account',
+                'Register',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
@@ -39,7 +39,7 @@ class SignupScreen extends StatelessWidget {
 
               // Subtitle
               Text(
-                'Sign up to access matric exams, notes, and tests.',
+                'Register to access matric exams, notes, and tests.',
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.45,

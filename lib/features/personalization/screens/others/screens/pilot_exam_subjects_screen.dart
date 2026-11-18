@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/modern_appbar.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
+import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/exam/controllers/pilot_exam_controller.dart';
 import 'package:matricmate/features/exam/models/pilot_exam_model.dart';
 import 'package:matricmate/features/exam/models/result_model.dart';
@@ -488,6 +489,20 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
                           controller.downloadSubject(subject);
                         }
                       },
+                      onRedo: () {
+                        HapticFeedback.lightImpact();
+                        if (isLocked) {
+                          TestAccessHelper.openPremiumSheet(user: user);
+                        } else {
+                          _confirmRedoSubjectExam(
+                            context,
+                            controller,
+                            subject,
+                            user,
+                            dark,
+                          );
+                        }
+                      },
                       onTap: () {
                         HapticFeedback.lightImpact();
                         if (isLocked) {
@@ -577,6 +592,28 @@ class _PilotExamSubjectsScreenState extends State<PilotExamSubjectsScreen> {
           ),
         );
       }),
+    );
+  }
+
+  void _confirmRedoSubjectExam(
+    BuildContext context,
+    PilotExamController controller,
+    PilotExamSubjectModel subject,
+    UserModel user,
+    bool dark,
+  ) {
+    AppHelperFunctions.showAppDialog(
+      context,
+      'Redo ${subject.subjectName}?',
+      'This will reset your previous score and allow you to retake the exam from question 1 with a fresh timer.',
+      () async {
+        Navigator.of(context, rootNavigator: true).pop();
+        await controller.redoSubjectExam(subject, user);
+      },
+      okText: 'Redo Exam',
+      cancelText: 'Cancel',
+      icon: Icons.refresh_rounded,
+      iconColor: AppColors.primary,
     );
   }
 
@@ -885,6 +922,7 @@ class _SubjectExamTile extends StatelessWidget {
     required this.totalQuestions,
     required this.onDownload,
     required this.onTap,
+    this.onRedo,
   });
 
   final bool dark;
@@ -901,6 +939,7 @@ class _SubjectExamTile extends StatelessWidget {
   final int totalQuestions;
   final VoidCallback onDownload;
   final VoidCallback onTap;
+  final VoidCallback? onRedo;
 
   IconData _getSubjectIcon(String name) {
     final lower = name.toLowerCase();
@@ -1235,13 +1274,69 @@ class _SubjectExamTile extends StatelessWidget {
                       ],
                     ),
                   ),
+                ] else if (isCompleted) ...[
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onRedo != null) ...[
+                        Tooltip(
+                          message: 'Reset and redo exam',
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: onRedo,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(
+                                  alpha: dark ? 0.20 : 0.10,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.refresh_rounded,
+                                    size: 14,
+                                    color: AppColors.primary,
+                                  ),
+                                  SizedBox(width: 3.5),
+                                  Text(
+                                    'Redo',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 15,
+                        color: Color(0xFF10B981),
+                      ),
+                    ],
+                  ),
                 ] else ...[
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,
-                    color: isCompleted
-                        ? const Color(0xFF10B981)
-                        : (dark ? AppColors.darkGrey : AppColors.textSecondary),
+                    color: dark ? AppColors.darkGrey : AppColors.textSecondary,
                   ),
                 ],
               ],

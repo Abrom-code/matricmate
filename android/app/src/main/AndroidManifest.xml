@@ -5,7 +5,8 @@
     <application
         android:label="MatricET"
         android:name=".MatricMateApplication"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:largeHeap="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

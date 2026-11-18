@@ -750,4 +750,40 @@ class PilotExamController extends GetxController {
       },
     );
   }
+
+  /// Resets a subject exam's previous result and starts it again cleanly from scratch.
+  Future<void> redoSubjectExam(
+    PilotExamSubjectModel subject,
+    UserModel user,
+  ) async {
+    final isAdmin = UserController.instance.isAdmin.value;
+    if (!isAdmin && !user.isActive) {
+      TestAccessHelper.openPremiumSheet(user: user);
+      return;
+    }
+
+    try {
+      final userId = user.id;
+      // 1. Delete previous result from local SQLite database
+      await _testRepo.deleteTestResult(subject.testId, userId);
+
+      // 2. Clear from controller observables
+      testResults.remove(subject.testId);
+
+      // 3. Update exam progress
+      final exam = selectedExam.value;
+      if (exam != null) {
+        examProgressMap[exam.id] = PilotExamProgress(
+          completedSubjects: completedSubjectsCount,
+          totalSubjects: examSubjects.length,
+          totalScore: grandTotalScore,
+        );
+      }
+
+      // 4. Start the exam cleanly from question 1
+      await startSubjectExam(subject, user);
+    } catch (e) {
+      AppExceptionHandler.handleResponse(e);
+    }
+  }
 }

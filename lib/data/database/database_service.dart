@@ -24,7 +24,7 @@ class DatabaseService extends GetxController {
 
     return await openDatabase(
       databasePath,
-      version: 22,
+      version: 23,
       onCreate: (db, version) async {
         await DBschema.create(db);
       },
@@ -297,6 +297,45 @@ class DatabaseService extends GetxController {
             );
           } catch (_) {}
         }
+        if (oldVersion < 23) {
+          try {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_and_news (
+                id INTEGER PRIMARY KEY,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                category TEXT NOT NULL,
+                image_url TEXT,
+                author TEXT,
+                audience TEXT,
+                is_pinned INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL,
+                is_read INTEGER DEFAULT 0
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_reads (
+                item_id INTEGER PRIMARY KEY,
+                read_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_user_pins (
+                item_id INTEGER PRIMARY KEY,
+                pinned_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_deletions (
+                item_id INTEGER PRIMARY KEY,
+                deleted_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_tips_news_created ON tips_and_news(created_at DESC)',
+            );
+          } catch (_) {}
+        }
       },
       onOpen: (db) async {
         try {
@@ -443,6 +482,40 @@ class DatabaseService extends GetxController {
               'ALTER TABLE results ADD COLUMN completed_at TEXT',
             );
           } catch (_) {}
+          try {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_and_news (
+                id INTEGER PRIMARY KEY,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                category TEXT NOT NULL,
+                image_url TEXT,
+                author TEXT,
+                audience TEXT,
+                is_pinned INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL,
+                is_read INTEGER DEFAULT 0
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_reads (
+                item_id INTEGER PRIMARY KEY,
+                read_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_user_pins (
+                item_id INTEGER PRIMARY KEY,
+                pinned_at TEXT NOT NULL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS tips_news_deletions (
+                item_id INTEGER PRIMARY KEY,
+                deleted_at TEXT NOT NULL
+              )
+            ''');
+          } catch (_) {}
         } catch (_) {}
       },
     );
@@ -476,10 +549,43 @@ class DatabaseService extends GetxController {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getQuestions() async {
+  @Deprecated('Use getQuestionsByIds or getQuestionsByTest to prevent OOM')
+  Future<List<Map<String, dynamic>>> getQuestions({int limit = 100}) async {
     try {
       final db = await database;
-      return await db.query('questions');
+      return await db.query('questions', limit: limit);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Returns only questions matching the given [ids], preventing OOM from full-table dumps.
+  Future<List<Map<String, dynamic>>> getQuestionsByIds(List<int> ids) async {
+    if (ids.isEmpty) return [];
+    try {
+      final db = await database;
+      final placeholders = ids.map((_) => '?').join(',');
+      return await db.query(
+        'questions',
+        where: 'id IN ($placeholders)',
+        whereArgs: ids,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Returns only bookmarked questions for [userId] via SQL JOIN,
+  /// avoiding loading thousands of unbookmarked questions into memory.
+  Future<List<Map<String, dynamic>>> getBookmarkedQuestions(String userId) async {
+    try {
+      final db = await database;
+      return await db.rawQuery('''
+        SELECT q.* FROM questions q
+        INNER JOIN bookmarks b ON q.id = b.question_id
+        WHERE b.user_id = ?
+        ORDER BY b.saved_at DESC
+      ''', [userId]);
     } catch (e) {
       rethrow;
     }
@@ -543,14 +649,16 @@ class DatabaseService extends GetxController {
   }
 
   // Get subject questions
+  @Deprecated('Use getQuestionsByTest to prevent OOM from loading thousands of questions')
   Future<List<Map<String, dynamic>>> getAllSubjectQuestions(
-    String subject,
-  ) async {
+    String subject, {
+    int limit = 100,
+  }) async {
     try {
       final db = await database;
       return await db.rawQuery(
-        'SELECT * FROM questions WHERE subject_id = (SELECT id FROM subjects WHERE name = ?)',
-        [subject],
+        'SELECT * FROM questions WHERE subject_id = (SELECT id FROM subjects WHERE name = ?) LIMIT ?',
+        [subject, limit],
       );
     } catch (e) {
       rethrow;
@@ -739,12 +847,11 @@ class DatabaseService extends GetxController {
     try {
       final db = await database;
       final userId = UserController.instance.user.value.id;
-      final result = await db.query(
-        'results',
-        where: 'user_id = ?',
-        whereArgs: [userId],
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as cnt FROM results WHERE user_id = ?',
+        [userId],
       );
-      return result.length;
+      return result.first['cnt'] as int? ?? 0;
     } catch (e) {
       rethrow;
     }
@@ -753,12 +860,11 @@ class DatabaseService extends GetxController {
   Future<int> getETestNumbers(int subjectId, String type) async {
     try {
       final db = await database;
-      final result = await db.query(
-        'tests',
-        where: 'type = ? AND subject_id = ?',
-        whereArgs: [type, subjectId],
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as cnt FROM tests WHERE type = ? AND subject_id = ?',
+        [type, subjectId],
       );
-      return result.length;
+      return result.first['cnt'] as int? ?? 0;
     } catch (e) {
       rethrow;
     }
@@ -836,6 +942,20 @@ class DatabaseService extends GetxController {
         'results',
         result.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Deletes a test result row matching on (user_id, test_id).
+  Future<int> deleteResult(int testId, String userId) async {
+    try {
+      final db = await database;
+      return await db.delete(
+        'results',
+        where: 'test_id = ? AND user_id = ?',
+        whereArgs: [testId, userId],
       );
     } catch (e) {
       rethrow;
@@ -1202,5 +1322,300 @@ class DatabaseService extends GetxController {
         whereArgs: [...ids],
       );
     } catch (_) {}
+  }
+
+  // ── Tips & News Helpers ───────────────────────────────────────────────────
+
+  /// Upserts remote tips and news items into local SQLite cache.
+  /// Uses ON CONFLICT to update metadata while preserving existing local is_read status.
+  /// Skips any items deleted locally by the user so remote sync never re-inserts them.
+  Future<void> saveTipsAndNews(List<Map<String, dynamic>> items) async {
+    if (items.isEmpty) return;
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_and_news (
+          id INTEGER PRIMARY KEY,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          category TEXT NOT NULL,
+          image_url TEXT,
+          author TEXT,
+          audience TEXT,
+          is_pinned INTEGER DEFAULT 0,
+          created_at TEXT NOT NULL,
+          is_read INTEGER DEFAULT 0
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_deletions (
+          item_id INTEGER PRIMARY KEY,
+          deleted_at TEXT NOT NULL
+        )
+      ''');
+
+      final deletedRows = await db.query('tips_news_deletions', columns: ['item_id']);
+      final deletedSet = deletedRows
+          .map((r) => (r['item_id'] as num?)?.toInt())
+          .whereType<int>()
+          .toSet();
+
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+        for (final item in items) {
+          final rawId = (item['id'] as num?)?.toInt();
+          if (rawId == null || deletedSet.contains(rawId)) {
+            continue; // Skip items previously deleted by the user!
+          }
+
+          batch.rawInsert(
+            '''
+            INSERT INTO tips_and_news (
+              id, title, content, category, image_url, author, audience, is_pinned, created_at, is_read
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              title = excluded.title,
+              content = excluded.content,
+              category = excluded.category,
+              image_url = excluded.image_url,
+              author = excluded.author,
+              audience = excluded.audience,
+              is_pinned = excluded.is_pinned,
+              created_at = excluded.created_at
+            ''',
+            [
+              rawId,
+              item['title'] ?? '',
+              item['content'] ?? '',
+              item['category'] ?? 'news',
+              item['image_url'],
+              item['author'] ?? 'MatricMate Team',
+              item['audience'] ?? 'both',
+              (item['is_pinned'] == true || item['is_pinned'] == 1) ? 1 : 0,
+              item['created_at']?.toString() ?? DateTime.now().toIso8601String(),
+              (item['is_read'] == true || item['is_read'] == 1) ? 1 : 0,
+            ],
+          );
+        }
+        await batch.commit(noResult: true);
+      });
+    } catch (_) {}
+  }
+
+  /// Retrieves cached tips and news joined with local read and user-pinned status.
+  /// Excludes any items deleted locally by the user.
+  Future<List<Map<String, dynamic>>> getTipsAndNews({
+    String? category,
+    int limit = 50,
+  }) async {
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_reads (
+          item_id INTEGER PRIMARY KEY,
+          read_at TEXT NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_user_pins (
+          item_id INTEGER PRIMARY KEY,
+          pinned_at TEXT NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_deletions (
+          item_id INTEGER PRIMARY KEY,
+          deleted_at TEXT NOT NULL
+        )
+      ''');
+      String query = '''
+        SELECT 
+          t.id, t.title, t.content, t.category, t.image_url, 
+          t.author, t.audience, t.is_pinned, t.created_at,
+          CASE WHEN r.item_id IS NOT NULL OR t.is_read = 1 THEN 1 ELSE 0 END AS is_read,
+          CASE WHEN up.item_id IS NOT NULL THEN 1 ELSE 0 END AS is_user_pinned
+        FROM tips_and_news t
+        LEFT JOIN tips_news_reads r ON t.id = r.item_id
+        LEFT JOIN tips_news_user_pins up ON t.id = up.item_id
+        WHERE t.id NOT IN (SELECT item_id FROM tips_news_deletions)
+      ''';
+      final List<dynamic> args = [];
+      if (category != null && category.isNotEmpty && category.toLowerCase() != 'all') {
+        query += ' AND LOWER(t.category) = ? ';
+        args.add(category.toLowerCase());
+      }
+      query += ' ORDER BY (CASE WHEN t.is_pinned = 1 OR up.item_id IS NOT NULL THEN 1 ELSE 0 END) DESC, t.created_at DESC';
+      query += ' LIMIT ?';
+      args.add(limit);
+
+      return await db.rawQuery(query, args);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Deletes tips or news items locally and persists tombstones so remote refresh never re-inserts them.
+  Future<void> deleteTipsAndNews(List<int> ids) async {
+    if (ids.isEmpty) return;
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_deletions (
+          item_id INTEGER PRIMARY KEY,
+          deleted_at TEXT NOT NULL
+        )
+      ''');
+      final now = DateTime.now().toIso8601String();
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+        for (final id in ids) {
+          batch.insert(
+            'tips_news_deletions',
+            {'item_id': id, 'deleted_at': now},
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+          batch.delete(
+            'tips_and_news',
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+          batch.delete(
+            'tips_news_reads',
+            where: 'item_id = ?',
+            whereArgs: [id],
+          );
+          batch.delete(
+            'tips_news_user_pins',
+            where: 'item_id = ?',
+            whereArgs: [id],
+          );
+        }
+        await batch.commit(noResult: true);
+      });
+    } catch (_) {}
+  }
+
+  /// Toggles personal pin status for a tip or news item (0ms, 100% local SQLite).
+  /// Returns the new pinned state (true = pinned, false = unpinned).
+  Future<bool> toggleTipOrNewsUserPin(int id) async {
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_user_pins (
+          item_id INTEGER PRIMARY KEY,
+          pinned_at TEXT NOT NULL
+        )
+      ''');
+      final existing = await db.query(
+        'tips_news_user_pins',
+        where: 'item_id = ?',
+        whereArgs: [id],
+      );
+      if (existing.isNotEmpty) {
+        await db.delete(
+          'tips_news_user_pins',
+          where: 'item_id = ?',
+          whereArgs: [id],
+        );
+        return false;
+      } else {
+        await db.insert('tips_news_user_pins', {
+          'item_id': id,
+          'pinned_at': DateTime.now().toIso8601String(),
+        });
+        return true;
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Marks a specific tip or news article as read locally (0ms, 0 network).
+  Future<void> markTipOrNewsRead(int id) async {
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_reads (
+          item_id INTEGER PRIMARY KEY,
+          read_at TEXT NOT NULL
+        )
+      ''');
+      final now = DateTime.now().toIso8601String();
+      await db.transaction((txn) async {
+        await txn.insert(
+          'tips_news_reads',
+          {'item_id': id, 'read_at': now},
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+        await txn.update(
+          'tips_and_news',
+          {'is_read': 1},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      });
+    } catch (_) {}
+  }
+
+  /// Marks all tips and news as read locally.
+  Future<void> markAllTipsAndNewsRead() async {
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_reads (
+          item_id INTEGER PRIMARY KEY,
+          read_at TEXT NOT NULL
+        )
+      ''');
+      final rows = await db.query('tips_and_news', columns: ['id']);
+      final now = DateTime.now().toIso8601String();
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+        for (final r in rows) {
+          final id = r['id'];
+          if (id != null) {
+            batch.insert(
+              'tips_news_reads',
+              {'item_id': id, 'read_at': now},
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+        batch.update('tips_and_news', {'is_read': 1});
+        await batch.commit(noResult: true);
+      });
+    } catch (_) {}
+  }
+
+  /// Returns count of unread tips and news items.
+  Future<int> getUnreadTipsAndNewsCount() async {
+    final db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_reads (
+          item_id INTEGER PRIMARY KEY,
+          read_at TEXT NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips_news_deletions (
+          item_id INTEGER PRIMARY KEY,
+          deleted_at TEXT NOT NULL
+        )
+      ''');
+      final res = await db.rawQuery('''
+        SELECT COUNT(*) as count 
+        FROM tips_and_news t
+        WHERE t.id NOT IN (SELECT item_id FROM tips_news_reads)
+          AND t.id NOT IN (SELECT item_id FROM tips_news_deletions)
+          AND (t.is_read IS NULL OR t.is_read = 0)
+      ''');
+      if (res.isNotEmpty && res.first['count'] != null) {
+        return (res.first['count'] as num).toInt();
+      }
+      return 0;
+    } catch (_) {
+      return 0;
+    }
   }
 }

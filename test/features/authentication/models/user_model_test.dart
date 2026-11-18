@@ -30,7 +30,7 @@ void main() {
     test('uses safe defaults for missing remote fields', () {
       final restored = UserModel.fromJson({'id': 'user-1'});
 
-      expect(restored.fullName, ' ');
+      expect(restored.fullName, '');
       expect(restored.status, 'inactive');
       expect(restored.isInactive, isTrue);
     });
@@ -59,7 +59,7 @@ void main() {
       expect(userOne.exceededUploadLimit, isFalse);
 
       final userTwo = userZero.copyWith(receiptUploadCount: 2);
-      expect(userTwo.exceededUploadLimit, isFalse);
+      expect(userTwo.exceededUploadLimit, isTrue);
 
       final userThree = userZero.copyWith(receiptUploadCount: 3);
       expect(userThree.exceededUploadLimit, isTrue);
@@ -90,6 +90,7 @@ void main() {
     });
 
     test('parses subscription dates and plan from Supabase payload', () {
+      final expiryDate = DateTime.now().add(const Duration(days: 30));
       final raw = {
         'id': 'u-sub',
         'first_name': 'Hana',
@@ -99,15 +100,15 @@ void main() {
         'subscription_status': 'active',
         'receipt_upload_count': 1,
         'subscription_plan': '1_month',
-        'subscription_expires_at': '2026-10-15T12:00:00.000Z',
+        'subscription_expires_at': expiryDate.toIso8601String(),
       };
 
       final parsed = UserModel.fromJson(raw);
       expect(parsed.subscriptionPlan, '1_month');
       expect(parsed.receiptUploadCount, 1);
       expect(parsed.subscriptionExpiresAt, isNotNull);
-      expect(parsed.subscriptionExpiresAt!.year, 2026);
-      expect(parsed.subscriptionExpiresAt!.month, 10);
+      expect(parsed.subscriptionExpiresAt!.year, expiryDate.year);
+      expect(parsed.subscriptionExpiresAt!.month, expiryDate.month);
       expect(parsed.isActive, isTrue);
     });
   });

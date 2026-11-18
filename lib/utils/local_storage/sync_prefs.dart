@@ -13,6 +13,10 @@ class SyncPrefs {
   static Future<DateTime?> lastEntranceSync() => _get(_entranceKey);
   static Future<DateTime?> lastChaptersSync() => _get(_chaptersKey);
   static Future<DateTime?> lastNotesSync() => _get(_notesKey);
+  static Future<DateTime?> lastSubjectSync(int subjectId) =>
+      _get('sync_ts_subject_$subjectId');
+  static Future<DateTime?> lastSubjectEntranceSync(int subjectId) =>
+      _get('sync_ts_entrance_$subjectId');
 
   static Future<void> saveSubjectsSync(DateTime time) =>
       _save(_subjectsKey, time);
@@ -22,6 +26,10 @@ class SyncPrefs {
       _save(_chaptersKey, time);
   static Future<void> saveNotesSync(DateTime time) =>
       _save(_notesKey, time);
+  static Future<void> saveSubjectSync(int subjectId, DateTime time) =>
+      _save('sync_ts_subject_$subjectId', time);
+  static Future<void> saveSubjectEntranceSync(int subjectId, DateTime time) =>
+      _save('sync_ts_entrance_$subjectId', time);
 
   /// Clears all sync timestamps (e.g. on sign-out or "force full sync").
   static Future<void> clearAll() async {

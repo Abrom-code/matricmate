@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/data/repositories/challenge/challenge_repository.dart';
@@ -9,7 +11,7 @@ import 'package:matricmate/features/exam/models/passage_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_review_screen.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
-class ChallengePracticeController extends GetxController {
+class ChallengePracticeController extends GetxController with WidgetsBindingObserver {
   ChallengePracticeController({
     required this.challengeId,
     required this.title,
@@ -59,14 +61,27 @@ class ChallengePracticeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     stopwatch.start();
     loadQuestions();
   }
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     stopwatch.stop();
     super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      if (stopwatch.isRunning) stopwatch.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      if (!stopwatch.isRunning) stopwatch.start();
+    }
   }
 
   Future<void> loadQuestions() async {
@@ -175,19 +190,24 @@ class ChallengePracticeController extends GetxController {
       }
     }
 
+    // Ensure any transition is cleanly settled before mutating reactive controllers
+    await Future.delayed(const Duration(milliseconds: 100));
+
     // Notify controllers of completion and downloaded availability
-    if (Get.isRegistered<ChallengeHomeController>()) {
-      final hCtrl = ChallengeHomeController.instance;
-      hCtrl.markAttemptedOrPracticed(challengeId);
-      hCtrl.downloadedIds.add(challengeId);
-      hCtrl.refreshAttemptStates();
-    }
-    if (Get.isRegistered<ChallengeArchiveController>()) {
-      final aCtrl = ChallengeArchiveController.instance;
-      aCtrl.markAttemptedOrPracticed(challengeId);
-      aCtrl.downloadedIds.add(challengeId);
-      aCtrl.refreshAttemptStates();
-    }
+    try {
+      if (Get.isRegistered<ChallengeHomeController>()) {
+        final hCtrl = ChallengeHomeController.instance;
+        hCtrl.markAttemptedOrPracticed(challengeId);
+        hCtrl.downloadedIds.add(challengeId);
+        unawaited(hCtrl.refreshAttemptStates());
+      }
+      if (Get.isRegistered<ChallengeArchiveController>()) {
+        final aCtrl = ChallengeArchiveController.instance;
+        aCtrl.markAttemptedOrPracticed(challengeId);
+        aCtrl.downloadedIds.add(challengeId);
+        unawaited(aCtrl.refreshAttemptStates());
+      }
+    } catch (_) {}
 
     // Navigate to Review Screen
     Get.off(
@@ -198,6 +218,8 @@ class ChallengePracticeController extends GetxController {
         userAnswers: userAnswers,
         score: correctCount,
         timeSpentSeconds: elapsedSeconds,
+        isRedo: false,
+        isLive: false,
       ),
     );
   }

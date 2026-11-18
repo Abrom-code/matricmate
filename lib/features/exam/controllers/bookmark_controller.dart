@@ -85,17 +85,7 @@ class BookmarkController extends GetxController {
 
       final userId = UserController.instance.user.value.id;
       final data = await _repo.loadBookmarks(userId);
-      final allQns = await _repo.getQns();
-
-      // Build the full new list before touching any observables
-      final newQuestions = data
-          .map((b) {
-            final qnList = allQns.where((q) => q['id'] == b.questionId);
-            if (qnList.isNotEmpty) return QuestionModel.fromMap(qnList.first);
-            return null;
-          })
-          .whereType<QuestionModel>()
-          .toList();
+      final newQuestions = await _repo.getBookmarkedQuestions(userId);
 
       await _loadPassages(newQuestions);
       await _loadTestTypes(newQuestions);
@@ -129,11 +119,11 @@ class BookmarkController extends GetxController {
 
   Future<void> _loadTestTypes(List<QuestionModel> questions) async {
     final testIds = questions.map((q) => q.testId).toSet();
-    final db = await DatabaseService.instance.database;
+    try {
+      final db = await DatabaseService.instance.database;
 
-    for (final tid in testIds) {
-      if (_testTypeCache.containsKey(tid)) continue;
-      try {
+      for (final tid in testIds) {
+        if (_testTypeCache.containsKey(tid)) continue;
         final rows = await db.query(
           'tests',
           columns: ['type'],
@@ -144,8 +134,8 @@ class BookmarkController extends GetxController {
         if (rows.isNotEmpty) {
           _testTypeCache[tid] = rows.first['type'] as String? ?? 'Unknown';
         }
-      } catch (_) {}
-    }
+      }
+    } catch (_) {}
   }
 
   ///  SAFE SUBJECT LIST

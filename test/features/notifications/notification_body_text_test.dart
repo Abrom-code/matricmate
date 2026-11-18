@@ -136,6 +136,32 @@ Check [a]https://t.me/matric_et[/a] for full explanation!
       expect(find.byType(NotificationBodyText), findsOneWidget);
       expect(find.textContaining('Question 1:'), findsWidgets);
     });
+
+    testWidgets(
+        'renders explanation formatting with colors, sizes, and headings',
+        (tester) async {
+      const text = '''
+[h1]Exam Tips[/h1]
+[c=red]Important:[/c] [color=blue][b]Read carefully[/b][/color]
+[size=20]Large Heading[/size]
+[bg=yellow]Highlighted note[/bg]
+\\(x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\\)
+''';
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: NotificationBodyText(text: text),
+          ),
+        ),
+      );
+
+      expect(find.byType(NotificationBodyText), findsOneWidget);
+      expect(find.textContaining('Exam Tips'), findsWidgets);
+      expect(find.textContaining('Important:'), findsWidgets);
+      expect(find.textContaining('Read carefully'), findsWidgets);
+      expect(find.textContaining('Large Heading'), findsWidgets);
+    });
   });
 }
 

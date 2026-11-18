@@ -7,10 +7,10 @@ import 'package:matricmate/features/challenges/controllers/challenge_archive_con
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
 import 'package:matricmate/features/challenges/screens/challenge_attempt_screen.dart';
 import 'package:matricmate/features/challenges/screens/challenge_practice_screen.dart';
-import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/colors.dart';
+import 'package:matricmate/utils/helpers/challenge_access_helper.dart';
 import 'package:matricmate/utils/helpers/toast_helper.dart';
 
 class ArchiveChallengeCard extends StatelessWidget {
@@ -229,47 +229,355 @@ class ArchiveChallengeCard extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // ── 4. Action Buttons Row ───────────────────────────────────
-            Row(
-              children: [
-                // Standings Button (Low emphasis)
-                TextButton.icon(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    foregroundColor: AppColors.amber,
-                    visualDensity: VisualDensity.compact,
+            // ── 4. Action Buttons ──────────────────────────────────────
+            if (isDone)
+              Obx(() {
+                final isDown = ctrl.isDownloaded(
+                  challenge.id,
+                  setId: challenge.setId,
+                );
+                final isBusy = ctrl.isDownloading[challenge.id] == true;
+                final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
+
+                if (!canAccess) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isPending
+                            ? const Color(0xFFD97706)
+                            : Colors.amber.shade700,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (isPending) {
+                          Get.toNamed(Routes.paymentVerification);
+                        } else {
+                          Get.toNamed(Routes.premium);
+                        }
+                      },
+                      icon: Icon(
+                        isPending ? Icons.hourglass_top_rounded : Icons.lock,
+                        size: 15,
+                      ),
+                      label: Text(
+                        isPending ? 'Verifying' : 'Unlock (Pro)',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                if (!isDown) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: Material(
+                      color: isBusy
+                          ? AppColors.teal.withValues(alpha: 0.6)
+                          : AppColors.teal,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: isBusy ? null : () => ctrl.downloadChallenge(challenge),
+                        child: Center(
+                          child: isBusy
+                              ? const AppCircularButtonLoading(color: Colors.white)
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.download_rounded,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Download',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // Review and Redo buttons for completed challenge (Leaderboard button removed!)
+                return Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 44,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.zero,
+                          ),
+                          onPressed: isReviewing
+                              ? null
+                              : () => ctrl.openCompletedChallenge(challenge),
+                          icon: isReviewing
+                              ? const SizedBox.shrink()
+                              : const Icon(
+                                  Icons.description_outlined,
+                                  size: 15,
+                                ),
+                          label: isReviewing
+                              ? const AppCircularButtonLoading(
+                                  color: AppColors.primary,
+                                )
+                              : const Text(
+                                  'Review',
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 44,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.teal,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.zero,
+                          ),
+                          onPressed: () => Get.to(
+                            () => ChallengeAttemptScreen(
+                              challengeId: challenge.id,
+                              title: challenge.title,
+                              audience: challenge.audience,
+                              durationMinutes: challenge.durationMinutes,
+                              setId: challenge.setId,
+                              isRedo: true,
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.replay_rounded,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            'Redo',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              })
+            else if (!challenge.shouldShowLeaderboard)
+              // Challenge was completed before 3 days -> omit Standings/Leaderboard button to save Supabase requests
+              Obx(() {
+                final isDown = ctrl.isDownloaded(
+                  challenge.id,
+                  setId: challenge.setId,
+                );
+                final isBusy = ctrl.isDownloading[challenge.id] == true;
+
+                // 1. Pro Locked
+                if (!canAccess) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isPending
+                            ? const Color(0xFFD97706)
+                            : Colors.amber.shade700,
+                        foregroundColor: Colors.white,
+                        side: BorderSide(
+                          color: isPending
+                              ? const Color(0xFFD97706)
+                              : Colors.amber.shade700,
+                        ),
+                        elevation: 0,
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (isPending) {
+                          Get.toNamed(Routes.paymentVerification);
+                        } else {
+                          Get.toNamed(Routes.premium);
+                        }
+                      },
+                      icon: Icon(
+                        isPending ? Icons.hourglass_top_rounded : Icons.lock,
+                        size: 15,
+                      ),
+                      label: Text(
+                        isPending ? 'Verifying' : 'Unlock (Pro)',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // 2. Closed / Archived: Needs Download -> Download
+                if (!isDown) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: Material(
+                      color: isBusy
+                          ? AppColors.teal.withValues(alpha: 0.6)
+                          : AppColors.teal,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: isBusy
+                            ? null
+                            : () => ctrl.downloadChallenge(challenge),
+                        child: Center(
+                          child: isBusy
+                              ? const AppCircularButtonLoading(
+                                  color: Colors.white,
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.download_rounded,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Download',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // 3. Downloaded & Not Completed -> Practice
+                return SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.teal,
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.teal),
+                      elevation: 0,
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => Get.to(
+                      () => ChallengePracticeScreen(
+                        challengeId: challenge.id,
+                        title: challenge.title,
+                        setId: challenge.setId,
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.menu_book_rounded,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      'Practice',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                  onPressed: () => Get.to(
-                    () => LeaderboardScreen(
+                );
+              })
+            else
+              Row(
+                children: [
+                  // Standings Button (Low emphasis)
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      foregroundColor: AppColors.amber,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    onPressed: () => ChallengeAccessHelper.openLeaderboard(
                       challengeId: challenge.id,
                       challengeTitle: challenge.title,
                       audience: challenge.audience,
                     ),
-                  ),
-                  icon: const Icon(
-                    Icons.leaderboard_rounded,
-                    size: 15,
-                    color: AppColors.amber,
-                  ),
-                  label: const Text(
-                    'Standings',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    icon: const Icon(
+                      Icons.leaderboard_rounded,
+                      size: 15,
                       color: AppColors.amber,
                     ),
+                    label: const Text(
+                      'Standings',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.amber,
+                      ),
+                    ),
                   ),
-                ),
 
-                const Spacer(),
+                  const Spacer(),
 
-                // Primary Action Button (Review / Start / Practice / Download)
-                Obx(() {
-                  final isDown = ctrl.isDownloaded(
-                    challenge.id,
-                    setId: challenge.setId,
-                  );
+                  // Primary Action Button (Review / Start / Practice / Download)
+                  Obx(() {
+                    final isDown = ctrl.isDownloaded(
+                      challenge.id,
+                      setId: challenge.setId,
+                    );
                   final isBusy = ctrl.isDownloading[challenge.id] == true;
                   final isReviewing = ctrl.isOpeningReview[challenge.id] == true;
 
@@ -326,40 +634,43 @@ class ArchiveChallengeCard extends StatelessWidget {
                     return SizedBox(
                       width: 150,
                       height: 44,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.teal,
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: AppColors.teal),
-                          elevation: 0,
-                          padding: EdgeInsets.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      child: Material(
+                        color: isBusy
+                            ? AppColors.teal.withValues(alpha: 0.6)
+                            : AppColors.teal,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: isBusy
+                              ? null
+                              : () => ctrl.downloadChallenge(challenge),
+                          child: Center(
+                            child: isBusy
+                                ? const AppCircularButtonLoading(
+                                    color: Colors.white,
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.download_rounded,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Download',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
-                        onPressed: isBusy
-                            ? null
-                            : () => ctrl.downloadChallenge(challenge),
-                        icon: isBusy
-                            ? const SizedBox.shrink()
-                            : const Icon(
-                                Icons.download_rounded,
-                                size: 15,
-                                color: Colors.white,
-                              ),
-                        label: isBusy
-                            ? const AppCircularButtonLoading(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                'Download',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
                       ),
                     );
                   }
@@ -436,7 +747,8 @@ class ArchiveChallengeCard extends StatelessWidget {
                       ),
                     );
                   }
-                  final inProgress = ctrl.isInProgress(challenge.id);
+                  final inProgress = ctrl.isInProgress(challenge.id) ||
+                      (challenge.setId.isNotEmpty && ctrl.isInProgress(challenge.setId));
                   return SizedBox(
                     width: 150,
                     height: 44,
@@ -458,6 +770,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                           audience: challenge.audience,
                           endsAt: challenge.endsAt,
                           durationMinutes: challenge.durationMinutes,
+                          setId: challenge.setId,
                         ),
                       ),
                       icon: Icon(
@@ -468,7 +781,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                         color: const Color(0xFF04342C),
                       ),
                       label: Text(
-                        inProgress ? 'Continue' : 'Start',
+                        inProgress ? 'Resume' : 'Start',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -513,40 +826,43 @@ class ArchiveChallengeCard extends StatelessWidget {
                   return SizedBox(
                     width: 150,
                     height: 44,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.teal,
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: AppColors.teal),
-                        elevation: 0,
-                        padding: EdgeInsets.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Material(
+                      color: isBusy
+                          ? AppColors.teal.withValues(alpha: 0.6)
+                          : AppColors.teal,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: isBusy
+                            ? null
+                            : () => ctrl.downloadChallenge(challenge),
+                        child: Center(
+                          child: isBusy
+                              ? const AppCircularButtonLoading(
+                                  color: Colors.white,
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.download_rounded,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Download',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
-                      onPressed: isBusy
-                          ? null
-                          : () => ctrl.downloadChallenge(challenge),
-                      icon: isBusy
-                          ? const SizedBox.shrink()
-                          : const Icon(
-                              Icons.download_rounded,
-                              size: 15,
-                              color: Colors.white,
-                            ),
-                      label: isBusy
-                          ? const AppCircularButtonLoading(
-                              color: Colors.white,
-                            )
-                          : const Text(
-                              'Download',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
                     ),
                   );
                 }

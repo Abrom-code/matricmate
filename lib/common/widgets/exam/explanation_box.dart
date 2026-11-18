@@ -20,28 +20,65 @@ class AppExplanationBox extends StatelessWidget {
 
   final String explanationEn;
   final String explanationAm;
-  final bool expanded;
+  final bool? expanded;
   final VoidCallback onToggle;
   final RxString languageSelected;
   final ValueChanged<String> onLanguageChange;
   final String? explanationImageUrl;
 
+  static bool _isValidExplanation(String? text, {required bool isAmharic}) {
+    if (text == null) return false;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return false;
+    final lower = trimmed.toLowerCase();
+    if (isAmharic) {
+      if (lower.startsWith('no amharic explanation') ||
+          lower == 'no amharic' ||
+          lower == 'null' ||
+          lower == 'none' ||
+          lower == 'n/a' ||
+          lower.contains('የአማርኛ ማብራሪያ የለም') ||
+          lower.contains('ማብራሪያ የለም')) {
+        return false;
+      }
+    } else {
+      if (lower.startsWith('no english explanation') ||
+          lower.startsWith('no explanation') ||
+          lower == 'no english' ||
+          lower == 'null' ||
+          lower == 'none' ||
+          lower == 'n/a') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool get _hasEn => _isValidExplanation(explanationEn, isAmharic: false);
+  bool get _hasAm => _isValidExplanation(explanationAm, isAmharic: true);
+  bool get _hasBoth => _hasEn && _hasAm;
+
   @override
   Widget build(BuildContext context) {
     final dark = AppHelperFunctions.isDark(context);
+    final isExpanded = expanded == true;
 
-    // Tinted teal background — signals "explanation" without being loud
+    // In dark mode: Warm amber/gold theme (fits lightbulb, high contrast, replaces murky teal)
+    // In light mode: Clean soft teal theme
+    final accentColor = dark ? const Color(0xFFFBBF24) : AppColors.primary;
     final bgColor = dark
-        ? AppColors.primary.withValues(alpha: 0.10)
-        : AppColors.primary.withValues(alpha: 0.06);
-    final borderColor = AppColors.primary.withValues(alpha: dark ? 0.30 : 0.25);
+        ? const Color(0xFF231F17)
+        : AppColors.primary.withValues(alpha: 0.05);
+    final borderColor = dark
+        ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
+        : AppColors.primary.withValues(alpha: 0.25);
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: bgColor.withValues(alpha: .06),
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: borderColor, width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,9 +94,9 @@ class AppExplanationBox extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.lightbulb_outline_rounded,
-                        color: AppColors.primary,
+                        color: accentColor,
                         size: 16,
                       ),
                       const SizedBox(width: 6),
@@ -68,15 +105,15 @@ class AppExplanationBox extends StatelessWidget {
                         style: Theme.of(context).textTheme.labelSmall!.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                          color: accentColor,
                         ),
                       ),
                     ],
                   ),
                   Row(
                     children: [
-                      // language toggle when expanded
-                      if (expanded)
+                      // Show language toggle ONLY when expanded and BOTH explanations exist
+                      if (isExpanded && _hasBoth)
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: () {},
@@ -84,14 +121,17 @@ class AppExplanationBox extends StatelessWidget {
                             () => _LangToggle(
                               selected: languageSelected.value,
                               dark: dark,
+                              accentColor: accentColor,
                               onTap: onLanguageChange,
                             ),
                           ),
                         )
                       else
                         Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: AppColors.primary.withValues(alpha: 0.8),
+                          isExpanded
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          color: accentColor.withValues(alpha: 0.85),
                           size: 20,
                         ),
                       const SizedBox(width: 4),
@@ -107,38 +147,56 @@ class AppExplanationBox extends StatelessWidget {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
-            child: expanded
+            child: isExpanded
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Divider(
                         height: 1,
-                        color: AppColors.primary.withValues(alpha: 0.15),
+                        color: dark
+                            ? const Color(0xFFF59E0B).withValues(alpha: 0.20)
+                            : AppColors.primary.withValues(alpha: 0.15),
                       ),
                       Obx(() {
-                        final text = languageSelected.value == 'AM'
-                            ? explanationAm
-                            : explanationEn;
+                        final isAmSelected =
+                            languageSelected.value.trim().toUpperCase() == 'AM';
+                        final String text;
+                        if (_hasBoth) {
+                          text = isAmSelected ? explanationAm : explanationEn;
+                        } else if (_hasAm) {
+                          text = explanationAm;
+                        } else {
+                          text = explanationEn;
+                        }
                         final baseStyle = TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w400,
                           height: 1.65,
                           letterSpacing: 0.1,
                           color: dark
-                              ? AppColors.white.withValues(alpha: 0.85)
+                              ? AppColors.white.withValues(alpha: 0.90)
                               : AppColors.darkerGrey,
                         );
                         return GestureDetector(
-                          // Swipe left → Amharic, swipe right → English
-                          onHorizontalDragEnd: (details) {
-                            final dx = details.primaryVelocity ?? 0;
-                            if (dx < -200 && languageSelected.value != 'AM') {
-                              onLanguageChange('AM');
-                            } else if (dx > 200 &&
-                                languageSelected.value != 'EN') {
-                              onLanguageChange('EN');
-                            }
-                          },
+                          // Swipe left → Amharic, swipe right → English (only if both exist)
+                          onHorizontalDragEnd: _hasBoth
+                              ? (details) {
+                                  final dx = details.primaryVelocity ?? 0;
+                                  final isAm = languageSelected.value
+                                          .trim()
+                                          .toUpperCase() ==
+                                      'AM';
+                                  if (dx < -200 && !isAm) {
+                                    onLanguageChange(
+                                      languageSelected.value == 'en' ? 'am' : 'AM',
+                                    );
+                                  } else if (dx > 200 && isAm) {
+                                    onLanguageChange(
+                                      languageSelected.value == 'am' ? 'en' : 'EN',
+                                    );
+                                  }
+                                }
+                              : null,
                           behavior: HitTestBehavior.opaque,
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -165,9 +223,7 @@ class AppExplanationBox extends StatelessWidget {
                                     child: Icon(
                                       Icons.keyboard_arrow_up_rounded,
                                       size: 20,
-                                      color: AppColors.primary.withValues(
-                                        alpha: 0.8,
-                                      ),
+                                      color: accentColor.withValues(alpha: 0.85),
                                     ),
                                   ),
                                 ),
@@ -193,11 +249,13 @@ class _LangToggle extends StatelessWidget {
   const _LangToggle({
     required this.selected,
     required this.dark,
+    required this.accentColor,
     required this.onTap,
   });
 
   final String selected;
   final bool dark;
+  final Color accentColor;
   final ValueChanged<String> onTap;
 
   @override
@@ -206,7 +264,7 @@ class _LangToggle extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: dark
-            ? AppColors.primary.withValues(alpha: 0.18)
+            ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
             : AppColors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(30),
       ),
@@ -218,17 +276,19 @@ class _LangToggle extends StatelessWidget {
   }
 
   Widget _pill(String label, String value) {
-    final isSelected = selected == value;
+    final isSelected =
+        selected.trim().toUpperCase() == value.trim().toUpperCase();
     return GestureDetector(
-      onTap: () => onTap(value),
+      onTap: () =>
+          onTap(selected == 'en' || selected == 'am' ? value.toLowerCase() : value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected
               ? dark
-                    ? AppColors.primary.withValues(alpha: 0.35)
-                    : AppColors.primary.withValues(alpha: 0.18)
+                  ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
+                  : AppColors.primary.withValues(alpha: 0.18)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
@@ -237,10 +297,10 @@ class _LangToggle extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             color: isSelected
-                ? AppColors.primary
+                ? accentColor
                 : dark
-                ? AppColors.primary.withValues(alpha: 0.6)
-                : AppColors.primary.withValues(alpha: 0.55),
+                    ? accentColor.withValues(alpha: 0.65)
+                    : accentColor.withValues(alpha: 0.55),
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),

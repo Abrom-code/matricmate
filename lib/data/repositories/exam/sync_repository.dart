@@ -521,7 +521,7 @@ class SyncRepository {
         'tests',
         columns: ['id'],
         where:
-            'subject_id IN (${subjectIds.map((_) => '?').join(',')})$premiumFilter',
+            'subject_id IN (${subjectIds.map((_) => '?').join(',')}) AND type IN (\'chapter\', \'grade\')$premiumFilter',
         whereArgs: subjectIds,
       );
       final allTestIds = <int>{
@@ -549,7 +549,8 @@ class SyncRepository {
     final emptyTestRows = await db.rawQuery(
       'SELECT t.id FROM tests t '
       'LEFT JOIN questions q ON t.id = q.test_id '
-      'WHERE t.subject_id IN (${subjectIds.map((_) => '?').join(',')})$premiumFilter '
+      'WHERE t.subject_id IN (${subjectIds.map((_) => '?').join(',')}) '
+      'AND t.type IN (\'chapter\', \'grade\')$premiumFilter '
       'GROUP BY t.id HAVING COUNT(q.id) = 0',
       subjectIds,
     );
@@ -579,7 +580,7 @@ class SyncRepository {
       'tests',
       columns: ['id'],
       where:
-          'subject_id IN (${subjectIds.map((_) => '?').join(',')})$localPremiumFilter',
+          'subject_id IN (${subjectIds.map((_) => '?').join(',')}) AND type IN (\'chapter\', \'grade\')$localPremiumFilter',
       whereArgs: subjectIds,
     );
     final existingTestIds =

@@ -1,5 +1,6 @@
 import 'package:matricmate/data/database/database_service.dart';
 import 'package:matricmate/features/exam/models/bookmark_model.dart';
+import 'package:matricmate/features/exam/models/question_model.dart';
 import 'package:matricmate/utils/exceptions/exception_handler.dart';
 
 class BookmarkRepository {
@@ -33,9 +34,22 @@ class BookmarkRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getQns() async {
+  /// Returns only the questions the user has bookmarked, avoiding full-table OOMs.
+  Future<List<QuestionModel>> getBookmarkedQuestions(String userId) async {
     try {
-      return await _dbService.getQuestions();
+      final rows = await _dbService.getBookmarkedQuestions(userId);
+      return rows.map((r) => QuestionModel.fromMap(r)).toList();
+    } catch (e) {
+      throw AppExceptionHandler.handle(e);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getQns({List<int>? ids}) async {
+    try {
+      if (ids != null && ids.isNotEmpty) {
+        return await _dbService.getQuestionsByIds(ids);
+      }
+      return [];
     } catch (e) {
       throw AppExceptionHandler.handle(e);
     }

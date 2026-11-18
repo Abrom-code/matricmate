@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/appbar/appbar.dart';
+import 'package:matricmate/common/widgets/appbar/sync_icon_button.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/challenges/constants/challenge_colors.dart';
 import 'package:matricmate/features/notes/controllers/notes_controller.dart';
@@ -40,6 +41,22 @@ class _NotesScreenState extends State<NotesScreen>
     _tabController.addListener(() {
       _currentTabIndex.value = _tabController.index;
     });
+
+    void autoFocusTabWithNotes() {
+      if (!mounted || _tabController.index != 0 || controller.subjectNotes.isEmpty) return;
+      if (controller.getNotesByGrade(9).isEmpty) {
+        for (int i = 0; i < _tabs.length; i++) {
+          final g = _tabs[i]['grade'] as int;
+          if (controller.getNotesByGrade(g).isNotEmpty) {
+            _tabController.animateTo(i);
+            break;
+          }
+        }
+      }
+    }
+
+    ever(controller.subjectNotes, (_) => autoFocusTabWithNotes());
+    WidgetsBinding.instance.addPostFrameCallback((_) => autoFocusTabWithNotes());
   }
 
   @override
@@ -106,6 +123,14 @@ class _NotesScreenState extends State<NotesScreen>
           ],
         ),
         actions: [
+          Obx(() {
+            final syncing = controller.isSyncing.value;
+            return SyncIconButton(
+              isSyncing: syncing,
+              tooltip: 'Sync notes',
+              onPressed: () => controller.loadSubjectNotes(forceRemote: true),
+            );
+          }),
           _buildAppBarAction(),
         ],
         bottom: isCommon

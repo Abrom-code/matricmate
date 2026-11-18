@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:matricmate/features/authentication/models/user_model.dart';
 import 'package:matricmate/features/challenges/models/challenge_model.dart';
+import 'package:matricmate/features/challenges/screens/leaderboard_screen.dart';
 import 'package:matricmate/features/personalization/controllers/user_controller.dart';
 import 'package:matricmate/routes/app_routes.dart';
 
@@ -11,6 +12,16 @@ import 'package:matricmate/routes/app_routes.dart';
 /// - Premium challenges (`isPremium == true`) require an active subscription (`user.isActive`).
 class ChallengeAccessHelper {
   const ChallengeAccessHelper._();
+
+  /// Determines whether the current user is on the free tier (inactive and not admin).
+  static bool get isFreeUser {
+    if (Get.isRegistered<UserController>()) {
+      final user = UserController.instance.user.value;
+      final isAdmin = UserController.instance.isAdmin.value;
+      return !user.isActive && !isAdmin;
+    }
+    return false;
+  }
 
   /// Determines whether the [user] has permission to access the given [challenge].
   static bool canAccess({
@@ -47,15 +58,61 @@ class ChallengeAccessHelper {
     Get.toNamed(Routes.premium);
   }
 
-  /// Navigates to [Routes.premium] or redirects to [Routes.paymentVerification]
-  /// if the user already has a pending payment.
-  static void openPremiumSheet({required UserModel user}) {
-    if (user.isPending) {
-      Get.toNamed(Routes.paymentVerification);
+  /// Opens the [LeaderboardScreen] if the user is a premium subscriber or admin.
+  /// If the user is on the free tier, redirects directly to the premium screen
+  /// (or payment verification if payment is pending).
+  static void openLeaderboard({
+    String? challengeId,
+    String? challengeTitle,
+    String? audience,
+    int? userScore,
+    int? userTimeSeconds,
+    bool replace = false,
+  }) {
+    if (isFreeUser) {
+      openPremiumSheet(replace: replace);
       return;
     }
 
-    Get.toNamed(Routes.premium);
+    if (replace) {
+      Get.off(
+        () => LeaderboardScreen(
+          challengeId: challengeId,
+          challengeTitle: challengeTitle,
+          audience: audience,
+          userScore: userScore,
+          userTimeSeconds: userTimeSeconds,
+        ),
+      );
+    } else {
+      Get.to(
+        () => LeaderboardScreen(
+          challengeId: challengeId,
+          challengeTitle: challengeTitle,
+          audience: audience,
+          userScore: userScore,
+          userTimeSeconds: userTimeSeconds,
+        ),
+      );
+    }
+  }
+
+  /// Navigates to [Routes.premium] or redirects to [Routes.paymentVerification]
+  /// if the user already has a pending payment.
+  static void openPremiumSheet({UserModel? user, bool replace = false}) {
+    final effectiveUser = user ??
+        (Get.isRegistered<UserController>()
+            ? UserController.instance.user.value
+            : UserModel.empty());
+    final targetRoute = effectiveUser.isPending
+        ? Routes.paymentVerification
+        : Routes.premium;
+
+    if (replace) {
+      Get.offNamed(targetRoute);
+    } else {
+      Get.toNamed(targetRoute);
+    }
   }
 
   /// Sorts a list of challenges based on user subscription status:

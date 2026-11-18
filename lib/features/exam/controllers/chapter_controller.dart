@@ -17,6 +17,7 @@ class ChapterController extends GetxController {
       <int, ChapterProgressModel>{}.obs;
 
   final RxBool isChapterLoading = false.obs;
+  final RxBool isSyncing = false.obs;
 
   late String title;
   late int subjectId;

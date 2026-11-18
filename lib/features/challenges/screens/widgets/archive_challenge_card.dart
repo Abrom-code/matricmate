@@ -631,6 +631,7 @@ class ArchiveChallengeCard extends StatelessWidget {
                           audience: challenge.audience,
                           endsAt: challenge.endsAt,
                           durationMinutes: challenge.durationMinutes,
+                          setId: challenge.setId,
                         ),
                       ),
                       icon: Icon(

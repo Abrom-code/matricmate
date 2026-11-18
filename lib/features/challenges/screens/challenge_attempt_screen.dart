@@ -42,6 +42,12 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
   @override
   void initState() {
     super.initState();
+    final tag = widget.isRedo
+        ? 'challenge_redo_${widget.challengeId}'
+        : 'challenge_attempt_${widget.challengeId}';
+    if (Get.isRegistered<ChallengeAttemptController>(tag: tag)) {
+      Get.delete<ChallengeAttemptController>(tag: tag, force: true);
+    }
     _ctrl = Get.put(
       ChallengeAttemptController(
         challengeId: widget.challengeId,
@@ -52,9 +58,7 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
         setId: widget.setId,
         isRedo: widget.isRedo,
       ),
-      tag: widget.isRedo
-          ? 'challenge_redo_${widget.challengeId}'
-          : 'challenge_attempt_${widget.challengeId}',
+      tag: tag,
     );
   }
 
@@ -66,6 +70,7 @@ class _ChallengeAttemptScreenState extends State<ChallengeAttemptScreen> {
       tag: widget.isRedo
           ? 'challenge_redo_${widget.challengeId}'
           : 'challenge_attempt_${widget.challengeId}',
+      force: true,
     );
     super.dispose();
   }

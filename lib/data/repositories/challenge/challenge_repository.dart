@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:matricmate/utils/constants/app_timeouts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -189,11 +191,13 @@ class ChallengeRepository {
     if (res is Map<String, dynamic>) {
       final rawQuestions = res['questions'];
       final List<ChallengeQuestionModel> questions = [];
-      if (rawQuestions is List) {
+      final dynamic rawList =
+          rawQuestions is String ? jsonDecode(rawQuestions) : rawQuestions;
+      if (rawList is List) {
         final parsed = <ChallengeQuestionModel>[];
         final neededPassageIds = <dynamic>{};
 
-        for (final item in rawQuestions) {
+        for (final item in rawList) {
           if (item is Map<String, dynamic>) {
             final q = ChallengeQuestionModel.fromJson(item);
             parsed.add(q);
@@ -215,6 +219,16 @@ class ChallengeRepository {
             questions.add(q);
           }
         }
+      }
+
+      // Fallback: If questions are empty from attempt RPC, fetch via review questions query
+      if (questions.isEmpty && challengeId.isNotEmpty) {
+        try {
+          final fallback = await fetchQuestionsForReview(challengeId);
+          if (fallback.isNotEmpty) {
+            questions.addAll(fallback);
+          }
+        } catch (_) {}
       }
 
       return {

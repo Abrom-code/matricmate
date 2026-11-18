@@ -864,6 +864,7 @@ class ChallengeHomeController extends GetxController {
           audience: challenge.audience,
           endsAt: challenge.endsAt,
           durationMinutes: challenge.durationMinutes,
+          setId: challenge.setId,
         ),
       );
     } else if (challenge.isScheduled || challenge.isDraft) {

@@ -39,13 +39,17 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
   @override
   void initState() {
     super.initState();
+    final tag = 'practice_${widget.challengeId}';
+    if (Get.isRegistered<ChallengePracticeController>(tag: tag)) {
+      Get.delete<ChallengePracticeController>(tag: tag, force: true);
+    }
     _ctrl = Get.put(
       ChallengePracticeController(
         challengeId: widget.challengeId,
         title: widget.title,
         setId: widget.setId,
       ),
-      tag: 'practice_${widget.challengeId}',
+      tag: tag,
     );
   }
 
@@ -54,6 +58,7 @@ class _ChallengePracticeScreenState extends State<ChallengePracticeScreen> {
     _scrollCtrl.dispose();
     Get.delete<ChallengePracticeController>(
       tag: 'practice_${widget.challengeId}',
+      force: true,
     );
     super.dispose();
   }

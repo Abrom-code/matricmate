@@ -163,6 +163,39 @@ class ChallengeAttemptController extends GetxController
       endsAt = data['ends_at'];
       questions.value = data['questions'] ?? [];
 
+      // Fallback: If questions are empty (e.g. on resume), check local SQLite and review questions
+      if (questions.isEmpty) {
+        final localRows =
+            await DatabaseService.instance.getDownloadedChallengeQuestions(
+          challengeId,
+          setId: setId,
+        );
+        if (localRows.isNotEmpty) {
+          questions.value =
+              localRows.map((r) => ChallengeQuestionModel.fromJson(r)).toList();
+        } else {
+          final fallback =
+              await _repo.fetchQuestionsForReview(challengeId, setId: setId);
+          if (fallback.isNotEmpty) {
+            questions.value = fallback;
+          }
+        }
+      }
+
+      // Cache loaded questions locally into SQLite so subsequent resumes are instant
+      if (questions.isNotEmpty) {
+        try {
+          await DatabaseService.instance.insertDownloadedChallengeBundle({
+            'id': challengeId,
+            'challenge_id': challengeId,
+            'set_id': setId ?? challengeId,
+            'title': title,
+            'audience': audience ?? '',
+            'questions': questions.map((q) => q.toJson()).toList(),
+          });
+        } catch (_) {}
+      }
+
       _markStatusInProgress();
 
       // Restore existing answers if resuming an ongoing attempt

@@ -410,6 +410,47 @@ class CompletedChallengeCard extends StatelessWidget {
               }
 
               // 4. Downloaded but Not Attempted Yet -> Standings + Practice
+              // If challenge was completed before 3 days, omit the Leaderboard button to reduce Supabase requests.
+              if (!challenge.shouldShowLeaderboard) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.teal,
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.teal),
+                      elevation: 0,
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => Get.to(
+                      () => ChallengePracticeScreen(
+                        challengeId: challenge.id,
+                        title: challenge.title,
+                        setId: challenge.setId,
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.menu_book_rounded,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      'Practice',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
               return Row(
                 children: [
                   TextButton.icon(
@@ -458,6 +499,7 @@ class CompletedChallengeCard extends StatelessWidget {
                         () => ChallengePracticeScreen(
                           challengeId: challenge.id,
                           title: challenge.title,
+                          setId: challenge.setId,
                         ),
                       ),
                       icon: const Icon(

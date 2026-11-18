@@ -400,6 +400,145 @@ class ArchiveChallengeCard extends StatelessWidget {
                   ],
                 );
               })
+            else if (!challenge.shouldShowLeaderboard)
+              // Challenge was completed before 3 days -> omit Standings/Leaderboard button to save Supabase requests
+              Obx(() {
+                final isDown = ctrl.isDownloaded(
+                  challenge.id,
+                  setId: challenge.setId,
+                );
+                final isBusy = ctrl.isDownloading[challenge.id] == true;
+
+                // 1. Pro Locked
+                if (!canAccess) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isPending
+                            ? const Color(0xFFD97706)
+                            : Colors.amber.shade700,
+                        foregroundColor: Colors.white,
+                        side: BorderSide(
+                          color: isPending
+                              ? const Color(0xFFD97706)
+                              : Colors.amber.shade700,
+                        ),
+                        elevation: 0,
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (isPending) {
+                          Get.toNamed(Routes.paymentVerification);
+                        } else {
+                          Get.toNamed(Routes.premium);
+                        }
+                      },
+                      icon: Icon(
+                        isPending ? Icons.hourglass_top_rounded : Icons.lock,
+                        size: 15,
+                      ),
+                      label: Text(
+                        isPending ? 'Verifying' : 'Unlock (Pro)',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // 2. Closed / Archived: Needs Download -> Download
+                if (!isDown) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: Material(
+                      color: isBusy
+                          ? AppColors.teal.withValues(alpha: 0.6)
+                          : AppColors.teal,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: isBusy
+                            ? null
+                            : () => ctrl.downloadChallenge(challenge),
+                        child: Center(
+                          child: isBusy
+                              ? const AppCircularButtonLoading(
+                                  color: Colors.white,
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.download_rounded,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Download',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // 3. Downloaded & Not Completed -> Practice
+                return SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.teal,
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.teal),
+                      elevation: 0,
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => Get.to(
+                      () => ChallengePracticeScreen(
+                        challengeId: challenge.id,
+                        title: challenge.title,
+                        setId: challenge.setId,
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.menu_book_rounded,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      'Practice',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              })
             else
               Row(
                 children: [

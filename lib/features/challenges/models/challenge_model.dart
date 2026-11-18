@@ -153,6 +153,21 @@ class LeaderboardChallengeModel {
     return difference.inHours <= 12 && difference.inSeconds > 0;
   }
 
+  /// Whether this challenge has already ended/completed 3 or more days ago.
+  bool get isCompletedBeforeThreeDays {
+    if (!isClosed && !isArchived) return false;
+    final completedDate = endsAt ?? createdAt;
+    return DateTime.now().difference(completedDate) >= const Duration(days: 3);
+  }
+
+  /// Whether the button to view the leaderboard should be displayed for this challenge.
+  /// When a challenge is completed for 3 or more days, the button is hidden to prevent
+  /// excessive Supabase RPC requests on archived/past challenges.
+  bool get shouldShowLeaderboard {
+    if (!isClosed && !isArchived) return true;
+    return !isCompletedBeforeThreeDays;
+  }
+
   factory LeaderboardChallengeModel.fromJson(Map<String, dynamic> json) {
     final rawId = json['id']?.toString() ?? json['challenge_id']?.toString() ?? '';
     final rawSetId = json['set_id']?.toString() ?? rawId;

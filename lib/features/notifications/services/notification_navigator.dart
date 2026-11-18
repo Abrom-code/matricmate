@@ -121,18 +121,20 @@ class NotificationTestOpener {
       }
 
       // 4. Status Checks:
-      // If closed, archived, or reward notification -> redirect directly to LeaderboardScreen!
+      // If closed, archived, or reward notification -> redirect directly to LeaderboardScreen if completed within 3 days
       if (challenge.isClosed ||
           challenge.isArchived ||
           data['type'] == 'challenge_reward' ||
           data['status'] == 'closed' ||
           data['status'] == 'archived') {
-        ChallengeAccessHelper.openLeaderboard(
-          challengeId: challenge.id,
-          challengeTitle: challenge.title,
-          audience: challenge.audience,
-        );
-        return;
+        if (challenge.shouldShowLeaderboard) {
+          ChallengeAccessHelper.openLeaderboard(
+            challengeId: challenge.id,
+            challengeTitle: challenge.title,
+            audience: challenge.audience,
+          );
+          return;
+        }
       }
 
       // Navigate to Challenges tab (Tab 1 in BottomNavigationBar)

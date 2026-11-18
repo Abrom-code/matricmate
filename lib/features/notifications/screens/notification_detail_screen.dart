@@ -193,7 +193,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
           await _challengeFetchFuture;
         }
 
-        if (_isChallengeClosed) {
+        if (_isChallengeClosed && (_loadedChallenge?.shouldShowLeaderboard ?? true)) {
           final challengeId = notification.payload['challenge_id']?.toString() ??
               notification.payload['id']?.toString() ??
               _loadedChallenge?.id;
@@ -624,14 +624,14 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              _isChallengeClosed
+                              (_isChallengeClosed && (_loadedChallenge?.shouldShowLeaderboard ?? true))
                                   ? Icons.leaderboard_rounded
                                   : Icons.emoji_events_rounded,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              _isChallengeClosed
+                              (_isChallengeClosed && (_loadedChallenge?.shouldShowLeaderboard ?? true))
                                   ? 'See Leaderboard'
                                   : 'Go to Challenge',
                               style: const TextStyle(

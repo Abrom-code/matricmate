@@ -352,33 +352,35 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isLive) ...[
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(6),
-                    onTap: () => ChallengeAccessHelper.openLeaderboard(
-                      challengeId: challenge.id,
-                      challengeTitle: challenge.title,
-                      audience: challenge.audience,
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 2,
-                        horizontal: 4,
+              if (isLive && challenge.shouldShowLeaderboard) ...[
+                if (challenge.shouldShowLeaderboard) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () => ChallengeAccessHelper.openLeaderboard(
+                        challengeId: challenge.id,
+                        challengeTitle: challenge.title,
+                        audience: challenge.audience,
                       ),
-                      child: Text(
-                        'View rankings →',
-                        style: TextStyle(
-                          color: AppColors.amber,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 2,
+                          horizontal: 4,
+                        ),
+                        child: Text(
+                          'View rankings →',
+                          style: TextStyle(
+                            color: AppColors.amber,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
             ] else if (challenge.isDraft && UserController.instance.isAdmin.value) ...[
               // Admin draft verification: Side-by-side Preview + Publish buttons
@@ -479,33 +481,35 @@ class AvailableChallengeCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (isLive) ...[
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(6),
-                    onTap: () => ChallengeAccessHelper.openLeaderboard(
-                      challengeId: challenge.id,
-                      challengeTitle: challenge.title,
-                      audience: challenge.audience,
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 2,
-                        horizontal: 4,
+              if (isLive && challenge.shouldShowLeaderboard) ...[
+                if (challenge.shouldShowLeaderboard) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () => ChallengeAccessHelper.openLeaderboard(
+                        challengeId: challenge.id,
+                        challengeTitle: challenge.title,
+                        audience: challenge.audience,
                       ),
-                      child: Text(
-                        'View rankings →',
-                        style: TextStyle(
-                          color: AppColors.amber,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 2,
+                          horizontal: 4,
+                        ),
+                        child: Text(
+                          'View rankings →',
+                          style: TextStyle(
+                            color: AppColors.amber,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
             ] else if (isLive) ...[
               if (isDone) ...[
@@ -630,32 +634,34 @@ class AvailableChallengeCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(6),
-                    onTap: () => ChallengeAccessHelper.openLeaderboard(
-                      challengeId: challenge.id,
-                      challengeTitle: challenge.title,
-                      audience: challenge.audience,
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 2,
-                        horizontal: 4,
+                if (challenge.shouldShowLeaderboard) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () => ChallengeAccessHelper.openLeaderboard(
+                        challengeId: challenge.id,
+                        challengeTitle: challenge.title,
+                        audience: challenge.audience,
                       ),
-                      child: Text(
-                        'View rankings →',
-                        style: TextStyle(
-                          color: AppColors.amber,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 2,
+                          horizontal: 4,
+                        ),
+                        child: Text(
+                          'View rankings →',
+                          style: TextStyle(
+                            color: AppColors.amber,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
             ] else ...[
               SizedBox(

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:matricmate/common/widgets/loaders/circular_loading.dart';
 import 'package:matricmate/features/authentication/controllers/login/forgot_password_controller.dart';
+import 'package:matricmate/routes/app_routes.dart';
 import 'package:matricmate/utils/constants/app_strings.dart';
 import 'package:matricmate/utils/constants/colors.dart';
 import 'package:matricmate/utils/helpers/helper_functions.dart';
@@ -186,6 +187,59 @@ class ForgetPasswordScreen extends GetView<ForgotPasswordController> {
                               Icon(Icons.arrow_forward_rounded, size: 18),
                             ],
                           ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Register Link Footer ──────────────────────────────────
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: dark ? AppColors.darkCard : AppColors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: dark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: dark ? 0.15 : 0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Don't have an account?",
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                          color: dark ? AppColors.darkGrey : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => Get.offNamed(Routes.signup),
+                        borderRadius: BorderRadius.circular(6),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text(
+                            'Register',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

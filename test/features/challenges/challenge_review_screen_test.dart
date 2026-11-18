@@ -59,12 +59,12 @@ void main() {
     expect(find.text('50%'), findsOneWidget);
     // No Done button — only Redo
     expect(find.text('Done'), findsNothing);
-    expect(find.text('Redo Challenge'), findsOneWidget);
+    expect(find.text('Redo'), findsOneWidget);
     // No live standing card
     expect(find.text('LIVE STANDING'), findsNothing);
   });
 
-  testWidgets('ChallengeReviewScreen with isLive: true shows only Redo (no standing card)', (tester) async {
+  testWidgets('ChallengeReviewScreen with isLive: true shows side-by-side Standing and Redo buttons (no top standing card)', (tester) async {
     final questions = [
       ChallengeQuestionModel(
         id: 'q1',
@@ -91,12 +91,11 @@ void main() {
       ),
     );
 
-    // No live standing card or view standings button
+    // Top live standing card is removed
     expect(find.text('LIVE STANDING'), findsNothing);
-    expect(find.text('View Standings'), findsNothing);
-    expect(find.text('Practice / Redo Challenge'), findsNothing);
-    // Single Redo button, no Done
+    // Side-by-side Standing and Redo buttons are present
+    expect(find.text('Standing'), findsOneWidget);
+    expect(find.text('Redo'), findsOneWidget);
     expect(find.text('Done'), findsNothing);
-    expect(find.text('Redo Challenge'), findsOneWidget);
   });
 }

@@ -51,6 +51,8 @@ void main() {
     // Verify footer text and register button are rendered
     expect(find.text("Don't have an account?"), findsOneWidget);
     expect(find.text('Register'), findsOneWidget);
+    expect(find.text('Contact Us'), findsOneWidget);
+    expect(find.byIcon(Icons.send_rounded), findsOneWidget);
 
     // Tap Register and verify navigation
     await tester.tap(find.text('Register'));
